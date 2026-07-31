@@ -405,10 +405,12 @@ export default function LiveScreen() {
 
       // 1a. User leagues — fetched early so we can filter the score strip to relevant tournaments.
       // Non-logged-in users (user?.id is null) get an empty array → no filter applied → show all live.
-      const { data: memberships = [] } = user?.id ? await supabase
+      const { data: rawMemberships = [] } = user?.id ? await supabase
         .from('league_members')
-        .select('league_id, total_points, rank, leagues(id, name, tournament_id)')
+        .select('league_id, total_points, rank, leagues(id, name, tournament_id, archived)')
         .eq('user_id', user.id) : { data: [] };
+      // Archived leagues get no live scoring/matchday sync — never surface them here.
+      const memberships = (rawMemberships || []).filter(m => !m.leagues?.archived);
       memberships.sort((a, b) => (a.leagues?.name ?? '').localeCompare(b.leagues?.name ?? ''));
       const userTournamentIds = [...new Set((memberships || []).map(m => m.leagues?.tournament_id).filter(Boolean))];
 

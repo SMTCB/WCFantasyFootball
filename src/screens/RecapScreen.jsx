@@ -302,12 +302,14 @@ export default function RecapScreen() {
 
     (async () => {
       try {
-        // 1. Memberships with tournament info
-        const { data: memberRows } = await supabase
+        // 1. Memberships with tournament info (archived leagues have no live
+        // matchday — scoring is paused for them — so exclude them here)
+        const { data: allMemberRows } = await supabase
           .from('league_members')
-          .select('league_id, leagues(id, name, tournament_id)')
+          .select('league_id, leagues(id, name, tournament_id, archived)')
           .eq('user_id', user.id);
-        if (cancelled || !memberRows?.length) return;
+        const memberRows = (allMemberRows ?? []).filter(r => !r.leagues?.archived);
+        if (cancelled || !memberRows.length) return;
 
         const tourIds = [...new Set(memberRows.map(r => r.leagues?.tournament_id).filter(Boolean))];
 

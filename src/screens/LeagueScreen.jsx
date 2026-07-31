@@ -26,7 +26,8 @@ import {
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
 } from '../components/league/HubShared';
 import { MONO, DISPLAY } from '../components/league/HubConstants';
-import { TypeChip, RankBadge } from '../components/league/LeagueBadges';
+import { TypeChip, RankBadge, ArchivedBadge } from '../components/league/LeagueBadges';
+import { useShowArchived } from '../hooks/useShowArchived';
 import { deriveLeagueType, TYPE_COLOR } from '../components/league/LeagueBadgeHelpers';
 import LeagueDetailView       from '../components/league/LeagueDetailView';
 import TradingView            from '../components/league/TradingView';
@@ -357,6 +358,9 @@ export default function LeagueScreen() {
     }, { replace: true });
   }, [setSearchParams]);
 
+  // B-13: shared "show archived leagues" toggle for the My Leagues list
+  const [showArchived, setShowArchived] = useShowArchived();
+
   const fetchTournaments = useCallback(async () => {
     const { data } = await supabase
       .from('tournaments')
@@ -378,7 +382,7 @@ export default function LeagueScreen() {
         .from('league_members')
         .select(`
           league_id, rank, total_points, role,
-          leagues ( id, name, format, tournament_id, created_by, h2h_enabled, draft_deadline, knockout_draft_deadline, cup_phase, league_mode )
+          leagues ( id, name, format, tournament_id, created_by, h2h_enabled, draft_deadline, knockout_draft_deadline, cup_phase, league_mode, archived )
         `)
         .eq('user_id', userId);
 
@@ -1731,6 +1735,17 @@ export default function LeagueScreen() {
     </form>
   );
 
+  // B-13: hide archived leagues from the list by default
+  const archivedLeagueCount = leagues.filter(l => l.leagues?.archived).length;
+  const visibleLeagues = showArchived ? leagues : leagues.filter(l => !l.leagues?.archived);
+
+  const archiveToggle = archivedLeagueCount > 0 && (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+      <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />
+      Show archived ({archivedLeagueCount})
+    </label>
+  );
+
   const emptyState = (
     <div className="p-8 text-center">
       <div className="fk-display" style={{ fontSize: 24, color: 'var(--gold)', marginBottom: '12px' }}>FFL</div>
@@ -1751,9 +1766,10 @@ export default function LeagueScreen() {
             <div className="fk-eyebrow" style={{ marginBottom: 6 }}>Season</div>
             <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 30, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>My Leagues</div>
           </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            {archiveToggle}
             <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
-              {leagues.length} {leagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
+              {visibleLeagues.length} {visibleLeagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
             </div>
             <button
               onClick={() => setView('create')}
@@ -1766,7 +1782,7 @@ export default function LeagueScreen() {
 
         {loading ? (
           <div className="p-8 text-center text-xs font-bold uppercase tracking-widest opacity-50">Syncing...</div>
-        ) : leagues.length === 0 ? emptyState : (
+        ) : visibleLeagues.length === 0 ? emptyState : (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr 140px 140px', gap: 0, padding: '10px 40px', borderBottom: '1px solid var(--rule)' }}>
               <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Rank</span>
@@ -1774,7 +1790,7 @@ export default function LeagueScreen() {
               <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Type</span>
               <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right' }}>Total Pts</span>
             </div>
-            {leagues.map(l => {
+            {visibleLeagues.map(l => {
               const { type, format } = deriveLeagueType(l.leagues ?? {});
               const medal = l.rank === 1 ? 'var(--gold)' : l.rank === 2 ? '#C0C0C0' : l.rank === 3 ? '#CD7F32' : 'var(--mute)';
               return (
@@ -1802,8 +1818,9 @@ export default function LeagueScreen() {
                       {l.member_count ?? '—'} members
                     </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
                     <TypeChip type={type} format={format} />
+                    {l.leagues?.archived && <ArchivedBadge />}
                   </div>
                   <div style={{ textAlign: 'right', padding: '20px 0' }}>
                     <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, color: 'var(--positive)' }}>{Math.round(l.total_points || 0)}</span>
@@ -1845,10 +1862,14 @@ export default function LeagueScreen() {
           </button>
         </div>
 
+        {archivedLeagueCount > 0 && (
+          <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--rule)' }}>{archiveToggle}</div>
+        )}
+
         {loading ? (
           <div className="p-8 text-center text-xs font-bold uppercase tracking-widest opacity-50">Syncing...</div>
-        ) : leagues.length === 0 ? emptyState : (
-          leagues.map(l => {
+        ) : visibleLeagues.length === 0 ? emptyState : (
+          visibleLeagues.map(l => {
             const { type, format } = deriveLeagueType(l.leagues ?? {});
             const tc = TYPE_COLOR[type] || 'var(--mute)';
             return (
@@ -1868,6 +1889,7 @@ export default function LeagueScreen() {
                   </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
                     <TypeChip type={type} format={format} />
+                    {l.leagues?.archived && <ArchivedBadge />}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
