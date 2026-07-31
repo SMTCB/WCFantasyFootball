@@ -87,3 +87,6 @@ backend/.env
 backups/
 docs/architecture/VALUATION_ANALYSIS.md
 .rehearsal/
+
+# Supabase CLI scratch dir (contains start-secrets/) — never commit
+supabase/.temp/
