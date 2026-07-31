@@ -2047,6 +2047,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
     triggerDraftAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores,
+    archiveLeague, unarchiveLeague,
   } = commissioner;
 
   // Draft submission tracker — shows which managers have submitted their pick list.
@@ -2130,6 +2131,12 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const handleRunAllocation = () => {
     if (!window.confirm('This allocates squads for all managers. It cannot be undone without a manual reset. Continue?')) return;
     triggerDraftAllocation();
+  };
+
+  const handleArchiveToggle = () => {
+    if (league?.archived) { unarchiveLeague(); return; }
+    if (!window.confirm('Archive this league? Scoring, matchday sync, and draft jobs will stop running for it until you reactivate. Nothing is deleted.')) return;
+    archiveLeague();
   };
 
   const opBtnStyle = (bg, color = 'var(--ink)') => ({
@@ -2342,6 +2349,39 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="Fixture ID — e.g. f-1219435455" style={{ ...inputStyle, flex: 1 }} />
                   <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={compactBtn('var(--warn)', commLoading || !scoreFixtureId)}>RECALC ↯</button>
                 </div>
+              </div>
+            }
+          />
+          </div>
+
+          {/* Archive / reactivate — season-lifecycle control, available regardless of format/mode */}
+          <div data-tour="comm-archive" style={{ display: 'flex' }}>
+          <LifecycleOp
+            title="ARCHIVE LEAGUE"
+            status={league?.archived ? 'ARCHIVED' : 'ACTIVE'}
+            statusTone={league?.archived ? 'var(--mute)' : 'var(--positive)'}
+            sub="Pauses scoring, matchday sync, and draft jobs for a league that's finished or dormant. Nothing is deleted."
+            when="End of season, or a league that never got off the ground. Reactivate any time — jobs resume from the current round (no catch-up scoring for rounds missed while archived)."
+            primary={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {league?.archived ? (
+                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ARCHIVED · </span>
+                    {league?.archived_at ? `Since ${new Date(league.archived_at).toLocaleDateString()}. ` : ''}Background jobs are skipped for this league.
+                  </div>
+                ) : (
+                  <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--warn)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>NOTE · </span>
+                    Managers can still view the league while archived — they just won't see new scores or matchdays until you reactivate.
+                  </div>
+                )}
+                <ToggleSwitch
+                  checked={!!league?.archived}
+                  onChange={handleArchiveToggle}
+                  disabled={commLoading}
+                  labelOn="ARCHIVED"
+                  labelOff="ACTIVE"
+                />
               </div>
             }
           />
@@ -2877,6 +2917,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
       triggerDraftAllocation,
       scoreFixtureId, setScoreFixtureId, triggerScores,
+      archiveLeague, unarchiveLeague,
     } = commissioner;
 
     const mobInput = { ...inputStyle };
@@ -2911,6 +2952,12 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     // Emergency transfers status labels (state/handlers from the top-level hook above).
     const mobEtStatus = activeFreeWindow ? 'ON' : 'OFF';
     const mobEtTone   = activeFreeWindow ? 'var(--positive)' : 'var(--mute)';
+
+    const mobHandleArchiveToggle = () => {
+      if (league?.archived) { unarchiveLeague(); return; }
+      if (!window.confirm('Archive this league? Scoring, matchday sync, and draft jobs will stop running for it until you reactivate. Nothing is deleted.')) return;
+      archiveLeague();
+    };
 
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
@@ -3036,6 +3083,29 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={mobInput} />
             </div>
             <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: commLoading || !scoreFixtureId ? 'var(--ink-3)' : 'var(--warn)', color: commLoading || !scoreFixtureId ? 'var(--mute)' : 'var(--ink)', cursor: commLoading || !scoreFixtureId ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
+          </MobLifecycleCard>
+          </div>
+
+          <div data-tour="comm-archive">
+          <MobLifecycleCard title="ARCHIVE LEAGUE" status={league?.archived ? 'ARCHIVED' : 'ACTIVE'} tone={league?.archived ? 'var(--mute)' : 'var(--positive)'} when="End of season, or a league that never got off the ground. Reactivate any time — jobs resume from the current round, no catch-up scoring for rounds missed while archived.">
+            {league?.archived ? (
+              <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ARCHIVED · </span>
+                {league?.archived_at ? `Since ${new Date(league.archived_at).toLocaleDateString()}. ` : ''}Background jobs are skipped for this league.
+              </div>
+            ) : (
+              <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--warn)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>NOTE · </span>
+                Managers can still view the league while archived — they just won't see new scores or matchdays until you reactivate.
+              </div>
+            )}
+            <ToggleSwitch
+              checked={!!league?.archived}
+              onChange={mobHandleArchiveToggle}
+              disabled={commLoading}
+              labelOn="ARCHIVED"
+              labelOff="ACTIVE"
+            />
           </MobLifecycleCard>
           </div>
         </div>

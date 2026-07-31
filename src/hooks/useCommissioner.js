@@ -174,6 +174,27 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     onLeagueUpdated?.();
   }), [commAction, leagueId, draftDeadline, onLeagueUpdated]);
 
+  // ── Archive / reactivate (B-13) ───────────────────────────────────────────
+  // Archiving pauses background jobs (scoring, matchday sync, drafts) for a
+  // league that's finished or dormant — it does not delete anything.
+  const archiveLeague = useCallback(() => commAction(async () => {
+    const { error } = await supabase.from('leagues')
+      .update({ archived: true, archived_at: new Date().toISOString() })
+      .eq('id', leagueId);
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: 'League archived — background jobs (scoring, matchday sync, drafts) are now skipped for this league.' });
+    onLeagueUpdated?.();
+  }), [commAction, leagueId, onLeagueUpdated]);
+
+  const unarchiveLeague = useCallback(() => commAction(async () => {
+    const { error } = await supabase.from('leagues')
+      .update({ archived: false, archived_at: null })
+      .eq('id', leagueId);
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: 'League reactivated — background jobs resume from the current round (no catch-up scoring for rounds missed while archived).' });
+    onLeagueUpdated?.();
+  }), [commAction, leagueId, onLeagueUpdated]);
+
   // ── Run draft allocation ──────────────────────────────────────────────────
   const triggerDraftAllocation = useCallback(() => commAction(async () => {
     const { data, error } = await invokeEdgeFunction('run-draft-lottery', { league_id: leagueId });
@@ -390,6 +411,7 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline, triggerDraftAllocation, triggerKnockoutAllocation,
+    archiveLeague, unarchiveLeague,
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
     createBetFromData,
     openBets, resolutionBetsLoading,
