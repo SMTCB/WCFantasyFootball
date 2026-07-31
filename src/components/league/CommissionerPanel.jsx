@@ -1138,6 +1138,8 @@ function VoidConfirmModal({ bet, onConfirm, onCancel }) {
 function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswers, toggleBetResolutionAnswer, setBetResolutionAnswers, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, resolveNoWinner, voidBet, commLoading, commMsg, memberCount = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [voidConfirmBet, setVoidConfirmBet] = useState(null); // {id, title} | null
+  const [customAnswerOpen, setCustomAnswerOpen] = useState(false);
+  const [customAnswerText, setCustomAnswerText] = useState('');
 
   // Pending = open/closed bets that need resolution. Resolved = already resolved (override eligible).
   const pending  = (openBets || []).filter(b => b.status !== 'resolved' && b.status !== 'cancelled');
@@ -1151,6 +1153,8 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
       setExpandedId(betId);
       setSelectedBetForResolution(openBets.find(b => b.id === betId) || null);
       setBetResolutionAnswers([]);
+      setCustomAnswerOpen(false);
+      setCustomAnswerText('');
       fetchBetSubmissions(betId);
     }
   };
@@ -1268,7 +1272,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                   <WizField
                     label="CORRECT ANSWER(S)"
                     sub={opts.length > 0
-                      ? 'Select all correct options — click to toggle. Multiple selections allowed for ties.'
+                      ? 'Select all correct options — click to toggle. Multiple selections allowed for ties. Use OTHER / WRITE-IN below if the real result isn\'t in this list.'
                       : 'No predefined options — type the answer key manually below.'}
                   >
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -1291,6 +1295,23 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                           </button>
                         );
                       })}
+                      {/* Other / write-in — for a real-world result that isn't one of the predefined
+                          options (e.g. a tie the pool didn't anticipate). resolve_bet already accepts
+                          any text in p_answers, so this is purely a UI affordance onto that capability;
+                          a write-in nobody picked resolves as a de-facto void, and combined with a
+                          selected chip it acts as a split payout. */}
+                      {opts.length > 0 && (
+                        <button
+                          onClick={() => setCustomAnswerOpen(o => !o)}
+                          style={{
+                            padding: '7px 11px', cursor: 'pointer',
+                            background: customAnswerOpen ? 'rgba(224,168,0,.08)' : 'var(--ink)',
+                            border: customAnswerOpen ? '1px solid var(--gold)' : '1px dashed var(--rule)',
+                            color: customAnswerOpen ? 'var(--gold)' : 'var(--mute)',
+                            fontFamily: DISPLAY, fontSize: 11, letterSpacing: '-0.01em',
+                          }}
+                        >{customAnswerOpen ? '✕ CANCEL' : '+ OTHER / WRITE-IN'}</button>
+                      )}
                     </div>
                     {/* Free-text fallback only when there are no predefined options */}
                     {opts.length === 0 && (
@@ -1301,6 +1322,55 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         style={{ ...inputStyle, marginTop: 6, fontSize: 11 }}
                       />
                     )}
+                    {/* Write-in input — only offered when predefined options exist */}
+                    {opts.length > 0 && customAnswerOpen && (
+                      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                        <input
+                          autoFocus
+                          placeholder="Custom result — e.g. tied: Salah &amp; Haaland…"
+                          value={customAnswerText}
+                          onChange={e => setCustomAnswerText(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key !== 'Enter') return;
+                            const val = customAnswerText.trim();
+                            if (!val) return;
+                            if (!currentAnswers.includes(val)) toggleBetResolutionAnswer(val);
+                            setCustomAnswerText('');
+                            setCustomAnswerOpen(false);
+                          }}
+                          style={{ ...inputStyle, fontSize: 11, flex: 1 }}
+                        />
+                        <button
+                          disabled={!customAnswerText.trim()}
+                          onClick={() => {
+                            const val = customAnswerText.trim();
+                            if (!val) return;
+                            if (!currentAnswers.includes(val)) toggleBetResolutionAnswer(val);
+                            setCustomAnswerText('');
+                            setCustomAnswerOpen(false);
+                          }}
+                          style={{ ...ghostBtn, fontSize: 9, opacity: customAnswerText.trim() ? 1 : 0.4 }}
+                        >ADD</button>
+                      </div>
+                    )}
+                    {/* Any write-in answers already added — shown as removable tags since they
+                        aren't part of `opts` and wouldn't otherwise render anywhere above */}
+                    {(() => {
+                      const optKeys = opts.map(o => o.key ?? o);
+                      const customAnswers = currentAnswers.filter(a => !optKeys.includes(a));
+                      if (customAnswers.length === 0) return null;
+                      return (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                          {customAnswers.map(ca => (
+                            <button key={ca} onClick={() => toggleBetResolutionAnswer(ca)} style={{
+                              padding: '5px 9px', cursor: 'pointer',
+                              background: 'rgba(34,197,94,.08)', border: '1px solid var(--positive)',
+                              color: 'var(--positive)', fontFamily: DISPLAY, fontSize: 10,
+                            }}>✓ {ca} · WRITE-IN ✕</button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </WizField>
 
                   {/* Footer: AWARDS count + action buttons */}
