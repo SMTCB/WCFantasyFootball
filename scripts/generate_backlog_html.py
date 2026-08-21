@@ -561,8 +561,14 @@ def render_group(slug, label, count, color, cards_html):
 
 def render_preamble_badges(preamble):
     badges = []
-    if "LAUNCH READY" in preamble:
-        badges.append('<span class="badge badge-green">LAUNCH READY (pilot)</span>')
+    # Match the status *line* (a bold heading starting with a traffic-light emoji), never a
+    # bare substring — the preamble legitimately mentions past statuses in prose
+    # ("was 🟢 LAUNCH READY"), which a substring test reads as the current one.
+    status = re.search(r"^\*\*(🟢|🟠|🔴)\s*(.+?)\*\*", preamble, re.MULTILINE)
+    if status:
+        light, text = status.group(1), re.sub(r"[`*]", "", status.group(2)).strip()
+        color = {"🟢": "badge-green", "🟠": "badge-amber", "🔴": "badge-red"}[light]
+        badges.append(f'<span class="badge {color}">{html.escape(text[:70])}</span>')
     if "MAINTENANCE_MODE" in preamble:
         badges.append('<span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>')
     m = re.search(r"E2E Test Suite\*\*:\s*(.+?)(?:\n|$)", preamble)
@@ -683,6 +689,7 @@ def build_css():
   .badge-green { background: #166534; color: #dcfce7; }
   .badge-blue  { background: #1a6fa8; color: #e8f3fb; }
   .badge-amber { background: #92400e; color: #fef9ed; }
+  .badge-red   { background: #991b1b; color: #fee2e2; }
 
   .totals { display: flex; gap: 8px; }
   .total-pill { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 6px 14px; text-align: center; min-width: 64px; }
