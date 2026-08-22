@@ -110,7 +110,7 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
       {open && (
         <div role="listbox" style={{
           position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
-          background: 'var(--ink-2, #14181f)', border: '1px solid rgba(255,255,255,.1)',
+          background: '#232D3F', border: '1px solid rgba(255,255,255,.1)',
           borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.4)', zIndex: 60,
           overflow: 'hidden',
         }}>
