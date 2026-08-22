@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { ClubhouseNotifContext } from '../context/ClubhouseNotifContext';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import BrandMark from './BrandMark';
@@ -64,60 +64,96 @@ function NavSectionLabel({ children }) {
 }
 
 const IDENTITY_COLORS = ['var(--accent)', 'var(--gold)', 'var(--f1)', 'var(--positive)', 'var(--danger)'];
-const STOPWORDS = new Set(['the', 'a', 'an']);
-
-function circleInitials(name) {
-  const words = (name ?? '').trim().split(/\s+/).filter(w => w && !STOPWORDS.has(w.toLowerCase()));
-  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return '??';
-}
 
 function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
   if (circles.length <= 1) return null;
   const activeCircle = circles.find(c => c.id === activeCircleId);
+
   return (
-    <>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, padding: '0 6px 12px' }}>
-        {circles.map((c, i) => {
-          const isActive = c.id === activeCircleId;
-          return (
-            <button
-              key={c.id}
-              onClick={() => onSelect(c.id)}
-              title={c.name}
-              style={{
-                width: 30, height: 30, borderRadius: 9,
-                display: 'grid', placeItems: 'center',
-                fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: '#fff',
-                background: IDENTITY_COLORS[i % IDENTITY_COLORS.length],
-                border: 'none', cursor: 'pointer', flexShrink: 0,
-                boxShadow: isActive ? '0 0 0 2px var(--shell), 0 0 0 3.5px var(--accent)' : 'none',
-              }}
-            >
-              {circleInitials(c.name)}
-            </button>
-          );
-        })}
-        <button
-          onClick={onAdd}
-          aria-label="Find or create a Clubhouse"
-          style={{
-            width: 30, height: 30, borderRadius: 9,
-            border: '1.5px dashed rgba(255,255,255,.25)',
-            display: 'grid', placeItems: 'center',
-            color: 'rgba(255,255,255,.4)', fontSize: 14,
-            background: 'transparent', cursor: 'pointer', flexShrink: 0,
-          }}
-        >
-          +
-        </button>
-      </div>
-      <div style={{ padding: '0 6px 14px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,.85)' }}>
-        {activeCircle?.name ?? ''}
-        <span aria-hidden="true" style={{ fontSize: 10, opacity: 0.6 }}>⌄</span>
-      </div>
-    </>
+    <div ref={rootRef} style={{ position: 'relative', padding: '0 6px 12px' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+          padding: '8px 9px', borderRadius: 7,
+          background: open ? 'rgba(255,255,255,.09)' : 'rgba(255,255,255,.05)',
+          border: '1px solid rgba(255,255,255,.08)', cursor: 'pointer',
+        }}
+      >
+        <span aria-hidden="true" style={{
+          width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+          background: IDENTITY_COLORS[circles.findIndex(c => c.id === activeCircleId) % IDENTITY_COLORS.length] || IDENTITY_COLORS[0],
+        }} />
+        <span style={{
+          flex: 1, textAlign: 'left', fontSize: 12.5, fontWeight: 600, color: '#fff',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {activeCircle?.name ?? 'Select Clubhouse'}
+        </span>
+        <span aria-hidden="true" style={{ fontSize: 10, opacity: 0.6, color: '#fff', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s' }}>⌄</span>
+      </button>
+
+      {open && (
+        <div role="listbox" style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
+          background: 'var(--ink-2, #14181f)', border: '1px solid rgba(255,255,255,.1)',
+          borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.4)', zIndex: 60,
+          overflow: 'hidden',
+        }}>
+          {circles.map((c, i) => {
+            const isActive = c.id === activeCircleId;
+            return (
+              <button
+                key={c.id}
+                role="option"
+                aria-selected={isActive}
+                onClick={() => { onSelect(c.id); setOpen(false); }}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '9px 10px', border: 'none', textAlign: 'left', cursor: 'pointer',
+                  background: isActive ? 'rgba(255,255,255,.08)' : 'transparent',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,.72)',
+                  fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                }}
+              >
+                <span aria-hidden="true" style={{
+                  width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                  background: IDENTITY_COLORS[i % IDENTITY_COLORS.length],
+                }} />
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                {isActive && <span aria-hidden="true" style={{ fontSize: 11, color: 'var(--accent)' }}>✓</span>}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => { setOpen(false); onAdd(); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+              padding: '9px 10px', border: 'none', borderTop: '1px solid rgba(255,255,255,.08)',
+              textAlign: 'left', cursor: 'pointer', background: 'transparent',
+              color: 'rgba(255,255,255,.55)', fontSize: 12.5, fontWeight: 500,
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: 13, width: 7, textAlign: 'center' }}>+</span>
+            Find or create a Clubhouse
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

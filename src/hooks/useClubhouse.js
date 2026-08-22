@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from './useAuth';
 
 export function useClubhouse() {
+  const { user } = useAuth();
   const [myCircles, setMyCircles] = useState([]);
   const [activeCircleId, setActiveCircleIdState] = useState(
     () => localStorage.getItem('activeCircleId') ?? null
@@ -21,12 +23,18 @@ export function useClubhouse() {
   }, []);
 
   const fetchMyCircles = useCallback(async () => {
+    if (!user?.id) {
+      setMyCircles([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const { data, error: err } = await supabase
         .from('circle_members')
-        .select('role, circles(id, name, invite_code, is_public, p2p_betting_enabled, created_by, created_at)');
+        .select('role, circles(id, name, invite_code, is_public, p2p_betting_enabled, created_by, created_at)')
+        .eq('user_id', user.id);
       if (err) throw err;
       const circles = (data ?? [])
         .map(row => ({ ...row.circles, role: row.role }))
@@ -43,7 +51,7 @@ export function useClubhouse() {
     } finally {
       setLoading(false);
     }
-  }, [activeCircleId, setActiveCircleId]);
+  }, [activeCircleId, setActiveCircleId, user?.id]);
 
   useEffect(() => { fetchMyCircles(); }, [fetchMyCircles]);
 
