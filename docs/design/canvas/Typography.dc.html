@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #F7F3ED; color: #18202E; font-family: 'Archivo', system-ui, sans-serif; }
+    code { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; background: #EDEAE2; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+    .disp { font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; }
+  </style>
+</helmet>
+
+<div style="width: 1240px; min-height: 1420px; background: #F7F3ED; padding: 52px 64px 48px; display: flex; flex-direction: column; gap: 34px; box-sizing: border-box;">
+
+  <div style="display: flex; flex-direction: column; gap: 12px; border-bottom: 3px solid #18202E; padding-bottom: 22px;">
+    <div class="mono" style="font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500;">Finding 02 · High · 474 declarations counted</div>
+    <div class="disp" style="font-size: 50px; line-height: 0.92; letter-spacing: -0.025em; text-transform: uppercase; color: #18202E;">Type has no ramp</div>
+    <div style="font-size: 17px; line-height: 1.55; color: #4B5568; max-width: 900px;">Every explicit size in <code>src/</code> — 92 inline objects, 355 Tailwind arbitrary values, 27 in <code>index.css</code>. Twenty distinct sizes, set three different ways, with no named steps anywhere.</div>
+  </div>
+
+  <div style="display: flex; gap: 44px; align-items: flex-start;">
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 7px;">
+      <div class="mono" style="font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8; font-weight: 500; padding-bottom: 8px;">Where the type actually sits</div>
+
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #B91C1C; font-weight: 700;">8px</div><div style="width: 43px; height: 17px; background: #B91C1C; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">8</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #B91C1C; font-weight: 700;">9px</div><div style="width: 611px; height: 17px; background: #B91C1C; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">114</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #B8720E; font-weight: 700;">10px</div><div style="width: 648px; height: 17px; background: #B8720E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">121</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #B8720E; font-weight: 700;">11px</div><div style="width: 429px; height: 17px; background: #B8720E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">80</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #4B5568;">12px</div><div style="width: 241px; height: 17px; background: #18202E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">45</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #4B5568;">13px</div><div style="width: 198px; height: 17px; background: #18202E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">37</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #4B5568;">14px</div><div style="width: 59px; height: 17px; background: #18202E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">11</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #4B5568;">15px</div><div style="width: 43px; height: 17px; background: #18202E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">8</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #4B5568;">16px</div><div style="width: 54px; height: 17px; background: #18202E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">10</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #4B5568;">18px</div><div style="width: 59px; height: 17px; background: #18202E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">11</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #4B5568;">20px</div><div style="width: 59px; height: 17px; background: #18202E; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">11</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #8A97A8;">22–40px</div><div style="width: 91px; height: 17px; background: #8A97A8; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">17 across 8 sizes</div></div>
+      <div style="display: flex; align-items: center; gap: 12px;"><div class="mono" style="width: 42px; text-align: right; font-size: 13px; color: #8A97A8;">64/80px</div><div style="width: 11px; height: 17px; background: #8A97A8; border-radius: 2px;"></div><div class="mono" style="font-size: 12px; color: #4B5568;">2</div></div>
+    </div>
+
+    <div style="width: 268px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px;">
+      <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 20px;">
+        <div class="disp" style="font-size: 44px; line-height: 1; color: #B91C1C;">68%</div>
+        <div style="font-size: 15px; line-height: 1.45; color: #4B5568; margin-top: 8px;">of all type in the app is set below 12px — 323 of 474 declarations.</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 20px;">
+        <div class="disp" style="font-size: 44px; line-height: 1; color: #B91C1C;">122</div>
+        <div style="font-size: 15px; line-height: 1.45; color: #4B5568; margin-top: 8px;">declarations at 9px or smaller, in an app whose smallest supported viewport is 375px.</div>
+      </div>
+      <div style="background: #18202E; border-radius: 6px; padding: 20px;">
+        <div class="disp" style="font-size: 44px; line-height: 1; color: #FFFFFF;">3</div>
+        <div style="font-size: 15px; line-height: 1.45; color: #C3CAD6; margin-top: 8px;">separate mechanisms set type — inline objects, Tailwind arbitraries, and CSS. None of them names a step.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px;">
+    <div class="mono" style="font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8; font-weight: 500;">The 9px problem, at actual size</div>
+    <div style="display: flex; gap: 40px; align-items: flex-end;">
+      <div style="flex: 1;">
+        <div class="disp" style="font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8; margin-bottom: 10px;">Gameweek Deadline</div>
+        <div class="disp" style="font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8;">Transfers Remaining</div>
+        <div style="height: 1px; background: #E2DDD5; margin: 14px 0;"></div>
+        <div class="mono" style="font-size: 12px; color: #B91C1C; font-weight: 700;">9px · shipped · 114 uses</div>
+        <div style="font-size: 14px; line-height: 1.45; color: #4B5568; margin-top: 6px;">Archivo Black at 9px with 0.15em tracking reads as texture, not language. This is the app's default label.</div>
+      </div>
+      <div style="width: 1px; align-self: stretch; background: #E2DDD5;"></div>
+      <div style="flex: 1;">
+        <div class="mono" style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80; font-weight: 500; margin-bottom: 10px;">Gameweek Deadline</div>
+        <div class="mono" style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80; font-weight: 500;">Transfers Remaining</div>
+        <div style="height: 1px; background: #E2DDD5; margin: 14px 0;"></div>
+        <div class="mono" style="font-size: 12px; color: #166534; font-weight: 700;">11px mono · proposed floor</div>
+        <div style="font-size: 14px; line-height: 1.45; color: #4B5568; margin-top: 6px;">Same footprint, legible at arm's length. Mono is what the system already specifies for eyebrows.</div>
+      </div>
+      <div style="width: 1px; align-self: stretch; background: #E2DDD5;"></div>
+      <div style="flex: 1;">
+        <div style="font-size: 15px; line-height: 1.4; color: #18202E; margin-bottom: 10px;">Deadline in 4h 12m</div>
+        <div style="font-size: 15px; line-height: 1.4; color: #18202E;">2 transfers remaining</div>
+        <div style="height: 1px; background: #E2DDD5; margin: 14px 0;"></div>
+        <div class="mono" style="font-size: 12px; color: #166534; font-weight: 700;">15px body · proposed</div>
+        <div style="font-size: 14px; line-height: 1.45; color: #4B5568; margin-top: 6px;">Where the label is really a sentence, stop shouting it. Sentence case at body size carries more and costs less space.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 0;">
+    <div class="mono" style="font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500; padding-bottom: 14px;">Proposed ramp — twenty sizes onto seven steps</div>
+
+    <div style="display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-top: 1px solid #E2DDD5;">
+      <div class="mono" style="width: 92px; flex-shrink: 0; font-size: 12px; color: #8A97A8;">display</div>
+      <div class="mono" style="width: 88px; flex-shrink: 0; font-size: 12px; color: #4B5568;">40 / 0.92</div>
+      <div class="disp" style="flex-grow: 1; font-size: 40px; line-height: 0.92; letter-spacing: -0.025em; text-transform: uppercase; color: #18202E;">Matchday</div>
+      <div class="mono" style="width: 176px; flex-shrink: 0; font-size: 12px; color: #8A97A8; text-align: right;">absorbs 64, 80</div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-top: 1px solid #E2DDD5;">
+      <div class="mono" style="width: 92px; flex-shrink: 0; font-size: 12px; color: #8A97A8;">title</div>
+      <div class="mono" style="width: 88px; flex-shrink: 0; font-size: 12px; color: #4B5568;">28 / 1.05</div>
+      <div class="disp" style="flex-grow: 1; font-size: 28px; line-height: 1.05; letter-spacing: -0.02em; text-transform: uppercase; color: #18202E;">Your squad</div>
+      <div class="mono" style="width: 176px; flex-shrink: 0; font-size: 12px; color: #8A97A8; text-align: right;">absorbs 22, 24, 32, 34, 36</div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-top: 1px solid #E2DDD5;">
+      <div class="mono" style="width: 92px; flex-shrink: 0; font-size: 12px; color: #8A97A8;">heading</div>
+      <div class="mono" style="width: 88px; flex-shrink: 0; font-size: 12px; color: #4B5568;">20 / 1.2</div>
+      <div class="disp" style="flex-grow: 1; font-size: 20px; line-height: 1.2; letter-spacing: -0.01em; text-transform: uppercase; color: #18202E;">League standings</div>
+      <div class="mono" style="width: 176px; flex-shrink: 0; font-size: 12px; color: #8A97A8; text-align: right;">absorbs 18</div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-top: 1px solid #E2DDD5;">
+      <div class="mono" style="width: 92px; flex-shrink: 0; font-size: 12px; color: #8A97A8;">body-lg</div>
+      <div class="mono" style="width: 88px; flex-shrink: 0; font-size: 12px; color: #4B5568;">17 / 1.5</div>
+      <div style="flex-grow: 1; font-size: 17px; line-height: 1.5; color: #18202E;">Haaland returns from suspension this week.</div>
+      <div class="mono" style="width: 176px; flex-shrink: 0; font-size: 12px; color: #8A97A8; text-align: right;">absorbs 16</div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-top: 1px solid #E2DDD5;">
+      <div class="mono" style="width: 92px; flex-shrink: 0; font-size: 12px; color: #8A97A8;">body</div>
+      <div class="mono" style="width: 88px; flex-shrink: 0; font-size: 12px; color: #4B5568;">15 / 1.5</div>
+      <div style="flex-grow: 1; font-size: 15px; line-height: 1.5; color: #18202E;">The default. Every sentence in the product should be at least this size.</div>
+      <div class="mono" style="width: 176px; flex-shrink: 0; font-size: 12px; color: #8A97A8; text-align: right;">absorbs 13, 14</div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-top: 1px solid #E2DDD5;">
+      <div class="mono" style="width: 92px; flex-shrink: 0; font-size: 12px; color: #8A97A8;">label</div>
+      <div class="mono" style="width: 88px; flex-shrink: 0; font-size: 12px; color: #4B5568;">13 / 1.3</div>
+      <div class="mono" style="flex-grow: 1; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #18202E; font-weight: 500;">Form · Fixtures · Price</div>
+      <div class="mono" style="width: 176px; flex-shrink: 0; font-size: 12px; color: #8A97A8; text-align: right;">absorbs 12 · mono</div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-top: 1px solid #E2DDD5; border-bottom: 1px solid #E2DDD5;">
+      <div class="mono" style="width: 92px; flex-shrink: 0; font-size: 12px; color: #8A97A8;">micro</div>
+      <div class="mono" style="width: 88px; flex-shrink: 0; font-size: 12px; color: #4B5568;">11 / 1.3</div>
+      <div class="mono" style="flex-grow: 1; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80; font-weight: 500;">Gameweek 12 · Deadline Sat 11:30</div>
+      <div class="mono" style="width: 176px; flex-shrink: 0; font-size: 12px; color: #8A97A8; text-align: right;">absorbs 8, 9, 10 · hard floor</div>
+    </div>
+  </div>
+
+  <div style="font-size: 15px; line-height: 1.55; color: #4B5568; max-width: 940px;">Adopting the ramp is a find-and-replace with a lint rule behind it, not a redesign: 243 declarations under 11px collapse onto the micro step, 48 rise from 13–14 to body, and the nine sizes above 20px become two. The rule that keeps it from drifting back is the one worth adding — no raw pixel value in a <code>fontSize</code> or a <code>text-[…]</code> class.</div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1240,"height":1420}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #F7F3ED; color: #18202E; font-family: 'Archivo', system-ui, sans-serif; }
+    a { color: #1A6FA8; text-decoration: none; } a:hover { color: #14567F; }
+    code { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; background: #EDEAE2; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  </style>
+</helmet>
+
+<div style="width: 1240px; min-height: 1160px; background: #F7F3ED; padding: 52px 64px 48px; display: flex; flex-direction: column; gap: 32px; box-sizing: border-box;">
+
+  <div style="display: flex; flex-direction: column; gap: 12px; border-bottom: 3px solid #18202E; padding-bottom: 22px;">
+    <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500;">Finding 01 · Critical · Live-verified</div>
+    <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 50px; line-height: 0.92; letter-spacing: -0.025em; text-transform: uppercase; color: #18202E;">The sign-in screen</div>
+    <div style="font-size: 17px; line-height: 1.55; color: #4B5568; max-width: 900px;">Recreated from <code>AuthScreen.jsx</code> at the exact shipped values, and checked against computed styles on the live deployment. Left is what a first-time user sees today.</div>
+  </div>
+
+  <div style="display: flex; gap: 36px; align-items: flex-start;">
+
+    <div style="display: flex; flex-direction: column; gap: 12px; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 9px; height: 9px; border-radius: 50%; background: #B91C1C; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #18202E; font-weight: 700;">As shipped</div>
+      </div>
+      <div style="width: 375px; background: #18202E; border-radius: 6px; padding: 44px 24px; display: flex; flex-direction: column; align-items: center; gap: 34px; box-sizing: border-box; position: relative;">
+        <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 26px; letter-spacing: -0.02em; text-transform: uppercase; color: #FFFFFF;">Frontrow</div>
+        <div style="width: 100%; background: #FFFFFF; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 32px; display: flex; flex-direction: column; box-sizing: border-box;">
+          <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 28px; position: relative;">
+            <div style="flex: 1; padding: 10px; text-align: center; border-bottom: 2px solid #1A6FA8; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #18202E;">Sign In</div>
+            <div style="flex: 1; padding: 10px; text-align: center; border-bottom: 2px solid transparent; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8A97A8;">Create Account</div>
+            <div style="position: absolute; right: -46px; top: 8px; width: 22px; height: 22px; border-radius: 50%; background: #B91C1C; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center;">3</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="position: relative;">
+              <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8; margin-bottom: 6px;">Email</div>
+              <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 12px 16px; font-size: 14px; color: #8A97A8;">your@email.com</div>
+              <div style="position: absolute; right: -46px; top: 22px; width: 22px; height: 22px; border-radius: 50%; background: #B91C1C; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center;">1</div>
+            </div>
+            <div style="position: relative;">
+              <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8; margin-bottom: 6px;">Password</div>
+              <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 12px 16px; font-size: 14px; color: #8A97A8;">••••••••</div>
+              <div style="position: absolute; right: -46px; top: 22px; width: 22px; height: 22px; border-radius: 50%; background: #B91C1C; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center;">2</div>
+            </div>
+            <div style="background: #1A6FA8; color: #F7F3ED; border-radius: 6px; min-height: 52px; display: grid; place-items: center; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;">Sign In</div>
+            <div style="position: relative; min-height: 36px; display: grid; place-items: center; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A97A8;">
+              Forgot password?
+              <div style="position: absolute; right: -46px; top: 7px; width: 22px; height: 22px; border-radius: 50%; background: #B8720E; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center;">4</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; padding-left: 40px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 9px; height: 9px; border-radius: 50%; background: #166534; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #18202E; font-weight: 700;">Corrected</div>
+      </div>
+      <div style="width: 375px; background: #18202E; border-radius: 6px; padding: 44px 24px; display: flex; flex-direction: column; align-items: center; gap: 34px; box-sizing: border-box;">
+        <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 26px; letter-spacing: -0.02em; text-transform: uppercase; color: #FFFFFF;">Frontrow</div>
+        <div style="width: 100%; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 32px; display: flex; flex-direction: column; box-sizing: border-box;">
+          <div style="display: flex; border-bottom: 1px solid #E2DDD5; margin-bottom: 28px;">
+            <div style="flex: 1; min-height: 44px; display: grid; place-items: center; border-bottom: 2px solid #1A6FA8; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #18202E; font-weight: 700;">Sign In</div>
+            <div style="flex: 1; min-height: 44px; display: grid; place-items: center; border-bottom: 2px solid transparent; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #626F80; font-weight: 500;">Create Account</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 18px;">
+            <div>
+              <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80; margin-bottom: 7px; font-weight: 500;">Email</div>
+              <div style="background: #FFFFFF; border: 1px solid #9A9488; border-radius: 6px; padding: 13px 16px; font-size: 15px; color: #626F80; min-height: 48px; box-sizing: border-box; display: flex; align-items: center;">your@email.com</div>
+            </div>
+            <div>
+              <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80; margin-bottom: 7px; font-weight: 500;">Password</div>
+              <div style="background: #FFFFFF; border: 2px solid #1A6FA8; border-radius: 6px; padding: 12px 16px; font-size: 15px; color: #18202E; min-height: 48px; box-sizing: border-box; display: flex; align-items: center;">••••••••</div>
+            </div>
+            <div style="background: #1A6FA8; color: #FFFFFF; border-radius: 6px; min-height: 52px; display: grid; place-items: center; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;">Sign In</div>
+            <div style="min-height: 44px; display: grid; place-items: center; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #14567F; font-weight: 500;">Forgot password?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 0; padding-top: 4px;">
+    <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500; padding-bottom: 12px;">What changed, and why</div>
+
+    <div style="display: flex; align-items: flex-start; gap: 18px; padding: 15px 0; border-top: 1px solid #E2DDD5;">
+      <div style="width: 22px; height: 22px; border-radius: 50%; background: #B91C1C; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;">1</div>
+      <div style="width: 250px; flex-shrink: 0; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: -0.005em; color: #18202E; line-height: 1.25;">Invisible field boundary</div>
+      <div style="flex-grow: 1; font-size: 15px; line-height: 1.5; color: #4B5568;">A white-alpha fill and border on a white card. Replaced with a solid <code>#9A9488</code> rule at 3.0:1 — the WCAG floor for a UI boundary — and the radius pulled from 4px to the system's 6px.</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 18px; padding: 15px 0; border-top: 1px solid #E2DDD5;">
+      <div style="width: 22px; height: 22px; border-radius: 50%; background: #B91C1C; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;">2</div>
+      <div style="width: 250px; flex-shrink: 0; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: -0.005em; color: #18202E; line-height: 1.25;">No visible focus state</div>
+      <div style="flex-grow: 1; font-size: 15px; line-height: 1.5; color: #4B5568;">The field sets <code>outline: none</code> with nothing in its place, so keyboard users lose their position entirely. Restored as a 2px accent border, shown here on the password field.</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 18px; padding: 15px 0; border-top: 1px solid #E2DDD5;">
+      <div style="width: 22px; height: 22px; border-radius: 50%; background: #B91C1C; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;">3</div>
+      <div style="width: 250px; flex-shrink: 0; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: -0.005em; color: #18202E; line-height: 1.25;">Labels break the type system</div>
+      <div style="flex-grow: 1; font-size: 15px; line-height: 1.5; color: #4B5568;">Field labels and tabs are set in Archivo Black at 9px. The system reserves that face for display and specifies JetBrains Mono for eyebrows — so the one screen everyone sees doesn't follow the rules the rest of the app was built on.</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 18px; padding: 15px 0; border-top: 1px solid #E2DDD5; border-bottom: 1px solid #E2DDD5;">
+      <div style="width: 22px; height: 22px; border-radius: 50%; background: #B8720E; color: #FFFFFF; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;">4</div>
+      <div style="width: 250px; flex-shrink: 0; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: -0.005em; color: #18202E; line-height: 1.25;">Targets under 44px</div>
+      <div style="flex-grow: 1; font-size: 15px; line-height: 1.5; color: #4B5568;">Measured live: the tab strip is 38.5px on desktop and the reset link 36px. Both raised to 44px, which also gives the tabs room to breathe.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1240,"height":1160}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

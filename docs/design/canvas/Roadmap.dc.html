@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #F7F3ED; color: #18202E; font-family: 'Archivo', system-ui, sans-serif; }
+    code { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; background: #EDEAE2; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+    .disp { font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; }
+    .sec { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8; font-weight: 500; }
+    .chip { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; padding: 3px 7px; border-radius: 4px; white-space: nowrap; }
+    .row { display: flex; align-items: baseline; gap: 16px; padding: 13px 0; border-top: 1px solid #E2DDD5; }
+    .row > .n { width: 26px; flex-shrink: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; color: #8A97A8; }
+    .row > .t { flex-grow: 1; font-size: 15px; line-height: 1.4; color: #18202E; }
+    .row > .s { width: 78px; flex-shrink: 0; }
+    .row > .w { width: 260px; flex-shrink: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #4B5568; }
+    .row > .e { width: 74px; flex-shrink: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #4B5568; text-align: right; }
+  </style>
+</helmet>
+
+<div style="width: 1240px; min-height: 1500px; background: #F7F3ED; padding: 52px 64px 48px; display: flex; flex-direction: column; gap: 34px; box-sizing: border-box;">
+
+  <div style="display: flex; flex-direction: column; gap: 12px; border-bottom: 3px solid #18202E; padding-bottom: 22px;">
+    <div class="mono" style="font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500;">Remediation · 14 findings · sequenced</div>
+    <div class="disp" style="font-size: 50px; line-height: 0.92; letter-spacing: -0.025em; text-transform: uppercase; color: #18202E;">What to do about it</div>
+    <div style="font-size: 17px; line-height: 1.55; color: #4B5568; max-width: 940px;">The first block is a day's work and removes every critical finding. The second stops them recurring. The third is the only part that takes real time — and it can run as maintenance rather than a project.</div>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch;">
+
+    <div style="flex: 1; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; border-top: 4px solid #B91C1C; padding: 26px 28px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <div class="sec">Block one</div>
+        <div class="mono" style="font-size: 12px; color: #B91C1C; font-weight: 700;">~1 day</div>
+      </div>
+      <div class="disp" style="font-size: 24px; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.015em; color: #18202E;">Stop the bleeding</div>
+      <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">Almost entirely token edits in <code>index.css</code>, plus one screen.</div>
+      <div style="height: 1px; background: #E2DDD5;"></div>
+      <div style="font-size: 15px; line-height: 1.6; color: #4B5568;">
+        · Rewrite the sign-in fields to real borders and a visible focus ring<br>
+        · Darken <code>--mute</code> to <code>#626F80</code> — one line, fixes contrast app-wide<br>
+        · Replace the four dark-theme hover and ink values on <code>.ffl-btn</code><br>
+        · Restore focus styling wherever <code>outline: none</code> stands alone
+      </div>
+      <div style="margin-top: auto; padding-top: 14px;">
+        <div class="mono" style="font-size: 12px; color: #166534; font-weight: 700;">Clears findings 1, 2, 3, 7</div>
+      </div>
+    </div>
+
+    <div style="flex: 1; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; border-top: 4px solid #B8720E; padding: 26px 28px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <div class="sec">Block two</div>
+        <div class="mono" style="font-size: 12px; color: #B8720E; font-weight: 700;">~3 days</div>
+      </div>
+      <div class="disp" style="font-size: 24px; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.015em; color: #18202E;">Make it stick</div>
+      <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">Sweep the residue, then close the door behind it.</div>
+      <div style="height: 1px; background: #E2DDD5;"></div>
+      <div style="font-size: 15px; line-height: 1.6; color: #4B5568;">
+        · Sweep the 156 white-alpha surfaces and rules to real tokens<br>
+        · Publish the seven-step type ramp as tokens and move the 243 sub-11px declarations onto it<br>
+        · Raise every control under 44px<br>
+        · Add lint rules banning raw hex, raw pixel type and <code>rgba(255,255,255,…)</code> in <code>src/</code>
+      </div>
+      <div style="margin-top: auto; padding-top: 14px;">
+        <div class="mono" style="font-size: 12px; color: #166534; font-weight: 700;">Clears findings 5, 6, 8, 9, 13</div>
+      </div>
+    </div>
+
+    <div style="flex: 1; background: #18202E; border-radius: 6px; border-top: 4px solid #1A6FA8; padding: 26px 28px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <div class="sec" style="color: #8A97A8;">Block three</div>
+        <div class="mono" style="font-size: 12px; color: #7FB6DC; font-weight: 700;">ongoing</div>
+      </div>
+      <div class="disp" style="font-size: 24px; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.015em; color: #FFFFFF;">Reverse the drift</div>
+      <div style="font-size: 15px; line-height: 1.5; color: #C3CAD6;">Not a project. A rule applied to whatever you were touching anyway.</div>
+      <div style="height: 1px; background: #3A4557;"></div>
+      <div style="font-size: 15px; line-height: 1.6; color: #C3CAD6;">
+        · Convert screens to <code style="background: #2A3446; color: #FFFFFF;">Button</code>, <code style="background: #2A3446; color: #FFFFFF;">TextInput</code> and <code style="background: #2A3446; color: #FFFFFF;">Select</code> as each is opened for other work<br>
+        · Token the remaining eight radius values, or delete them<br>
+        · Decide what the 24 unnavigable routes are for — surface them or retire them<br>
+        · Drop the 1,584 inline <code style="background: #2A3446; color: #FFFFFF;">fontFamily</code> lines once faces are inherited
+      </div>
+      <div style="margin-top: auto; padding-top: 14px;">
+        <div class="mono" style="font-size: 12px; color: #7FDCA4; font-weight: 700;">Clears findings 4, 10, 11, 12, 14</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display: flex; flex-direction: column;">
+    <div style="display: flex; align-items: baseline; gap: 16px; padding-bottom: 12px;">
+      <div class="sec" style="flex-grow: 1;">The full ledger</div>
+      <div class="sec" style="width: 78px; flex-shrink: 0;">Severity</div>
+      <div class="sec" style="width: 260px; flex-shrink: 0;">Where</div>
+      <div class="sec" style="width: 74px; flex-shrink: 0; text-align: right;">Effort</div>
+    </div>
+
+    <div class="row" style="border-top: 2px solid #18202E;">
+      <div class="n">01</div><div class="t">Sign-in fields are invisible — 1.00:1 fill and border on a white card</div>
+      <div class="s"><span class="chip" style="background: #FBE9E9; color: #B91C1C;">Critical</span></div>
+      <div class="w">AuthScreen.jsx:131–132</div><div class="e">2h</div>
+    </div>
+    <div class="row">
+      <div class="n">02</div><div class="t">The muted token fails contrast at 2.69:1, and carries nearly all metadata in the app</div>
+      <div class="s"><span class="chip" style="background: #FBE9E9; color: #B91C1C;">Critical</span></div>
+      <div class="w">index.css · --mute</div><div class="e">1h</div>
+    </div>
+    <div class="row">
+      <div class="n">03</div><div class="t">Four button states drop below 3:1 — primary hover 1.91, gold hover 1.63, danger 2.53</div>
+      <div class="s"><span class="chip" style="background: #FBE9E9; color: #B91C1C;">Critical</span></div>
+      <div class="w">index.css · .ffl-btn</div><div class="e">1h</div>
+    </div>
+    <div class="row">
+      <div class="n">04</div><div class="t">Primitives exist and are barely imported — Button 5 files, TextInput 1, Select 0</div>
+      <div class="s"><span class="chip" style="background: #FBF0E0; color: #96600C;">High</span></div>
+      <div class="w">src/components/</div><div class="e">ongoing</div>
+    </div>
+    <div class="row">
+      <div class="n">05</div><div class="t">No type ramp — 20 sizes set three ways, 68% of all type below 12px</div>
+      <div class="s"><span class="chip" style="background: #FBF0E0; color: #96600C;">High</span></div>
+      <div class="w">474 declarations, 112 files</div><div class="e">1.5d</div>
+    </div>
+    <div class="row">
+      <div class="n">06</div><div class="t">297 dark-theme white-alpha values survive the migration; 156 are invisible surfaces and rules</div>
+      <div class="s"><span class="chip" style="background: #FBF0E0; color: #96600C;">High</span></div>
+      <div class="w">48 of 112 files</div><div class="e">1d</div>
+    </div>
+    <div class="row">
+      <div class="n">07</div><div class="t">Inputs set <code>outline: none</code> with no replacement — keyboard focus is untrackable</div>
+      <div class="s"><span class="chip" style="background: #FBF0E0; color: #96600C;">High</span></div>
+      <div class="w">AuthScreen.jsx and 101 raw inputs</div><div class="e">3h</div>
+    </div>
+    <div class="row">
+      <div class="n">08</div><div class="t">Touch targets under 44px — the small button variant is 36px, the sign-in tabs 38.5px</div>
+      <div class="s"><span class="chip" style="background: #E7E9EE; color: #4B5568;">Medium</span></div>
+      <div class="w">index.css · .ffl-btn--sm</div><div class="e">3h</div>
+    </div>
+    <div class="row">
+      <div class="n">09</div><div class="t">Position chip tints are pre-migration colours that don't match the ink they're paired with</div>
+      <div class="s"><span class="chip" style="background: #E7E9EE; color: #4B5568;">Medium</span></div>
+      <div class="w">index.css:282–285</div><div class="e">1h</div>
+    </div>
+    <div class="row">
+      <div class="n">10</div><div class="t">Ten distinct corner radii in use against two defined tokens</div>
+      <div class="s"><span class="chip" style="background: #E7E9EE; color: #4B5568;">Medium</span></div>
+      <div class="w">src/ · index.css</div><div class="e">4h</div>
+    </div>
+    <div class="row">
+      <div class="n">11</div><div class="t">Navigation reaches 11 destinations against 35 routes; tennis exposes only three</div>
+      <div class="s"><span class="chip" style="background: #E7E9EE; color: #4B5568;">Medium</span></div>
+      <div class="w">AppLayout.jsx · App.jsx</div><div class="e">IA call</div>
+    </div>
+    <div class="row">
+      <div class="n">12</div><div class="t">The three brand faces are re-declared inline 1,584 times instead of inherited</div>
+      <div class="s"><span class="chip" style="background: #EDEAE2; color: #8A97A8;">Low</span></div>
+      <div class="w">112 files</div><div class="e">ongoing</div>
+    </div>
+    <div class="row">
+      <div class="n">13</div><div class="t">Glow effects and the live-ring keyframe still animate dark-theme colours</div>
+      <div class="s"><span class="chip" style="background: #EDEAE2; color: #8A97A8;">Low</span></div>
+      <div class="w">index.css · .glow-* · liveRing</div><div class="e">1h</div>
+    </div>
+    <div class="row" style="border-bottom: 1px solid #E2DDD5;">
+      <div class="n">14</div><div class="t">Radius mixed inside single components — sign-in fields 4px against the card and button at 6px</div>
+      <div class="s"><span class="chip" style="background: #EDEAE2; color: #8A97A8;">Low</span></div>
+      <div class="w">AuthScreen.jsx</div><div class="e">included</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 20px;">
+    <div style="flex: 2; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 24px 28px;">
+      <div class="sec" style="margin-bottom: 12px;">The one-line version</div>
+      <div style="font-size: 17px; line-height: 1.6; color: #18202E;">Frontrow's design system is better than the product built on top of it. Nothing here calls for a redesign — the palette, the type pairing and the primitives are all sound, and the critical findings are a day of token edits. The work worth committing to is the lint rule and the conversion habit, because those are what stop the gap between system and product widening again.</div>
+    </div>
+    <div style="flex: 1; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 6px; padding: 24px 28px;">
+      <div class="sec" style="margin-bottom: 12px;">Caveat</div>
+      <div style="font-size: 15px; line-height: 1.55; color: #4B5568;">Signed-in screens were assessed from source rather than exercised live — I can't enter credentials. Findings 4–6 and 10–12 are counted across the whole codebase and hold regardless; anything about flow or state inside the app is unverified and deliberately absent.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1240,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

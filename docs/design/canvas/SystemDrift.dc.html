@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #F7F3ED; color: #18202E; font-family: 'Archivo', system-ui, sans-serif; }
+    code { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; background: #EDEAE2; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+    .disp { font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; }
+    .sec { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8; font-weight: 500; }
+  </style>
+</helmet>
+
+<div style="width: 1240px; min-height: 1500px; background: #F7F3ED; padding: 52px 64px 48px; display: flex; flex-direction: column; gap: 34px; box-sizing: border-box;">
+
+  <div style="display: flex; flex-direction: column; gap: 12px; border-bottom: 3px solid #18202E; padding-bottom: 22px;">
+    <div class="mono" style="font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500;">Finding 03 · Critical · The root cause</div>
+    <div class="disp" style="font-size: 50px; line-height: 0.92; letter-spacing: -0.025em; text-transform: uppercase; color: #18202E;">The system exists.<br>Nothing uses it.</div>
+    <div style="font-size: 17px; line-height: 1.55; color: #4B5568; max-width: 940px;">Seventy-five design tokens and a set of correctly-built primitives sit in the repo, well made and largely unimported. Everything below follows from that — including the sign-in screen and the contrast failures, which are symptoms, not separate problems.</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    <div class="sec">Primitive adoption across 112 view files</div>
+    <div style="display: flex; gap: 20px;">
+
+      <div style="flex: 1; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="mono" style="font-size: 13px; color: #18202E; font-weight: 700;">Button.jsx</div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <div class="disp" style="font-size: 40px; line-height: 1; color: #B8720E;">5</div>
+          <div style="font-size: 15px; color: #4B5568;">files import it</div>
+        </div>
+        <div style="height: 1px; background: #E2DDD5;"></div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <div class="disp" style="font-size: 40px; line-height: 1; color: #18202E;">447</div>
+          <div style="font-size: 15px; color: #4B5568;">raw <code>&lt;button&gt;</code> elements</div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.45; color: #4B5568;">A well-built polymorphic component with five variants and three sizes — bypassed 99% of the time.</div>
+      </div>
+
+      <div style="flex: 1; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="mono" style="font-size: 13px; color: #18202E; font-weight: 700;">TextInput.jsx</div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <div class="disp" style="font-size: 40px; line-height: 1; color: #B91C1C;">1</div>
+          <div style="font-size: 15px; color: #4B5568;">file imports it</div>
+        </div>
+        <div style="height: 1px; background: #E2DDD5;"></div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <div class="disp" style="font-size: 40px; line-height: 1; color: #18202E;">101</div>
+          <div style="font-size: 15px; color: #4B5568;">raw <code>&lt;input&gt;</code> elements</div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.45; color: #4B5568;">Only <code>SettingsScreen</code> uses it. Sign-in — the highest-traffic form in the product — does not.</div>
+      </div>
+
+      <div style="flex: 1; background: #18202E; border-radius: 6px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="mono" style="font-size: 13px; color: #FFFFFF; font-weight: 700;">Select.jsx</div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <div class="disp" style="font-size: 40px; line-height: 1; color: #FF8080;">0</div>
+          <div style="font-size: 15px; color: #C3CAD6;">files import it</div>
+        </div>
+        <div style="height: 1px; background: #3A4557;"></div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <div class="disp" style="font-size: 40px; line-height: 1; color: #FFFFFF;">30</div>
+          <div style="font-size: 15px; color: #C3CAD6;">raw <code style="background: #2A3446; color: #FFFFFF;">&lt;select&gt;</code> elements</div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.45; color: #C3CAD6;">Written, styled, exported, never imported once. It is dead code that looks like a design system.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch;">
+    <div style="flex: 1; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px;">
+      <div class="sec">What replaced it</div>
+      <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 4px;">
+        <div class="disp" style="font-size: 52px; line-height: 1; color: #18202E;">4,127</div>
+        <div style="font-size: 16px; color: #4B5568;">inline <code>style={{…}}</code> objects</div>
+      </div>
+      <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">Thirty-seven per file on average. Each one is a private decision that no token can reach and no lint rule currently checks.</div>
+      <div style="height: 1px; background: #E2DDD5; margin: 6px 0;"></div>
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div class="disp" style="font-size: 52px; line-height: 1; color: #18202E;">1,584</div>
+        <div style="font-size: 16px; color: #4B5568;">inline <code>fontFamily</code> declarations</div>
+      </div>
+      <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">The three brand faces are re-declared by hand 1,584 times rather than inherited from <code>--font-display</code>, <code>--font-body</code> and <code>--font-mono</code>.</div>
+    </div>
+
+    <div style="width: 372px; flex-shrink: 0; background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 24px 28px; display: flex; flex-direction: column; gap: 14px;">
+      <div class="sec">Radius: 10 values, 2 tokens</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px;">
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 2px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">2</span></div>
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 3px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">3</span></div>
+        <div style="width: 52px; height: 52px; background: #D9E7F1; border: 1px solid #1A6FA8; border-radius: 4px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #14567F; font-weight: 700;">4</span></div>
+        <div style="width: 52px; height: 52px; background: #D9E7F1; border: 1px solid #1A6FA8; border-radius: 6px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #14567F; font-weight: 700;">6</span></div>
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 8px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">8</span></div>
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 10px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">10</span></div>
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 12px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">12</span></div>
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 16px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">16</span></div>
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 18px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">18</span></div>
+        <div style="width: 52px; height: 52px; background: #EDEAE2; border: 1px solid #E2DDD5; border-radius: 999px; display: grid; place-items: center;" class="mono"><span style="font-size: 11px; color: #4B5568;">pill</span></div>
+      </div>
+      <div style="font-size: 14px; line-height: 1.45; color: #4B5568;">Only the two blue swatches have tokens — <code>--radius-sm</code> 4px and <code>--radius-md</code> 6px. The other eight were typed from memory.</div>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <div class="sec">Migration residue</div>
+      <div style="font-size: 15px; color: #4B5568;">297 white-alpha values survive the dark → Kit Light migration, across 48 of 112 files.</div>
+    </div>
+
+    <div style="display: flex; gap: 36px; align-items: flex-start;">
+      <div style="flex-grow: 1;">
+        <div style="font-size: 15px; line-height: 1.55; color: #4B5568; margin-bottom: 16px;">These were all correct on the old <code>#0B0F14</code> ground. On a white card, white at 4% alpha is white. The four boxes below are real, sized 96×56, and rendered at the exact alphas the app ships — the dashed outline is added here only to prove they are there.</div>
+        <div style="display: flex; gap: 14px;">
+          <div style="position: relative;">
+            <div style="width: 96px; height: 56px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;"></div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px; pointer-events: none;"></div>
+            <div class="mono" style="font-size: 11px; color: #4B5568; margin-top: 10px;">.04 / .1</div>
+            <div class="mono" style="font-size: 11px; color: #8A97A8;">33 uses</div>
+          </div>
+          <div style="position: relative;">
+            <div style="width: 96px; height: 56px; background: rgba(255,255,255,0.06); border-radius: 4px;"></div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px; pointer-events: none;"></div>
+            <div class="mono" style="font-size: 11px; color: #4B5568; margin-top: 10px;">.06</div>
+            <div class="mono" style="font-size: 11px; color: #8A97A8;">26 uses</div>
+          </div>
+          <div style="position: relative;">
+            <div style="width: 96px; height: 56px; background: rgba(255,255,255,0.08); border-radius: 4px;"></div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px; pointer-events: none;"></div>
+            <div class="mono" style="font-size: 11px; color: #4B5568; margin-top: 10px;">.08</div>
+            <div class="mono" style="font-size: 11px; color: #8A97A8;">17 uses</div>
+          </div>
+          <div style="position: relative;">
+            <div style="width: 96px; height: 56px; background: #FFFFFF; border-radius: 4px; display: grid; place-items: center;">
+              <span style="font-size: 14px; color: rgba(255,255,255,0.9);">Sold</span>
+            </div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px; pointer-events: none;"></div>
+            <div class="mono" style="font-size: 11px; color: #4B5568; margin-top: 10px;">text .9</div>
+            <div class="mono" style="font-size: 11px; color: #8A97A8;">75 uses</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 0;">
+        <div class="sec" style="padding-bottom: 10px;">Where the 231 typed ones land</div>
+        <div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #E2DDD5;"><span style="font-size: 15px; color: #18202E;">Text colour</span><span class="mono" style="font-size: 14px; color: #B91C1C; font-weight: 700;">75</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #E2DDD5;"><span style="font-size: 15px; color: #18202E;">Background fills</span><span class="mono" style="font-size: 14px; color: #B91C1C; font-weight: 700;">59</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #E2DDD5;"><span style="font-size: 15px; color: #18202E;">Full borders</span><span class="mono" style="font-size: 14px; color: #B91C1C; font-weight: 700;">57</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #E2DDD5;"><span style="font-size: 15px; color: #18202E;">Edge rules</span><span class="mono" style="font-size: 14px; color: #B91C1C; font-weight: 700;">40</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 11px 0; border-top: 2px solid #18202E; border-bottom: 1px solid #E2DDD5;"><span style="font-size: 15px; color: #18202E; font-weight: 700;">Invisible surfaces &amp; rules</span><span class="mono" style="font-size: 14px; color: #B91C1C; font-weight: 700;">156</span></div>
+        <div style="font-size: 14px; line-height: 1.45; color: #4B5568; margin-top: 12px;">Every dividing line, card edge and hover fill in that group is currently doing nothing at all.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background: #18202E; border-radius: 6px; padding: 28px 32px; display: flex; gap: 40px; align-items: flex-start;">
+    <div style="flex: 1;">
+      <div class="mono" style="font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8; font-weight: 500; margin-bottom: 12px;">Why this is the finding that matters</div>
+      <div style="font-size: 16px; line-height: 1.6; color: #E8E4DC;">Fixing the sign-in screen, the four failing button states and the position chips takes about a day. It also fixes nothing structurally: with 4,127 inline style objects and a primitive layer nobody imports, the next screen anyone builds will drift the same way, because hand-writing styles is currently the path of least resistance and the system is the detour.</div>
+    </div>
+    <div style="flex: 1;">
+      <div class="mono" style="font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8; font-weight: 500; margin-bottom: 12px;">What actually reverses it</div>
+      <div style="font-size: 16px; line-height: 1.6; color: #E8E4DC;">Make the system cheaper than the workaround. Ban raw hex, raw pixel type and <code style="background: #2A3446; color: #FFFFFF;">rgba(255,255,255,…)</code> in <code style="background: #2A3446; color: #FFFFFF;">src/</code> with a lint rule so the residue can't grow back; then convert screens to the primitives as they're touched rather than in one sweep. The tokens and components to convert to already exist — that work is done.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1240,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

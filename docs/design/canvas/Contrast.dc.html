@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #F7F3ED; color: #18202E; font-family: 'Archivo', system-ui, sans-serif; }
+    a { color: #1A6FA8; text-decoration: none; } a:hover { color: #14567F; }
+    code { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; background: #EDEAE2; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  </style>
+</helmet>
+
+<div style="width: 1240px; min-height: 1300px; background: #F7F3ED; padding: 52px 64px 48px; display: flex; flex-direction: column; gap: 32px; box-sizing: border-box;">
+
+  <div style="display: flex; flex-direction: column; gap: 12px; border-bottom: 3px solid #18202E; padding-bottom: 22px;">
+    <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500;">Finding 01–03 · Critical</div>
+    <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 50px; line-height: 0.92; letter-spacing: -0.025em; text-transform: uppercase; color: #18202E;">Colour &amp; contrast</div>
+    <div style="font-size: 17px; line-height: 1.55; color: #4B5568; max-width: 880px;">Every specimen below is rendered in the real token values. Ratios are computed from the shipped hex pairs; WCAG AA needs 4.5:1 for body text and 3:1 for large text and UI boundaries.</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8;">A · Kit Light migration residue</div>
+
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 26px 28px; display: flex; flex-direction: column; gap: 22px;">
+
+      <div style="display: flex; align-items: center; gap: 28px;">
+        <div style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A97A8;">Email</div>
+          <div style="height: 47px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; padding: 0 14px; font-size: 14px; color: #8A97A8;">your@email.com</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 17px; text-transform: uppercase; letter-spacing: -0.01em; color: #18202E;">Sign-in input, as shipped</div>
+          <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">The field is there — you cannot see it. <code>AuthScreen.jsx:131</code></div>
+        </div>
+        <div style="text-align: right; flex-shrink: 0; width: 108px;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 30px; line-height: 1; color: #B91C1C;">1.00:1</div>
+          <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #B91C1C; padding-top: 4px;">Fail</div>
+        </div>
+      </div>
+
+      <hr style="height: 1px; background: #E2DDD5; border: 0; margin: 0;">
+
+      <div style="display: flex; align-items: center; gap: 28px;">
+        <div style="width: 300px; flex-shrink: 0; display: flex; gap: 10px;">
+          <div style="background: #1EC3E3; color: #F7F3ED; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 20px; border-radius: 6px;">Sign In</div>
+          <div style="background: #F0B91A; color: #F7F3ED; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 20px; border-radius: 6px;">Confirm</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 17px; text-transform: uppercase; letter-spacing: -0.01em; color: #18202E;">Primary &amp; gold, on hover</div>
+          <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">Resting states pass. The hover colours never got migrated. <code>index.css:488, 516</code></div>
+        </div>
+        <div style="text-align: right; flex-shrink: 0; width: 108px;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 30px; line-height: 1; color: #B91C1C;">1.91<span style="font-size: 20px;">/</span>1.63</div>
+          <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #B91C1C; padding-top: 4px;">Fail</div>
+        </div>
+      </div>
+
+      <hr style="height: 1px; background: #E2DDD5; border: 0; margin: 0;">
+
+      <div style="display: flex; align-items: center; gap: 28px;">
+        <div style="width: 300px; flex-shrink: 0; display: flex; gap: 10px; align-items: center;">
+          <div style="background: #B91C1C; color: #18202E; font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 20px; border-radius: 6px;">Delete League</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 17px; text-transform: uppercase; letter-spacing: -0.01em; color: #18202E;">Danger button</div>
+          <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">Navy ink on dark red — a surface token used as a foreground. <code>index.css:506</code></div>
+        </div>
+        <div style="text-align: right; flex-shrink: 0; width: 108px;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 30px; line-height: 1; color: #B91C1C;">2.53:1</div>
+          <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #B91C1C; padding-top: 4px;">Fail</div>
+        </div>
+      </div>
+
+      <hr style="height: 1px; background: #E2DDD5; border: 0; margin: 0;">
+
+      <div style="display: flex; align-items: center; gap: 28px;">
+        <div style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-family: 'Archivo', system-ui, sans-serif; font-size: 16px; color: #18202E;">Marcus Rashford</div>
+          <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A97A8;">MID · Man Utd · €8.4M</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 17px; text-transform: uppercase; letter-spacing: -0.01em; color: #18202E;">The muted token — used everywhere</div>
+          <div style="font-size: 15px; line-height: 1.5; color: #4B5568;">Highest-volume failure in the product. Every eyebrow, price, position and timestamp.</div>
+        </div>
+        <div style="text-align: right; flex-shrink: 0; width: 108px;">
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 30px; line-height: 1; color: #B91C1C;">2.69:1</div>
+          <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #B91C1C; padding-top: 4px;">Fail</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8;">B · Position chips — tint and ink from two different palettes</div>
+
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-radius: 6px; padding: 26px 28px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="font-size: 15px; line-height: 1.55; color: #4B5568; max-width: 900px;">The chip backgrounds in <code>index.css</code> are still the pre-migration dark palette expressed as rgba, while the text colour comes from the new Kit Light tokens. The two were never reconciled, so each chip mixes two colour systems.</div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+
+        <div style="border: 1px solid #E2DDD5; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: rgba(168,85,247,0.14); color: #8C49C9; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 5px 10px; border-radius: 4px; align-self: flex-start;">GK</div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">tint <span style="color: #B91C1C;">#A855F7</span></div>
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">ink &nbsp;<span style="color: #166534;">#8C49C9</span></div>
+          </div>
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 20px; color: #166534;">4.79:1</div>
+        </div>
+
+        <div style="border: 1px solid #E2DDD5; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: rgba(0,180,216,0.14); color: #1A6FA8; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 5px 10px; border-radius: 4px; align-self: flex-start;">DEF</div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">tint <span style="color: #B91C1C;">#00B4D8</span></div>
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">ink &nbsp;<span style="color: #166534;">#1A6FA8</span></div>
+          </div>
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 20px; color: #166534;">4.91:1</div>
+        </div>
+
+        <div style="border: 1px solid #E2DDD5; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #FDF6F6;">
+          <div style="background: rgba(224,168,0,0.14); color: #B8720E; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 5px 10px; border-radius: 4px; align-self: flex-start;">MID</div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">tint <span style="color: #B91C1C;">#E0A800</span></div>
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">ink &nbsp;<span style="color: #B91C1C;">#B8720E</span></div>
+          </div>
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 20px; color: #B91C1C;">3.57:1</div>
+        </div>
+
+        <div style="border: 1px solid #E2DDD5; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: rgba(239,68,68,0.14); color: #B91C1C; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 5px 10px; border-radius: 4px; align-self: flex-start;">FWD</div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">tint <span style="color: #B91C1C;">#EF4444</span></div>
+            <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.1em; color: #8A97A8;">ink &nbsp;<span style="color: #166534;">#B91C1C</span></div>
+          </div>
+          <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 20px; color: #166534;">5.66:1</div>
+        </div>
+
+      </div>
+      <div style="font-size: 14px; line-height: 1.5; color: #4B5568;">Three of four pass by luck rather than design — the tints are light enough that the mismatch doesn't bite. MID does not. The same stale palette also drives the four <code>.glow-*</code> utilities and the live-match pulse ring.</div>
+    </div>
+  </div>
+
+  <div style="background: #18202E; border-radius: 6px; padding: 28px 30px; display: flex; flex-direction: column; gap: 16px;">
+    <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.5);">Recommended token corrections</div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 40px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #8A97A8; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: rgba(255,255,255,0.55); text-decoration: line-through;">--mute #8A97A8</div>
+        <div style="color: rgba(255,255,255,0.4);">&rarr;</div>
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #626F80; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: #FFFFFF;">#626F80 &nbsp;<span style="color: #7BC67B;">4.6:1</span></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #1EC3E3; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: rgba(255,255,255,0.55); text-decoration: line-through;">primary:hover</div>
+        <div style="color: rgba(255,255,255,0.4);">&rarr;</div>
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #14567F; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: #FFFFFF;">#14567F &nbsp;<span style="color: #7BC67B;">7.1:1</span></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #B91C1C; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: rgba(255,255,255,0.55); text-decoration: line-through;">danger ink</div>
+        <div style="color: rgba(255,255,255,0.4);">&rarr;</div>
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #FFFFFF; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: #FFFFFF;">#FFFFFF &nbsp;<span style="color: #7BC67B;">6.5:1</span></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #F0B91A; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: rgba(255,255,255,0.55); text-decoration: line-through;">gold:hover</div>
+        <div style="color: rgba(255,255,255,0.4);">&rarr;</div>
+        <div style="width: 26px; height: 26px; border-radius: 4px; background: #8E570A; flex-shrink: 0;"></div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; color: #FFFFFF;">#8E570A &nbsp;<span style="color: #7BC67B;">5.4:1</span></div>
+      </div>
+    </div>
+    <div style="font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.6); padding-top: 4px;">All four keep the existing hue and only move lightness, so nothing in the visual language changes — the palette just stops failing.</div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1240,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

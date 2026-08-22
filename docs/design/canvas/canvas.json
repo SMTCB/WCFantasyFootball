@@ -1,0 +1,20 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",        "x": 0,    "y": 0, "w": 1240, "h": 900,  "title": "Summary" },
+    { "file": "Contrast.dc.html",    "x": 1400, "y": 0, "w": 1240, "h": 1300, "title": "Contrast failures" },
+    { "file": "SignIn.dc.html",      "x": 2800, "y": 0, "w": 1240, "h": 1160, "title": "Sign-in screen" },
+    { "file": "Typography.dc.html",  "x": 4200, "y": 0, "w": 1240, "h": 1420, "title": "Typography" },
+    { "file": "SystemDrift.dc.html", "x": 5600, "y": 0, "w": 1240, "h": 1500, "title": "System drift" },
+    { "file": "Roadmap.dc.html",     "x": 7000, "y": 0, "w": 1240, "h": 1500, "title": "Remediation plan" }
+  ],
+  "annotations": [
+    {
+      "id": "reading-order",
+      "x": -420,
+      "y": 60,
+      "w": 340,
+      "text": "Read left to right.\n\nSummary first, then the three evidence boards (contrast, sign-in, typography), then the root cause, then the plan.\n\nEvery number on these boards was counted or measured — nothing is estimated. Colour ratios were computed against the shipped token values; counts come from src/ at commit 1f4e937."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
