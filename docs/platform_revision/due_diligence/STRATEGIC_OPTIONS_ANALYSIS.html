@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forza Fantasy League — Launch vs. Sell: Strategic Options Analysis</title>
+<style>
+:root{
+  --bg-primary:#0a0d14; --bg-elevated:#0f131c; --bg-surface:#161b28; --bg-hover:#1e2536;
+  --text-primary:#fff; --text-secondary:rgba(255,255,255,.72); --text-muted:rgba(255,255,255,.48);
+  --accent:#d4af37; --accent-hover:#b8952e;
+  --win:#10b981; --lose:#ef4444; --tie:#f59e0b; --info:#3b82f6;
+  --border:rgba(255,255,255,.10);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg-primary);color:var(--text-primary);
+  font:15px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+header{border-bottom:1px solid var(--border);padding:34px 0 26px;margin-bottom:6px}
+header .eyebrow{font:600 11px/1 var(--mono);letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
+h1{font-size:29px;line-height:1.2;margin:12px 0 8px;letter-spacing:-.02em}
+header .sub{color:var(--text-muted);font-size:13px;font-family:var(--mono)}
+.warn{margin-top:16px;background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.32);
+  border-left:3px solid var(--lose);border-radius:8px;padding:10px 14px;font-size:12.5px;color:#fca5a5}
+
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:20;
+  background:rgba(10,13,20,.94);backdrop-filter:blur(12px);padding:14px 0;
+  border-bottom:1px solid var(--border);margin-bottom:32px}
+.tab{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);
+  padding:9px 15px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;
+  transition:all .18s;font-family:inherit}
+.tab:hover{background:var(--bg-hover);color:var(--text-primary)}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#0a0d14;font-weight:650}
+.tab-content{display:none;animation:fade .22s ease}
+.tab-content.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+h2{font-size:21px;margin:38px 0 14px;letter-spacing:-.01em}
+h2:first-child{margin-top:4px}
+h3{font-size:15.5px;margin:26px 0 10px;color:var(--text-primary)}
+h4{font-size:13.5px;margin:20px 0 8px;color:var(--accent);letter-spacing:.02em;text-transform:uppercase}
+p{color:var(--text-secondary);margin:0 0 13px}
+ul{color:var(--text-secondary);padding-left:20px;margin:0 0 14px}
+li{margin-bottom:7px}
+strong{color:var(--text-primary);font-weight:640}
+code{font-family:var(--mono);font-size:12.5px;background:var(--bg-surface);
+  padding:1.5px 6px;border-radius:4px;color:var(--accent)}
+a{color:var(--info)}
+.xlink{cursor:pointer;border-bottom:1px dotted currentColor;text-decoration:none}
+
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;
+  padding:20px 22px;margin-bottom:16px;transition:all .18s}
+.card:hover{background:var(--bg-surface)}
+.card h3{margin-top:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
+
+.verdict{background:linear-gradient(135deg,rgba(212,175,55,.13),rgba(212,175,55,.03));
+  border:1px solid rgba(212,175,55,.36);border-radius:14px;padding:26px 28px;margin-bottom:26px}
+.verdict .label{font:650 11px/1 var(--mono);letter-spacing:.15em;color:var(--accent);
+  text-transform:uppercase;margin-bottom:12px}
+.verdict .big{font-size:22px;line-height:1.38;font-weight:600;letter-spacing:-.01em;margin-bottom:12px}
+.verdict p{color:var(--text-secondary);margin-bottom:0}
+
+.stat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:11px;padding:16px 18px}
+.stat .n{font:700 25px/1.1 var(--mono);letter-spacing:-.02em;margin-bottom:6px}
+.stat .l{font-size:11.5px;color:var(--text-muted);line-height:1.42}
+.n.good{color:var(--win)} .n.bad{color:var(--lose)} .n.warn{color:var(--tie)} .n.acc{color:var(--accent)}
+
+.tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:11px;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:13.2px;min-width:620px}
+th{background:var(--bg-surface);text-align:left;padding:11px 14px;font-weight:620;
+  font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);
+  border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.055);
+  color:var(--text-secondary);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.024)}
+td.you{color:var(--text-primary);font-weight:560}
+
+.pill{display:inline-block;padding:2.5px 9px;border-radius:20px;font-size:10.5px;
+  font-weight:650;font-family:var(--mono);letter-spacing:.04em;white-space:nowrap}
+.p-win{background:rgba(16,185,129,.16);color:#34d399}
+.p-lose{background:rgba(239,68,68,.16);color:#f87171}
+.p-tie{background:rgba(245,158,11,.16);color:#fbbf24}
+.p-info{background:rgba(59,130,246,.16);color:#60a5fa}
+
+.callout{border-left:3px solid var(--accent);background:rgba(212,175,55,.06);
+  padding:15px 18px;border-radius:0 9px 9px 0;margin:18px 0}
+.callout.danger{border-left-color:var(--lose);background:rgba(239,68,68,.06)}
+.callout.good{border-left-color:var(--win);background:rgba(16,185,129,.06)}
+.callout p:last-child{margin-bottom:0}
+.callout .t{font:650 11px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:9px;display:block}
+.callout.danger .t{color:var(--lose)}
+.callout.good .t{color:var(--win)}
+
+.comp{border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;
+  background:var(--bg-elevated)}
+.comp summary{padding:16px 20px;cursor:pointer;list-style:none;display:flex;
+  align-items:center;gap:13px;transition:background .18s}
+.comp summary::-webkit-details-marker{display:none}
+.comp summary:hover{background:var(--bg-surface)}
+.comp summary .nm{font-weight:640;font-size:15px;flex:1}
+.comp summary .ar{color:var(--text-muted);font-size:12px;transition:transform .2s}
+.comp[open] summary .ar{transform:rotate(90deg)}
+.comp .body{padding:4px 20px 20px;border-top:1px solid var(--border)}
+
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding:0 0 18px 44px;margin:0;
+  border-left:1px solid var(--border);margin-left:14px}
+.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+.steps li::before{content:counter(s);position:absolute;left:-14px;top:-2px;width:28px;height:28px;
+  background:var(--bg-surface);border:1px solid var(--accent);color:var(--accent);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font:650 12px var(--mono)}
+.steps .h{font-weight:640;color:var(--text-primary);margin-bottom:5px;display:block}
+.steps .d{font-size:13.4px;color:var(--text-secondary)}
+
+.src{font-size:12.4px;color:var(--text-muted);margin-bottom:7px}
+footer{margin-top:44px;padding-top:22px;border-top:1px solid var(--border);
+  color:var(--text-muted);font-size:12px;font-family:var(--mono)}
+@media(max-width:640px){h1{font-size:23px}.verdict .big{font-size:18px}nav.tabs{gap:5px}.tab{padding:8px 12px;font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Internal Strategic Analysis · Competitive Intelligence</div>
+  <h1>Launch as a Business, or Sell the Asset?</h1>
+  <div class="sub">Forza Fantasy League · Prepared 2026-08-21 · Supersedes the pricing logic in VALUATION_ANALYSIS.md (2026-06-30)</div>
+  <div class="warn"><strong>INTERNAL ONLY.</strong> Contains valuation reasoning and negotiating position. Do not include in any buyer-facing handover pack.</div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-t="verdict">Verdict</button>
+  <button class="tab" data-t="market">Competitive Landscape</button>
+  <button class="tab" data-t="launch">Path A — Launch</button>
+  <button class="tab" data-t="sell">Path B — Sell</button>
+  <button class="tab" data-t="b2b">Path D — B2B2C ★</button>
+  <button class="tab" data-t="rec">Path C — Recommended</button>
+  <button class="tab" data-t="next">Next Steps</button>
+  <button class="tab" data-t="asset">Asset Facts</button>
+  <button class="tab" data-t="sources">Evidence</button>
+</nav>
+
+<!-- ══════════════ VERDICT ══════════════ -->
+<section id="verdict" class="tab-content active">
+
+  <div class="verdict">
+    <div class="label">Bottom line</div>
+    <div class="big">Run the full-product cohort (<strong>Path C</strong>) as the proof engine for a <strong>B2B2C licence or sale to a broadcaster</strong> (<strong>Path D</strong>). Not consumer launch, not a marketplace listing — both of those price the asset badly. This one doesn't.</div>
+    <p>The B2B2C reframe is the single most valuable idea in this document, and it's yours. Against a broadcaster's build-vs-buy decision the asset compares to a <strong>$900k–2.5M custom build</strong>, not to other codebases on Flippa. It also inverts the two weaknesses that sink every other path: you stop needing distribution (they have the audience) and you stop needing a gambling licence (they carry it, or it ships free-to-play — exactly as your no-cash-out design already assumes).</p>
+    <p>The cohort still matters, because a broadcaster needs a clean engagement metric — but crucially <em>not scale</em>. 300 players can produce that. And the clock is real: the three seasons only overlap until December.</p>
+  </div>
+
+  <h2>The three findings that drive this</h2>
+
+  <div class="callout danger">
+    <span class="t">Finding 1 — Your floor valuation is self-defeating</span>
+    <p><code>VALUATION_ANALYSIS.md</code> sets a <strong>£200k–£450k</strong> "cost-to-recreate" floor, derived from 2–3 engineers × 11–16 months at £18–28k/month. But your own git history says this was built by <strong>one non-technical founder with AI assistance in roughly four months</strong> — 1,217 commits since 2026-04-18.</p>
+    <p>Those two facts cannot both price the asset. And §11.1 of the buyer-facing brief <em>offers the build history to buyers on request</em> — handing a sophisticated acquirer the exact evidence that destroys the floor. Cost-to-recreate is only a valid floor when recreating is genuinely expensive. The same technology that let you build this collapsed the cost of rebuilding it, for the buyer as much as for you.</p>
+  </div>
+
+  <div class="callout danger">
+    <span class="t">Finding 2 — In every sport you built, the incumbent is free and official</span>
+    <p>Fantasy Premier League: <strong>11.43M</strong> verified teams, free, run by the league itself. F1 Fantasy: <strong>10M+</strong> registered players, free, run by F1. These aren't competitors in the ordinary sense — they're rights-holders giving the core loop away as fan engagement, funded by broadcast and sponsorship money. You cannot out-price free, and you cannot out-license the league.</p>
+    <p>Your differentiation (private multi-sport circles, social layer, coin economy) is real, but it's a layer <em>on top of</em> a commodity core — and it's precisely the layer <a href="https://frontofficesports.com/sleeper-more-than-quadruples-valuation-to-400m/">Sleeper</a> is building with <strong>$217M</strong> of raised capital and 4M+ users.</p>
+  </div>
+
+  <div class="callout danger">
+    <span class="t">Finding 3 — The <em>consumer</em> asset market has essentially no bid</span>
+    <p>Acquire.com filters pre-revenue submissions out at review. Flippa will accept the listing but its buyers price against businesses with real traction and lowball code-only assets accordingly. There is no liquid market at £450–750k for a pre-revenue consumer codebase.</p>
+    <p>Any such buyer's diligence also finds what your own August audit found: 75 of 271 migrations fail a from-scratch replay, thin money-logic test coverage, no DR or staging, Supabase lock-in, unconfirmed data-feed transferability.</p>
+    <p><strong>This finding is confined to the D2C frame.</strong> See Path D — against a broadcaster's build-vs-buy comparison the same asset is priced entirely differently, and the internal valuation becomes defensible.</p>
+  </div>
+
+  <div class="callout good">
+    <span class="t">Finding 4 — You have more demand proof than the documents claim</span>
+    <p>I said "zero demand proof" in the first version of this analysis. That was wrong, and the correction comes from querying the pilot data directly rather than reading the docs.</p>
+    <p>In the World Cup pilot (11 Jun – 19 Jul 2026), across the two leagues where betting was switched on: <strong>14 of 16 members placed bets — 87.5% adoption</strong>. 250 submissions across 39 bets. <strong>17.9 bets per participant</strong>, one user at 34. Average <strong>4.6 active weeks</strong> out of ~5.5; <strong>9 of 14 (64%) active in four or more distinct weeks</strong>.</p>
+    <p>That is a real behavioural signal on the exact mechanic you believe is the differentiator, and it is a far better opening line than "pre-revenue." Caveats are heavy and must be stated: n=16, almost certainly friends and family, and it ran <em>during a World Cup</em> — the single highest-engagement event in sport. But heavily-caveated real engagement beats no engagement, and it reframes the whole conversation.</p>
+  </div>
+
+  <h2>Your three-part USP, scored against the evidence</h2>
+  <p>The stated differentiator is the combination: <strong>(i)</strong> multi-sport in one room with the same people, <strong>(ii)</strong> a social layer aimed at casual fans rather than die-hard fantasy players, <strong>(iii)</strong> a fast, direct betting layer. I think that combination is genuinely coherent and it's what makes the product non-generic. But the three legs are <em>not</em> equally proven, and the imbalance should drive priorities.</p>
+
+  <div class="tblwrap"><table>
+    <thead><tr><th>USP leg</th><th>Evidence today</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="you"><strong>(iii)</strong> Fast, direct betting</td>
+        <td>87.5% adoption among exposed users; 17.9 bets each; 64% active 4+ weeks. Confounded by World Cup timing and a friends-and-family cohort, but real.</td>
+        <td><span class="pill p-win">Best-evidenced</span></td>
+      </tr>
+      <tr>
+        <td class="you"><strong>(ii)</strong> Social layer, casual-fan focus</td>
+        <td>Implied by the above — high adoption in a friend group suggests social pull rather than fantasy depth. But inseparable from social obligation at n=16, and "casual fan" was never explicitly tested.</td>
+        <td><span class="pill p-tie">Suggestive only</span></td>
+      </tr>
+      <tr>
+        <td class="you"><strong>(i)</strong> Multi-sport, one room, same people</td>
+        <td><strong>None.</strong> <code>trophy_ledger</code> = 0 rows, <code>player_boxes</code> = 0 rows, <code>paddocks</code> = 1 row. The pilot was single-sport. No user has ever competed across two sports in one circle.</td>
+        <td><span class="pill p-lose">Entirely unproven</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout danger">
+    <span class="t">The uncomfortable shape of this</span>
+    <p>Your <em>most</em> proven leg is the betting layer. Your <em>least</em> proven leg is multi-sport — which is the one the entire architecture, the three sport modules, and the strategic pitch all rest on. Every claim about "the same group across sports" is currently an assertion.</p>
+    <p>That's not an argument against the thesis. It's an argument that the cohort's primary job is to test leg (i), because legs (ii) and (iii) already have at least a signal and leg (i) has literally none.</p>
+  </div>
+
+  <div class="callout">
+    <span class="t">A structural finding hiding in the pilot data</span>
+    <p>Only <strong>2 leagues</strong> had any bets at all, and all 39 bet instances were commissioner-created. The betting layer — your best-performing feature — has a <strong>supply dependency</strong>: no commissioner, no bets, no engagement. That is a serious product risk at any scale beyond a handful of leagues.</p>
+    <p><code>p2p_challenges</code> (user-generated, peer-to-peer) is precisely the fix for this, and it has <strong>zero rows</strong>. So the single highest-value validation task in the entire plan is proving that users create bets for each other without a commissioner driving it. Not a footnote — the top priority.</p>
+  </div>
+
+  <h2>What the asset is actually worth today</h2>
+
+  <div class="tblwrap"><table>
+    <thead><tr><th>Scenario</th><th>Realistic range</th><th>Probability of clearing</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="you">Code marketplace, as-is</td><td><strong>£8k–£30k</strong></td><td><span class="pill p-win">High</span></td><td>Priced as a premium code asset. Acquire.com won't list it; Flippa/code marketplaces will, at code-asset prices.</td></tr>
+      <tr><td class="you">Bilateral strategic sale, as-is</td><td><strong>£25k–£90k</strong></td><td><span class="pill p-tie">Low–Medium</span></td><td>Requires finding a buyer who wants a multi-sport engine + mobile shells <em>now</em>. Few such buyers; no competitive tension; DD findings all discount.</td></tr>
+      <tr><td class="you">Strategic sale after traction</td><td><strong>£120k–£400k</strong></td><td><span class="pill p-tie">Medium</span></td><td>Needs 6+ months retention data, some coin revenue, and DATA-1/OPS-1 cleared. This is where your doc's "realistic" range becomes reachable.</td></tr>
+      <tr><td class="you">D2C strategic sale after cohort traction</td><td><strong>£120k–£400k</strong></td><td><span class="pill p-tie">Medium</span></td><td>Needs retention data and DATA-1/OPS-1 cleared. Where your doc's "realistic" range starts to become reachable.</td></tr>
+      <tr style="background:rgba(212,175,55,.07)"><td class="you"><strong>★ B2B2C licence or IP sale</strong><br><span style="color:var(--text-muted);font-size:12px">broadcaster / rights-holder / operator</span></td><td><strong>£300k–£900k+</strong></td><td><span class="pill p-tie">Medium — best available</span></td><td>Priced against their build-vs-buy: <strong>$900k–2.5M</strong> custom, <strong>$400k–1M</strong> hybrid. Requires multi-tenancy, DATA-1/OPS-1 cleared, and one credible engagement metric. <strong>This is where the internal valuation actually lives.</strong></td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="src">These are my estimates from the market evidence in the Evidence tab, not appraisals. Note the spread between row 1 and the last row: <strong>the same code, differing by roughly 30× purely on who is comparing it to what.</strong> Choosing the buyer frame is worth more than any engineering work on the list.</p>
+
+  <h2>Honest framing of what you have</h2>
+  <p>None of the above is a judgement on the quality of the work. The asset is genuinely strong: three working sport modules, an idempotent live-scoring pipeline, a legally-considered coin economy, native shells, and documentation far better than typical for this size. The August pre-pilot audit is more rigorous than most seed-stage companies ever perform on themselves.</p>
+  <p><strong>The problem isn't the build. It's that "a working codebase" stopped being the scarce input.</strong> Scarcity moved to distribution, users, and revenue — the three things this asset has none of. That's the strategic reality both paths have to be planned against.</p>
+</section>
+
+<!-- ══════════════ MARKET ══════════════ -->
+<section id="market" class="tab-content">
+  <h2>Who you are actually competing with</h2>
+  <p>Two distinct competitive sets, depending on the path. If you <strong>launch</strong>, you compete with fantasy platforms for users. If you <strong>sell</strong>, you compete with every other asset on a buyer's desk for capital. Both are covered here.</p>
+
+  <h3>Comparison matrix — the launch battlefield</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Dimension</th><th>Forza (you)</th><th>FPL / F1 Fantasy</th><th>Sleeper</th><th>Fantrax</th></tr></thead>
+    <tbody>
+      <tr><td>Scale</td><td class="you">~75 registered, ~50 pilot</td><td>11.43M / 10M+</td><td>4M+ users</td><td>Large, niche-deep</td></tr>
+      <tr><td>Price to user</td><td class="you">Free + coin packs</td><td>Free forever</td><td>Free + Pro tier</td><td>Free + premium</td></tr>
+      <tr><td>Capital behind it</td><td class="you">Bootstrapped</td><td>League/rights money</td><td>$217M raised</td><td>Profitable, established</td></tr>
+      <tr><td>Multi-sport in one social container</td><td class="you"><span class="pill p-win">You win</span></td><td>Single-sport silos</td><td>NFL-centric + DFS</td><td>Multi-sport, no social spine</td></tr>
+      <tr><td>Private-league social layer</td><td class="you"><span class="pill p-tie">Parity</span></td><td>Weak (basic mini-leagues)</td><td>Best-in-class</td><td>Functional, dated</td></tr>
+      <tr><td>Football (soccer) depth</td><td class="you"><span class="pill p-lose">They win</span></td><td>Definitive, official data</td><td>Minimal</td><td>Good</td></tr>
+      <tr><td>AI-generated league content</td><td class="you"><span class="pill p-win">You win</span></td><td>None</td><td>Editorial, human</td><td>None</td></tr>
+      <tr><td>Official data rights</td><td class="you"><span class="pill p-lose">They win</span></td><td>Owns the rights</td><td>Licensed</td><td>Licensed</td></tr>
+      <tr><td>Distribution</td><td class="you"><span class="pill p-lose">None</span></td><td>Broadcast + club channels</td><td>Creator network, media arm</td><td>SEO + community</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <span class="t">Read this matrix carefully</span>
+    <p>You win on <strong>product architecture</strong> (multi-sport container, AI content). You lose on <strong>everything that determines whether a fantasy product survives</strong>: data rights, distribution, and capital. In this category, product quality has historically been a weak predictor of winning — FPL is not the best-designed fantasy football product, it's the official one.</p>
+  </div>
+
+  <h3>Competitor detail</h3>
+
+  <details class="comp"><summary><span class="nm">Fantasy Premier League (official)</span><span class="pill p-lose">Structural threat</span><span class="ar">▸</span></summary>
+  <div class="body">
+    <p><strong>Profile.</strong> Operated by the Premier League. 11.43M verified teams at the GW38 deadline of 2025/26 — a record, and still growing. Free, permanently. Added elite global leagues for top-1% and top-10% finishers in 2025/26, directly strengthening the competitive/social hook that third-party apps used to differentiate on.</p>
+    <p><strong>Why it matters to you.</strong> Your football module — the mature one, the one the pilot ran on — competes head-on with this. FPL's mini-league feature already covers the "play with your mates" use case for the overwhelming majority of players. Your advantages (drafts, H2H, trades, auctions, chat) are real but serve a smaller, more committed segment that Fantrax and Sleeper already serve.</p>
+    <p><strong>Where you win.</strong> Format depth (draft/H2H/cup/auction in one product), cross-sport continuity, private social container.</p>
+    <p><strong>Where they win.</strong> Free, official, ubiquitous, zero switching friction, brand trust, marketing via every club and broadcaster in England.</p>
+    <p><strong>Implication.</strong> Football is your <em>weakest</em> commercial wedge despite being your most complete module. This inverts the natural instinct to relaunch on football first.</p>
+  </div></details>
+
+  <details class="comp"><summary><span class="nm">F1 Fantasy (official)</span><span class="pill p-tie">Threat + signal</span><span class="ar">▸</span></summary>
+  <div class="body">
+    <p><strong>Profile.</strong> Crossed 10M registered players globally in 2025. Free, official, run by Formula 1.</p>
+    <p><strong>Why it matters.</strong> Your August audit found F1 is the only module with genuine forward-looking content (11 upcoming races on the 2026 calendar) and is therefore the natural relaunch surface. But it's also contested by a free official product with 10M users.</p>
+    <p><strong>Where you win.</strong> F1 Fantasy's private-league and social features are thin. The "paddock" as a persistent social container with chat, trophies and cross-sport carry-over is a real gap in their product. F1's audience also skews international and highly engaged — good for word-of-mouth.</p>
+    <p><strong>Where they win.</strong> Free, official timing data, promoted inside the F1 app and broadcast ecosystem.</p>
+    <p><strong>Implication.</strong> Best available wedge for a traction sprint — smallest gap between your product and theirs, and live content available now without registering a new football tournament.</p>
+  </div></details>
+
+  <details class="comp"><summary><span class="nm">Sleeper</span><span class="pill p-lose">The strategic answer to "why not you"</span><span class="ar">▸</span></summary>
+  <div class="body">
+    <p><strong>Profile.</strong> $217.26M raised; valuation quadrupled to $400M off a $40M round; 4M+ users; status active and expanding. Now launching <strong>Sleeper Media</strong>, committing mid-seven-figures to recruit ~100 creators, starting with former NFL QB Kurt Benkert.</p>
+    <p><strong>Why this is the most important card here.</strong> Sleeper is executing <em>your exact thesis</em> — social-first private leagues, chat-native, modern UX, expanding formats, monetising via Pro subscriptions and league dues rather than beating the incumbent on the core game. They validated the thesis. They also demonstrated what it costs: $217M and seven years.</p>
+    <p><strong>Where you win.</strong> Genuine multi-sport breadth in a single social container (Sleeper is NFL-centric); football/F1/tennis coverage they don't have; European focus.</p>
+    <p><strong>Where they win.</strong> Everything else — capital, users, brand, creator distribution, engineering headcount.</p>
+    <p><strong>Landmine question to ask yourself.</strong> "If the social-fantasy thesis needed $217M and a media arm to reach 4M users in the US, what does the European multi-sport version need — and do I have any version of that?" If the honest answer is no, that is an argument for selling or for a much narrower niche, not for launching broadly.</p>
+    <p><strong>Sell-path angle.</strong> Sleeper's expansion is also the best argument <em>to</em> a strategic buyer: it proves the category is being contested and that multi-sport European coverage is an unfilled gap. That's the pitch.</p>
+  </div></details>
+
+  <details class="comp"><summary><span class="nm">Fantrax</span><span class="pill p-tie">Closest functional analogue</span><span class="ar">▸</span></summary>
+  <div class="body">
+    <p><strong>Profile.</strong> Deep roster/scoring configurability, real-time drafts, waivers, dynasty/keeper/best-ball formats, multi-sport. Established and long-running.</p>
+    <p><strong>Why it matters.</strong> Fantrax is the closest thing to "what you built" that already exists at scale — multi-sport, format-rich, commissioner-driven. It's a useful proof that the model sustains a business, and a useful warning that the niche is already occupied by an incumbent with a decade-plus of SEO and community.</p>
+    <p><strong>Where you win.</strong> Modern mobile-first UX, social/clubhouse spine, AI content, native shells. Fantrax's interface is widely considered dated.</p>
+    <p><strong>Where they win.</strong> Installed base, format depth, commissioner trust, search presence.</p>
+    <p><strong>Sell-path angle.</strong> A "modern Fantrax for European sports" is a coherent one-line pitch to an acquirer. Worth using.</p>
+  </div></details>
+
+  <details class="comp"><summary><span class="nm">DraftKings / FanDuel (adjacent)</span><span class="pill p-info">Buyer, not rival</span><span class="ar">▸</span></summary>
+  <div class="body">
+    <p><strong>Profile.</strong> DraftKings closed a $750M acquisition of Jackpocket in Oct 2025 — an acquisitive operator with real appetite for adjacent engagement products.</p>
+    <p><strong>Why it matters.</strong> These are not competitors to a bootstrapped private-league product; they're the plausible <em>buyer</em> class, alongside sports media groups and European betting operators. Note what they buy: businesses with users and regulatory position (Jackpocket had both), not codebases.</p>
+    <p><strong>Implication for the sell path.</strong> To be interesting to this class you need either (a) a user base with proven engagement, or (b) a regulatory/market position they lack. Code alone doesn't register — they have engineering capacity in abundance.</p>
+  </div></details>
+
+  <details class="comp"><summary><span class="nm">The sell-side comparison set</span><span class="pill p-lose">Where you're weakest</span><span class="ar">▸</span></summary>
+  <div class="body">
+    <p>When you list for sale, you're not compared to fantasy apps — you're compared to <strong>every other asset competing for that buyer's capital</strong>. Typical Acquire.com transactions are priced on profit, with a median around 3.9× for confirmed SaaS deals under $10M enterprise value.</p>
+    <p>Against a peer set of cash-generating small businesses, a pre-revenue codebase reads as a <em>cost</em> (integration, re-platforming, ongoing live-ops for three sports) rather than an asset. That framing is the single biggest reason the £450–750k number doesn't survive contact with the market.</p>
+    <p><strong>The counter.</strong> The only buyer who breaks this framing is a strategic one who values <em>time</em> over money — someone with a season starting, a rights deal signed, or a competitor launching. Finding that buyer is a search problem, and it's the reason a sale process takes months and may return nothing.</p>
+  </div></details>
+</section>
+
+<!-- ══════════════ LAUNCH ══════════════ -->
+<section id="launch" class="tab-content">
+  <h2>Path A — Launch it as a business</h2>
+
+  <div class="grid3" style="margin-bottom:22px">
+    <div class="stat"><div class="n bad">$26.81</div><div class="l">Average cost-per-install for sports apps — the highest of any app category</div></div>
+    <div class="stat"><div class="n bad">2–5%</div><div class="l">Typical freemium install→paying conversion, making real cost per paying user 20–50× CPI</div></div>
+    <div class="stat"><div class="n warn">£0</div><div class="l">Revenue to date; coin economy built but never switched on (<code>p2p_challenges</code> = 0 rows)</div></div>
+  </div>
+
+  <h3>The economics, honestly</h3>
+  <p>At a sports-category CPI of ~$26.81 and a 2–5% conversion rate, a paid-acquisition strategy implies a cost per paying user in the <strong>hundreds of dollars</strong>. One industry estimate puts North American fantasy user acquisition at $300–350 per user given category marketing intensity. Against coin-pack revenue of a few pounds per user, paid acquisition is not viable at any scale you can fund.</p>
+  <p>That leaves organic: communities, word-of-mouth, creator partnerships, SEO. All are viable, all are slow, and all require sustained content and community work — which is a full-time job that is <em>not</em> engineering. This is the crux: the remaining work in Path A is almost entirely work you haven't been doing and haven't demonstrated.</p>
+
+  <h3>What Path A actually requires</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Requirement</th><th>Current state</th><th>Gap</th></tr></thead>
+    <tbody>
+      <tr><td>Live competition to play</td><td>0 future fixtures in football; site walled; 22 crons frozen</td><td><span class="pill p-tie">Days of work, approval-gated</span></td></tr>
+      <tr><td>Distribution / audience</td><td>None. 34 of 75 users are in no league at all</td><td><span class="pill p-lose">The whole problem</span></td></tr>
+      <tr><td>Live-ops capacity</td><td>Solo. History shows manual scoring corrections (13 managers, retroactive clean-sheets)</td><td><span class="pill p-lose">Doesn't scale past a few hundred users</span></td></tr>
+      <tr><td>Legal opinion on coin economy</td><td>No-cash-out design; no opinion obtained</td><td><span class="pill p-tie">£3–10k, needed before charging</span></td></tr>
+      <tr><td>Operational DR</td><td>Single environment, no PITR, manual backups (OPS-1)</td><td><span class="pill p-tie">Real risk once money is involved</span></td></tr>
+      <tr><td>Analytics instrumentation</td><td>Missing (CODE-5). August audit had to infer product reality from raw row counts</td><td><span class="pill p-lose">Must exist before first cohort</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout danger">
+    <span class="t">Regulatory — treat this as a hard gate, not a footnote</span>
+    <p>The UK Gambling Commission explicitly lists <strong>"fantasy football-type competitions"</strong> under pool betting. Its guidance on virtual currencies states that where facilities for gambling are offered using such items, a licence is required in the same manner as for casino chips that can later be exchanged for cash.</p>
+    <p>Your no-cash-out design is a genuine and well-reasoned mitigation — it's the difference between a virtual-goods model and gambling. But you have users paying <em>real money</em> via Stripe for coins that are then <em>staked on outcomes</em> in P2P challenges. Whether that constitutes a "prize of money's worth" is a question for a gambling solicitor, not for a founder's reading of the guidance. <strong>Get a written opinion before you take a single pound of coin revenue.</strong> This is also the item most likely to blow up a sale later if left unresolved.</p>
+  </div>
+
+  <h3>Verdict on Path A</h3>
+  <p><strong>Not viable as a broad public launch</strong> as currently resourced. The product is ready enough; the business around it doesn't exist. You'd be entering the highest-CPI app category, against free official incumbents, with no distribution, no marketing budget, no ops team, and an unresolved regulatory question, as one person.</p>
+  <p><strong>But the failure mode is audience scale, not product scope.</strong> Cutting features to "launch smaller" is the wrong economy — it strips out the multi-sport container that is the only reason to choose this over FPL, and leaves you testing a commodity. Cut the <em>audience</em> instead: full product, 200–400 invited players, a size one person can operate. That's Path C, and it's a genuine version of Path A rather than a retreat from it.</p>
+</section>
+
+<!-- ══════════════ SELL ══════════════ -->
+<section id="sell" class="tab-content">
+  <h2>Path B — Sell it as-is</h2>
+
+  <h3>Who could actually buy this</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Buyer type</th><th>Why they'd care</th><th>What kills it</th><th>Realistic</th></tr></thead>
+    <tbody>
+      <tr><td class="you">White-label / B2B fantasy vendor</td><td>Wants a multi-sport engine to resell to clubs, media groups, bookmakers</td><td>They already have engines; yours is Supabase-locked and needs re-platforming</td><td><span class="pill p-tie">Best odds</span></td></tr>
+      <tr><td class="you">Sports media group</td><td>Fan-engagement product to launch with an existing audience</td><td>They'd rather license an off-the-shelf white-label than own a codebase</td><td><span class="pill p-tie">Medium</span></td></tr>
+      <tr><td class="you">European betting operator</td><td>Free-to-play acquisition funnel feeding a licensed book</td><td>Regulatory caution; strong preference for vendors with compliance track record</td><td><span class="pill p-tie">Medium</span></td></tr>
+      <tr><td class="you">Fantasy operator entering multi-sport</td><td>Skip 12 months of build for F1/tennis modules</td><td>Small set of such firms; most build in-house</td><td><span class="pill p-lose">Low</span></td></tr>
+      <tr><td class="you">Acqui-hire</td><td>Buying the team</td><td><strong>There is no team.</strong> Solo + AI-assisted build means no engineers to acquire</td><td><span class="pill p-lose">Not available</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout danger">
+    <span class="t">The acqui-hire route is closed — and this matters</span>
+    <p>A large share of pre-revenue technical exits are really talent deals. That option is structurally unavailable here: the value was created by a non-technical founder directing AI, which is a genuine skill but not the thing acquirers write acqui-hire cheques for. It means the sale must stand entirely on the asset's own merits, with no fallback.</p>
+  </div>
+
+  <h3>What a buyer's diligence will find</h3>
+  <p>Your own documents are unusually candid, which is a real asset in a sale — but it means the findings are already written down. A buyer will read:</p>
+  <ul>
+    <li><strong>Schema irreproducibility (DATA-1).</strong> 75 of 271 migrations fail a from-scratch replay. A fix was applied directly to production and never captured as a migration. The repo cannot rebuild the database it runs on. Mitigated by <code>supabase/schema.sql</code>, but the audit trail gap is the finding.</li>
+    <li><strong>Test coverage.</strong> 56 unit tests and 84 E2E UI tests is meaningful progress — but coverage of the money and scoring paths is thin relative to the risk those paths carry.</li>
+    <li><strong>No DR (OPS-1).</strong> Single environment, no point-in-time recovery, manual backups.</li>
+    <li><strong>Supabase lock-in.</strong> "Run it on our cloud" is a re-platforming project, not a config change.</li>
+    <li><strong>Data-feed transferability unconfirmed.</strong> Forza, OpenF1, RapidAPI commercial terms on change of control — still an open question in your own brief.</li>
+    <li><strong>Three headline features never exercised in production.</strong> <code>p2p_challenges</code>, <code>trophy_ledger</code>, <code>player_boxes</code> all have zero rows. "Shipped" means merged, not validated.</li>
+    <li><strong>Zero demand proof.</strong> ~75 registered users, 34 in nothing, £0 revenue, site behind a maintenance wall.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="t">The candour trade-off</span>
+    <p>Your documentation quality genuinely raises value — it removes onboarding risk and signals integrity, and buyers reward that. But be deliberate about <em>sequencing</em>: don't volunteer the internal valuation reasoning or the raw build history (§11.1) until you understand what the buyer's own alternative costs. Full transparency on technical state, yes. Volunteering the argument that defeats your own floor, no.</p>
+  </div>
+
+  <h3>Realistic outcome if you run a sale process now</h3>
+  <p>Months of outbound to a thin buyer list, with the most likely outcomes being no bid, or a bid in the <strong>£25k–£90k</strong> range from a single strategic buyer with no competitive tension. A code-marketplace listing would clear faster at <strong>£8k–£30k</strong>. Weigh that against roughly four months of full-time work and whatever the platform cost to run.</p>
+
+  <h3>Verdict on Path B</h3>
+  <p><strong>Available, but you'd be selling at the bottom of the asset's value range</strong>, at the precise moment its two cheapest value multipliers — a live competition and a retention curve — are still unexercised. If you are certain you don't want to operate this, sell. But sell <em>after</em> Path C, not instead of it: 10–12 weeks of traction data plausibly multiplies the achievable price several times over, and costs far less than the difference.</p>
+</section>
+
+<!-- ══════════════ B2B2C ══════════════ -->
+<section id="b2b" class="tab-content">
+  <h2>Path D — License or sell to a broadcaster (DAZN / LiveMode class)</h2>
+
+  <div class="verdict">
+    <div class="label">Why this reframe matters more than anything else here</div>
+    <div class="big">Same asset, different buyer, roughly <strong>30× difference in price</strong> — driven entirely by what the buyer compares it against.</div>
+    <p>A Flippa buyer compares this to other pre-revenue codebases → £8–30k. A broadcaster compares it to their own <strong>build-vs-buy decision</strong> for a fan-engagement layer → <strong>$900k–2.5M custom build (8–14 months, full IP)</strong> or <strong>$400k–1M hybrid</strong>, per current market build-path pricing. Nothing about the code changes. The comparison set does.</p>
+  </div>
+
+  <div class="callout danger">
+    <span class="t">Correction to my earlier analysis</span>
+    <p>In the Sell tab I priced this against consumer-app marketplaces and concluded £450–750k was unreachable. <strong>That was the wrong comparison set.</strong> In a B2B2C frame the internal valuation is defensible — it sits below the cost of a custom build and in the range of a hybrid one. The Sell tab's numbers stand for a D2C asset sale; they do not apply here. This is the strongest version of the sell path and I under-weighted it.</p>
+  </div>
+
+  <h3>The market you'd actually be selling into</h3>
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="stat"><div class="n good">$4.8B → $13.2B</div><div class="l">Sports fan-engagement platform market, 2025 → 2034 forecast</div></div>
+    <div class="stat"><div class="n acc">$900k–2.5M</div><div class="l">Custom build path: 8–14 months, full IP — your direct comparison</div></div>
+    <div class="stat"><div class="n acc">$400k–1M</div><div class="l">Hybrid build path: 5–8 months, full UX control</div></div>
+  </div>
+
+  <h3>Your instinct is validated — DAZN has already moved</h3>
+  <div class="callout">
+    <span class="t">April 2026 — DAZN × ADI Predictstreet</span>
+    <p>DAZN entered a strategic partnership with ADI Predictstreet, Official Prediction Market Partner of the FIFA World Cup 2026, launching a <strong>free-to-play prediction layer embedded directly into the viewing experience</strong> — real-time predictions, sentiment tracking, dynamic leaderboards, rewards. Explicitly framed as free-to-play and engagement-focused, <em>not</em> a wagering product. It expands across DAZN's wider sports portfolio after the tournament.</p>
+    <p><strong>Read this both ways.</strong> Bad news: the specific company you named has already partnered, so that door is at minimum narrowed. Good news, and it's bigger: a company of DAZN's size independently concluded that a free-to-play prediction layer is worth a strategic partnership — and they chose to <em>partner rather than build</em>. That is your thesis being validated and your deal shape being demonstrated in the same announcement.</p>
+  </div>
+
+  <div class="callout danger">
+    <span class="t">July 2026 — it got narrower again, and this is the version that matters</span>
+    <p>On <strong>15 July 2026</strong> the same two companies announced a second, deeper agreement: an <strong>exclusive global partnership</strong> to build regulated sports prediction markets — described as operating "on an exclusive basis," covering DAZN's <strong>200+ market international footprint</strong>, with a stated strategic focus on the US pending licences. A second-screen prediction experience running alongside DAZN content, on ADI Chain infrastructure.</p>
+    <p><strong>What this actually closes:</strong> leg (iii) of your USP — the fast prediction/betting layer — is now <em>contractually</em> occupied at DAZN. Not "they're busy"; exclusive. What it does <em>not</em> close is fantasy squad play and the persistent cross-sport private group. ADI Predictstreet is a prediction <em>market</em> — individual, global, sentiment-and-probability — not a clubhouse.</p>
+    <p><strong>Consequence for your pitch:</strong> any DAZN approach must now lead with legs (i) and (ii) and explicitly disclaim the betting layer. That means leading with your <em>least-proven</em> leg while your best evidence is unusable. Deprioritise DAZN — don't delete it, but stop treating it as the anchor prospect.</p>
+  </div>
+
+  <h3>Where the gap still is — and it's exactly your USP</h3>
+  <p>What DAZN bought is a <strong>global prediction market with public leaderboards</strong>. What it is not, is a small-group social container. The distinction is the whole argument:</p>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Dimension</th><th>ADI Predictstreet / LiveLike / Monterosa</th><th>Forza</th></tr></thead>
+    <tbody>
+      <tr><td>Social unit</td><td>Individual vs. the global crowd</td><td class="you"><span class="pill p-win">Persistent private group ("the room")</span></td></tr>
+      <tr><td>Continuity between events</td><td>Per-match, per-event; resets</td><td class="you"><span class="pill p-win">Clubhouse persists across sports and seasons</span></td></tr>
+      <tr><td>Multi-sport under one membership</td><td>Per-property integrations</td><td class="you"><span class="pill p-win">Native — one circle, many sports</span></td></tr>
+      <tr><td>Depth of game layer</td><td>Predictions and polls</td><td class="you"><span class="pill p-win">Fantasy squads + drafts + bets + trophies</span></td></tr>
+      <tr><td>Overlay / SDK maturity</td><td><span class="pill p-lose">They win</span> — mature broadcast overlay SDKs</td><td>Standalone app; no SDK surface</td></tr>
+      <tr><td>Multi-tenancy / white-label</td><td><span class="pill p-lose">They win</span> — core to their product</td><td>Single-tenant; not built for this</td></tr>
+      <tr><td>Enterprise readiness</td><td><span class="pill p-lose">They win</span> — SLAs, DR, references</td><td>No staging, no PITR, solo vendor</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout good">
+    <span class="t">The one-sentence pitch</span>
+    <p>"You have a global prediction leaderboard. What drives retention isn't predicting against 2 million strangers — it's a standing bet against six friends who'll rib you about it all week. In our pilot <strong>87% of exposed users adopted the betting layer and 64% stayed active across four or more weeks</strong>, because they were playing against people they know. That's the layer you don't have, and it works across every sport you carry."</p>
+  </div>
+
+  <h3>The regulatory picture gets better, not worse</h3>
+  <p>This is a genuine advantage of the B2B route and worth stating plainly. In D2C, your paid-coins-staked-on-outcomes model is an open UKGC question you must resolve at your own cost and risk. In B2B2C, either the operator already holds the licence (DAZN Bet is licensed), or — as DAZN did with ADI — the layer ships explicitly as <strong>free-to-play, no cash-out</strong>, which is precisely how your coin economy was designed. The no-cash-out choice stops being a limitation you have to defend and becomes the compliance feature that makes the product shippable inside a regulated broadcaster.</p>
+
+  <h3>Target map — six buyer classes, not one</h3>
+  <p>"Broadcaster" was too narrow a frame. There are six distinct classes here, and they differ in cheque size, cycle length and <em>which leg of your USP does the selling</em>. That last column is the one to read.</p>
+
+  <h4 style="margin-top:18px">A · Creator-led challenger broadcasters <span class="pill p-win">Best fit</span></h4>
+  <p><strong>LiveMode</strong> is the standout and the timing is exceptional. On <strong>27 July 2026</strong> they opened the commercial program for the <strong>FIFA Women's World Cup Brazil 2027</strong> — all 64 matches, free-to-air in Brazil via <strong>CazéTV</strong> and in Portugal via <strong>LiveModeTV</strong>. Their own description of the broadcast: live sports, creators, entertainment and audience participation, with <em>live chat, real-time polls and interactive features</em> turning the transmission into a shared environment for fans, creators, athletes and brands. Backed by <strong>General Atlantic and XP</strong> (minority investment, 2024), with Cristiano Ronaldo a partner in the international expansion.</p>
+  <div class="callout danger">
+    <span class="t">Important nuance I got wrong first time</span>
+    <p>That commercial program is a <strong>sponsorship and advertising sale</strong>, not a technology procurement. So the realistic route is not "LiveMode buys your platform" — it is "<strong>a sponsor funds a branded engagement layer that LiveMode hosts</strong>." That changes who you pitch, and it is <em>good</em> news: marketing budgets move in weeks, IT procurement moves in quarters, and a sponsor activation does not run the DATA-1/OPS-1 diligence gauntlet. Smaller cheque, far faster close, and it produces the reference case that unlocks the bigger ones.</p>
+  </div>
+  <p>Also in class: other creator-led and challenger rights-holders buying single-tournament rights who need differentiation against incumbent broadcasters and cannot fund a $900k–2.5M custom build. Portugal and Brazil are also your <em>easiest</em> markets to serve — you already have the language and time zone.</p>
+
+  <h4 style="margin-top:22px">B · Betting operators running a free-to-play funnel <span class="pill p-win">Deal shape already proven</span></h4>
+  <p>This class has a live, dated precedent that is almost exactly your proposed transaction. In <strong>June 2026</strong>, <strong>bet365 launched a free-to-play Fantasy Sports product</strong> across the US and Canada, timed ahead of the World Cup — <strong>built by LOW6</strong>, a ~40-person B2B gamification vendor, under what both parties called an expanding partnership. Free-to-play, in-game coins, division-based leaderboards, ad-free.</p>
+  <p>Why it fits you specifically: your <strong>no-cash-out virtual coin economy is the exact compliance shape</strong> an operator wants for a top-of-funnel product — engagement without a licensable event. And the operator carries the licence on the paid side, which removes your single largest regulatory unknown. The catch is stated below in class D: this is LOW6's home turf.</p>
+
+  <h4 style="margin-top:22px">C · Multi-sport OTT with a churn problem <span class="pill p-tie">Only class where leg (i) is a P&amp;L line</span></h4>
+  <p>Sky/NOW, TNT Sports, Viaplay, Optus Sport, SuperSport, Sportsnet. This is the <em>only</em> buyer class for whom "the same group of people, across several sports, all season long" maps directly to a number they already manage — subscriber churn between seasons. Everyone else treats engagement as a marketing nice-to-have; these buyers treat it as retention. DAZN was the archetype and is now locked, which makes this class thinner but not empty.</p>
+  <p>Trade-off: longest procurement cycles, hardest diligence, and the class where solo-vendor risk bites worst.</p>
+
+  <h4 style="margin-top:22px">D · The incumbent B2B vendors — as <em>acquirers</em>, not customers <span class="pill p-info">Tuck-in angle</span></h4>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Vendor</th><th>Position</th><th>Angle</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Genius Sports</strong> (FanHub)</td><td>Acquired FanHub in 2021 — trivia, brackets, pick'em, polling, fantasy. Ships to NFL, MLB, MLS, Betway, PointsBet. Public company.</td><td>Proven acquirer of exactly this category</td></tr>
+      <tr><td><strong>LOW6</strong></td><td>~$21M raised, ~40 staff across 3 continents, new chairman May 2026, powers bet365 Fantasy. Expanding into skill-based PvP.</td><td>Closest competitor <em>and</em> plausible acquirer</td></tr>
+      <tr><td><strong>Sportradar</strong></td><td>Fan-engagement product line alongside data; serial acquirer.</td><td>Consolidator</td></tr>
+      <tr><td>Vinfotech · 4C Games · LiveLike · Monterosa · Dizplai</td><td>White-label predictor/fantasy and broadcast-overlay shops.</td><td>Tuck-in or partner-to-resell</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout">
+    <span class="t">Your actual differentiator against every one of them</span>
+    <p>They sell <strong>campaign-shaped widgets</strong> — one game, one tournament, one sponsor, resets afterwards. You have a <strong>persistent, cross-sport, private-group room with an escrowed ledger</strong>. That is a <em>retention</em> product, not an activation, and it is a genuinely different shape rather than a feature-count difference. It is also the reason a consolidator might buy rather than build.</p>
+    <p><strong>But be honest about the risk:</strong> LOW6's 2026 move into skill-based PvP competition is drifting toward your space, and they have funding, staff and distribution you don't. The window on "nobody else sells the persistent room" is not indefinite.</p>
+  </div>
+
+  <h4 style="margin-top:22px">E · Sponsors and brands <span class="pill p-win">Fastest money, most overlooked</span></h4>
+  <p>Nobody puts this class on the list, and it may be the best first close. A brand sponsoring WWC 2027 (or any tournament) needs an <em>activation</em>. You have an activation with a measured four-week retention number attached. The budget comes from marketing, the decision cycle is weeks, the technical diligence is light, and success is measured in engagement — the one thing you can already evidence. Smallest cheque of the six, but it is revenue, it is a logo, and it converts you from "pre-revenue asset" to "vendor with a client."</p>
+
+  <h4 style="margin-top:22px">F · Leagues, federations and clubs <span class="pill p-lose">Weakest fit</span></h4>
+  <p>Single-sport bodies structurally cannot use leg (i), which is your headline differentiator — a tennis federation has no interest in an F1 paddock. Only worth pursuing for genuinely multi-sport bodies or multi-club groups. Long cycles, and you'd be selling the least distinctive version of the product.</p>
+
+  <h3>Deal shapes — the other axis</h3>
+  <p>Who you sell to is one question; <em>what you sell</em> is a separate one, and it moves the price and the amount of you that gets consumed.</p>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Shape</th><th>Cheque</th><th>Cycle</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="you"><strong>Sponsor-funded activation</strong></td><td>£20–80k</td><td>Weeks</td><td>No IP transfer, light diligence. The realistic <em>first</em> deal.</td></tr>
+      <tr><td class="you"><strong>Powered-by vendor deal</strong></td><td>Fee + rev-share</td><td>3–9 months</td><td>The LOW6/bet365 shape. Recurring, but you become an ongoing dependency.</td></tr>
+      <tr><td class="you"><strong>White-label licence</strong></td><td>£100–400k/yr</td><td>6–12 months</td><td>Requires multi-tenancy. Highest long-run value if you can staff support.</td></tr>
+      <tr><td class="you"><strong>Build-and-operate</strong></td><td>Managed-service fee</td><td>3–6 months</td><td>You run it, they brand it. Plays to solo-founder reality — no multi-tenancy needed.</td></tr>
+      <tr><td class="you"><strong>Outright IP sale</strong></td><td>£300–900k+</td><td>6–18 months</td><td>To a class-D consolidator. Cleanest exit; kills the solo-vendor objection outright.</td></tr>
+      <tr><td class="you"><strong>Licence with option to buy</strong></td><td>Staged</td><td>One tournament cycle</td><td>De-risks them, prices you on proof rather than promise. Best structure if they hesitate.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>What this path demands that the D2C path doesn't</h3>
+  <div class="callout danger">
+    <span class="t">This reverses my earlier "defer DATA-1 / OPS-1" advice</span>
+    <p>In the D2C frame those were deferrable — you'd only clear them once a buyer appeared. In the B2B2C frame they are <strong>entry requirements</strong>. No broadcaster's technical diligence accepts "we can't rebuild the schema from the repo," "there's no staging," or "there's no point-in-time recovery." A consumer buyer might shrug; a procurement process will not.</p>
+  </div>
+  <ul>
+    <li><strong>Multi-tenancy and white-label theming.</strong> Currently single-tenant. This is real engineering, not configuration, and it's the biggest genuine gap.</li>
+    <li><strong>Data-feed agnosticism.</strong> They bring their own rights and feeds. The provider-adapter seam and the Opta stub are exactly the right groundwork — finish and demo them.</li>
+    <li><strong>Integration surface.</strong> SSO into their identity system, an embeddable/SDK path rather than a standalone app, and their design system.</li>
+    <li><strong>DATA-1, OPS-1, TEST-1 cleared.</strong> Schema reproducibility, staging + PITR, money-logic test coverage. Non-negotiable for procurement.</li>
+    <li><strong>Solo-vendor risk.</strong> The hardest objection, and it has no clean answer. Mitigate with source-code escrow, a licence-plus-support structure, or by selling the IP outright rather than becoming a dependency.</li>
+  </ul>
+
+  <h3>Verdict on Path D</h3>
+  <p><strong>This is the most valuable path available, and it's where the internal valuation actually lives.</strong> It inverts the two weaknesses that sink the other paths: you stop needing distribution (they have the audience) and you stop needing a gambling licence (they carry it, or it ships free-to-play). It also matches what you can realistically resource — one strong pitch to one broadcaster, not a consumer growth machine.</p>
+  <p>The costs are real: 6–18 month sales cycles, procurement-grade diligence, and multi-tenancy work that doesn't yet exist. But the proof it requires is a <strong>clean engagement metric, not scale</strong> — and a 300-person cohort can produce that. Which is why Path C doesn't compete with this. It feeds it.</p>
+</section>
+
+<!-- ══════════════ RECOMMENDED ══════════════ -->
+<section id="rec" class="tab-content">
+  <h2>Path C — Full product, controlled audience</h2>
+
+  <div class="verdict">
+    <div class="label">The move</div>
+    <div class="big">Launch the <strong>entire thesis</strong> — clubhouse, all three sports live simultaneously, P2P challenges, trophies — to a deliberately <strong>invited cohort of 200–400</strong>. Instrument it. Run 10–12 weeks. Then decide with data.</div>
+    <p>Full product scope is non-negotiable: a mono-sport launch tests the commodity layer, and the commodity layer is the part you lose to the free official incumbent anyway. But <em>audience</em> scope is a separate decision from <em>product</em> scope, and going wide is the worse bet — three of your four differentiators have never been touched by a human.</p>
+  </div>
+
+  <div class="callout danger">
+    <span class="t">Why not open the doors completely</span>
+    <p><code>p2p_challenges</code> = 0 rows. <code>trophy_ledger</code> = 0 rows. <code>player_boxes</code> = 0 rows. Merged is not validated. Your live-ops history already includes manual scoring corrections (13 managers, retroactive clean-sheets) at ~50 users, run by one person. An invited cohort isn't timidity — it's the largest audience you can actually support while three headline features meet their first real user.</p>
+  </div>
+
+  <h3>Why this beats committing to either path now</h3>
+  <ul>
+    <li><strong>It tests the real hypothesis.</strong> Not "is our fantasy game good" — that question's answer doesn't matter. The question is whether a multi-sport social container is something people want. Only a full-scope launch can answer it.</li>
+    <li><strong>It's the same work either way.</strong> Engagement data is the primary input to a launch decision <em>and</em> the primary missing input to a sale price. Nothing else has that property.</li>
+    <li><strong>It's falsifiable in both directions.</strong> If the cross-sport rate is low, you've proven your own "then I should close shop" hypothesis with evidence in 12 weeks rather than assuming it, or discovering it in 12 months.</li>
+    <li><strong>It de-risks the sale regardless.</strong> Exercising the three never-used surfaces converts "merged" into "validated" — which is a diligence answer whichever way the numbers land.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="t">The calendar is the constraint — this is time-critical</span>
+    <p>As of 21 Aug 2026: <strong>F1</strong> has 11 races left, ending early December. <strong>European football</strong> 2026/27 seasons are kicking off right now. <strong>Tennis</strong> has 5 genuinely future tournaments.</p>
+    <p>This is the one window where all three run at once — and a multi-sport clubhouse where only one sport has live content isn't demonstrable at all. The cross-sport trophy ledger has nothing to aggregate. <strong>The thesis is only testable while the seasons overlap, and that overlap closes when F1 ends in December.</strong> Football registration is a now-action, not a later-action.</p>
+  </div>
+
+  <h3>The metric this whole launch exists to produce</h3>
+  <div class="callout good">
+    <span class="t">Cross-sport participation rate</span>
+    <p>Of active users, what percentage compete in <strong>two or more sports</strong>? That single number is the thesis. If it's high, the clubhouse container is real and you are not another fantasy app. If it's low, the container adds nothing — and by your own logic, that's the answer.</p>
+    <p>Retention is secondary. Everything else — screens, formats, polish — is in service of this one measurement. Instrument for it specifically, not just for generic DAU.</p>
+  </div>
+
+  <h3>Pre-commit to these decision criteria</h3>
+  <p>Agree these now, while you're not yet invested in a particular answer. Four signals, in priority order:</p>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Signal after 10–12 weeks</th><th>Read</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="you"><strong>Cross-sport rate &gt;35%</strong> + week-8 retention &gt;40% + organic invites spreading</td>
+        <td><span class="pill p-win">Thesis proven</span></td>
+        <td>Commit to Path A. Raise or bootstrap. You now hold the only thing investors and acquirers actually price.</td>
+      </tr>
+      <tr>
+        <td class="you">Cross-sport rate <strong>&gt;35%</strong> but retention 20–40%, no organic spread</td>
+        <td><span class="pill p-tie">Thesis right, distribution wrong</span></td>
+        <td>Strongest possible sale story: "the multi-sport hook works, we lack reach." This is the £120k–£400k conversation, not £25k–£90k.</td>
+      </tr>
+      <tr>
+        <td class="you">Cross-sport rate <strong>&lt;25%</strong> — people join one sport and stay there</td>
+        <td><span class="pill p-lose">Thesis false</span></td>
+        <td>You are a commodity fantasy app. Your own conclusion applies: sell the asset for what the code market bears and stop spending.</td>
+      </tr>
+      <tr>
+        <td class="you">P2P challenge participation &lt;10% of active users</td>
+        <td><span class="pill p-lose">Coin economy is dead weight</span></td>
+        <td>Independent of the above. Drop the monetisation thesis, and with it the entire gambling-regulatory exposure. That simplification alone has value.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <span class="t">What makes this the right call</span>
+    <p>Every branch leaves you better off than deciding today. The upside branch gives you a fundable business. The middle branch multiplies the achievable sale price by more than the sprint costs. The downside branch tells you to stop — which, four months in, is genuinely valuable and far cheaper to learn now than after another six months of building.</p>
+  </div>
+
+  <h3>What NOT to do</h3>
+  <ul>
+    <li><strong>Don't build new features.</strong> The problem is not missing capability. Every hour spent on a new format is an hour not spent on the calendar window, which closes in December.</li>
+    <li><strong>Do start DATA-1 / OPS-1 — revised.</strong> I originally said defer these. That holds only if the buyer is a consumer acquirer. If you are pursuing Path D they are <em>entry requirements</em> for procurement, not optional hardening, and they have long lead times. Start them in parallel with the cohort.</li>
+    <li><strong>Don't measure only your own sport.</strong> Leg (i) of the USP has zero evidence. If the cohort ends with everyone in one sport, you've learned nothing about the thesis regardless of how good retention looks.</li>
+    <li><strong>Don't take coin revenue before the legal opinion lands.</strong> Small revenue is not worth the regulatory exposure or the risk of derailing a later sale. Run the cohort on granted coins until the opinion is in.</li>
+    <li><strong>Don't open signup publicly.</strong> Invited cohorts only. You need a surface you can support solo while three headline features meet their first real user.</li>
+    <li><strong>Don't measure only retention.</strong> A high-retention single-sport cohort would look like success and would actually be the failure case. Cross-sport rate is the number.</li>
+  </ul>
+</section>
+
+<!-- ══════════════ NEXT STEPS ══════════════ -->
+<section id="next" class="tab-content">
+  <h2>Next steps — the all-in launch runbook</h2>
+  <p>Concrete sequence for a full-scope launch to an invited cohort, working back from the calendar. Everything here assumes the seasons-overlap window: <strong>launch by early October, or the F1 season ends before you have 8 weeks of data.</strong></p>
+  <p style="margin-top:-8px"><strong>Read this alongside <a href="#" data-goto="b2b" class="xlink">Path D</a>.</strong> The runbook below is the proof engine; the B2B2C outreach it feeds runs <em>in parallel from week 1</em>, not after. A broadcaster sales cycle is 6–18 months — sequencing it behind an 18-week cohort costs you a year you don't have.</p>
+
+  <div class="grid3" style="margin-bottom:22px">
+    <div class="stat"><div class="n acc">~6 wks</div><div class="l">Prep before the first cohort user arrives</div></div>
+    <div class="stat"><div class="n acc">10–12 wks</div><div class="l">Cohort run, then the decision gate</div></div>
+    <div class="stat"><div class="n warn">Dec 2026</div><div class="l">F1 season ends — the multi-sport overlap window closes</div></div>
+  </div>
+
+  <div class="callout danger">
+    <span class="t">Standing constraint — every DB and deploy step below is approval-gated</span>
+    <p>Per the project's operating rules, no migration, <code>db query --linked</code> write, Edge Function deploy, or change to <code>MAINTENANCE_MODE</code> happens without the exact action being named in chat and explicitly approved <em>for that item, in that session</em>. Nothing in this runbook is pre-authorised by virtue of appearing here. Every migration is preceded by a full <code>db dump</code> backup.</p>
+  </div>
+
+  <h3>Phase 0 — Decide and de-risk (week 1)</h3>
+  <ol class="steps">
+    <li><span class="h">Commission the gambling legal opinion — still first, but scope it to the paid path only</span><span class="d">Longest lead time, and it gates the P2P pitch that is core to the all-in thesis. Brief: paid coins via Stripe, staked on outcomes in P2P challenges and pools, no cash-out path, UK users. Ask specifically whether the no-cash-out design keeps this outside pool betting under the Gambling Act. Budget £3–10k, 2–4 weeks turnaround. <strong>Path D note:</strong> under a broadcaster licence this risk mostly inverts — the operator carries the licence, or ships the layer free-to-play, which is what the no-cash-out design already assumes. So this opinion protects the <em>cohort</em>, not the B2B deal. If cash gets tight, run the cohort's coin path as free-issue only and defer the opinion; do not defer the outreach.</span></li>
+    <li><span class="h">Confirm data-feed transferability and commercial terms</span><span class="d">Forza, OpenF1, RapidAPI. Two questions: what are the rate limits and costs at 400 concurrent users rather than 50, and do the terms permit a commercial product with paid features. This is also the open diligence question in your own valuation brief — answering it serves both paths.</span></li>
+    <li><span class="h">Fix the analytics gap before anything else technical</span><span class="d"><code>CODE-5</code>, promoted out of P3. Non-negotiable and it comes first, because retrofitting loses the first cohort's drop-off data permanently. Instrument specifically for <strong>cross-sport participation</strong> — user → clubhouse → competitions joined, keyed by sport — plus funnel, week-over-week retention, and P2P challenge creation/acceptance. Generic DAU is not sufficient; the thesis metric must be measurable on day one.</span></li>
+  </ol>
+
+  <h3>Phase 1 — Stand up all three sports (weeks 2–4)</h3>
+  <ol class="steps">
+    <li><span class="h">Register the 2026/27 football competition — the critical path</span><span class="d"><code>DD-P0-3</code>. Follow <a href="../../deployment/ADDING_A_NEW_TOURNAMENT.md">ADDING_A_NEW_TOURNAMENT.md</a> steps 1–6: register the tournament with <code>sync_enabled=false</code>, sync fixtures, sync players, seed <code>scoring_rules</code> from EPL (<code>426</code>), add the three per-tournament sync crons, then flip <code>sync_enabled=true</code>. Also fix the stale tournament statuses — all 8 existing leagues currently point at finished tournament <code>429</code>. This is config, not code, but it's ten steps and the season is already running.</span></li>
+    <li><span class="h">Verify F1 and tennis have live, joinable competitions</span><span class="d">F1: confirm the 11 remaining 2026 races are synced with correct deadlines. Tennis: confirm the 5 future tournaments are set up and that a Player Box can actually be created and joined — <code>player_boxes</code> has zero rows, so this path has never run with a real user. All three sports must be simultaneously joinable or the clubhouse pitch doesn't hold.</span></li>
+    <li><span class="h">Unfreeze the crons — with observability first</span><span class="d"><code>DD-P0-2</code>. All 22 jobs, but only after step 4 gives them real data to act on, or they fire against half-loaded fixtures. Fold in <code>OPS-SENTRY</code> (backend DSN + <code>check-cron-health</code> scheduling) in the same change so the first live scoring run is actually observable rather than inferred from row counts afterwards.</span></li>
+    <li><span class="h">Purge test and dry-run data</span><span class="d"><code>DD-P1-1</code>. <code>TEST_</code>-prefixed leagues, dry-run tournaments, orphaned squads. This is what a new tester would otherwise walk into. SELECT and review the affected rows before any delete.</span></li>
+  </ol>
+
+  <h3>Phase 2 — Validate the never-exercised surfaces (weeks 4–5)</h3>
+  <ol class="steps">
+    <li><span class="h">Walk the cold-start funnel with a fresh account</span><span class="d"><code>DD-P1-2</code>. The one step that needs a human, not a query. Real credentials, no shortcuts, no admin access: sign up → land on <code>/clubhouse</code> with nothing → create or join a circle → join a league, a paddock <em>and</em> a player box → build squads in all three → see a scored round. 34 of 75 existing users are sitting in exactly this empty state and the path has never been walked end to end. <strong>This is the real go/no-go gate.</strong></span></li>
+    <li><span class="h">Force-exercise the three zero-row features</span><span class="d">Create and settle a real P2P challenge (<code>p2p_challenges</code>). Confirm a trophy actually emits and appears on the cross-sport leaderboard (<code>trophy_ledger</code> — ARCH-1 shipped in PR #807 but has never fired in production). Run a full Player Box (<code>player_boxes</code>). Also verify <code>chips_used</code>, which is likewise empty. These four are your differentiators; every one of them is unproven.</span></li>
+    <li><span class="h">Rehearse one full scoring cycle across all three sports in the same week</span><span class="d">The multi-sport claim only holds if the pipeline handles concurrent live content. Score a football round, an F1 race and a tennis round within one week and confirm the clubhouse aggregates them. This is also the demo you'd show a buyer — it's the visual proof of the entire differentiator.</span></li>
+  </ol>
+
+  <h3>Phase 3 — Recruit and run (weeks 6–18)</h3>
+  <ol class="steps">
+    <li><span class="h">Take the maintenance wall down for invited users only</span><span class="d">Not a broad public lift. Whatever mechanism fits — invite codes, allowlist, staged middleware bypass — the requirement is a controlled surface you can support solo. Explicit approval needed before touching <code>MAINTENANCE_MODE</code> in any form.</span></li>
+    <li><span class="h">Recruit 200–400 into 20–40 clubhouses</span><span class="d">Organic only — no paid acquisition at $26.81 CPI. Existing pilot users first (including the 34 currently in nothing), then football/F1/tennis communities, Reddit, Discord, your own network. Recruit into <em>groups</em>, not as individuals: the product is social, so a lone signup has nothing to do. Target ~10 per clubhouse.</span></li>
+    <li><span class="h">Run 10–12 weeks and hold the line on scope</span><span class="d">The output is evidence, not more product. The only permitted work is fixes to things that demonstrably block engagement. Weekly: check the cross-sport rate, read errors in Sentry, talk to users directly. Resist every instinct to build.</span></li>
+    <li><span class="h">Decide at the gate</span><span class="d">Against the four pre-committed criteria in Path C. Cross-sport participation rate is the primary signal; retention and P2P engagement are secondary. If the answer is "commodity," act on it rather than funding a second sprint hoping for different numbers.</span></li>
+  </ol>
+
+  <h3>Parallel track — B2B2C outreach (runs alongside, from week 1)</h3>
+  <p>The cohort is the proof engine; this is what the proof is <em>for</em>. Do not run these in sequence — a B2B sales cycle is 6–18 months, so starting it after the cohort finishes costs you a year.</p>
+  <ol class="steps">
+    <li><span class="h">Approach the WWC 2027 sponsor market via LiveMode — not LiveMode's IT department</span><span class="d">They opened the commercial program on 27 July 2026 for the FIFA Women's World Cup Brazil 2027 — all 64 matches, CazéTV in Brazil and LiveModeTV in Portugal, explicitly positioned around live chat, real-time polls, creators and audience participation. But that program is a <strong>sponsorship sale, not a technology procurement</strong>. Pitch a sponsor-funded branded engagement layer that LiveMode hosts: marketing budget, weeks not quarters, light technical diligence. Lead with the pilot betting numbers, never with the codebase.</span></li>
+<li><span class="h">Run the betting-operator angle in parallel — the deal shape is already proven</span><span class="d">bet365 launched a free-to-play Fantasy Sports product in June 2026, built by LOW6 (~40 staff), timed to the World Cup. That is your proposed transaction, executed. Your no-cash-out coin economy is the exact compliance shape an operator wants top-of-funnel. Be clear-eyed: you'd be competing on LOW6's turf, so lead with the persistent cross-sport room, not with pick'em parity.</span></li>
+    <li><span class="h">Build the one-page proof asset, not a pitch deck</span><span class="d">A broadcaster wants a single defensible engagement claim, not an architecture tour. Lead: <em>87% of exposed users adopted the betting layer; 64% stayed active four-plus weeks; the mechanic is small-group social, not global leaderboard.</em> State the n=16 and World Cup caveats yourself — volunteering the weakness buys credibility and you'll be found out otherwise.</span></li>
+    <li><span class="h">Scope the multi-tenancy gap honestly and cost it</span><span class="d">Single-tenant today. You don't need to build it before conversations start, but you need a credible estimate and design, because it will be the first technical question. Pair it with finishing the provider-adapter seam — they will bring their own feed, and the Opta stub is the demo that proves they can.</span></li>
+    <li><span class="h">Start DATA-1, OPS-1, TEST-1 in parallel</span><span class="d">Schema reproducibility, staging + PITR, money-logic tests. Long lead times, and procurement will not waive them. Starting these at week 1 rather than at first buyer contact is the difference between closing and stalling.</span></li>
+    <li><span class="h">Decide the deal shape before the first call</span><span class="d">Licence-plus-support, outright IP sale, or build-and-operate. Each implies a different price and a different amount of you. Note DAZN chose to <em>partner</em> rather than build or buy — partnership may be the realistic shape, and solo-vendor risk is the objection you must have an answer to (source escrow, or sell the IP outright).</span></li>
+  </ol>
+
+  <h3>What this costs and what could stop it</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Item</th><th>Cost / effort</th><th>Risk if skipped</th></tr></thead>
+    <tbody>
+      <tr><td class="you">Gambling legal opinion</td><td>£3–10k, 2–4 wks</td><td><span class="pill p-lose">High</span> — regulatory exposure and a live sale-derailer</td></tr>
+      <tr><td class="you">Analytics instrumentation</td><td>~1 wk build</td><td><span class="pill p-lose">Fatal</span> — the cohort runs and you learn nothing measurable</td></tr>
+      <tr><td class="you">Football tournament registration</td><td>~2–3 days config</td><td><span class="pill p-lose">Fatal to the thesis</span> — no multi-sport overlap to test</td></tr>
+      <tr><td class="you">Cron unfreeze + Sentry</td><td>~2 days</td><td><span class="pill p-lose">Fatal</span> — a static app with no failure message</td></tr>
+      <tr><td class="you">Cold-start walk + feature validation</td><td>~1 wk of your time</td><td><span class="pill p-tie">High</span> — first cohort hits unproven paths</td></tr>
+      <tr><td class="you">Data-feed costs at 400 users</td><td>Unknown — confirm early</td><td><span class="pill p-tie">Medium</span> — could impose a hard scale ceiling</td></tr>
+      <tr><td class="you">Recruitment</td><td>Time only, no ad spend</td><td><span class="pill p-tie">Medium</span> — the hardest part, and unproven for you</td></tr>
+      <tr><td class="you">DATA-1 / OPS-1 / TEST-1 <span class="pill p-win">Path D</span></td><td>~6–10 eng-weeks</td><td><span class="pill p-lose">Fatal to Path D</span> — procurement will not waive schema reproducibility, DR or money-logic tests; long lead time means starting late stalls the deal</td></tr>
+      <tr><td class="you">Multi-tenancy design + costing <span class="pill p-win">Path D</span></td><td>Design only, ~3–5 days</td><td><span class="pill p-tie">High</span> — it's the first technical question a broadcaster asks; no answer reads as not-ready</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <span class="t">The honest risk in this plan</span>
+    <p>The binding constraint is <strong>recruitment, not engineering</strong>. Every technical step above is tractable and largely sequenced already by your own August audit. Getting 200–400 people into 20–40 clubhouses with no budget, no distribution and no existing audience is the part with no runbook and no prior evidence that you can do it.</p>
+    <p>If, four weeks into recruiting, you have 30 people rather than 300, that is itself the answer — and it arrives before most of the money is spent. Treat the recruitment number as an early checkpoint, not something to discover at week 12.</p>
+    <p><strong>The parallel track is partly a hedge against exactly this.</strong> A broadcaster doesn't need you to have an audience — they have one. Under Path D a small cohort that produces <em>clean cross-sport and betting engagement data</em> is worth more than a large one that produces noise. That reframes a recruitment shortfall from fatal to survivable, but only if the outreach has already been running for months by the time you find out.</p>
+  </div>
+</section>
+
+<!-- ══════════════ ASSET ══════════════ -->
+<section id="asset" class="tab-content">
+  <h2>Asset facts (verified against the repo and your August audit)</h2>
+
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="stat"><div class="n acc">1,217</div><div class="l">Commits since 2026-04-18 — roughly four months elapsed</div></div>
+    <div class="stat"><div class="n acc">273</div><div class="l">SQL migrations · 22 Edge Function directories · ~41K LOC frontend</div></div>
+    <div class="stat"><div class="n acc">3</div><div class="l">Sport modules built (Football, F1, Tennis) · ~27 screens</div></div>
+    <div class="stat"><div class="n warn">~75</div><div class="l">Registered users — 34 in no clubhouse and no league</div></div>
+    <div class="stat"><div class="n bad">£0</div><div class="l">Revenue. Coin economy built, never switched on</div></div>
+    <div class="stat"><div class="n good">56 / 84</div><div class="l">Unit tests / E2E tests passing in CI</div></div>
+  </div>
+
+  <h3>Genuine strengths</h3>
+  <ul>
+    <li><strong>Idempotent live-scoring pipeline</strong> across three sports with recovery snapshots — the hardest component, and it works.</li>
+    <li><strong>Server-side money integrity</strong> — SECURITY DEFINER RPCs, RLS, protected-column triggers, no cash-out ledger, constant-time Stripe webhook verification.</li>
+    <li><strong>Documentation quality</strong> well above the norm for this size — architecture docs, runbooks, a competition model reference, and self-critical due-diligence passes.</li>
+    <li><strong>Security posture</strong> — Phase-0 gate closed, CI security job, 0 npm vulnerabilities (bar one documented react-router advisory with no patch published).</li>
+    <li><strong>Native shells ready</strong> for iOS and Android; mobile-first UX redesign done.</li>
+  </ul>
+
+  <h3>Current operating state — everything is switched off</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Item</th><th>State</th><th>Since</th></tr></thead>
+    <tbody>
+      <tr><td>Public site</td><td><span class="pill p-lose">Walled</span> <code>MAINTENANCE_MODE=true</code></td><td>2026-07-24 cutover</td></tr>
+      <tr><td>Scheduled jobs</td><td><span class="pill p-lose">0 of 22 active</span> — nothing scores, syncs or resolves</td><td>2026-07-31</td></tr>
+      <tr><td>Football competition</td><td><span class="pill p-lose">None live</span> — 0 future fixtures across all 4 tournaments</td><td>Last kickoff 2026-07-19</td></tr>
+      <tr><td>F1</td><td><span class="pill p-win">11 races upcoming</span> on the 2026 calendar</td><td>Live content available</td></tr>
+      <tr><td>Tennis</td><td><span class="pill p-tie">5 genuinely future tournaments</span>; <code>player_boxes</code> = 0 rows</td><td>Never used by a real user</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <span class="t">Note on the valuation documents</span>
+    <p><code>PLATFORM_VALUATION_BRIEF.md</code> is a strong buyer-facing document — candid, well-structured, and genuinely useful in a sale. Keep it. This analysis does not contradict its <em>factual</em> content.</p>
+    <p>What it revises is <code>VALUATION_ANALYSIS.md</code>'s <strong>pricing logic</strong>: Method 1 (cost-to-recreate) is undermined by your own build history, and Method 2 (strategic premium) assumes a competitive buyer process for which there's no evidence. Both were reasonable when written; the market evidence gathered here doesn't support the resulting range. I'd recommend annotating that file rather than deleting it — the reasoning framework is sound, the inputs need revising.</p>
+  </div>
+</section>
+
+<!-- ══════════════ SOURCES ══════════════ -->
+<section id="sources" class="tab-content">
+  <h2>Evidence base</h2>
+  <p>Market claims in this document come from the sources below, gathered 2026-08-21. Asset claims come from the repository, git history, and your own <a href="../../../BACKLOG.md">Pre-Pilot Due Diligence (2026-08-01)</a>.</p>
+
+  <h3>Market &amp; competitive</h3>
+  <div class="src">→ <a href="https://www.premierleague.com/en/news/4671444/fpl-202526-team-of-the-season">Premier League — FPL 2025/26</a> · 11.43M verified teams at the GW38 deadline</div>
+  <div class="src">→ <a href="https://www.premierleague.com/en/news/4362120/whats-new-in-202526-fantasy-qualifying-for-elite-global-leagues">Premier League — What's new in 2025/26 Fantasy</a> · new elite global leagues</div>
+  <div class="src">→ <a href="https://frontofficesports.com/sleeper-more-than-quadruples-valuation-to-400m/">Front Office Sports — Sleeper quadruples valuation to $400M</a></div>
+  <div class="src">→ <a href="https://tracxn.com/d/companies/sleeper/__tYRPrSSLrnRPC8acmkCAeOaxsx0KdaGUvtWC_RIl9Ng">Tracxn — Sleeper company profile</a> · $217.26M raised, status active (Jul 2026)</div>
+  <div class="src">→ <a href="https://www.sonictechpro.com/blog/how-do-fantasy-sports-apps-make-money/">Sonic Tech — Fantasy sports revenue models</a> · Sleeper 4M+ users; F1 Fantasy 10M+ registered players (2025)</div>
+  <div class="src">→ <a href="https://www.draftsharks.com/kb/best-fantasy-football-websites">Draft Sharks — Best fantasy football websites 2026</a> · Fantrax format depth</div>
+  <div class="src">→ <a href="https://www.sportico.com/business/sports-betting/2025/betsperts-fantasy-national-golf-betting-tool-company-1234863726/">Sportico — Betsperts acquires Fantasy National</a></div>
+  <div class="src">→ <a href="https://www.accessnewswire.com/newsroom/en/computers-technology-and-internet/mgam-signs-definitive-agreement-to-acquire-reality-sports-online-1089008">MGAM acquires Reality Sports Online assets</a> · comparable fantasy asset deal</div>
+
+  <h3>Acquisition market</h3>
+  <div class="src">→ <a href="https://blog.acquire.com/acquire-com-biannual-acquisition-multiples-report-jan-2026/">Acquire.com Biannual Acquisition Multiples Report (Jan 2026)</a> · median 3.9× profit, sub-$10M EV</div>
+  <div class="src">→ <a href="https://exitbid.io/blog/flippa-vs-acquire-com-2026">ExitBid — Flippa vs Acquire.com 2026</a> · pre-revenue filtered out at review; code-only lowballed</div>
+  <div class="src">→ <a href="https://sellmycode.co/blogs/flippa-vs-codecanyon/">Sell My Code — Flippa vs CodeCanyon</a> · where code-only assets actually transact</div>
+  <div class="src">→ <a href="https://support.flippa.com/hc/en-us/articles/360000217435-Making-potential-revenue-claims-on-sites-without-revenue">Flippa — revenue claims on sites without revenue</a></div>
+
+  <h3>Unit economics</h3>
+  <div class="src">→ <a href="https://insertaffiliate.com/blog/mobile-app-user-acquisition-cost-benchmarks/">Insert Affiliate — Mobile app UA cost benchmarks</a> · sports highest CPI at $26.81; 2–5% freemium conversion; 20–50× CPI per paying user</div>
+  <div class="src">→ <a href="https://pmtoolkit.ai/calculators/cac-calculator/mobile-apps">PM Toolkit — Mobile app CAC benchmarks 2026</a> · $300–350 per fantasy sports user in North America</div>
+
+  <h3>Regulatory</h3>
+  <div class="src">→ <a href="https://www.gamblingcommission.gov.uk/authorities/codes-of-practice/guide/page/digital-and-virtual-currencies">UK Gambling Commission — Digital and virtual currencies</a> · licence required where virtual items function as casino chips exchangeable for cash</div>
+  <div class="src">→ <a href="https://www.gamblingcommission.gov.uk/licensees-and-businesses/licences-and-fees/remote-pool-betting-licence">UKGC — Remote pool betting licence</a> · pool betting explicitly includes "fantasy football-type competitions"</div>
+  <div class="src">→ <a href="https://www.osborneclarke.com/insights/virtual-currencies-esports-and-social-gaming-some-guidance-and-questions-from-the-uk-gambling-commission">Osborne Clarke — Virtual currencies, eSports and social gaming</a></div>
+
+  <div class="callout">
+    <span class="t">Method &amp; limits</span>
+    <p>Desk research plus repository analysis. No buyer conversations were held, no broker was consulted, and no valuation professional was engaged — the price ranges here are reasoned estimates from market evidence, not appraisals. The regulatory section is not legal advice; obtain a written opinion from a UK gambling solicitor before taking coin revenue.</p>
+    <p>Connector-based intelligence (CRM win/loss, Slack field intel, call transcripts) was unavailable — the sales plugin's connectors are unauthenticated in this session.</p>
+  </div>
+</section>
+
+<footer>
+  Forza Fantasy League · Strategic Options Analysis · 2026-08-21 · INTERNAL ONLY — not for buyer-facing packs
+</footer>
+
+</div>
+<script>
+document.querySelectorAll('.tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active')});
+    document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active')});
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.t).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+document.querySelectorAll('[data-goto]').forEach(function(link){
+  link.addEventListener('click',function(e){
+    e.preventDefault();
+    var t=document.querySelector('.tab[data-t="'+link.dataset.goto+'"]');
+    if(t){t.click()}
+  });
+});
+</script>
+</body>
+</html>

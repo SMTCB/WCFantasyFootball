@@ -1,6 +1,6 @@
 # Valuation Analysis — Forza Fantasy League
 
-> **INTERNAL ONLY.** Contains target price and negotiating reasoning. Do **not** include in any buyer-facing handover pack. Last updated: 2026-06-30. The prior 2026-06-26 edition is archived at [docs/archive/superseded-dd-2026-06-30/VALUATION_ANALYSIS.md](../../archive/superseded-dd-2026-06-30/VALUATION_ANALYSIS.md).
+> **INTERNAL ONLY.** Contains target price and negotiating reasoning. Do **not** include in any buyer-facing handover pack. Last updated: 2026-08-22. The prior 2026-06-26 edition is archived at [docs/archive/superseded-dd-2026-06-30/VALUATION_ANALYSIS.md](../../archive/superseded-dd-2026-06-30/VALUATION_ANALYSIS.md).
 
 This is a reasoning framework, not an appraisal. It is grounded in the technical due diligence ([TECHNICAL_DUE_DILIGENCE.md](TECHNICAL_DUE_DILIGENCE.md)) and the buyout assessment ([B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md](../architecture/B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md), now **6.5/10**, up from 4/10). Final price depends on **buyer type** and **what is actually being sold** (code/IP vs. a running business with users and revenue).
 
@@ -27,8 +27,11 @@ The prior valuation was set against a 4/10 buyout-readiness score with a live se
 | **A. Code/IP asset sale** | Source, docs, architecture, the multi-sport platform; ~50 pilot users, ~£0 revenue | Cost-to-recreate + strategic premium |
 | **B. Product + small pilot** | Above + the live football product, brand, pipeline, external integrations | Asset value + early traction premium |
 | **C. Business sale** | Above + meaningful revenue/retention | Revenue multiple (not applicable yet) |
+| **D. B2B2C licence / vendor deal** | A white-labelled or embedded engagement layer inside a broadcaster, operator or sponsor activation — not a standalone consumer product | **Buyer's build-vs-buy comparison** (see below) |
 
 Today the platform is firmly in **A–B**: feature-complete across 3 sports, functional in production, Phase-0-clean, but pre-revenue with a ~50-user pilot and a (now smaller) hardening backlog. **Revenue-multiple valuations (C) still do not apply** — no recurring revenue to multiply.
+
+> **Scenario D was missing from this document and is material.** Sections 2–4 below price the asset against a *consumer* acquirer. A broadcaster, betting operator or sponsor compares it instead against **their own build-vs-buy decision** for a fan-engagement layer — roughly **$900k–2.5M custom / $400k–1M hybrid** at current market build pricing — which supports the upper half of §4's realistic range rather than undercutting it. It also changes *which* work is discretionary: DATA-1, OPS-1 and TEST-1 become procurement entry requirements rather than optional hardening. Full analysis, buyer target map, deal shapes and the supporting pilot engagement data: **[STRATEGIC_OPTIONS_ANALYSIS.html](STRATEGIC_OPTIONS_ANALYSIS.html)** (also internal-only).
 
 ---
 
@@ -66,7 +69,7 @@ A strategic buyer (an existing fantasy/sports-media/betting operator, or a team 
 - **No automated test coverage of money/game logic (TEST-1)** — buyer assumes regression risk; mitigated by the now-available local DB for building a harness.
 - **No operational DR (OPS-1)** — single environment, no PITR, manual backups.
 - **Provider seam half-consumed + runtime Supabase-locked** — feed swap scoped but not finished; "run on our cloud" still a re-platforming project.
-- **Pre-revenue, tiny pilot** — no demand proof.
+- **Pre-revenue, tiny pilot** — but *not* "no demand proof." Corrected 2026-08-22 against live pilot data: of 16 members in leagues where bets ran, **14 (87.5%) adopted the betting layer**, **9 (64%) stayed active 4+ weeks**, averaging 17.9 bets each over 2026-06-11 → 07-19. Small n and a World Cup window, and all 39 bet instances were commissioner-created (user-generated `p2p_challenges` still has zero rows) — so this evidences *appetite to participate*, not *appetite to create*. Still, it is a real engagement number and it is the single most valuable thing to put in front of a Scenario-D buyer.
 
 **Net:** the strategic upside (multi-sport *built*, working pipeline, legally-clean monetisation, security clean) is now real and demonstrable; the deductions are fewer, well-documented, and ≈6–10 engineer-weeks to clear. For a motivated strategic buyer this lands at roughly **£450k–£850k**, with the multi-sport breadth, the closed security gate, and the documentation pulling toward the upper half — especially if a competitive process exists.
 
@@ -106,4 +109,4 @@ Each of these is worth more than its engineering cost:
 
 ---
 
-*Grounded in: [TECHNICAL_DUE_DILIGENCE.md](TECHNICAL_DUE_DILIGENCE.md), [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md](../architecture/B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md), [TRACKER.md](../TRACKER.md). Last updated: 2026-06-30.*
+*Grounded in: [TECHNICAL_DUE_DILIGENCE.md](TECHNICAL_DUE_DILIGENCE.md), [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md](../architecture/B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md), [TRACKER.md](../TRACKER.md), [STRATEGIC_OPTIONS_ANALYSIS.html](STRATEGIC_OPTIONS_ANALYSIS.html). Last updated: 2026-08-22 (Scenario D + pilot demand data added; §2–4 ranges unchanged and still pending a Scenario-D-specific revision).*
