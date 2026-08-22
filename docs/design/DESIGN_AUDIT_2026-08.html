@@ -1,0 +1,913 @@
+<title>Frontrow Design Report</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --ground:   #F7F3ED;
+    --surface:  #FFFFFF;
+    --raised:   #EDEAE2;
+    --rule:     #DDD7CD;
+    --rule-hard:#18202E;
+    --ink:      #18202E;
+    --ink-2:    #4B5568;
+    --muted:    #626F80;
+    --accent:   #1A6FA8;
+    --accent-2: #14567F;
+    --crit:     #B91C1C;
+    --crit-bg:  #FBE9E9;
+    --high:     #8A5A0B;
+    --high-bg:  #FAF0DE;
+    --med-bg:   #E7E9EE;
+    --low-bg:   #EDEAE2;
+    --good:     #166534;
+    --inverse-ground: #18202E;
+    --inverse-ink:    #FFFFFF;
+    --inverse-ink-2:  #C3CAD6;
+    --inverse-rule:   #3A4557;
+
+    --display: 'Archivo Black', 'Helvetica Neue', 'Arial Black', sans-serif;
+    --body:    'Archivo', system-ui, -apple-system, sans-serif;
+    --mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --measure: 68ch;
+    --wide: 1080px;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #0B0F14;
+      --surface:  #141A22;
+      --raised:   #1C242E;
+      --rule:     #2E3846;
+      --rule-hard:#E8E4DC;
+      --ink:      #F2EEE5;
+      --ink-2:    #C3CAD6;
+      --muted:    #93A0B1;
+      --accent:   #5FB3E5;
+      --accent-2: #8ECBF0;
+      --crit:     #F08B8B;
+      --crit-bg:  #2E1616;
+      --high:     #E5B45C;
+      --high-bg:  #2C2312;
+      --med-bg:   #222B36;
+      --low-bg:   #1C242E;
+      --good:     #7FDCA4;
+      --inverse-ground: #1C242E;
+      --inverse-ink:    #F2EEE5;
+      --inverse-ink-2:  #C3CAD6;
+      --inverse-rule:   #3A4557;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:   #0B0F14;
+    --surface:  #141A22;
+    --raised:   #1C242E;
+    --rule:     #2E3846;
+    --rule-hard:#E8E4DC;
+    --ink:      #F2EEE5;
+    --ink-2:    #C3CAD6;
+    --muted:    #93A0B1;
+    --accent:   #5FB3E5;
+    --accent-2: #8ECBF0;
+    --crit:     #F08B8B;
+    --crit-bg:  #2E1616;
+    --high:     #E5B45C;
+    --high-bg:  #2C2312;
+    --med-bg:   #222B36;
+    --low-bg:   #1C242E;
+    --good:     #7FDCA4;
+    --inverse-ground: #1C242E;
+    --inverse-ink:    #F2EEE5;
+    --inverse-ink-2:  #C3CAD6;
+    --inverse-rule:   #3A4557;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--wide); margin: 0 auto; padding: 0 28px 96px; }
+  .col  { max-width: var(--measure); }
+
+  h1, h2, h3 { font-family: var(--display); font-weight: 400; text-transform: uppercase; text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted);
+  }
+
+  code {
+    font-family: var(--mono); font-size: 0.88em;
+    background: var(--raised); color: var(--ink);
+    padding: 1px 5px; border-radius: 4px;
+    word-break: break-word;
+  }
+
+  a { color: var(--accent-2); text-underline-offset: 3px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  /* ── masthead ─────────────────────────────────────── */
+  .masthead { padding: 64px 0 40px; border-bottom: 4px solid var(--rule-hard); display: flex; flex-direction: column; gap: 22px; }
+  .masthead h1 { font-size: clamp(42px, 8vw, 76px); line-height: 0.9; letter-spacing: -0.03em; }
+  .verdict { font-family: var(--display); font-size: clamp(19px, 2.6vw, 25px); line-height: 1.2; letter-spacing: -0.015em; text-transform: uppercase; color: var(--accent-2); max-width: 22ch; }
+  .standfirst { font-size: 19px; line-height: 1.55; color: var(--ink-2); max-width: 62ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px 28px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  /* ── sections ─────────────────────────────────────── */
+  section { padding-top: 64px; display: flex; flex-direction: column; gap: 26px; }
+  .head { display: flex; flex-direction: column; gap: 10px; border-bottom: 2px solid var(--rule-hard); padding-bottom: 16px; }
+  .head h2 { font-size: clamp(28px, 4.4vw, 40px); line-height: 0.98; letter-spacing: -0.025em; }
+  h3 { font-size: 19px; letter-spacing: -0.01em; line-height: 1.2; }
+
+  .lede { font-size: 18px; line-height: 1.6; color: var(--ink-2); max-width: var(--measure); }
+  .body { font-size: 17px; line-height: 1.65; color: var(--ink-2); max-width: var(--measure); }
+  .body strong { color: var(--ink); font-weight: 600; }
+
+  /* ── panels ───────────────────────────────────────── */
+  .panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 26px 28px; display: flex; flex-direction: column; gap: 16px; }
+  .panel--dark { background: var(--inverse-ground); border-color: var(--inverse-rule); color: var(--inverse-ink); }
+  .panel--dark .body, .panel--dark p { color: var(--inverse-ink-2); }
+  .panel--dark h3 { color: var(--inverse-ink); }
+  .panel--dark code { background: rgba(255,255,255,0.10); color: var(--inverse-ink); }
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .g4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+  .stat { font-family: var(--display); font-size: 46px; line-height: 1; letter-spacing: -0.02em; }
+  .stat-note { font-size: 15px; line-height: 1.45; color: var(--ink-2); }
+
+  /* ── severity chips ───────────────────────────────── */
+  .chip { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; white-space: nowrap; display: inline-block; }
+  .chip--crit { background: var(--crit-bg); color: var(--crit); }
+  .chip--high { background: var(--high-bg); color: var(--high); }
+  .chip--med  { background: var(--med-bg);  color: var(--ink-2); }
+  .chip--low  { background: var(--low-bg);  color: var(--ink-2); }
+
+  /* ── ledger / tables ──────────────────────────────── */
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 660px; font-size: 15px; }
+  th { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 0 14px 10px 0; border-bottom: 2px solid var(--rule-hard); vertical-align: bottom; }
+  td { padding: 13px 14px 13px 0; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.45; color: var(--ink-2); }
+  td:first-child, th:first-child { padding-left: 0; }
+  td.n { font-family: var(--mono); font-size: 13px; color: var(--muted); width: 34px; font-variant-numeric: tabular-nums; }
+  td.t { color: var(--ink); }
+  td.w { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+  td.e { font-family: var(--mono); font-size: 12.5px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  th.e { text-align: right; }
+
+  /* ── specimens: always the app's own light ground ── */
+  .spec {
+    background: #FFFFFF; color: #18202E; color-scheme: light;
+    border: 1px solid #DDD7CD; border-radius: 6px; padding: 26px 28px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .spec-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #626F80; }
+  .spec-note { font-size: 14.5px; line-height: 1.45; color: #4B5568; }
+  .ratio { font-family: var(--mono); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ratio--fail { color: #B91C1C; }
+  .ratio--pass { color: #166534; }
+
+  .demo-btn { border-radius: 6px; min-height: 44px; padding: 12px 18px; display: grid; place-items: center; font-family: var(--display); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* ── sign-in mocks ────────────────────────────────── */
+  .phone { width: 100%; max-width: 360px; background: #18202E; border-radius: 6px; padding: 36px 20px; display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .phone-mark { font-family: var(--display); font-size: 23px; letter-spacing: -0.02em; text-transform: uppercase; color: #FFFFFF; }
+  .card-mock { width: 100%; background: #FFFFFF; border-radius: 6px; padding: 26px; display: flex; flex-direction: column; }
+
+  /* ── histogram ────────────────────────────────────── */
+  .hist { display: flex; flex-direction: column; gap: 6px; }
+  .hrow { display: flex; align-items: center; gap: 12px; }
+  .hrow .lab { width: 58px; text-align: right; font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .hrow .track { flex-grow: 1; min-width: 0; }
+  .hrow .bar { height: 16px; border-radius: 2px; }
+  .hrow .val { width: 118px; font-family: var(--mono); font-size: 12px; color: var(--muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  /* ── ramp ─────────────────────────────────────────── */
+  .ramp-row { display: flex; align-items: baseline; gap: 20px; padding: 14px 0; border-top: 1px solid var(--rule); flex-wrap: wrap; }
+  .ramp-row .step { width: 78px; font-family: var(--mono); font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .ramp-row .size { width: 76px; font-family: var(--mono); font-size: 12px; color: var(--ink-2); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .ramp-row .sample { flex-grow: 1; min-width: 200px; color: var(--ink); }
+  .ramp-row .absorbs { width: 190px; font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; flex-shrink: 0; }
+
+  /* ── action blocks ────────────────────────────────── */
+  .tier { border-radius: 6px; border: 1px solid var(--rule); background: var(--surface); overflow: hidden; }
+  .tier-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 26px; border-bottom: 1px solid var(--rule); border-top: 5px solid var(--tier-color); }
+  .tier-head h3 { font-size: 21px; }
+  .tier-when { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .tier-total { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--tier-color); }
+  .act { display: grid; grid-template-columns: 72px 1fr; gap: 4px 18px; padding: 22px 26px; border-bottom: 1px solid var(--rule); }
+  .act:last-child { border-bottom: 0; }
+  .act-id { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--tier-color); font-variant-numeric: tabular-nums; }
+  .act-title { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: -0.005em; line-height: 1.25; color: var(--ink); }
+  .act-body { grid-column: 2; font-size: 15.5px; line-height: 1.55; color: var(--ink-2); }
+  .act-foot { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px 20px; padding-top: 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .act-foot b { color: var(--ink-2); font-weight: 500; }
+  .act-check { grid-column: 2; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); border-left: 2px solid var(--good); padding-left: 12px; margin-top: 4px; }
+  @media (max-width: 560px) {
+    .act { grid-template-columns: 1fr; }
+    .act-body, .act-foot, .act-check { grid-column: 1; }
+  }
+
+  .callout { border-left: 3px solid var(--accent); padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+
+  hr.rule { border: 0; border-top: 1px solid var(--rule); margin: 0; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Design &amp; accessibility assessment</div>
+    <h1>Frontrow<br>Design Report</h1>
+    <p class="verdict">The system is sound. The product doesn't use it.</p>
+    <p class="standfirst">Frontrow ships a well-built token layer and a small set of correct primitives. Across 112 view files there are 4,127 inline style objects, and the canonical <code>Select</code> component is imported by none of them. Everything below follows from that gap — including a sign-in screen whose input fields are currently invisible.</p>
+    <div class="meta">
+      <span>22 August 2026</span>
+      <span>Commit 1f4e937</span>
+      <span>14 findings · 3 critical</span>
+      <span>WCAG 2.1 AA</span>
+    </div>
+  </header>
+
+  <!-- ══ SUMMARY ══════════════════════════════════════ -->
+  <section id="summary">
+    <div class="head">
+      <div class="eyebrow">Section one</div>
+      <h2>What was found</h2>
+    </div>
+
+    <p class="lede">Three findings are critical, meaning a user meets them on the way in and cannot work around them. Four are high, four medium, three low. None of them is a matter of taste — every one is a measured number or a count against the repository.</p>
+
+    <div class="grid g4">
+      <div class="panel">
+        <div class="stat" style="color: var(--crit);">3</div>
+        <div class="stat-note"><strong style="color: var(--ink);">Critical.</strong> Contrast and visibility failures on the sign-in path and across all secondary text.</div>
+      </div>
+      <div class="panel">
+        <div class="stat" style="color: var(--high);">4</div>
+        <div class="stat-note"><strong style="color: var(--ink);">High.</strong> Structural: unused primitives, no type ramp, unfinished migration, missing focus states.</div>
+      </div>
+      <div class="panel">
+        <div class="stat" style="color: var(--ink-2);">4</div>
+        <div class="stat-note"><strong style="color: var(--ink);">Medium.</strong> Touch targets, mismatched chip colours, radius sprawl, navigation coverage.</div>
+      </div>
+      <div class="panel">
+        <div class="stat" style="color: var(--muted);">3</div>
+        <div class="stat-note"><strong style="color: var(--ink);">Low.</strong> Inline font declarations, stale animation colours, mixed radii inside one component.</div>
+      </div>
+    </div>
+
+    <div class="panel--dark panel">
+      <h3>The thesis</h3>
+      <p class="body">Fixing the sign-in screen, the four failing button states and the position chips takes about a day. It also fixes nothing structurally. With 4,127 inline style objects and a primitive layer nobody imports, the next screen anyone builds will drift the same way — because hand-writing styles is currently the path of least resistance and the design system is the detour. The work worth committing to is the lint rule and the conversion habit, because those are what stop the gap widening again.</p>
+    </div>
+  </section>
+
+  <!-- ══ CONTRAST ═════════════════════════════════════ -->
+  <section id="contrast">
+    <div class="head">
+      <div class="eyebrow">Section two · Findings 1–3 · Critical</div>
+      <h2>Contrast failures</h2>
+    </div>
+
+    <p class="lede">Four colour pairs in the shipped token layer fall below the WCAG AA floor. All four are pre-migration dark-theme values that survived the move to Kit Light. The specimens below are rendered at the exact values the app ships, on the app's own white card.</p>
+
+    <div class="spec">
+      <div class="spec-label">Rendered at shipped values · #FFFFFF card</div>
+
+      <div class="grid g2">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-family: 'Archivo Black', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8;">Email</div>
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 12px 16px; font-size: 14px; color: #8A97A8;">your@email.com</div>
+          <div class="ratio ratio--fail">1.00:1 &nbsp;·&nbsp; border invisible</div>
+          <div class="spec-note">The sign-in input, exactly as shipped. Fill and border are both white-alpha on a white card.</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 15px; color: #18202E;">Haaland &nbsp;<span style="font-family: 'Archivo Black', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A97A8;">MCI · FWD · £14.2m · 8 pts</span></div>
+          <div class="ratio ratio--fail">2.69:1 &nbsp;·&nbsp; needs 4.5:1</div>
+          <div class="spec-note">The <code style="background:#EDEAE2; color:#18202E;">--mute</code> token carries nearly all metadata in the product, usually at 9–11px. It fails everywhere it appears.</div>
+        </div>
+      </div>
+
+      <hr class="rule" style="border-color: #E2DDD5;">
+
+      <div class="grid g4">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="demo-btn" style="background: #1EC3E3; color: #F7F3ED;">Confirm</div>
+          <div class="ratio ratio--fail">1.91:1</div>
+          <div class="spec-note">Primary, hover state</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="demo-btn" style="background: #F0B91A; color: #F7F3ED;">Use chip</div>
+          <div class="ratio ratio--fail">1.63:1</div>
+          <div class="spec-note">Gold, hover state</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="demo-btn" style="background: #B8720E; color: #F7F3ED;">Use chip</div>
+          <div class="ratio ratio--fail">3.49:1</div>
+          <div class="spec-note">Gold, resting state</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="demo-btn" style="background: #B91C1C; color: #18202E;">Sell player</div>
+          <div class="ratio ratio--fail">2.53:1</div>
+          <div class="spec-note">Danger — navy ink on red</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="body">A hover state that erases its own label is worse than no hover state at all: the control appears to break at the moment of interaction. Two more variants — <code>secondary</code> and <code>icon</code> — hover to <code>rgba(242,238,229,.06)</code>, a near-white wash that was a visible lift on the old dark ground and is now nothing at all.</p>
+
+    <h3>Position chips carry two different palettes</h3>
+    <p class="body">The four position chips pair a tint from the old palette with ink from the new one. Nobody notices because both are broadly the right hue — but the tint and the text are literally different colours, and three of the four tints come from tokens that no longer exist.</p>
+
+    <div class="spec">
+      <div class="spec-label">index.css:282–285 · tint vs ink</div>
+      <div class="grid g4">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(168,85,247,0.14); color: #8C49C9; border-radius: 4px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-align: center;">GK</div>
+          <div class="spec-note"><b>Tint</b> #A855F7 &nbsp;·&nbsp; <b>Ink</b> #8C49C9</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(0,180,216,0.14); color: #1A6FA8; border-radius: 4px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-align: center;">DEF</div>
+          <div class="spec-note"><b>Tint</b> #00B4D8 &nbsp;·&nbsp; <b>Ink</b> #1A6FA8</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(224,168,0,0.14); color: #B8720E; border-radius: 4px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-align: center;">MID</div>
+          <div class="spec-note"><b>Tint</b> #E0A800 &nbsp;·&nbsp; <b>Ink</b> #B8720E</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(239,68,68,0.14); color: #B91C1C; border-radius: 4px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-align: center;">FWD</div>
+          <div class="spec-note"><b>Tint</b> #EF4444 &nbsp;·&nbsp; <b>Ink</b> #B91C1C</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>The corrections</h3>
+    <p class="body">All four keep the existing hue and move only lightness, so nothing in the visual language changes — the palette just stops failing.</p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Token</th><th>Shipped</th><th>Measured</th><th>Corrected</th><th class="e">Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="t"><code>--mute</code></td><td class="w">#8A97A8</td><td class="w" style="color: var(--crit);">2.69:1</td><td class="w">#626F80</td><td class="e" style="color: var(--good);">4.6:1</td></tr>
+          <tr><td class="t"><code>--cyan</code> hover</td><td class="w">#1EC3E3</td><td class="w" style="color: var(--crit);">1.91:1</td><td class="w">#14567F</td><td class="e" style="color: var(--good);">7.1:1</td></tr>
+          <tr><td class="t"><code>--gold</code></td><td class="w">#B8720E</td><td class="w" style="color: var(--crit);">3.49:1</td><td class="w">#96600C</td><td class="e" style="color: var(--good);">4.8:1</td></tr>
+          <tr><td class="t"><code>--gold</code> hover</td><td class="w">#F0B91A</td><td class="w" style="color: var(--crit);">1.63:1</td><td class="w">#7A4A08</td><td class="e" style="color: var(--good);">6.8:1</td></tr>
+          <tr><td class="t"><code>--danger</code> ink</td><td class="w">#18202E</td><td class="w" style="color: var(--crit);">2.53:1</td><td class="w">#FFFFFF</td><td class="e" style="color: var(--good);">6.5:1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="body" style="font-size: 15px;">Ratios are computed against <code>--ink</code> (#F7F3ED), the label colour those button variants actually use.</p>
+  </section>
+
+  <!-- ══ SIGN-IN ══════════════════════════════════════ -->
+  <section id="signin">
+    <div class="head">
+      <div class="eyebrow">Section three · Findings 1, 7, 14 · Critical</div>
+      <h2>The sign-in screen</h2>
+    </div>
+
+    <p class="lede">The single screen every user meets before anything else, recreated from <code>AuthScreen.jsx</code> at the exact shipped values and confirmed against computed styles on the live deployment. Left is what a first-time user sees today.</p>
+
+    <div class="grid g2">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--crit);"></span>
+          <span class="eyebrow" style="color: var(--ink);">As shipped</span>
+        </div>
+        <div class="phone">
+          <div class="phone-mark">Frontrow</div>
+          <div class="card-mock">
+            <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 24px;">
+              <div style="flex: 1; padding: 9px; text-align: center; border-bottom: 2px solid #1A6FA8; font-family: 'Archivo Black', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #18202E;">Sign In</div>
+              <div style="flex: 1; padding: 9px; text-align: center; font-family: 'Archivo Black', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8A97A8;">Create Account</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div>
+                <div style="font-family: 'Archivo Black', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8; margin-bottom: 6px;">Email</div>
+                <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 12px 16px; font-size: 14px; color: #8A97A8;">your@email.com</div>
+              </div>
+              <div>
+                <div style="font-family: 'Archivo Black', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8; margin-bottom: 6px;">Password</div>
+                <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 12px 16px; font-size: 14px; color: #8A97A8;">••••••••</div>
+              </div>
+              <div style="background: #1A6FA8; color: #F7F3ED; border-radius: 6px; min-height: 52px; display: grid; place-items: center; font-family: 'Archivo Black', sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;">Sign In</div>
+              <div style="min-height: 36px; display: grid; place-items: center; font-family: 'Archivo Black', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A97A8;">Forgot password?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--good);"></span>
+          <span class="eyebrow" style="color: var(--ink);">Corrected</span>
+        </div>
+        <div class="phone">
+          <div class="phone-mark">Frontrow</div>
+          <div class="card-mock">
+            <div style="display: flex; border-bottom: 1px solid #E2DDD5; margin-bottom: 24px;">
+              <div style="flex: 1; min-height: 44px; display: grid; place-items: center; border-bottom: 2px solid #1A6FA8; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #18202E;">Sign In</div>
+              <div style="flex: 1; min-height: 44px; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #626F80;">Create Account</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80; margin-bottom: 7px;">Email</div>
+                <div style="background: #FFFFFF; border: 1px solid #9A9488; border-radius: 6px; padding: 13px 16px; font-size: 15px; color: #626F80; min-height: 48px; display: flex; align-items: center;">your@email.com</div>
+              </div>
+              <div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80; margin-bottom: 7px;">Password</div>
+                <div style="background: #FFFFFF; border: 2px solid #1A6FA8; border-radius: 6px; padding: 12px 16px; font-size: 15px; color: #18202E; min-height: 48px; display: flex; align-items: center;">••••••••</div>
+              </div>
+              <div style="background: #1A6FA8; color: #FFFFFF; border-radius: 6px; min-height: 52px; display: grid; place-items: center; font-family: 'Archivo Black', sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;">Sign In</div>
+              <div style="min-height: 44px; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #14567F;">Forgot password?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th style="width: 30%;">What changed</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="t">Field boundary</td>
+            <td>Both inputs paint <code>rgba(255,255,255,0.04)</code> with a <code>rgba(255,255,255,0.1)</code> border on a white card — a measured 1.00:1. Replaced with a solid <code>#9A9488</code> rule at 3.0:1, the WCAG 1.4.11 floor for a UI boundary. <span class="w">AuthScreen.jsx:131–132</span></td>
+          </tr>
+          <tr>
+            <td class="t">Focus state</td>
+            <td>The field sets <code>outline: none</code> with nothing in its place, so a keyboard user loses their position entirely. Restored as a 2px accent border, shown on the password field.</td>
+          </tr>
+          <tr>
+            <td class="t">Label typography</td>
+            <td>Labels and tabs are set in Archivo Black at 9px. The system reserves that face for display and specifies JetBrains Mono for eyebrows — so the one screen everyone sees doesn't follow the rules the rest of the app was built on.</td>
+          </tr>
+          <tr>
+            <td class="t">Touch targets</td>
+            <td>Measured live: the tab strip is 38.5px and the reset link 36px, both under the 44px minimum. Raised to 44px, which also gives the tabs room to breathe.</td>
+          </tr>
+          <tr>
+            <td class="t">Corner radius</td>
+            <td>Fields use 4px while the card and button around them use 6px — a mismatch inside a single component, and a symptom of the wider radius sprawl in section five.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ TYPOGRAPHY ═══════════════════════════════════ -->
+  <section id="typography">
+    <div class="head">
+      <div class="eyebrow">Section four · Finding 5 · High</div>
+      <h2>Type has no ramp</h2>
+    </div>
+
+    <p class="lede">Every explicit size in <code>src/</code>: 92 inline style objects, 355 Tailwind arbitrary values, 27 rules in <code>index.css</code>. Twenty distinct sizes, set three different ways, with no named steps anywhere in the codebase.</p>
+
+    <div class="panel">
+      <div class="eyebrow">Where the type actually sits · 474 declarations</div>
+      <div class="hist">
+        <div class="hrow"><span class="lab" style="color: var(--crit);">8px</span><span class="track"><span class="bar" style="display: block; width: 6.6%; background: var(--crit);"></span></span><span class="val">8</span></div>
+        <div class="hrow"><span class="lab" style="color: var(--crit);">9px</span><span class="track"><span class="bar" style="display: block; width: 94.2%; background: var(--crit);"></span></span><span class="val">114</span></div>
+        <div class="hrow"><span class="lab" style="color: var(--high);">10px</span><span class="track"><span class="bar" style="display: block; width: 100%; background: var(--high);"></span></span><span class="val">121</span></div>
+        <div class="hrow"><span class="lab" style="color: var(--high);">11px</span><span class="track"><span class="bar" style="display: block; width: 66.1%; background: var(--high);"></span></span><span class="val">80</span></div>
+        <div class="hrow"><span class="lab">12px</span><span class="track"><span class="bar" style="display: block; width: 37.2%; background: var(--ink);"></span></span><span class="val">45</span></div>
+        <div class="hrow"><span class="lab">13px</span><span class="track"><span class="bar" style="display: block; width: 30.6%; background: var(--ink);"></span></span><span class="val">37</span></div>
+        <div class="hrow"><span class="lab">14px</span><span class="track"><span class="bar" style="display: block; width: 9.1%; background: var(--ink);"></span></span><span class="val">11</span></div>
+        <div class="hrow"><span class="lab">15px</span><span class="track"><span class="bar" style="display: block; width: 6.6%; background: var(--ink);"></span></span><span class="val">8</span></div>
+        <div class="hrow"><span class="lab">16px</span><span class="track"><span class="bar" style="display: block; width: 8.3%; background: var(--ink);"></span></span><span class="val">10</span></div>
+        <div class="hrow"><span class="lab">18px</span><span class="track"><span class="bar" style="display: block; width: 9.1%; background: var(--ink);"></span></span><span class="val">11</span></div>
+        <div class="hrow"><span class="lab">20px</span><span class="track"><span class="bar" style="display: block; width: 9.1%; background: var(--ink);"></span></span><span class="val">11</span></div>
+        <div class="hrow"><span class="lab" style="color: var(--muted);">22–40</span><span class="track"><span class="bar" style="display: block; width: 14%; background: var(--muted);"></span></span><span class="val">17 · 8 sizes</span></div>
+        <div class="hrow"><span class="lab" style="color: var(--muted);">64/80</span><span class="track"><span class="bar" style="display: block; width: 1.7%; background: var(--muted);"></span></span><span class="val">2</span></div>
+      </div>
+    </div>
+
+    <div class="grid g3">
+      <div class="panel">
+        <div class="stat" style="color: var(--crit);">68%</div>
+        <div class="stat-note">of all type in the app sits below 12px — 323 of 474 declarations.</div>
+      </div>
+      <div class="panel">
+        <div class="stat" style="color: var(--crit);">122</div>
+        <div class="stat-note">declarations at 9px or smaller, in an app whose smallest supported viewport is 375px.</div>
+      </div>
+      <div class="panel">
+        <div class="stat">3</div>
+        <div class="stat-note">separate mechanisms set type. None of them names a step, so none of them can be changed centrally.</div>
+      </div>
+    </div>
+
+    <h3>The 9px problem, at actual size</h3>
+    <div class="spec">
+      <div class="grid g3">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-family: 'Archivo Black', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8;">Gameweek Deadline</div>
+          <div style="font-family: 'Archivo Black', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A97A8;">Transfers Remaining</div>
+          <div class="ratio ratio--fail">9px · shipped · 114 uses</div>
+          <div class="spec-note">Archivo Black at 9px with 0.15em tracking reads as texture, not language. This is the app's default label.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80;">Gameweek Deadline</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: #626F80;">Transfers Remaining</div>
+          <div class="ratio ratio--pass">11px mono · proposed floor</div>
+          <div class="spec-note">Same footprint, legible at arm's length. Mono is what the system already specifies for eyebrows.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-size: 15px; color: #18202E;">Deadline in 4h 12m</div>
+          <div style="font-size: 15px; color: #18202E;">2 transfers remaining</div>
+          <div class="ratio ratio--pass">15px body · proposed</div>
+          <div class="spec-note">Where the label is really a sentence, stop shouting it. Sentence case at body size carries more and costs less space.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Proposed ramp — twenty sizes onto seven steps</h3>
+    <div>
+      <div class="ramp-row" style="border-top: 2px solid var(--rule-hard);">
+        <span class="step">display</span><span class="size">40 / 0.92</span>
+        <span class="sample" style="font-family: var(--display); font-size: 40px; line-height: 0.92; letter-spacing: -0.025em; text-transform: uppercase;">Matchday</span>
+        <span class="absorbs">absorbs 64, 80</span>
+      </div>
+      <div class="ramp-row">
+        <span class="step">title</span><span class="size">28 / 1.05</span>
+        <span class="sample" style="font-family: var(--display); font-size: 28px; line-height: 1.05; letter-spacing: -0.02em; text-transform: uppercase;">Your squad</span>
+        <span class="absorbs">absorbs 22, 24, 32, 34, 36</span>
+      </div>
+      <div class="ramp-row">
+        <span class="step">heading</span><span class="size">20 / 1.2</span>
+        <span class="sample" style="font-family: var(--display); font-size: 20px; line-height: 1.2; letter-spacing: -0.01em; text-transform: uppercase;">League standings</span>
+        <span class="absorbs">absorbs 18</span>
+      </div>
+      <div class="ramp-row">
+        <span class="step">body-lg</span><span class="size">17 / 1.5</span>
+        <span class="sample" style="font-size: 17px; line-height: 1.5;">Haaland returns from suspension this week.</span>
+        <span class="absorbs">absorbs 16</span>
+      </div>
+      <div class="ramp-row">
+        <span class="step">body</span><span class="size">15 / 1.5</span>
+        <span class="sample" style="font-size: 15px; line-height: 1.5;">The default. Every sentence in the product should be at least this size.</span>
+        <span class="absorbs">absorbs 13, 14</span>
+      </div>
+      <div class="ramp-row">
+        <span class="step">label</span><span class="size">13 / 1.3</span>
+        <span class="sample" style="font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;">Form · Fixtures · Price</span>
+        <span class="absorbs">absorbs 12 · mono</span>
+      </div>
+      <div class="ramp-row" style="border-bottom: 1px solid var(--rule);">
+        <span class="step">micro</span><span class="size">11 / 1.3</span>
+        <span class="sample" style="font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);">Gameweek 12 · Deadline Sat 11:30</span>
+        <span class="absorbs">absorbs 8, 9, 10 · hard floor</span>
+      </div>
+    </div>
+
+    <p class="body">Adopting the ramp is a find-and-replace with a lint rule behind it, not a redesign: 243 declarations under 11px collapse onto the micro step, 48 rise from 13–14 to body, and the nine sizes above 20px become two. The rule that keeps it from drifting back is the part worth adding — no raw pixel value in a <code>fontSize</code> or a <code>text-[…]</code> class.</p>
+  </section>
+
+  <!-- ══ SYSTEM DRIFT ═════════════════════════════════ -->
+  <section id="drift">
+    <div class="head">
+      <div class="eyebrow">Section five · Findings 4, 6, 10, 12 · The root cause</div>
+      <h2>The system exists.<br>Nothing uses it.</h2>
+    </div>
+
+    <p class="lede">Seventy-five design tokens and a set of correctly-built primitives sit in the repo, well made and largely unimported. Every other finding in this report is downstream of that.</p>
+
+    <div class="grid g3">
+      <div class="panel">
+        <div class="eyebrow" style="color: var(--ink);">Button.jsx</div>
+        <div><span class="stat" style="color: var(--high); font-size: 38px;">5</span> <span class="stat-note" style="display: inline;">files import it</span></div>
+        <hr class="rule">
+        <div><span class="stat" style="font-size: 38px;">447</span> <span class="stat-note" style="display: inline;">raw <code>&lt;button&gt;</code> elements</span></div>
+        <div class="stat-note">A polymorphic component with five variants and three sizes — bypassed 99% of the time.</div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow" style="color: var(--ink);">TextInput.jsx</div>
+        <div><span class="stat" style="color: var(--crit); font-size: 38px;">1</span> <span class="stat-note" style="display: inline;">file imports it</span></div>
+        <hr class="rule">
+        <div><span class="stat" style="font-size: 38px;">101</span> <span class="stat-note" style="display: inline;">raw <code>&lt;input&gt;</code> elements</span></div>
+        <div class="stat-note">Only <code>SettingsScreen</code> uses it. Sign-in — the highest-traffic form in the product — does not.</div>
+      </div>
+      <div class="panel panel--dark">
+        <div class="eyebrow" style="color: #FFFFFF;">Select.jsx</div>
+        <div><span class="stat" style="color: #F08B8B; font-size: 38px;">0</span> <span class="stat-note" style="display: inline; color: var(--inverse-ink-2);">files import it</span></div>
+        <hr class="rule" style="border-color: var(--inverse-rule);">
+        <div><span class="stat" style="color: #FFFFFF; font-size: 38px;">30</span> <span class="stat-note" style="display: inline; color: var(--inverse-ink-2);">raw <code>&lt;select&gt;</code> elements</span></div>
+        <div class="stat-note" style="color: var(--inverse-ink-2);">Written, styled, exported, never imported once. It is dead code that looks like a design system.</div>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="eyebrow">What replaced it</div>
+        <div><span class="stat">4,127</span></div>
+        <div class="stat-note">inline <code>style={{…}}</code> objects — thirty-seven per file on average. Each is a private decision that no token can reach and no lint rule currently checks.</div>
+        <hr class="rule">
+        <div><span class="stat">1,584</span></div>
+        <div class="stat-note">inline <code>fontFamily</code> declarations. The three brand faces are re-declared by hand rather than inherited from <code>--font-display</code>, <code>--font-body</code> and <code>--font-mono</code>.</div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Radius — ten values, two tokens</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 2px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2);">2</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 3px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2);">3</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 2px solid var(--accent); border-radius: 4px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accent-2);">4</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 2px solid var(--accent); border-radius: 6px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accent-2);">6</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2);">8</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 10px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2);">10</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 12px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2);">12</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 16px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2);">16</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 18px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2);">18</span>
+          <span style="width: 50px; height: 50px; background: var(--raised); border: 1px solid var(--rule); border-radius: 999px; display: grid; place-items: center; font-family: var(--mono); font-size: 10px; color: var(--ink-2);">pill</span>
+        </div>
+        <div class="stat-note">Only the two outlined swatches have tokens — <code>--radius-sm</code> 4px and <code>--radius-md</code> 6px. The other eight were typed from memory.</div>
+      </div>
+    </div>
+
+    <h3>Migration residue</h3>
+    <p class="body">297 white-alpha values survive the dark → Kit Light migration, across <strong>48 of 112 files</strong>. All were correct on the old <code>#0B0F14</code> ground. On a white card, white at 4% alpha is white.</p>
+
+    <div class="spec">
+      <div class="spec-label">Rendered at shipped alphas · the dashed outlines are added here only to prove the boxes exist</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="position: relative; width: 96px; height: 56px;">
+            <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;"></div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px;"></div>
+          </div>
+          <div class="ratio" style="color: #4B5568; margin-top: 10px;">.04 / .1 &nbsp; <span style="color: #626F80; font-weight: 400;">33 uses</span></div>
+        </div>
+        <div>
+          <div style="position: relative; width: 96px; height: 56px;">
+            <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.06); border-radius: 4px;"></div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px;"></div>
+          </div>
+          <div class="ratio" style="color: #4B5568; margin-top: 10px;">.06 &nbsp; <span style="color: #626F80; font-weight: 400;">26 uses</span></div>
+        </div>
+        <div>
+          <div style="position: relative; width: 96px; height: 56px;">
+            <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.08); border-radius: 4px;"></div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px;"></div>
+          </div>
+          <div class="ratio" style="color: #4B5568; margin-top: 10px;">.08 &nbsp; <span style="color: #626F80; font-weight: 400;">17 uses</span></div>
+        </div>
+        <div>
+          <div style="position: relative; width: 96px; height: 56px;">
+            <div style="width: 100%; height: 100%; background: #FFFFFF; border-radius: 4px; display: grid; place-items: center;"><span style="font-size: 14px; color: rgba(255,255,255,0.9);">Sold</span></div>
+            <div style="position: absolute; inset: -3px; border: 1px dashed #B91C1C; border-radius: 6px;"></div>
+          </div>
+          <div class="ratio" style="color: #4B5568; margin-top: 10px;">text .9 &nbsp; <span style="color: #626F80; font-weight: 400;">75 uses</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <table style="min-width: 420px;">
+        <thead><tr><th>Where the 231 typed values land</th><th class="e">Count</th></tr></thead>
+        <tbody>
+          <tr><td class="t">Text colour</td><td class="e" style="color: var(--crit);">75</td></tr>
+          <tr><td class="t">Background fills</td><td class="e" style="color: var(--crit);">59</td></tr>
+          <tr><td class="t">Full borders</td><td class="e" style="color: var(--crit);">57</td></tr>
+          <tr><td class="t">Edge rules</td><td class="e" style="color: var(--crit);">40</td></tr>
+          <tr style="border-top: 2px solid var(--rule-hard);"><td class="t" style="font-weight: 600;">Invisible surfaces &amp; rules</td><td class="e" style="color: var(--crit); font-weight: 700;">156</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="body">Every dividing line, card edge and hover fill in that group is currently doing nothing at all.</p>
+
+    <h3>Navigation reaches a third of the product</h3>
+    <p class="body">The router serves <strong>35 routes</strong>. The three sport navs expose <strong>11 destinations</strong> between them — football five, F1 five, tennis three. Twenty-four routes are reachable only by direct URL. That is an information-architecture question rather than a bug, but it is worth answering deliberately: either those screens matter and should be navigable, or they don't and should go.</p>
+  </section>
+
+  <!-- ══ METHOD ═══════════════════════════════════════ -->
+  <section id="method">
+    <div class="head">
+      <div class="eyebrow">Section six</div>
+      <h2>Method &amp; limits</h2>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <h3>How this was assessed</h3>
+        <p class="body">Live inspection of the deployed sign-in screen — computed styles and DOM at 375px and 1280px — plus a full read of the token layer, the primitive components and all 112 view files at commit <code>1f4e937</code>. Every contrast figure was computed from the shipped token values under the WCAG 2.1 relative-luminance formula; every count is a repository count, not an estimate.</p>
+      </div>
+      <div class="panel">
+        <h3>What is not covered</h3>
+        <p class="body">Signed-in screens were assessed from source rather than exercised live — entering credentials isn't something I can do. The codebase-wide counts hold regardless, and the token and component findings are code-verified. Anything about flow, state or in-app behaviour is unverified and deliberately absent from this report rather than guessed at.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ACTIONS ══════════════════════════════════════ -->
+  <section id="actions">
+    <div class="head">
+      <div class="eyebrow">Section seven</div>
+      <h2>Actions, prioritised</h2>
+    </div>
+
+    <p class="lede">Thirteen items across the four tiers already used in <code>BACKLOG.md</code>, each traceable to the findings it clears. P0 is roughly one day and removes every critical finding. P1 is the tier that decides whether any of this holds — <strong>B4 must land with B1 and B2, not after them</strong>, or the sweep starts decaying the week it finishes.</p>
+
+    <!-- P0 -->
+    <div class="tier" style="--tier-color: var(--crit);">
+      <div class="tier-head">
+        <div>
+          <h3>P0 — Blocker</h3>
+          <div class="tier-when">Before the maintenance wall comes down</div>
+        </div>
+        <div class="tier-total">~1 day · clears findings 1, 2, 3, 7, 14</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">A1</div>
+        <div class="act-title">Rebuild the sign-in fields</div>
+        <div class="act-body">Replace the white-alpha fill and border with a solid <code>#9A9488</code> boundary at 3.0:1. Restore a visible focus state as a 2px <code>--accent</code> border where <code>outline: none</code> currently stands alone. Move the field radius from 4px to the system's 6px, re-set labels and tabs in JetBrains Mono at 11–12px, and raise the tab strip and reset link to 44px.</div>
+        <div class="act-foot"><span><b>Where</b> src/screens/AuthScreen.jsx:129–140, :260</span><span><b>Effort</b> 2h</span><span><b>Clears</b> 1, 7, 14</span></div>
+        <div class="act-check"><b>Done when:</b> the field boundary measures ≥3:1 against the card, tabbing through the form shows focus at every stop, and no target is under 44px at a 375px viewport.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">A2</div>
+        <div class="act-title">Darken the muted token</div>
+        <div class="act-body">Change <code>--mute</code> from <code>#8A97A8</code> to <code>#626F80</code>. One line, and it lifts every secondary label in the product from 2.69:1 to 4.63:1 at once. Budget the rest of the time for a visual regression pass — this token appears on almost every screen, so it is worth looking at each one before merging.</div>
+        <div class="act-foot"><span><b>Where</b> src/index.css:78</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 2</span></div>
+        <div class="act-check"><b>Done when:</b> no text token measures below 4.5:1 against <code>--bg</code> or <code>--card</code>.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">A3</div>
+        <div class="act-title">Fix the failing button states</div>
+        <div class="act-body">Four value swaps on <code>.ffl-btn</code>: <code>primary:hover</code> #1EC3E3 → #14567F, <code>gold</code> #B8720E → #96600C, <code>gold:hover</code> #F0B91A → #7A4A08, and <code>danger</code> ink from <code>--paper</code> to <code>#FFFFFF</code>. While in the file, replace the two <code>rgba(242,238,229,.06)</code> hover fills on the <code>secondary</code> and <code>icon</code> variants, which are invisible on a light ground.</div>
+        <div class="act-foot"><span><b>Where</b> src/index.css:440–535</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 3</span></div>
+        <div class="act-check"><b>Done when:</b> every button variant measures ≥4.5:1 label-on-fill in both resting and hover states, and every hover produces a visible change.</div>
+      </div>
+    </div>
+
+    <!-- P1 -->
+    <div class="tier" style="--tier-color: var(--high);">
+      <div class="tier-head">
+        <div>
+          <h3>P1 — High</h3>
+          <div class="tier-when">First sprint after launch</div>
+        </div>
+        <div class="tier-total">~3 days · clears findings 5, 6, 8</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">B1</div>
+        <div class="act-title">Sweep the invisible surfaces</div>
+        <div class="act-body">Map the 156 white-alpha backgrounds and borders onto real tokens — <code>--rule</code> for dividers and card edges, <code>--elev</code> for raised fills, <code>--card</code> for surfaces. Then check the 75 white-alpha text colours individually: some sit on the navy shell and are correct as they are.</div>
+        <div class="act-foot"><span><b>Where</b> 48 of 112 files in src/</span><span><b>Effort</b> 1d</span><span><b>Clears</b> 6</span></div>
+        <div class="act-check"><b>Done when:</b> <code>rgba(255,255,255,…)</code> appears in <code>src/</code> only where the surface behind it is genuinely dark.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">B2</div>
+        <div class="act-title">Publish the type ramp as tokens</div>
+        <div class="act-body">Add the seven steps as CSS custom properties, then move the declarations onto them: 243 under 11px collapse onto the micro step, 48 at 13–14px rise to body, and the nine sizes above 20px become display and title. Where a 9px Archivo Black label is really a sentence, re-set it as 15px sentence case rather than shrinking it back down.</div>
+        <div class="act-foot"><span><b>Where</b> 474 declarations across 112 files</span><span><b>Effort</b> 1.5d</span><span><b>Clears</b> 5</span></div>
+        <div class="act-check"><b>Done when:</b> no type in the product is set below 11px, and every size in <code>src/</code> resolves through a named step.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">B3</div>
+        <div class="act-title">Raise every control to 44px</div>
+        <div class="act-body">Start with <code>.ffl-btn--sm</code>, which is 36px — below the minimum on a product whose smallest supported viewport is 375px. Then sweep the hand-rolled controls: any tap target under 44px either grows or gains padding around it.</div>
+        <div class="act-foot"><span><b>Where</b> src/index.css:440–535 and 447 raw buttons</span><span><b>Effort</b> 3h</span><span><b>Clears</b> 8</span></div>
+        <div class="act-check"><b>Done when:</b> nothing interactive measures under 44px in either dimension at 375px.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">B4</div>
+        <div class="act-title">Add the lint rules that stop regression</div>
+        <div class="act-body">Three rules in <code>eslint.config.js</code>, scoped to <code>src/</code>: ban raw hex outside the token file, ban raw pixel values in <code>fontSize</code> and <code>text-[…]</code>, and ban <code>rgba(255,255,255,…)</code> outright. This is the highest-leverage item in the report and the cheapest — without it, B1 and B2 are a one-off cleanup that decays.</div>
+        <div class="act-foot"><span><b>Where</b> eslint.config.js</span><span><b>Effort</b> 3h</span><span><b>Clears</b> nothing directly — protects B1, B2, C1, C3</span></div>
+        <div class="act-check"><b>Done when:</b> CI fails a PR that introduces a raw hex, a raw pixel font size, or a white-alpha value in <code>src/</code>.</div>
+      </div>
+    </div>
+
+    <!-- P2 -->
+    <div class="tier" style="--tier-color: var(--accent);">
+      <div class="tier-head">
+        <div>
+          <h3>P2 — Medium</h3>
+          <div class="tier-when">Within the quarter</div>
+        </div>
+        <div class="tier-total">~6h + one IA decision · clears findings 9, 10, 11, 13</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">C1</div>
+        <div class="act-title">Repoint the position chip tints</div>
+        <div class="act-body">Derive each chip's tint from its own ink token instead of the pre-migration hex — <code>color-mix(in srgb, var(--pos-gk) 14%, transparent)</code> and the same for def, mid and fwd. Three of the four current tints reference colours that no longer exist anywhere else in the palette.</div>
+        <div class="act-foot"><span><b>Where</b> src/index.css:282–285</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 9</span></div>
+        <div class="act-check"><b>Done when:</b> each chip's tint and ink are the same hue, and no <code>.pos-*</code> rule contains a literal colour.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">C2</div>
+        <div class="act-title">Retire the stale animation colours</div>
+        <div class="act-body">The <code>.glow-cyan</code>, <code>.glow-gold</code> and <code>.glow-green</code> helpers and the <code>liveRing</code> keyframe all animate pre-migration rgba values. On the light ground they either do nothing or read as a smudge. Re-derive them from the current accent tokens, or delete them if nothing depends on them.</div>
+        <div class="act-foot"><span><b>Where</b> src/index.css · .glow-* · @keyframes liveRing</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 13</span></div>
+        <div class="act-check"><b>Done when:</b> every animated colour resolves through a token, and the live-match ring is visible on <code>--card</code>.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">C3</div>
+        <div class="act-title">Token the remaining radii</div>
+        <div class="act-body">Ten distinct corner radii are in use against two defined tokens. Decide which of 2, 3, 8, 10, 12, 16, 18 and the pill are real steps — probably a pill for chips and one large radius for sheets — add those as tokens, and rewrite the rest to <code>--radius-sm</code> or <code>--radius-md</code>.</div>
+        <div class="act-foot"><span><b>Where</b> src/ and src/index.css</span><span><b>Effort</b> 4h</span><span><b>Clears</b> 10</span></div>
+        <div class="act-check"><b>Done when:</b> the set of radii in <code>src/</code> equals the set of radius tokens.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">C4</div>
+        <div class="act-title">Decide what the unnavigable routes are for</div>
+        <div class="act-body">Twenty-four of 35 routes have no entry point in any nav. Some are deliberate — deep links, admin, share targets. The rest are either features users can't find or screens that should be retired. This needs a product decision before it needs any code; tennis in particular exposes only three destinations against football's five.</div>
+        <div class="act-foot"><span><b>Where</b> src/components/AppLayout.jsx · src/App.jsx</span><span><b>Effort</b> IA decision, then scoped</span><span><b>Clears</b> 11</span></div>
+        <div class="act-check"><b>Done when:</b> every route is either reachable from a nav, deliberately deep-link-only and documented as such, or removed.</div>
+      </div>
+    </div>
+
+    <!-- P3 -->
+    <div class="tier" style="--tier-color: var(--muted);">
+      <div class="tier-head">
+        <div>
+          <h3>P3 — Low</h3>
+          <div class="tier-when">Ongoing, as files are touched</div>
+        </div>
+        <div class="tier-total">No standalone budget · clears findings 4, 12</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">D1</div>
+        <div class="act-title">Convert screens to the primitives</div>
+        <div class="act-body">Not a project and not worth a sweep. The rule is: when a file is opened for any other reason, its buttons, inputs and selects convert to <code>Button</code>, <code>TextInput</code> and <code>Select</code> before it closes. At 447 raw buttons across 112 files, a sweep would be weeks and would touch everything at once; the habit costs minutes per PR and compounds.</div>
+        <div class="act-foot"><span><b>Where</b> src/screens/ · src/components/</span><span><b>Effort</b> ongoing</span><span><b>Clears</b> 4</span></div>
+        <div class="act-check"><b>Done when:</b> raw control counts trend down PR over PR. Worth tracking as a number in <code>BACKLOG.md</code>.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">D2</div>
+        <div class="act-title">Drop the inline font declarations</div>
+        <div class="act-body">Once faces are inherited properly from <code>body</code> and the ramp tokens, the 1,584 inline <code>fontFamily</code> lines are dead weight. Remove them alongside D1 rather than as their own pass — they sit in the same style objects.</div>
+        <div class="act-foot"><span><b>Where</b> 112 files</span><span><b>Effort</b> ongoing</span><span><b>Clears</b> 12</span></div>
+        <div class="act-check"><b>Done when:</b> <code>fontFamily</code> appears in <code>src/</code> only where a specimen deliberately overrides the inherited face.</div>
+      </div>
+    </div>
+
+    <div class="panel callout" style="border: 0; background: transparent; padding: 8px 0 0;">
+      <h3>If only three things get done</h3>
+      <p class="body">A1, A2 and B4. The first two remove what a user actually hits on the way into the product; the third is what stops the report being true again in six months.</p>
+    </div>
+  </section>
+
+  <!-- ══ LEDGER ═══════════════════════════════════════ -->
+  <section id="ledger">
+    <div class="head">
+      <div class="eyebrow">Appendix</div>
+      <h2>Full findings ledger</h2>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th style="width: 34px;">#</th><th>Finding</th><th>Severity</th><th>Where</th><th class="e">Action</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="n">01</td><td class="t">Sign-in fields are invisible — 1.00:1 fill and border on a white card</td><td><span class="chip chip--crit">Critical</span></td><td class="w">AuthScreen.jsx:131–132</td><td class="e">A1</td></tr>
+          <tr><td class="n">02</td><td class="t">The muted token fails contrast at 2.69:1 and carries nearly all metadata in the app</td><td><span class="chip chip--crit">Critical</span></td><td class="w">index.css:78</td><td class="e">A2</td></tr>
+          <tr><td class="n">03</td><td class="t">Four button states fall below AA — primary hover 1.91, gold hover 1.63, gold 3.49, danger 2.53</td><td><span class="chip chip--crit">Critical</span></td><td class="w">index.css:440–535</td><td class="e">A3</td></tr>
+          <tr><td class="n">04</td><td class="t">Primitives exist and are barely imported — Button 5 files, TextInput 1, Select 0</td><td><span class="chip chip--high">High</span></td><td class="w">src/components/</td><td class="e">D1</td></tr>
+          <tr><td class="n">05</td><td class="t">No type ramp — 20 sizes set three ways, 68% of all type below 12px</td><td><span class="chip chip--high">High</span></td><td class="w">474 declarations</td><td class="e">B2</td></tr>
+          <tr><td class="n">06</td><td class="t">297 dark-theme white-alpha values survive; 156 are invisible surfaces and rules</td><td><span class="chip chip--high">High</span></td><td class="w">48 of 112 files</td><td class="e">B1</td></tr>
+          <tr><td class="n">07</td><td class="t"><code>outline: none</code> with no replacement — keyboard focus is untrackable</td><td><span class="chip chip--high">High</span></td><td class="w">AuthScreen.jsx + 101 inputs</td><td class="e">A1</td></tr>
+          <tr><td class="n">08</td><td class="t">Touch targets under 44px — small button 36px, sign-in tabs 38.5px</td><td><span class="chip chip--med">Medium</span></td><td class="w">index.css · .ffl-btn--sm</td><td class="e">B3</td></tr>
+          <tr><td class="n">09</td><td class="t">Position chip tints don't match the ink they're paired with</td><td><span class="chip chip--med">Medium</span></td><td class="w">index.css:282–285</td><td class="e">C1</td></tr>
+          <tr><td class="n">10</td><td class="t">Ten distinct corner radii in use against two defined tokens</td><td><span class="chip chip--med">Medium</span></td><td class="w">src/ · index.css</td><td class="e">C3</td></tr>
+          <tr><td class="n">11</td><td class="t">Navigation reaches 11 destinations against 35 routes; tennis exposes three</td><td><span class="chip chip--med">Medium</span></td><td class="w">AppLayout.jsx · App.jsx</td><td class="e">C4</td></tr>
+          <tr><td class="n">12</td><td class="t">The three brand faces are re-declared inline 1,584 times instead of inherited</td><td><span class="chip chip--low">Low</span></td><td class="w">112 files</td><td class="e">D2</td></tr>
+          <tr><td class="n">13</td><td class="t">Glow helpers and the live-ring keyframe still animate dark-theme colours</td><td><span class="chip chip--low">Low</span></td><td class="w">index.css · .glow-* · liveRing</td><td class="e">C2</td></tr>
+          <tr><td class="n">14</td><td class="t">Radius mixed inside single components — sign-in fields 4px against a 6px card</td><td><span class="chip chip--low">Low</span></td><td class="w">AuthScreen.jsx</td><td class="e">A1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

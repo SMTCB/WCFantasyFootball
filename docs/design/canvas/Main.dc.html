@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #F7F3ED; color: #18202E; font-family: 'Archivo', system-ui, sans-serif; }
+    a { color: #1A6FA8; text-decoration: none; } a:hover { color: #14567F; }
+    code { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; background: #EDEAE2; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</helmet>
+
+<div style="width: 1240px; min-height: 900px; background: #F7F3ED; padding: 56px 64px 48px; display: flex; flex-direction: column; gap: 38px; box-sizing: border-box;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; border-bottom: 3px solid #18202E; padding-bottom: 26px;">
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500;">Design Assessment · 22 August 2026</div>
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 74px; line-height: 0.88; letter-spacing: -0.03em; text-transform: uppercase; color: #18202E;">Frontrow<br>Platform Audit</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end; padding-top: 6px; flex-shrink: 0;">
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8A97A8;">Verdict</div>
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 29px; line-height: 1.05; letter-spacing: -0.02em; text-transform: uppercase; color: #B8720E; text-align: right;">System sound,<br>adoption failing</div>
+    </div>
+  </div>
+
+  <div style="font-family: 'Archivo', system-ui, sans-serif; font-size: 19px; line-height: 1.6; color: #4B5568; max-width: 940px; text-wrap: pretty;">
+    Frontrow has a genuinely well-designed token layer and a small set of correctly-built primitives. The product almost never uses them. Across 112 view files there are <strong style="color: #18202E;">4,127 inline style objects</strong>, and the canonical <code>Select</code> component is imported by <strong style="color: #B91C1C;">zero</strong> of them. The visible symptom is the Kit Light migration: dark-theme values survive in enough places that the sign-in screen currently ships with invisible input fields.
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px;">
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-top: 4px solid #B91C1C; border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 7px;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 44px; line-height: 1; color: #B91C1C;">3</div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #18202E; font-weight: 700;">Critical</div>
+      <div style="font-size: 14px; line-height: 1.45; color: #4B5568;">Ships today. Degrades real use.</div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-top: 4px solid #B8720E; border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 7px;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 44px; line-height: 1; color: #B8720E;">4</div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #18202E; font-weight: 700;">High</div>
+      <div style="font-size: 14px; line-height: 1.45; color: #4B5568;">Structural. Compounds per screen.</div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-top: 4px solid #1A6FA8; border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 7px;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 44px; line-height: 1; color: #1A6FA8;">4</div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #18202E; font-weight: 700;">Medium</div>
+      <div style="font-size: 14px; line-height: 1.45; color: #4B5568;">Consistency and reach.</div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD5; border-top: 4px solid #8A97A8; border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 7px;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 44px; line-height: 1; color: #4B5568;">3</div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #18202E; font-weight: 700;">Low</div>
+      <div style="font-size: 14px; line-height: 1.45; color: #4B5568;">Assistive tech and polish.</div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 0;">
+    <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #8A97A8; font-weight: 500; padding-bottom: 12px;">The five that matter most</div>
+
+    <div style="display: flex; align-items: flex-start; gap: 20px; padding: 17px 0; border-top: 1px solid #E2DDD5;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 21px; color: #CFC9BF; width: 34px; flex-shrink: 0; line-height: 1.2;">01</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
+        <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 19px; letter-spacing: -0.01em; text-transform: uppercase; color: #18202E;">The sign-in fields are invisible</div>
+        <div style="font-size: 16px; line-height: 1.5; color: #4B5568;">Both inputs paint <code style="font-size: 14px;">rgba(255,255,255,.04)</code> on a white card, with a <code style="font-size: 14px;">rgba(255,255,255,.1)</code> border — a measured <strong style="color: #B91C1C;">1.00:1</strong>. Verified on the live deployment.</div>
+      </div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; background: #B91C1C; color: #FFFFFF; padding: 4px 9px; border-radius: 4px; flex-shrink: 0; margin-top: 3px;">Critical</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 20px; padding: 17px 0; border-top: 1px solid #E2DDD5;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 21px; color: #CFC9BF; width: 34px; flex-shrink: 0; line-height: 1.2;">02</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
+        <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 19px; letter-spacing: -0.01em; text-transform: uppercase; color: #18202E;">Every secondary label fails contrast</div>
+        <div style="font-size: 16px; line-height: 1.5; color: #4B5568;">The muted token measures <strong style="color: #B91C1C;">2.69:1</strong> on the page ground — and it carries nearly all metadata in the app, usually at 9–11px.</div>
+      </div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; background: #B91C1C; color: #FFFFFF; padding: 4px 9px; border-radius: 4px; flex-shrink: 0; margin-top: 3px;">Critical</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 20px; padding: 17px 0; border-top: 1px solid #E2DDD5;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 21px; color: #CFC9BF; width: 34px; flex-shrink: 0; line-height: 1.2;">03</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
+        <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 19px; letter-spacing: -0.01em; text-transform: uppercase; color: #18202E;">Hover states erase their own labels</div>
+        <div style="font-size: 16px; line-height: 1.5; color: #4B5568;">Primary hover drops to <strong style="color: #B91C1C;">1.91:1</strong> and gold to <strong style="color: #B91C1C;">1.63:1</strong>. Both hover colours are pre-migration dark-theme values.</div>
+      </div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; background: #B91C1C; color: #FFFFFF; padding: 4px 9px; border-radius: 4px; flex-shrink: 0; margin-top: 3px;">Critical</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 20px; padding: 17px 0; border-top: 1px solid #E2DDD5;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 21px; color: #CFC9BF; width: 34px; flex-shrink: 0; line-height: 1.2;">04</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
+        <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 19px; letter-spacing: -0.01em; text-transform: uppercase; color: #18202E;">The primitives exist; nobody imports them</div>
+        <div style="font-size: 16px; line-height: 1.5; color: #4B5568;">Button: 5 of 112 files, against 447 hand-rolled buttons. TextInput: 1 file, 101 raw inputs. Select: <strong style="color: #B91C1C;">0 files</strong>, 30 raw selects.</div>
+      </div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; background: #B8720E; color: #FFFFFF; padding: 4px 9px; border-radius: 4px; flex-shrink: 0; margin-top: 3px;">High</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 20px; padding: 17px 0; border-top: 1px solid #E2DDD5; border-bottom: 1px solid #E2DDD5;">
+      <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 21px; color: #CFC9BF; width: 34px; flex-shrink: 0; line-height: 1.2;">05</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
+        <div style="font-family: 'Archivo Black', 'Helvetica Neue', Arial Black, sans-serif; font-size: 19px; letter-spacing: -0.01em; text-transform: uppercase; color: #18202E;">Type has no ramp — 20 sizes, 122 set at 9px or smaller</div>
+        <div style="font-size: 16px; line-height: 1.5; color: #4B5568;">Set three different ways — 92 inline objects, 355 Tailwind arbitraries, 27 CSS rules — with no named steps. 68% of all type sits below 12px.</div>
+      </div>
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; background: #B8720E; color: #FFFFFF; padding: 4px 9px; border-radius: 4px; flex-shrink: 0; margin-top: 3px;">High</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; padding-top: 2px;">
+    <div style="display: flex; flex-direction: column; gap: 7px; flex-grow: 1;">
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8;">Method</div>
+      <div style="font-size: 15px; line-height: 1.55; color: #4B5568;">Live inspection of the deployed sign-in screen — computed styles and DOM at 375px and 1280px — plus a full read of the token layer, the primitive components and all 112 view files.</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 7px; flex-grow: 1;">
+      <div style="font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8A97A8;">Not covered</div>
+      <div style="font-size: 15px; line-height: 1.55; color: #4B5568;">Signed-in screens were read from source, not exercised live — entering credentials isn't something I can do. Findings there are code-verified rather than observed in use.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1240,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
