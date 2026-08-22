@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>183</strong><span>closed</span></div>
+      <div class="total-pill"><strong>184</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (106)</span>
+    <span class="chip" data-filter-kind="done">Shipped (107)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (5)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">183</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">184</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">106</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">107</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">5</span></div>
@@ -1179,8 +1179,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">106</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">107</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ club-switch-1 — clubhouse sidebar switcher duplicate-badge bug fixed (2026-08-22) — pr #822 
+
+**symptom**: user reported the left sidebar&#x27;s clubhouse switcher showing 60+ small colored badges with cryptic 2-letter labels (dm/md/wc/m&#x27;), many sharing the same label — user has only 4 real clubhouse memberships.
+
+**root cause**: `fetchmycircles()` in [src/hooks/useclubhouse.js](src/hooks/useclubhouse.js) queried `circle_members` with no `.eq(&#x27;user_id&#x27;, ...)` filter, relying entirely on rls to scope results. the `circle_members_member_read` rls policy (`is_circle_member(circle_id)`) is scoped **per circle**, not per user — it lets any member of a circle read *every* member row for that circle (a reasonable policy for member-list features elsewhere in the app). without a client-side `user_id` filter, the unfiltered query returned one row per fellow member of each circle the user belongs to, each embedding the same `circles` record — e.g. 39 rows for a 39-member &quot;world cup pilot&quot; circle, 11 for an 11-member circle, etc. confirmed by reproducing the exact unfiltered query under the user&#x27;s real rls context via `npx supabase db query --linked`: row counts matched the observed badge counts exactly, grouped by circle.
+
+**fix**: added `.eq(&#x27;user_id&#x27;, user.id)` to the query (using the already-established `useauth()` hook). also replaced the 2-letter initial badge grid with a proper dropdown showing full clubhouse names, per explicit user request — no more guessing what the abbreviations mean.
+
+**verification**: `npm run lint` (0 errors), `npm run build` (clean, no rolldown tdz issues), full ci green (build/lint/security/unit/e2e/ios/android). not exercised in a live logged-in browser session this session — local dev points at the live production supabase with real auth enabled and no demo-mode credentials were available; verification was root-cause reproduction via direct db query (before/after) plus lint/build/ci.
+
+**scope**: pure client-side query fix, no db/rls change, no mi" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">CLUB-SWITCH-1 — Clubhouse sidebar switcher duplicate-badge bug fixed</h3>
+        <p class="card-summary">Symptom : user reported the left sidebar's Clubhouse switcher showing 60+ small colored badges with cryptic 2-letter labels (DM/MD/WC/M'), many sharing the same label —…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-22</span><span class="foot-refs">PR #822</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">CLUB-SWITCH-1 — Clubhouse sidebar switcher duplicate-badge bug fixed</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Symptom : user reported the left sidebar's Clubhouse switcher showing 60+ small colored badges with cryptic 2-letter labels (DM/MD/WC/M'), many sharing the same label —…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #822</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-22</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Symptom</strong>: user reported the left sidebar's Clubhouse switcher showing 60+ small colored badges with cryptic 2-letter labels (DM/MD/WC/M'), many sharing the same label — user has only 4 real Clubhouse memberships.</p>
+<p><strong>Root cause</strong>: <code>fetchMyCircles()</code> in <a href="src/hooks/useClubhouse.js" target="_blank" rel="noopener">src/hooks/useClubhouse.js</a> queried <code>circle_members</code> with no <code>.eq('user_id', ...)</code> filter, relying entirely on RLS to scope results. The <code>circle_members_member_read</code> RLS policy (<code>is_circle_member(circle_id)</code>) is scoped <strong>per circle</strong>, not per user — it lets any member of a circle read *every* member row for that circle (a reasonable policy for member-list features elsewhere in the app). Without a client-side <code>user_id</code> filter, the unfiltered query returned one row per fellow member of each circle the user belongs to, each embedding the same <code>circles</code> record — e.g. 39 rows for a 39-member "World Cup Pilot" circle, 11 for an 11-member circle, etc. Confirmed by reproducing the exact unfiltered query under the user's real RLS context via <code>npx supabase db query --linked</code>: row counts matched the observed badge counts exactly, grouped by circle.</p>
+<p><strong>Fix</strong>: added <code>.eq('user_id', user.id)</code> to the query (using the already-established <code>useAuth()</code> hook). Also replaced the 2-letter initial badge grid with a proper dropdown showing full Clubhouse names, per explicit user request — no more guessing what the abbreviations mean.</p>
+<p><strong>Verification</strong>: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ issues), full CI green (Build/Lint/Security/Unit/E2E/iOS/Android). Not exercised in a live logged-in browser session this session — local dev points at the live production Supabase with real auth enabled and no demo-mode credentials were available; verification was root-cause reproduction via direct DB query (before/after) plus lint/build/CI.</p>
+<p><strong>Scope</strong>: pure client-side query fix, no DB/RLS change, no migration.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ docker schema-rehearsal workflow + full tennis pipeline test vs. real wimbledon field (2026-07-31, corrected 2026-08-01) — no pr yet (pending) 
 
 addressed the standing &quot;i want real tests in case we need to adjust the schema&quot; want (a lightweight substitute for the full data-1/ops-1 staging-environment backlog items) and closed the gap between &quot;tennis tested against synthetic `season_year=2099` fixture data&quot; (2026-07-27 session) and &quot;tennis tested against the shape/scale of a real tournament draw.&quot;
