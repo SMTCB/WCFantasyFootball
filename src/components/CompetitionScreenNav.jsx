@@ -78,7 +78,7 @@ export function CompetitionScreenNav({ pathname, paddockId }) {
               borderBottom: isActive ? `2px solid ${color}` : '2px solid transparent',
               textDecoration: 'none',
               fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.12em',
+              fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em',
               color,
               whiteSpace: 'nowrap',
               transition: 'color .12s',

@@ -11,7 +11,7 @@ function ptColor(pts) {
 
 const TH = ({ children, right }) => (
   <th style={{
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 7, fontWeight: 700,
+    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700,
     color: 'var(--mute)', letterSpacing: '0.18em', textTransform: 'uppercase',
     padding: '0 4px 5px', textAlign: right ? 'right' : 'left', whiteSpace: 'nowrap',
   }}>{children}</th>
@@ -19,7 +19,7 @@ const TH = ({ children, right }) => (
 
 const TD = ({ children, right, bold, color }) => (
   <td style={{
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: bold ? 700 : 400,
+    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: bold ? 700 : 400,
     color: color ?? 'var(--paper)', padding: '3px 4px',
     textAlign: right ? 'right' : 'left', whiteSpace: 'nowrap',
   }}>{children}</td>
@@ -34,9 +34,9 @@ export default memo(function PlayerStatsPanel({
     return (
       <div style={{
         padding: '8px 16px 10px', borderBottom: '1px solid var(--rule)',
-        background: 'rgba(255,255,255,0.02)',
+        background: 'var(--shell-fill)',
       }}>
-        <div className="fk-mono animate-pulse" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '0.18em' }}>
+        <div className="fk-mono animate-pulse" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.18em' }}>
           LOADING STATS…
         </div>
       </div>
@@ -48,7 +48,7 @@ export default memo(function PlayerStatsPanel({
   return (
     <div style={{
       borderBottom: '1px solid var(--rule)',
-      background: 'rgba(255,255,255,0.025)',
+      background: 'var(--shell-fill)',
       padding: '10px 16px 12px 52px', // indent past position chip
     }}>
 
@@ -68,7 +68,7 @@ export default memo(function PlayerStatsPanel({
           </thead>
           <tbody>
             {rounds.map((r, i) => (
-              <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              <tr key={i} style={{ borderTop: '1px solid var(--shell-rule)' }}>
                 <TD color="var(--mute)">{r.gw}</TD>
                 <TD>{r.fixture}</TD>
                 <TD right color="var(--mute)">{r.mins ?? 0}'</TD>
@@ -81,7 +81,7 @@ export default memo(function PlayerStatsPanel({
           </tbody>
         </table>
       ) : (
-        <div className="fk-mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '0.14em', marginBottom: 8 }}>
+        <div className="fk-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginBottom: 8 }}>
           NO STATS YET THIS SEASON
         </div>
       )}
@@ -89,7 +89,7 @@ export default memo(function PlayerStatsPanel({
       {/* ── Season totals + full stats link ─────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
         {season && season.apps > 0 ? (
-          <div className="fk-mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em' }}>
+          <div className="fk-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.12em' }}>
             {season.apps} APPS · {season.goals}G · {season.assists}A · {season.pts} PTS · AVG {season.avgPts}/GW
           </div>
         ) : <span />}
@@ -100,7 +100,7 @@ export default memo(function PlayerStatsPanel({
             style={{
               padding: '5px 10px', border: '1px solid var(--cyan)',
               color: 'var(--cyan)', background: 'transparent',
-              fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', cursor: 'pointer',
+              fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em', cursor: 'pointer',
             }}
           >
             STATS ↗
@@ -118,7 +118,7 @@ export default memo(function PlayerStatsPanel({
             style={{
               padding: '6px 16px', border: '1px solid var(--danger)',
               color: 'var(--danger)', background: 'transparent',
-              fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', cursor: 'pointer',
+              fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em', cursor: 'pointer',
             }}
           >
             SELL
@@ -133,7 +133,7 @@ export default memo(function PlayerStatsPanel({
               border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
               color: canBuy ? 'var(--cyan)' : 'var(--mute)',
               background: 'transparent',
-              fontSize: 10, fontWeight: 800, letterSpacing: '0.14em',
+              fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em',
               cursor: canBuy ? 'pointer' : 'not-allowed',
             }}
           >

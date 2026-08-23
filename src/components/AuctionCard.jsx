@@ -47,7 +47,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
   return (
     <div
       className="border-b"
-      style={{ borderColor: 'var(--rule)', background: isMine ? 'rgba(255,255,255,0.02)' : 'transparent' }}
+      style={{ borderColor: 'var(--rule)', background: isMine ? 'var(--shell-fill)' : 'transparent' }}
     >
       <div className="px-4 py-3 flex items-start gap-3">
         {/* Position badge */}

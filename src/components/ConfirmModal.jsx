@@ -84,7 +84,7 @@ export default function ConfirmModal({
           width:        '100%',
           maxWidth:     '360px',
           background:   'var(--ink-2)',
-          border:       '1px solid rgba(255,255,255,0.10)',
+          border:       '1px solid var(--shell-rule-strong)',
           borderRadius: '12px',
           padding:      '28px 24px 24px',
           boxShadow:    '0 24px 64px rgba(0,0,0,0.7)',
@@ -94,7 +94,7 @@ export default function ConfirmModal({
         <div
           id={TITLE_ID}
           style={{
-            fontSize:      '20px',
+            fontSize: 'var(--fs-heading)',
             fontFamily:    'Archivo Black, sans-serif',
             fontWeight:    900,
             textTransform: 'uppercase',
@@ -109,7 +109,7 @@ export default function ConfirmModal({
 
         {/* Body */}
         <p style={{
-          fontSize:     '13px',
+          fontSize: 'var(--fs-body)',
           lineHeight:   1.6,
           color:        'rgba(240,242,245,0.6)',
           marginBottom: warning ? '12px' : '24px',
@@ -142,11 +142,11 @@ export default function ConfirmModal({
               <MessageIcon type="warning" style={{ width: 12, height: 12 }} />
             </div>
             <div>
-              <div className="fk-mono" style={{ fontSize: '9px', color: 'var(--warn)', marginBottom: '3px' }}>
+              <div className="fk-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--warn)', marginBottom: '3px' }}>
                 Warning
               </div>
               <p style={{
-                fontSize:   '12px',
+                fontSize: 'var(--fs-label)',
                 lineHeight: 1.55,
                 color:      'var(--paper)',
                 margin:     0,

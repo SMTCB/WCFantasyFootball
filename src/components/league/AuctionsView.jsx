@@ -17,7 +17,7 @@ export default function AuctionsView({ auctions, auctionsLoading, name, mySquadI
             { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE',                    tone: 'var(--cyan)'   },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 22px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 28px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
             </div>
           ))}
@@ -27,14 +27,14 @@ export default function AuctionsView({ auctions, auctionsLoading, name, mySquadI
       <div style={{ flex: 1, overflow: 'auto', padding: '0 0 80px' }}>
         {auctionsLoading && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 28px' }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING AUCTIONS…</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING AUCTIONS…</div>
           </div>
         )}
         {!auctionsLoading && auctions.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
-            <div style={{ fontSize: 28 }}>🔨</div>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVE AUCTIONS</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>
+            <div style={{ fontSize: 'var(--fs-title)' }}>🔨</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVE AUCTIONS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>
               List a player for auction from your Squad screen to start bidding.
             </div>
           </div>

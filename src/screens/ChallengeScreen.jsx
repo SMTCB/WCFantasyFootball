@@ -66,7 +66,7 @@ function TypeBadge({ betType }) {
   return (
     <span style={{
       background: isFree ? 'var(--abg)' : 'var(--gbg)', color: isFree ? 'var(--accent)' : 'var(--gold)',
-      ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase',
+      ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase',
       padding: '2px 7px', borderRadius: 100, flexShrink: 0,
     }}>
       {isFree ? 'Freeform' : 'Competitor'}
@@ -90,24 +90,24 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
     }}>
       {/* Opponent + type + timer */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-        <span style={{ ...HEAD, fontSize: 14, color: 'var(--text)', letterSpacing: '-0.01em' }}>
+        <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
           {challenge.challenger_username ?? 'Challenger'}
         </span>
         <TypeBadge betType={challenge.bet_type} />
-        <span style={{ marginLeft: 'auto', ...MONO, fontSize: 8.5, color: 'var(--gold)', letterSpacing: '.04em' }}>
+        <span style={{ marginLeft: 'auto', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.04em' }}>
           ⏱ {timeUntil(challenge.expires_at)}
         </span>
       </div>
 
       {challenge.bet_type === 'freeform' ? (
-        <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
       ) : (
-        <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>{gwLabel(challenge.matchday_id)} · GW Total</div>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{gwLabel(challenge.matchday_id)} · GW Total</div>
       )}
 
       {/* Message */}
       {challenge.message && (
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.45 }}>
           &ldquo;{challenge.message}&rdquo;
         </div>
       )}
@@ -115,11 +115,11 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
       {/* Stake + net win */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <div>
-          <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>Stake each</div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>Stake each</div>
           <CoinAmt amount={challenge.stake_coins} size="sm" />
         </div>
         <div>
-          <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>Net win</div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>Net win</div>
           <CoinAmt amount={netWin} size="sm" color="var(--pos)" />
         </div>
       </div>
@@ -132,7 +132,7 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
           style={{
             flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
             background: 'transparent', border: '1.5px solid var(--gold)',
-            ...MONO, fontSize: 8.5, letterSpacing: '.14em', textTransform: 'uppercase',
+            ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase',
             fontWeight: 600, color: 'var(--gold)', opacity: loading ? 0.6 : 1,
           }}
         >Accept</button>
@@ -142,7 +142,7 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
           style={{
             flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
             background: 'transparent', border: '1px solid var(--rule)',
-            ...MONO, fontSize: 8.5, letterSpacing: '.14em', textTransform: 'uppercase',
+            ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase',
             fontWeight: 500, color: 'var(--text2)', opacity: loading ? 0.6 : 1,
           }}
         >Decline</button>
@@ -166,23 +166,23 @@ function OutgoingCard({ challenge, onCancel, loading }) {
       gap: 7,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-        <span style={{ ...HEAD, fontSize: 14, color: 'var(--text)', letterSpacing: '-0.01em' }}>
+        <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
           → {challenge.opponent_username ?? 'Opponent'}
         </span>
         <TypeBadge betType={challenge.bet_type} />
-        <span style={{ marginLeft: 'auto', ...MONO, fontSize: 8, color: 'var(--mute)' }}>
+        <span style={{ marginLeft: 'auto', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
           Awaiting · {timeUntil(challenge.expires_at)}
         </span>
       </div>
       {challenge.bet_type === 'freeform' && (
-        <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
       )}
       {challenge.message && (
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.45 }}>{challenge.message}</div>
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.45 }}>{challenge.message}</div>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
         <CoinAmt amount={challenge.stake_coins} size="sm" />
-        <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>staked · net win: </span>
+        <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>staked · net win: </span>
         <CoinAmt amount={netWin} size="sm" color="var(--pos)" />
       </div>
       <button
@@ -190,7 +190,7 @@ function OutgoingCard({ challenge, onCancel, loading }) {
         disabled={loading}
         style={{
           padding: '8px', borderRadius: 6, border: '1px solid var(--rule)',
-          background: 'transparent', ...MONO, fontSize: 8, color: 'var(--mute)',
+          background: 'transparent', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)',
           cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
         }}
       >Cancel</button>
@@ -222,7 +222,7 @@ function LiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, loading 
         display: 'flex', alignItems: 'center', gap: 8,
       }}>
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--pos)', flexShrink: 0 }} />
-        <span style={{ flex: 1, ...MONO, fontSize: 8.5, color: 'var(--mute)', letterSpacing: '.04em' }}>
+        <span style={{ flex: 1, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.04em' }}>
           vs {oppName ?? 'Opponent'} · {gwLabel(challenge.matchday_id)}
         </span>
         <CoinAmt amount={challenge.stake_coins} size="sm" />
@@ -234,29 +234,29 @@ function LiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, loading 
           flex: 1, padding: '12px 10px', textAlign: 'center',
           background: diff > 0 ? 'var(--pbg)' : 'transparent',
         }}>
-          <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: diff > 0 ? 'var(--pos)' : 'var(--mute)', marginBottom: 4 }}>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: diff > 0 ? 'var(--pos)' : 'var(--mute)', marginBottom: 4 }}>
             {diff > 0 ? 'You (leading)' : 'You'}
           </div>
-          <div style={{ ...HEAD, fontSize: 34, letterSpacing: '-0.03em', lineHeight: 1, color: diff > 0 ? 'var(--pos)' : 'var(--text)' }}>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.03em', lineHeight: 1, color: diff > 0 ? 'var(--pos)' : 'var(--text)' }}>
             {myPts ?? '—'}
           </div>
-          <div style={{ ...MONO, fontSize: 7, color: diff > 0 ? 'var(--pos)' : 'var(--mute)', marginTop: 2 }}>pts</div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: diff > 0 ? 'var(--pos)' : 'var(--mute)', marginTop: 2 }}>pts</div>
         </div>
         <div style={{ width: 1, background: 'var(--rule)', alignSelf: 'stretch' }} />
         <div style={{ flex: 1, padding: '12px 10px', textAlign: 'center' }}>
-          <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: diff < 0 ? 'var(--neg)' : 'var(--mute)', marginBottom: 4 }}>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: diff < 0 ? 'var(--neg)' : 'var(--mute)', marginBottom: 4 }}>
             {oppName}
           </div>
-          <div style={{ ...HEAD, fontSize: 34, letterSpacing: '-0.03em', lineHeight: 1, color: diff < 0 ? 'var(--neg)' : 'var(--text)' }}>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.03em', lineHeight: 1, color: diff < 0 ? 'var(--neg)' : 'var(--text)' }}>
             {oppPts ?? '—'}
           </div>
-          <div style={{ ...MONO, fontSize: 7, color: 'var(--mute)', marginTop: 2 }}>pts</div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>pts</div>
         </div>
       </div>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '8px 13px', background: 'var(--elev)', borderTop: '1px solid var(--rule)',
-        ...MONO, fontSize: 8.5,
+        ...MONO, fontSize: 'var(--fs-micro)',
       }}>
         <span style={{ color: diff > 0 ? 'var(--pos)' : diff < 0 ? 'var(--neg)' : 'var(--mute)', letterSpacing: '.04em' }}>
           {diff > 0 ? `↑ +${diff} lead` : diff < 0 ? `↓ ${diff} behind` : 'Level'}
@@ -284,15 +284,15 @@ function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, 
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <TypeBadge betType="freeform" />
-          <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>vs {oppName ?? 'Opponent'}</span>
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>vs {oppName ?? 'Opponent'}</span>
         </div>
-        <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
-        <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
           ⚖ Disputed — the Clubhouse owner will review and decide.
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
           <CoinAmt amount={challenge.stake_coins} size="sm" />
-          <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>frozen in escrow</span>
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>frozen in escrow</span>
         </div>
       </div>
     );
@@ -307,32 +307,32 @@ function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, 
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <TypeBadge betType="freeform" />
-        <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>vs {oppName ?? 'Opponent'}</span>
+        <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>vs {oppName ?? 'Opponent'}</span>
         <span style={{ marginLeft: 'auto' }}><CoinAmt amount={challenge.stake_coins} size="sm" /></span>
       </div>
-      <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+      <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
 
       {!challenge.proposed_by ? (
         <>
-          <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>Both staked · escrow held</div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Both staked · escrow held</div>
           <button
             onClick={() => onDeclare(challenge)}
             disabled={loading}
             style={{
               padding: '9px 0', borderRadius: 6, border: '1.5px solid var(--accent)',
               background: 'transparent', color: 'var(--accent)', cursor: loading ? 'not-allowed' : 'pointer',
-              ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600,
+              ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600,
               opacity: loading ? 0.6 : 1,
             }}
           >Declare Result</button>
         </>
       ) : isProposer ? (
-        <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
           You declared <strong style={{ color: 'var(--text)' }}>{winnerLabel}</strong> — waiting for {oppName} to confirm or dispute.
         </div>
       ) : (
         <>
-          <div style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--text2)', lineHeight: 1.5 }}>
             <strong style={{ color: 'var(--text)' }}>{proposerName}</strong> declared: <strong style={{ color: 'var(--text)' }}>{winnerLabel}</strong>{challenge.proposed_winner_id == null ? '' : ' wins'}. Confirm to settle, or dispute if you disagree.
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -342,7 +342,7 @@ function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, 
               style={{
                 flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--accent)',
                 background: 'transparent', color: 'var(--accent)', cursor: loading ? 'not-allowed' : 'pointer',
-                ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1,
+                ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1,
               }}
             >Confirm</button>
             <button
@@ -351,7 +351,7 @@ function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, 
               style={{
                 flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--neg)',
                 background: 'transparent', color: 'var(--neg)', cursor: loading ? 'not-allowed' : 'pointer',
-                ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1,
+                ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1,
               }}
             >Dispute</button>
           </div>
@@ -391,42 +391,42 @@ function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <div style={{ ...MONO, fontSize: 8, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Declare Result</div>
-            <div style={{ ...HEAD, fontSize: 19, color: 'var(--text)', lineHeight: 1.3 }}>{challenge.question}</div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Declare Result</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1.3 }}>{challenge.question}</div>
           </div>
           <button
             onClick={onClose}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 17, color: 'var(--text2)', flexShrink: 0 }}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)', flexShrink: 0 }}
           >×</button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
           <PickerRow selected={pick === 'me'} onClick={() => setPick('me')}>
-            <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>You won</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>You won</span>
             <RadioDot selected={pick === 'me'} />
           </PickerRow>
           <PickerRow selected={pick === 'opponent'} onClick={() => setPick('opponent')}>
-            <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{oppName} won</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{oppName} won</span>
             <RadioDot selected={pick === 'opponent'} />
           </PickerRow>
           <PickerRow selected={pick === 'push'} onClick={() => setPick('push')}>
-            <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>Push — no winner</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>Push — no winner</span>
             <RadioDot selected={pick === 'push'} />
           </PickerRow>
         </div>
 
-        <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 6, padding: '10px 12px', ...MONO, fontSize: 10, color: 'var(--gold)', lineHeight: 1.5, marginBottom: 14 }}>
+        <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 6, padding: '10px 12px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', lineHeight: 1.5, marginBottom: 14 }}>
           ⚠ Real coins move once {oppName} confirms — choose carefully. If they disagree, the Clubhouse owner will settle it.
         </div>
 
-        {error && <div style={{ ...MONO, fontSize: 11, color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+        {error && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
 
         <button
           onClick={handleSubmit} disabled={submitting || !pick}
           style={{
             width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || !pick) ? 'not-allowed' : 'pointer',
             background: pick ? 'var(--accent)' : 'var(--elev)', color: pick ? '#fff' : 'var(--mute)',
-            ...MONO, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
+            ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
             opacity: submitting ? 0.7 : 1,
           }}
         >
@@ -466,44 +466,44 @@ function ArbitrationModal({ challenge, onClose, onSubmit }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <div style={{ ...MONO, fontSize: 8, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--purple)', marginBottom: 5 }}>⚖ Owner Arbitration</div>
-            <div style={{ ...HEAD, fontSize: 19, color: 'var(--text)', lineHeight: 1.3 }}>{challenge.question}</div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--purple)', marginBottom: 5 }}>⚖ Owner Arbitration</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1.3 }}>{challenge.question}</div>
           </div>
           <button
             onClick={onClose}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 17, color: 'var(--text2)', flexShrink: 0 }}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)', flexShrink: 0 }}
           >×</button>
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
           <div style={{ flex: 1, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
-            <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', marginBottom: 4 }}>CHALLENGER</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{challenge.challenger_username}</div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 4 }}>CHALLENGER</div>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)' }}>{challenge.challenger_username}</div>
           </div>
           <div style={{ flex: 1, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
-            <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', marginBottom: 4 }}>OPPONENT</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{challenge.opponent_username}</div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 4 }}>OPPONENT</div>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)' }}>{challenge.opponent_username}</div>
           </div>
         </div>
 
-        <div style={{ background: 'rgba(140,73,201,.09)', border: '1px solid rgba(140,73,201,.32)', borderRadius: 6, padding: '10px 12px', fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5, marginBottom: 16 }}>
+        <div style={{ background: 'rgba(140,73,201,.09)', border: '1px solid rgba(140,73,201,.32)', borderRadius: 6, padding: '10px 12px', fontSize: 'var(--fs-label)', color: 'var(--text2)', lineHeight: 1.5, marginBottom: 16 }}>
           <strong style={{ color: 'var(--text)' }}>{proposerName}</strong> declared <strong style={{ color: 'var(--text)' }}>{proposedWinnerLabel}</strong>{challenge.proposed_winner_id == null ? '' : ' the winner'}, and the other party disputed it. Stakes (<strong style={{ color: 'var(--text)' }}>{challenge.stake_coins}</strong> coins each) are frozen in escrow until you decide.
         </div>
 
-        {error && <div style={{ ...MONO, fontSize: 11, color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+        {error && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
             onClick={() => handle(challenge.challenger_id)} disabled={submitting}
-            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
+            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
           >Award {challenge.challenger_username}</button>
           <button
             onClick={() => handle(challenge.opponent_id)} disabled={submitting}
-            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
+            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
           >Award {challenge.opponent_username}</button>
           <button
             onClick={() => handle(null)} disabled={submitting}
-            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--mute)', background: 'transparent', color: 'var(--mute)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
+            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--mute)', background: 'transparent', color: 'var(--mute)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
           >Void — return stakes</button>
         </div>
       </div>
@@ -536,13 +536,13 @@ function HistoryItem({ challenge, userId }) {
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
-          <span style={{ ...HEAD, fontSize: 13, color: 'var(--text)', letterSpacing: '-0.01em' }}>{label}</span>
+          <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>{label}</span>
           <TypeBadge betType={challenge.bet_type} />
           {challenge.bet_type !== 'freeform' && (
-            <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>vs {oppName} · {gwLabel(challenge.matchday_id)}</span>
+            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>vs {oppName} · {gwLabel(challenge.matchday_id)}</span>
           )}
         </div>
-        <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.04em' }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.04em' }}>
           {challenge.bet_type === 'freeform'
             ? challenge.question
             : `GW Total Battle${challenge.challenger_pts != null ? ` · ${challenge.challenger_pts}—${challenge.opponent_pts} pts` : ''}`}
@@ -550,10 +550,10 @@ function HistoryItem({ challenge, userId }) {
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ ...HEAD, fontSize: 15, letterSpacing: '-0.02em', color: amtColor }}>{amtStr}</span>
+          <span style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.02em', color: amtColor }}>{amtStr}</span>
           {!voided && <Ci size="sm" />}
         </div>
-        {won && <div style={{ ...MONO, fontSize: 7.5, color: 'var(--mute)', marginTop: 2 }}>after rake</div>}
+        {won && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>after rake</div>}
       </div>
     </div>
   );
@@ -590,20 +590,20 @@ function WalletTabContent({ wallet, walletLoading }) {
         {/* Balance card */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Coin Wallet</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Coin Wallet</div>
           </div>
           <div style={{ padding: '20px 16px', textAlign: 'center' }}>
             {walletLoading ? (
-              <div style={{ ...MONO, fontSize: 12, color: 'var(--mute)' }}>Loading…</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
             ) : (
               <>
-                <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 10 }}>Available balance</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 10 }}>Available balance</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
                   <Ci size="xl" />
-                  <span style={{ ...HEAD, fontSize: 38, letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
+                  <span style={{ ...HEAD, fontSize: 'var(--fs-display)', letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
                 </div>
                 {escrow > 0 && (
-                  <div style={{ ...MONO, fontSize: 8.5, color: 'var(--mute)', marginBottom: 16 }}>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 16 }}>
                     {escrow.toLocaleString()} coins locked in challenges
                   </div>
                 )}
@@ -620,7 +620,7 @@ function WalletTabContent({ wallet, walletLoading }) {
                   style={{
                     width: '100%', padding: '8px 0', borderRadius: 6,
                     border: '1.5px solid var(--rule)', background: 'transparent',
-                    ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase',
+                    ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
                     color: 'var(--text2)', cursor: 'pointer',
                   }}
                 >
@@ -634,7 +634,7 @@ function WalletTabContent({ wallet, walletLoading }) {
         {/* Coin packs */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-            <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Buy Coins</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Buy Coins</div>
           </div>
           <div style={{ padding: '16px 16px', display: 'flex', gap: 10 }}>
             {[{ coins: 500, price: '£1.99' }, { coins: 1500, price: '£4.99' }, { coins: 5000, price: '£12.99' }].map(({ coins, price }) => (
@@ -643,19 +643,19 @@ function WalletTabContent({ wallet, walletLoading }) {
                 border: '1px solid var(--rule)', background: 'var(--elev)',
                 textAlign: 'center', cursor: 'pointer',
               }}>
-                <div style={{ ...HEAD, fontSize: 16, letterSpacing: '-0.02em', color: 'var(--gold)' }}>{coins.toLocaleString()}</div>
-                <div style={{ ...MONO, fontSize: 8.5, color: 'var(--mute)', marginTop: 3 }}>{price}</div>
+                <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', letterSpacing: '-0.02em', color: 'var(--gold)' }}>{coins.toLocaleString()}</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3 }}>{price}</div>
               </div>
             ))}
           </div>
-          <div style={{ padding: '0 16px 12px', ...MONO, fontSize: 8, color: 'var(--mute)', textAlign: 'center' }}>Payments coming soon</div>
+          <div style={{ padding: '0 16px 12px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>Payments coming soon</div>
         </div>
 
         {/* Economy stats */}
         {econStats && (
           <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-              <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Platform Economy</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Platform Economy</div>
             </div>
             <div style={{ padding: '16px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
               {[
@@ -665,8 +665,8 @@ function WalletTabContent({ wallet, walletLoading }) {
                 { label: 'RAKE BURNED', value: Number(econStats.rake_burned).toLocaleString() },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <div style={{ ...MONO, fontSize: 7.5, color: 'var(--mute)', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 2 }}>{label}</div>
-                  <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)' }}>{value}</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 2 }}>{label}</div>
+                  <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--text)' }}>{value}</div>
                 </div>
               ))}
             </div>
@@ -676,13 +676,13 @@ function WalletTabContent({ wallet, walletLoading }) {
         {/* Transaction history */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-            <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Transaction History</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Transaction History</div>
           </div>
           <div style={{ padding: '0 16px' }}>
             {walletLoading ? (
-              <div style={{ ...MONO, fontSize: 12, color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>Loading…</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>Loading…</div>
             ) : transactions.length === 0 ? (
-              <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>No transactions yet</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>No transactions yet</div>
             ) : transactions.map((tx, i) => {
               const meta = TX_META[tx.type] ?? { label: tx.type.toUpperCase(), color: 'var(--mute)' };
               const isCredit = ['purchase', 'win', 'refund', 'admin'].includes(tx.type);
@@ -692,13 +692,13 @@ function WalletTabContent({ wallet, walletLoading }) {
                   padding: '11px 0', borderBottom: i < transactions.length - 1 ? '1px solid var(--rule)' : 'none',
                 }}>
                   <div>
-                    <div style={{ ...MONO, fontSize: 10, color: meta.color, letterSpacing: '.1em', marginBottom: 2 }}>{meta.label}</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: meta.color, letterSpacing: '.1em', marginBottom: 2 }}>{meta.label}</div>
                     {tx.meta?.reason && (
-                      <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>{tx.meta.reason.replace(/_/g, ' ')}</div>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{tx.meta.reason.replace(/_/g, ' ')}</div>
                     )}
-                    <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>{timeAgo(tx.created_at)}</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{timeAgo(tx.created_at)}</div>
                   </div>
-                  <span style={{ ...HEAD, fontSize: 14, color: isCredit ? 'var(--pos)' : 'var(--neg)' }}>
+                  <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: isCredit ? 'var(--pos)' : 'var(--neg)' }}>
                     {isCredit ? '+' : '-'}{tx.amount.toLocaleString()}
                   </span>
                 </div>
@@ -764,7 +764,7 @@ function Chip({ selected, onClick, children }) {
         background: selected ? 'var(--gold)' : 'var(--elev)',
         border: `1px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
         color: selected ? '#fff' : 'var(--text)',
-        ...MONO, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap',
+        ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, whiteSpace: 'nowrap',
       }}
     >
       {children}
@@ -887,12 +887,12 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
-            <div style={{ ...MONO, fontSize: 8, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Challenge</div>
-            <div style={{ ...HEAD, fontSize: 20, color: 'var(--text)' }}>{isFreeform ? 'Send a Freeform Bet' : 'Send a GW Total Bet'}</div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Challenge</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>{isFreeform ? 'Send a Freeform Bet' : 'Send a GW Total Bet'}</div>
           </div>
           <button
             onClick={onClose}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 17, color: 'var(--text2)' }}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
           >×</button>
         </div>
 
@@ -900,13 +900,13 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
           <div style={{ padding: '30px 6px 12px', textAlign: 'center' }}>
             {!circleId ? (
               <>
-                <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>No Clubhouse selected</div>
-                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>Join or create a Clubhouse before starting a challenge.</div>
+                <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--text)', marginBottom: 8 }}>No Clubhouse selected</div>
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5 }}>Join or create a Clubhouse before starting a challenge.</div>
               </>
             ) : (
               <>
-                <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>Nobody to challenge yet</div>
-                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>
+                <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--text)', marginBottom: 8 }}>Nobody to challenge yet</div>
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5 }}>
                   Invite more managers to {circleName ?? 'this Clubhouse'} before you can send a challenge.
                 </div>
               </>
@@ -916,7 +916,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
           <>
             {/* Bet-type picker */}
             <div style={{ marginBottom: 14 }}>
-              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Bet Type</span>
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Bet Type</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => hasCompetitions && setBetType('gw_total')}
@@ -928,8 +928,8 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
                     opacity: hasCompetitions ? 1 : 0.5,
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>🏆 Competitor</div>
-                  <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>
+                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>🏆 Competitor</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                     {hasCompetitions ? 'Auto-resolved GW total' : 'No competitions linked'}
                   </div>
                 </button>
@@ -941,20 +941,20 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
                     border: `2px solid ${isFreeform ? 'var(--accent)' : 'var(--rule)'}`,
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
-                  <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>Settle by agreement</div>
+                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Settle by agreement</div>
                 </button>
               </div>
             </div>
 
             {/* Opponent picker */}
             <div style={{ marginBottom: 14 }}>
-              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Opponent</span>
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Opponent</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
                 {opponents.map((m, i) => (
                   <PickerRow key={m.user_id} selected={opponentId === m.user_id} onClick={() => setOpponentId(m.user_id)}>
                     <MemberAvatar username={m.username} index={i} />
-                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{m.username}</span>
+                    <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{m.username}</span>
                     <RadioDot selected={opponentId === m.user_id} />
                   </PickerRow>
                 ))}
@@ -964,21 +964,21 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
             {isFreeform ? (
               /* Question field */
               <label style={{ display: 'block', marginBottom: 14 }}>
-                <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
                   What are you betting on? (<span style={{ color: question.length > 140 ? 'var(--neg)' : 'var(--mute)' }}>{140 - question.length}</span> chars)
                 </span>
                 <textarea
                   maxLength={140} value={question} onChange={e => setQuestion(e.target.value)}
                   placeholder="Will it rain at kickoff for Saturday's derby?"
                   rows={2}
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 13, resize: 'none', fontFamily: 'inherit' }}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)', resize: 'none', fontFamily: 'inherit' }}
                 />
               </label>
             ) : (
               <>
                 {/* Competition picker */}
                 <div style={{ marginBottom: 14 }}>
-                  <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Competition</span>
+                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Competition</span>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {footballLeagues.map(l => (
                       <Chip key={l.id} selected={leagueId === l.id} onClick={() => { setLeagueId(l.id); setGw(null); }}>{l.name}</Chip>
@@ -989,11 +989,11 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
                 {/* Gameweek picker */}
                 {leagueId && (
                   <div style={{ marginBottom: 14 }}>
-                    <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek</span>
+                    <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek</span>
                     {gwLoading ? (
-                      <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>Loading…</div>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</div>
                     ) : !current && !next ? (
-                      <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>No upcoming gameweeks found.</div>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No upcoming gameweeks found.</div>
                     ) : (
                       <div style={{ display: 'flex', gap: 8 }}>
                         {current && <Chip selected={gw === 'current'} onClick={() => setGw('current')}>Current · {gwLabel(current.matchday_id)}</Chip>}
@@ -1007,7 +1007,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
 
             {/* Stake */}
             <div style={{ marginBottom: 12 }}>
-              <div style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
                 Stake (balance: <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()} coins</span>)
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -1017,7 +1017,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
                     background: stakeCoins === v ? 'var(--gold)' : 'var(--elev)',
                     border: `1px solid ${stakeCoins === v ? 'var(--gold)' : 'var(--rule)'}`,
                     color: stakeCoins === v ? '#fff' : 'var(--text)',
-                    ...MONO, fontSize: 11, fontWeight: 700,
+                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
                   }}>{v}</button>
                 ))}
               </div>
@@ -1027,34 +1027,34 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
                 style={{
                   width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6,
                   background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--rule)'}`,
-                  color: overBudget ? 'var(--neg)' : 'var(--text)', ...MONO, fontSize: 13,
+                  color: overBudget ? 'var(--neg)' : 'var(--text)', ...MONO, fontSize: 'var(--fs-body)',
                 }}
               />
-              <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', marginTop: 5 }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 5 }}>
                 Net win if you win: <span style={{ color: 'var(--pos)' }}>{netWin.toLocaleString()} coins</span> after 5% rake
               </div>
             </div>
 
             {/* Message */}
             <label style={{ display: 'block', marginBottom: 16 }}>
-              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
                 Message (optional · {140 - message.length} chars)
               </span>
               <input
                 maxLength={140} value={message} onChange={e => setMessage(e.target.value)}
                 placeholder="trash talk here…"
-                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 13 }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)' }}
               />
             </label>
 
-            {error && <div style={{ ...MONO, fontSize: 11, color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+            {error && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
 
             <button
               onClick={handleSubmit} disabled={submitting || overBudget}
               style={{
                 width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || overBudget) ? 'not-allowed' : 'pointer',
                 background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : '#fff',
-                ...MONO, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
+                ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
                 opacity: submitting ? 0.7 : 1,
               }}
             >
@@ -1084,7 +1084,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
           style={{
             width: '100%', padding: '12px 24px', borderRadius: 6, border: 'none',
             background: 'var(--gold)', color: '#fff', cursor: 'pointer',
-            ...MONO, fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase',
+            ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
             fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
           }}
@@ -1094,16 +1094,16 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
       {/* Wallet mini-card */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
         <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Coin Wallet</div>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Coin Wallet</div>
         </div>
         <div style={{ padding: '16px 16px' }}>
-          <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Available balance</div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Available balance</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <Ci size="xl" />
-            <span style={{ ...HEAD, fontSize: 28, letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
+            <span style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
           </div>
           {escrow > 0 && (
-            <div style={{ ...MONO, fontSize: 8.5, color: 'var(--mute)', marginBottom: 13 }}>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 13 }}>
               {escrow.toLocaleString()} coins locked in challenges
             </div>
           )}
@@ -1112,7 +1112,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
             style={{
               width: '100%', padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)',
               background: 'transparent', cursor: 'pointer',
-              ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text2)',
+              ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text2)',
             }}
           >Buy Coins →</button>
         </div>
@@ -1121,31 +1121,31 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
       {/* Season record */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
         <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Season record</div>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Season record</div>
         </div>
         <div style={{ padding: '10px 14px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', paddingBottom: 10, marginBottom: 8, borderBottom: '1px solid var(--rule)' }}>
             <div style={{ padding: '6px 0' }}>
-              <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--pos)' }}>{won}</div>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Won</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.02em', color: 'var(--pos)' }}>{won}</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Won</div>
             </div>
             <div style={{ padding: '6px 0', borderLeft: '1px solid var(--rule)', borderRight: '1px solid var(--rule)' }}>
-              <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--neg)' }}>{lost}</div>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Lost</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.02em', color: 'var(--neg)' }}>{lost}</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Lost</div>
             </div>
             <div style={{ padding: '6px 0' }}>
-              <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--mute)' }}>{voided}</div>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Void</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.02em', color: 'var(--mute)' }}>{voided}</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Void</div>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--fs-label)', padding: '4px 0', borderBottom: '1px solid var(--rule)' }}>
             <span style={{ color: 'var(--text2)' }}>Net P&L</span>
-            <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{netWL >= 0 ? '+' : ''}{netWL.toLocaleString()} C</strong>
+            <strong style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{netWL >= 0 ? '+' : ''}{netWL.toLocaleString()} C</strong>
           </div>
           {total > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--fs-label)', padding: '4px 0' }}>
               <span style={{ color: 'var(--text2)' }}>Win rate</span>
-              <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>{Math.round(won / total * 100)}%</strong>
+              <strong style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>{Math.round(won / total * 100)}%</strong>
             </div>
           )}
         </div>
@@ -1154,11 +1154,11 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
       {/* How it works info */}
       <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6 }}>
         <div style={{ padding: '13px 14px' }}>
-          <div style={{ ...HEAD, fontSize: 12.5, letterSpacing: '-0.01em', marginBottom: 6 }}>How Challenges work</div>
-          <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.55 }}>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em', marginBottom: 6 }}>How Challenges work</div>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--text2)', lineHeight: 1.55 }}>
             Challenge any Clubhouse member to a Competitor (auto-resolved GW Total) or Freeform (settle-by-agreement) bet. Both stake coins — winner takes 95%, 5% rake burned.
           </div>
-          <div style={{ marginTop: 9, ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.04em' }}>Stakes held in escrow until result</div>
+          <div style={{ marginTop: 9, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.04em' }}>Stakes held in escrow until result</div>
         </div>
       </div>
     </>
@@ -1265,7 +1265,7 @@ export default function ChallengeScreen() {
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
           background: toast.isError ? 'var(--neg)' : 'var(--shell)', color: '#fff',
-          padding: '12px 22px', borderRadius: 6, ...MONO, fontSize: 10,
+          padding: '12px 22px', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)',
           letterSpacing: '.05em', zIndex: 999, whiteSpace: 'nowrap',
           boxShadow: '0 8px 28px rgba(0,0,0,.25)',
         }}>
@@ -1278,27 +1278,27 @@ export default function ChallengeScreen() {
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: isMobile ? '14px 16px 0' : '14px 26px 0', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 12, gap: 16 }}>
           <div>
-            <div style={{ ...MONO, fontSize: 9, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>P2P Betting</div>
-            <div style={{ ...HEAD, fontSize: 23, letterSpacing: '-0.025em', color: 'var(--paper)', lineHeight: 1 }}>Coin Challenges</div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>P2P Betting</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.025em', color: 'var(--paper)', lineHeight: 1 }}>Coin Challenges</div>
           </div>
           {/* Key stats */}
           <div style={{ display: 'flex', gap: isMobile ? 14 : 22, alignItems: 'flex-start', paddingTop: 2 }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>Balance</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>Balance</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginTop: 2 }}>
                 <Ci size="lg" />
-                <span style={{ ...HEAD, fontSize: 18, letterSpacing: '-0.02em', color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
+                <span style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.02em', color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
               </div>
             </div>
             {!isMobile && (
               <div style={{ textAlign: 'right' }}>
-                <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>In escrow</div>
-                <div style={{ ...HEAD, fontSize: 18, letterSpacing: '-0.02em', color: 'var(--paper)' }}>{escrow.toLocaleString()}</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>In escrow</div>
+                <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.02em', color: 'var(--paper)' }}>{escrow.toLocaleString()}</div>
               </div>
             )}
             <div style={{ textAlign: 'right' }}>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>Net W/L</div>
-              <div style={{ ...HEAD, fontSize: 18, letterSpacing: '-0.02em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>Net W/L</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.02em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
                 {netWL >= 0 ? '+' : ''}{netWL.toLocaleString()}
               </div>
             </div>
@@ -1312,7 +1312,7 @@ export default function ChallengeScreen() {
               key={t.key}
               onClick={() => setOuterTab(t.key)}
               style={{
-                fontSize: 12.5, fontWeight: 600, color: outerTab === t.key ? 'var(--paper)' : 'var(--mute)',
+                fontSize: 'var(--fs-label)', fontWeight: 600, color: outerTab === t.key ? 'var(--paper)' : 'var(--mute)',
                 padding: '9px 14px', position: 'relative', cursor: 'pointer',
                 background: 'transparent', border: 'none', whiteSpace: 'nowrap',
               }}
@@ -1359,19 +1359,19 @@ export default function ChallengeScreen() {
             {/* Incoming section */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Incoming</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Incoming</div>
                 {incoming.length > 0 && (
                   <span style={{
                     background: 'var(--gbg)', color: 'var(--gold)',
-                    ...MONO, fontSize: 8.5, letterSpacing: '.06em', padding: '1px 8px',
+                    ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.06em', padding: '1px 8px',
                     borderRadius: 100, fontWeight: 600,
                   }}>{incoming.length}</span>
                 )}
               </div>
               {loading ? (
-                <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading…</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading…</div>
               ) : incoming.length === 0 ? (
-                <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '20px 16px', ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center' }}>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '20px 16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
                   No pending challenges from other managers.
                 </div>
               ) : (
@@ -1390,9 +1390,9 @@ export default function ChallengeScreen() {
               gap: 14,
             }}>
               <div>
-                <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Sent · awaiting</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Sent · awaiting</div>
                 {outgoing.length === 0 ? (
-                  <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center' }}>
+                  <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
                     No sent challenges.
                   </div>
                 ) : (
@@ -1405,16 +1405,16 @@ export default function ChallengeScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 5,
-                    ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase',
+                    ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase',
                     padding: '3px 8px', borderRadius: 100, background: 'var(--nbg)', color: 'var(--neg)',
                   }}>
                     <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
                     Live
                   </span>
-                  <span style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Active</span>
+                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Active</span>
                 </div>
                 {liveChallenges.length === 0 ? (
-                  <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center' }}>
+                  <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
                     No live challenges.
                   </div>
                 ) : (
@@ -1435,10 +1435,10 @@ export default function ChallengeScreen() {
             {isOwner && ownerDisputed.length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--purple)' }}>⚖ Arbitration needed</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--purple)' }}>⚖ Arbitration needed</div>
                   <span style={{
                     background: 'rgba(140,73,201,.12)', color: 'var(--purple)',
-                    ...MONO, fontSize: 8.5, letterSpacing: '.06em', padding: '1px 8px',
+                    ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.06em', padding: '1px 8px',
                     borderRadius: 100, fontWeight: 600,
                   }}>{ownerDisputed.length}</span>
                 </div>
@@ -1446,15 +1446,15 @@ export default function ChallengeScreen() {
                   {ownerDisputed.map(c => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{c.question}</div>
-                        <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>{c.challenger_username} vs {c.opponent_username} · <CoinAmt amount={c.stake_coins} size="sm" /></div>
+                        <div style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{c.question}</div>
+                        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{c.challenger_username} vs {c.opponent_username} · <CoinAmt amount={c.stake_coins} size="sm" /></div>
                       </div>
                       <button
                         onClick={() => setArbitratingChallenge(c)}
                         style={{
                           flexShrink: 0, padding: '8px 12px', borderRadius: 6, border: '1.5px solid var(--purple)',
                           background: 'transparent', color: 'var(--purple)', cursor: 'pointer',
-                          ...MONO, fontSize: 8.5, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600,
+                          ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600,
                         }}
                       >Review</button>
                     </div>
@@ -1466,7 +1466,7 @@ export default function ChallengeScreen() {
             {/* Settled history */}
             {history.length > 0 && (
               <div>
-                <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Settled this season</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Settled this season</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                   {history.map(c => <HistoryItem key={c.id} challenge={c} userId={user?.id} />)}
                 </div>

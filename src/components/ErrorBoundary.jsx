@@ -90,13 +90,13 @@ export default class ErrorBoundary extends Component {
         }}
       >
         {/* Icon */}
-        <div style={{ fontSize: '40px', marginBottom: '20px', opacity: 0.5 }}>⚡</div>
+        <div style={{ fontSize: 'var(--fs-display)', marginBottom: '20px', opacity: 0.5 }}>⚡</div>
 
         {/* Heading */}
         <div
           style={{
             fontFamily: 'Archivo Black, sans-serif',
-            fontSize: '22px',
+            fontSize: 'var(--fs-title)',
             fontWeight: 900,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
@@ -110,7 +110,7 @@ export default class ErrorBoundary extends Component {
         {/* Subtext */}
         <div
           style={{
-            fontSize: '13px',
+            fontSize: 'var(--fs-body)',
             color: 'var(--mute)',
             fontFamily: 'Archivo, sans-serif',
             maxWidth: '300px',
@@ -139,7 +139,7 @@ export default class ErrorBoundary extends Component {
           >
             <div
               style={{
-                fontSize: '9px',
+                fontSize: 'var(--fs-micro)',
                 fontWeight: 800,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
@@ -152,7 +152,7 @@ export default class ErrorBoundary extends Component {
             </div>
             <pre
               style={{
-                fontSize: '11px',
+                fontSize: 'var(--fs-micro)',
                 color: 'var(--danger)',
                 fontFamily: 'monospace',
                 whiteSpace: 'pre-wrap',
@@ -175,7 +175,7 @@ export default class ErrorBoundary extends Component {
               color: '#fff',
               border: 'none',
               borderRadius: '4px',
-              fontSize: '11px',
+              fontSize: 'var(--fs-micro)',
               fontWeight: 800,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
@@ -193,7 +193,7 @@ export default class ErrorBoundary extends Component {
               color: 'var(--mute)',
               border: '1px solid var(--rule)',
               borderRadius: '4px',
-              fontSize: '11px',
+              fontSize: 'var(--fs-micro)',
               fontWeight: 800,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',

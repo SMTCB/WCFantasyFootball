@@ -25,7 +25,7 @@ export default function SectionHeader({ title, action, accent = 'cyan', count })
 
       <span
         className="fk-mono flex-1 min-w-0 truncate"
-        style={{ fontSize: '10px', letterSpacing: '0.18em', color: 'var(--mute)' }}
+        style={{ fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)' }}
       >
         {title}
         {count != null && (

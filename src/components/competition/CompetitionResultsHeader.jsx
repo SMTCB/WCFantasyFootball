@@ -70,7 +70,7 @@ export function CompetitionResultsHeader({
 
   const headerCellStyle = {
     fontFamily: MONO,
-    fontSize: 9,
+    fontSize: 'var(--fs-micro)',
     letterSpacing: '0.12em',
     color: 'var(--mute)',
   };
@@ -80,7 +80,7 @@ export function CompetitionResultsHeader({
   if (loading) {
     return (
       <div style={{ padding: '48px 16px', textAlign: 'center' }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
+        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>
           LOADING…
         </div>
       </div>
@@ -90,8 +90,8 @@ export function CompetitionResultsHeader({
   if (rows.length === 0) {
     return (
       <div style={{ padding: '48px 16px', textAlign: 'center' }}>
-        <div style={{ fontSize: 28, marginBottom: 10 }}>{emptyIcon}</div>
-        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--mute)' }}>
+        <div style={{ fontSize: 'var(--fs-title)', marginBottom: 10 }}>{emptyIcon}</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>
           {emptyMessage}
         </div>
       </div>
@@ -156,7 +156,7 @@ export function CompetitionResultsHeader({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ marginBottom: supportCols.length ? 4 : 0 }}>
                   {renderName ? renderName(row, isMe) : (
-                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)', fontWeight: 600 }}>
+                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', fontWeight: 600 }}>
                       {row.username ?? row.display_name ?? row.name ?? '—'}
                     </span>
                   )}
@@ -174,7 +174,7 @@ export function CompetitionResultsHeader({
                           key={col.key}
                           style={{
                             fontFamily:    MONO,
-                            fontSize:      9,
+                            fontSize: 'var(--fs-micro)',
                             letterSpacing: '0.06em',
                             color:         colColor,
                             background:    colIsActive
@@ -206,7 +206,7 @@ export function CompetitionResultsHeader({
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{
                     fontFamily: DISP,
-                    fontSize:   20,
+                    fontSize: 'var(--fs-heading)',
                     color:      leadColor,
                     lineHeight: 1.1,
                   }}>
@@ -214,7 +214,7 @@ export function CompetitionResultsHeader({
                   </div>
                   <div style={{
                     fontFamily:    MONO,
-                    fontSize:      8,
+                    fontSize: 'var(--fs-micro)',
                     letterSpacing: '0.1em',
                     color:         'var(--mute)',
                     marginTop:     2,
@@ -294,7 +294,7 @@ export function CompetitionResultsHeader({
             {/* Name cell */}
             <div style={{ minWidth: 0 }}>
               {renderName ? renderName(row, isMe) : (
-                <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--paper)' }}>
+                <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>
                   {row.username ?? row.display_name ?? row.name ?? '—'}
                 </span>
               )}

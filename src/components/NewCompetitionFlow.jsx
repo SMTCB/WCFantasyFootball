@@ -146,13 +146,13 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
   const LABEL_STYLE = {
     display: 'block', marginBottom: 6,
     fontFamily: 'JetBrains Mono, monospace',
-    fontSize: 9.5, letterSpacing: '0.1em',
+    fontSize: 'var(--fs-micro)', letterSpacing: '0.1em',
     textTransform: 'uppercase', color: 'var(--mute)',
   };
   const INPUT_STYLE = {
     width: '100%', padding: '11px 13px', borderRadius: 6,
     background: 'var(--elev)', border: 'none',
-    color: 'var(--paper)', fontFamily: 'inherit', fontSize: 13,
+    color: 'var(--paper)', fontFamily: 'inherit', fontSize: 'var(--fs-body)',
     outline: 'none', boxSizing: 'border-box',
   };
   const SPORT_TILE = (active) => ({
@@ -164,23 +164,23 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
   const GHOST_BTN = {
     flex: 1, textAlign: 'center', padding: 12, borderRadius: 6,
     border: '1px solid var(--rule)', background: 'transparent', color: 'var(--mute)',
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, letterSpacing: '0.1em',
+    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em',
     textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer',
   };
   const PRIMARY_BTN = {
     flex: 1, textAlign: 'center', padding: 12, borderRadius: 6,
     border: 'none', background: 'var(--accent)', color: '#fff',
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, letterSpacing: '0.1em',
+    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em',
     textTransform: 'uppercase', fontWeight: 600,
     cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
   };
 
   const formContent = (
     <>
-      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)', marginBottom: 4 }}>
+      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--paper)', marginBottom: 4 }}>
         Create a competition
       </div>
-      <div style={{ fontSize: 12.5, color: 'var(--mute)', marginBottom: 18 }}>
+      <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 18 }}>
         {clubhouseName ? `Adds to ${clubhouseName} — every member gets access` : 'Every member of this Clubhouse gets access'}
       </div>
 
@@ -189,7 +189,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         {SPORTS.map(({ sport: s, label, icon }) => (
           <button key={s} onClick={() => setSport(s)} style={SPORT_TILE(s === sport)}>
             <img src={icon} alt="" style={{ width: 48, height: 48, marginBottom: 8, display: 'block', marginInline: 'auto' }} />
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--paper)' }}>{label}</span>
+            <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 600, color: 'var(--paper)' }}>{label}</span>
           </button>
         ))}
       </div>
@@ -242,12 +242,12 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
               onChange={e => setH2h(e.target.checked)}
               style={{ width: 15, height: 15, accentColor: 'var(--accent)' }}
             />
-            <span style={{ fontSize: 13, color: 'var(--mute)' }}>Head-to-Head mode</span>
+            <span style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>Head-to-Head mode</span>
           </label>
         </>
       )}
 
-      {error && <div style={{ color: 'var(--danger)', fontSize: 12, marginTop: 8 }}>{error}</div>}
+      {error && <div style={{ color: 'var(--danger)', fontSize: 'var(--fs-label)', marginTop: 8 }}>{error}</div>}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
         <button onClick={close} style={GHOST_BTN}>Cancel</button>
@@ -260,7 +260,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         {!showJoin ? (
           <button
             onClick={() => setShowJoin(true)}
-            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, letterSpacing: '0.08em', color: 'var(--accent)' }}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--accent)' }}
           >
             Have an invite code instead? →
           </button>
@@ -280,7 +280,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
                     flex: 1, padding: '7px 4px', borderRadius: 5,
                     border: `1.5px solid ${joinSport === s ? SPORT_COLOR[s] : 'var(--rule)'}`,
                     background: joinSport === s ? `${SPORT_COLOR[s]}18` : 'transparent',
-                    cursor: 'pointer', fontSize: 14,
+                    cursor: 'pointer', fontSize: 'var(--fs-body)',
                   }}
                 >
                   {SPORT_EMOJI[s]}
@@ -302,7 +302,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
                 style={{
                   padding: '9px 16px', borderRadius: 6, border: 'none',
                   background: SPORT_COLOR[joinSport], color: '#fff',
-                  fontFamily: 'Archivo Black, sans-serif', fontSize: 13,
+                  fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)',
                   cursor: loading || !joinCode.trim() ? 'not-allowed' : 'pointer',
                   opacity: loading || !joinCode.trim() ? 0.5 : 1,
                   flexShrink: 0,

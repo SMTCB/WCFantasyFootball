@@ -8,7 +8,7 @@ export default function NotFoundScreen() {
       <div style={{ textAlign: 'center', maxWidth: 320 }}>
         <div style={{
           fontFamily:    'Archivo Black, sans-serif',
-          fontSize:      '80px',
+          fontSize: 'var(--fs-display)',
           lineHeight:    1,
           color:         'var(--mute)',
           letterSpacing: '-0.02em',
@@ -18,7 +18,7 @@ export default function NotFoundScreen() {
         </div>
         <div style={{
           fontFamily:    'Archivo Black, sans-serif',
-          fontSize:      '18px',
+          fontSize: 'var(--fs-heading)',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
           color:         'var(--paper)',
@@ -28,7 +28,7 @@ export default function NotFoundScreen() {
         </div>
         <p style={{
           fontFamily: 'JetBrains Mono, monospace',
-          fontSize:   '12px',
+          fontSize: 'var(--fs-label)',
           color:      'var(--mute)',
           lineHeight: 1.6,
           marginBottom: '28px',
@@ -39,7 +39,7 @@ export default function NotFoundScreen() {
           onClick={() => navigate('/', { replace: true })}
           style={{
             fontFamily:    'Archivo Black, sans-serif',
-            fontSize:      '11px',
+            fontSize: 'var(--fs-micro)',
             fontWeight:    800,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',

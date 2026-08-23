@@ -100,13 +100,13 @@ function Row({ label, val, valColor = 'var(--cyan)', note }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)',
+      padding: '6px 0', borderBottom: '1px solid var(--shell-rule)',
     }}>
-      <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.06em' }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.06em' }}>
         {label}
-        {note && <span style={{ marginLeft: 6, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>({note})</span>}
+        {note && <span style={{ marginLeft: 6, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>({note})</span>}
       </span>
-      <span style={{ fontFamily: DISPLAY, fontSize: 13, color: valColor }}>{val}</span>
+      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: valColor }}>{val}</span>
     </div>
   );
 }
@@ -114,7 +114,7 @@ function Row({ label, val, valColor = 'var(--cyan)', note }) {
 function Section({ title, children, accent = 'var(--gold)' }) {
   return (
     <div style={{ padding: '14px 20px 0' }}>
-      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: accent, marginBottom: 8 }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: accent, marginBottom: 8 }}>
         {title}
       </div>
       {children}
@@ -125,8 +125,8 @@ function Section({ title, children, accent = 'var(--gold)' }) {
 function InfoBox({ children }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '10px 14px',
-      fontFamily: MONO, fontSize: 10, color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
+      background: 'var(--shell-fill)', borderRadius: 6, padding: '10px 14px',
+      fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
     }}>
       {children}
     </div>
@@ -157,10 +157,10 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             padding: '18px 20px 12px',
           }}>
             <div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 14, letterSpacing: '-0.01em' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>
                 {meta.title}
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>
                 {meta.sub}
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
               onClick={onClose}
               style={{
                 background: 'none', border: 'none', color: 'var(--mute)',
-                fontFamily: MONO, fontSize: 10, letterSpacing: '.1em', cursor: 'pointer', padding: 4,
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', cursor: 'pointer', padding: 4,
               }}
             >
               CLOSE
@@ -183,9 +183,9 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                 onClick={() => setTab(t.id)}
                 style={{
                   flex: 1, padding: '7px 0',
-                  background: tab === t.id ? 'var(--gold)' : 'rgba(255,255,255,0.05)',
+                  background: tab === t.id ? 'var(--gold)' : 'var(--shell-fill)',
                   border: 'none', borderRadius: 4, cursor: 'pointer',
-                  fontFamily: MONO, fontSize: 9, letterSpacing: '.14em',
+                  fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
                   color: tab === t.id ? '#000' : 'var(--mute)',
                   fontWeight: tab === t.id ? 700 : 400,
                   transition: 'all 0.15s',
@@ -220,7 +220,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
               ))}
             </Section>
 
-            <div style={{ margin: '16px 20px 0', fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
+            <div style={{ margin: '16px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
               CAPTAIN ×2 · TRIPLE CAPTAIN ×3 · JOKER ×2 · CHIPS DO NOT STACK — MAX APPLIES
             </div>
           </>
@@ -238,7 +238,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             <Section title="CLUB CAP RULES">
               <InfoBox>
                 <div>Club cap per round:</div>
-                <div style={{ marginTop: 6, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px', fontSize: 9 }}>
+                <div style={{ marginTop: 6, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px', fontSize: 'var(--fs-micro)' }}>
                   <div style={{ color: 'var(--mute)' }}>Group (MD1–MD3)</div>      <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
                   <div style={{ color: 'var(--mute)' }}>Round of 32 (MD4)</div>    <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
                   <div style={{ color: 'var(--mute)' }}>Round of 16 (MD5)</div>    <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>4 players</div>
@@ -259,7 +259,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                   {' — '}Up to <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 buys</span> per matchday window. Sells are always free.
                 </div>
                 <div>Window closes at the <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>matchday deadline</span> and reopens ~8h after the last match.</div>
-                <div style={{ marginTop: 6, color: 'var(--mute)', fontSize: 9 }}>
+                <div style={{ marginTop: 6, color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>
                   Classic leagues only: extra buys beyond 3 are allowed but cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each. Commissioner free-transfer windows bypass all limits.
                 </div>
               </InfoBox>
@@ -280,7 +280,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                   <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>CLOSED</span>
                   {' — '}From the matchday deadline until ~8 hours after the last kick-off of the round. No buys or sells.
                 </div>
-                <div style={{ fontSize: 9, color: 'var(--mute)' }}>
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                   A commissioner free-transfer window bypasses the deadline lock and (for classic leagues) the 3-buy limit entirely.
                 </div>
               </InfoBox>
@@ -299,7 +299,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                 <div style={{ marginBottom: 6, color: 'var(--gold)' }}>
                   Once a fixture kicks off, any of your players who started that match are <span style={{ fontFamily: DISPLAY }}>LOCKED</span> — they cannot be swapped or benched until the next matchday.
                 </div>
-                <div style={{ fontSize: 9, color: 'var(--mute)' }}>
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                   Auto-subs: at the end of a round, any starter with 0 minutes is automatically replaced by the best-scoring bench player who played, provided formation rules are still valid.
                 </div>
               </InfoBox>
@@ -313,7 +313,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                 <div style={{ marginBottom: 6 }}>
                   You can change your captain anytime the transfer window is <span style={{ color: 'var(--positive)' }}>open</span>.
                 </div>
-                <div style={{ fontSize: 9, color: 'var(--mute)' }}>
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                   If your captain is auto-subbed out (0 minutes played), the ×2 bonus passes to the highest-scoring starter who registered more than 0 points.
                 </div>
               </InfoBox>

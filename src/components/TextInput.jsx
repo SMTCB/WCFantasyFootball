@@ -51,7 +51,7 @@ export default function TextInput({
           htmlFor={inputId}
           style={{
             fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 10,
+            fontSize: 'var(--fs-micro)',
             color: hasError ? 'var(--danger)' : 'var(--mute)',
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
@@ -79,7 +79,7 @@ export default function TextInput({
         style={{
           width: '100%',
           fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 12,
+          fontSize: 'var(--fs-label)',
           color: disabled ? 'var(--mute)' : 'var(--paper)',
           padding: '8px 12px',
           background: disabled ? 'rgba(242, 238, 229, 0.02)' : 'rgba(242, 238, 229, 0.04)',
@@ -108,7 +108,7 @@ export default function TextInput({
           id={`${inputId}-error`}
           style={{
             fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 10,
+            fontSize: 'var(--fs-micro)',
             color: 'var(--danger)',
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
@@ -123,7 +123,7 @@ export default function TextInput({
           id={`${inputId}-helper`}
           style={{
             fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 10,
+            fontSize: 'var(--fs-micro)',
             color: 'var(--mute)',
             letterSpacing: '0.05em',
           }}

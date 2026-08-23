@@ -125,8 +125,8 @@ export default function F1AdminScreen() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--mute)', fontSize: 12 }}>ADMIN ACCESS REQUIRED</p>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🔒</div>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>ADMIN ACCESS REQUIRED</p>
         </div>
       </div>
     );
@@ -134,26 +134,26 @@ export default function F1AdminScreen() {
 
   const btnStyle = (variant = 'primary') => ({
     padding: '11px 18px', border: 'none', borderRadius: 6,
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em',
+    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em',
     cursor: busy ? 'default' : 'pointer',
     background: variant === 'primary' ? 'var(--f1)' : variant === 'danger' ? 'var(--danger)' : 'var(--elev)',
     color: variant === 'elev' ? 'var(--paper)' : '#fff',
     opacity: busy ? 0.7 : 1,
   });
 
-  const selectStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' };
+  const selectStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' };
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>⚡ ADMIN PANEL</div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: 'var(--on-shell)', margin: 0 }}>F1 ADMIN</h1>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', marginBottom: 4 }}>⚡ ADMIN PANEL</div>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>F1 ADMIN</h1>
       </div>
 
       {/* Section tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)' }}>
         {[['race', 'RACE RESULTS'], ['season', 'SEASON BETS']].map(([k, l]) => (
-          <button key={k} onClick={() => setActiveSection(k)} style={{ flex: 1, padding: '11px 0', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: activeSection === k ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: activeSection === k ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}>
+          <button key={k} onClick={() => setActiveSection(k)} style={{ flex: 1, padding: '11px 0', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: activeSection === k ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: activeSection === k ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}>
             {l}
           </button>
         ))}
@@ -161,7 +161,7 @@ export default function F1AdminScreen() {
 
       <div style={{ padding: '16px', maxWidth: 560 }}>
         {msg && (
-          <div style={{ padding: '10px 14px', marginBottom: 14, background: 'var(--elev)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--paper)' }}>
+          <div style={{ padding: '10px 14px', marginBottom: 14, background: 'var(--elev)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>
             {msg}
           </div>
         )}
@@ -170,7 +170,7 @@ export default function F1AdminScreen() {
         {activeSection === 'race' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em' }}>SELECT RACE</label>
+              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em' }}>SELECT RACE</label>
               <select value={selectedId ?? ''} onChange={e => setSelectedId(e.target.value)} style={selectStyle}>
                 {races.map(r => <option key={r.id} value={r.id}>R{r.round_number} — {r.gp_name} {r.is_scored ? '✓' : ''}</option>)}
               </select>
@@ -188,7 +188,7 @@ export default function F1AdminScreen() {
                   const vals = [p1, p2, p3]; const setters = [setP1, setP2, setP3];
                   return (
                     <div key={label}>
-                      <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</label>
+                      <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</label>
                       <select value={vals[i]} onChange={e => setters[i](e.target.value)} style={selectStyle}>
                         <option value="">Select driver…</option>
                         {DRIVERS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -198,7 +198,7 @@ export default function F1AdminScreen() {
                 })}
 
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em' }}>TEAM — MOST POINTS</label>
+                  <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em' }}>TEAM — MOST POINTS</label>
                   <select value={team} onChange={e => setTeam(e.target.value)} style={selectStyle}>
                     <option value="">Select team…</option>
                     {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -207,7 +207,7 @@ export default function F1AdminScreen() {
 
                 {race.special_category_question && (
                   <div>
-                    <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em' }}>SPECIAL: {race.special_category_question}</label>
+                    <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em' }}>SPECIAL: {race.special_category_question}</label>
                     <input
                       value={specialAns}
                       onChange={e => setSpecialAns(e.target.value)}
@@ -219,7 +219,7 @@ export default function F1AdminScreen() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
                   <input type="checkbox" id="unlock" checked={manualUnlock} onChange={e => setManualUnlock(e.target.checked)} />
-                  <label htmlFor="unlock" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--paper)', cursor: 'pointer', letterSpacing: '0.1em' }}>
+                  <label htmlFor="unlock" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--paper)', cursor: 'pointer', letterSpacing: '0.1em' }}>
                     MANUAL UNLOCK (allow late bet edits)
                   </label>
                 </div>
@@ -239,19 +239,19 @@ export default function F1AdminScreen() {
         {activeSection === 'season' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: yearResults?.is_bets_locked ? 'var(--danger)' : 'var(--positive)' }}>
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: yearResults?.is_bets_locked ? 'var(--danger)' : 'var(--positive)' }}>
                 {yearResults?.is_bets_locked ? '🔒 LOCKED' : '🔓 OPEN'}
               </span>
               <button onClick={toggleYearLock} disabled={busy} style={btnStyle('elev')}>
                 {yearResults?.is_bets_locked ? 'UNLOCK BETS' : 'LOCK BETS'}
               </button>
             </div>
-            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--mute)', margin: 0 }}>
+            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: 0 }}>
               Enter final season results to score all season bets. Each correct prediction = 10 pts.
             </p>
             {[['driver_champion','Driver Champion'],['driver_p2','P2'],['driver_p3','P3'],['constructor_champion','Constructor Champion'],['last_constructor','Last Constructor'],['fewest_finishers_race','Fewest Finishers Race'],['most_dnfs_driver','Most DNFs Driver'],['first_driver_replaced','First Driver Replaced'],['most_poles','Most Poles'],['most_podiums_no_win','Most Podiums No Win']].map(([key, label]) => (
               <div key={key}>
-                <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</label>
+                <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</label>
                 <input
                   value={yearFields[key] ?? ''}
                   onChange={e => setYearFields(f => ({ ...f, [key]: e.target.value || null }))}

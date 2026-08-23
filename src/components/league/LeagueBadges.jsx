@@ -11,7 +11,7 @@ export function TypeChip({ type, format }) {
         border: `1px solid ${c}44`,
         background: `${c}12`,
         color: c,
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.16em', fontWeight: 600,
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
         textTransform: 'uppercase', whiteSpace: 'nowrap',
       }}
     >
@@ -27,9 +27,9 @@ export function ArchivedBadge() {
         display: 'inline-flex', alignItems: 'center', gap: 4,
         padding: '2px 7px',
         border: '1px solid var(--rule)',
-        background: 'rgba(255,255,255,0.03)',
+        background: 'var(--shell-fill)',
         color: 'var(--mute)',
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.16em', fontWeight: 600,
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
         textTransform: 'uppercase', whiteSpace: 'nowrap',
       }}
     >

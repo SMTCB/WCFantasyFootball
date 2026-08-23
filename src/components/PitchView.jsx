@@ -78,7 +78,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           border:       `1px solid ${isSelected ? 'var(--cyan)' : posColor}`,
           borderRadius: 3,
           fontFamily:   'Archivo Black, sans-serif',
-          fontSize:     10,
+          fontSize: 'var(--fs-micro)',
           letterSpacing: '-0.01em',
           textTransform: 'uppercase',
           color:        'var(--paper)',
@@ -88,7 +88,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         </div>
         <div style={{
           fontFamily:   'JetBrains Mono, monospace',
-          fontSize:     8,
+          fontSize: 'var(--fs-micro)',
           color:        pts > 0 ? 'var(--positive)' : 'var(--mute)',
           letterSpacing: '.1em',
         }}>
@@ -103,7 +103,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
             background:  'var(--gold)',
             color:       'var(--ink)',
             fontFamily:  'Archivo Black, sans-serif',
-            fontSize:    7,
+            fontSize: 'var(--fs-micro)',
             display:     'flex',
             alignItems:  'center',
             justifyContent: 'center',
@@ -150,7 +150,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         border:          `1.5px solid ${isCaptain ? 'var(--gold)' : 'var(--cyan)'}`,
         color:           isCaptain ? 'var(--ink)' : 'var(--cyan)',
         fontFamily:      'Archivo Black, sans-serif',
-        fontSize:        14,
+        fontSize: 'var(--fs-body)',
       }}>
         {no}
       </div>
@@ -162,7 +162,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc, flexShrink: 0 }} />
           <span style={{
             fontFamily:     'Archivo Black, sans-serif',
-            fontSize:       13,
+            fontSize: 'var(--fs-body)',
             letterSpacing:  '-0.01em',
             textTransform:  'uppercase',
             color:          'var(--paper)',
@@ -175,7 +175,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         </div>
         <div style={{
           fontFamily:    'JetBrains Mono, monospace',
-          fontSize:      9,
+          fontSize: 'var(--fs-micro)',
           color:         'var(--mute)',
           letterSpacing: '.14em',
           marginTop:     2,
@@ -185,7 +185,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         {player.fixtureStatus && (
           <div style={{
             fontFamily:    'JetBrains Mono, monospace',
-            fontSize:      8,
+            fontSize: 'var(--fs-micro)',
             color:         player.fixtureStatus.color,
             letterSpacing: '.1em',
             marginTop:     1,
@@ -199,7 +199,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         {player.clubEliminated && (
           <div style={{
             fontFamily:    'JetBrains Mono, monospace',
-            fontSize:      8,
+            fontSize: 'var(--fs-micro)',
             fontWeight:    800,
             color:         'var(--danger)',
             letterSpacing: '.1em',
@@ -225,7 +225,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           background:     'var(--gold)',
           color:          'var(--ink)',
           fontFamily:     'Archivo Black, sans-serif',
-          fontSize:       9,
+          fontSize: 'var(--fs-micro)',
           display:        'flex',
           alignItems:     'center',
           justifyContent: 'center',
@@ -316,7 +316,7 @@ export default function PitchView({
             right:      24,
             top:        `${y}%`,
             height:     1,
-            background: 'rgba(255,255,255,0.18)',
+            background: 'var(--shell-fill-active)',
           }} />
         ))}
 
@@ -346,8 +346,8 @@ export default function PitchView({
             top:           `${l.y}%`,
             transform:     'translateY(-50%)',
             fontFamily:    'JetBrains Mono, monospace',
-            fontSize:      9,
-            color:         'rgba(255,255,255,0.7)',
+            fontSize: 'var(--fs-micro)',
+            color:         'var(--on-shell-mid)',
             background:    'rgba(0,0,0,0.3)',
             padding:       '2px 4px',
             letterSpacing: '.18em',
@@ -364,7 +364,7 @@ export default function PitchView({
           right:      '10%',
           top:        '50%',
           height:     1,
-          background: 'rgba(255,255,255,0.18)',
+          background: 'var(--shell-fill-active)',
         }} />
         <div style={{
           position:     'absolute',
@@ -374,7 +374,7 @@ export default function PitchView({
           width:        160,
           height:       160,
           borderRadius: '50%',
-          border:       '1px solid rgba(255,255,255,0.18)',
+          border:       '1px solid var(--shell-rule-emphasis)',
         }} />
 
         {/* ── Fixture context strip ───────────────────────────────── */}
@@ -388,11 +388,11 @@ export default function PitchView({
           zIndex:          5,
           pointerEvents:   'none',
         }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>
             STARTING XI · {formation}
           </div>
           {matchdayLabel && (
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>
               {matchdayLabel}
             </div>
           )}

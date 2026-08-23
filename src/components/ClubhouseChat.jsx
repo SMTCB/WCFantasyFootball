@@ -28,21 +28,21 @@ function MessageBubble({ msg, prevMsg, onDelete }) {
     >
       {showMeta && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
-          <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: msg.isOwn ? 'var(--accent)' : 'var(--paper)' }}>
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: msg.isOwn ? 'var(--accent)' : 'var(--paper)' }}>
             {msg.username ?? msg.isOwn ? (msg.username || 'You') : '?'}
           </span>
-          <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>{timeAgo(msg.createdAt)}</span>
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{timeAgo(msg.createdAt)}</span>
         </div>
       )}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-        <p style={{ margin: 0, ...BODY, fontSize: 14, color: 'var(--paper)', lineHeight: 1.45, flex: 1, wordBreak: 'break-word' }}>
+        <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.45, flex: 1, wordBreak: 'break-word' }}>
           {msg.content}
         </p>
         {onDelete && hovering && (
           <button
             onClick={onDelete}
             title="Delete message"
-            style={{ flexShrink: 0, background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 10, cursor: 'pointer', padding: '1px 4px', opacity: 0.6, lineHeight: 1 }}
+            style={{ flexShrink: 0, background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer', padding: '1px 4px', opacity: 0.6, lineHeight: 1 }}
           >
             ✕
           </button>
@@ -63,10 +63,10 @@ function DmBubble({ msg }) {
         background: msg.isOwn ? 'var(--accent)' : 'var(--card)',
         border: msg.isOwn ? 'none' : '1px solid var(--rule)',
       }}>
-        <p style={{ margin: 0, ...BODY, fontSize: 14, color: msg.isOwn ? '#fff' : 'var(--paper)', lineHeight: 1.4, wordBreak: 'break-word' }}>
+        <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: msg.isOwn ? '#fff' : 'var(--paper)', lineHeight: 1.4, wordBreak: 'break-word' }}>
           {msg.content}
         </p>
-        <div style={{ ...MONO, fontSize: 8, color: msg.isOwn ? 'rgba(255,255,255,0.55)' : 'var(--mute)', marginTop: 4, textAlign: 'right' }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: msg.isOwn ? 'var(--on-shell-dim)' : 'var(--mute)', marginTop: 4, textAlign: 'right' }}>
           {timeAgo(msg.createdAt)}
           {msg.isOwn && msg.readAt && <span style={{ marginLeft: 4 }}>· read</span>}
         </div>
@@ -101,12 +101,12 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
         {onBack && (
           <button
             onClick={onBack}
-            style={{ background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 12, cursor: 'pointer', padding: '2px 8px 2px 0', flexShrink: 0 }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-label)', cursor: 'pointer', padding: '2px 8px 2px 0', flexShrink: 0 }}
           >
             ←
           </button>
         )}
-        <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: 'var(--paper)', letterSpacing: '0.06em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)', letterSpacing: '0.06em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {titlePrefix}{title}
         </span>
       </div>
@@ -114,10 +114,10 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: isDm ? '12px 16px' : '4px 16px', display: 'flex', flexDirection: 'column' }}>
         {loading && (
-          <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</div>
         )}
         {!loading && messages.length === 0 && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '0.08em', textAlign: 'center', padding: '32px 0' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', textAlign: 'center', padding: '32px 0' }}>
             {isDm ? 'Start a conversation' : 'No messages yet — say hello 👋'}
           </div>
         )}
@@ -146,12 +146,12 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e); } }}
           placeholder={isDm ? `Message ${title}…` : `Message #${title}…`}
           maxLength={2000}
-          style={{ flex: 1, padding: '9px 12px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, color: 'var(--paper)', ...BODY, fontSize: 14, outline: 'none', minWidth: 0 }}
+          style={{ flex: 1, padding: '9px 12px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, color: 'var(--paper)', ...BODY, fontSize: 'var(--fs-body)', outline: 'none', minWidth: 0 }}
         />
         <button
           type="submit"
           disabled={!text.trim() || sending}
-          style={{ padding: '9px 14px', background: !text.trim() || sending ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: !text.trim() || sending ? 'default' : 'pointer', flexShrink: 0 }}
+          style={{ padding: '9px 14px', background: !text.trim() || sending ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: !text.trim() || sending ? 'default' : 'pointer', flexShrink: 0 }}
         >
           {sending ? '…' : 'SEND'}
         </button>
@@ -169,7 +169,7 @@ function RailListItem({ label, active, onClick }) {
         width: '100%', textAlign: 'left', padding: '7px 8px', borderRadius: 6,
         background: active ? 'var(--accent-bg)' : 'transparent',
         border: 'none', cursor: 'pointer',
-        ...MONO, fontSize: 12.5, fontWeight: active ? 600 : 400,
+        ...MONO, fontSize: 'var(--fs-label)', fontWeight: active ? 600 : 400,
         color: active ? 'var(--accent)' : '#4B5568',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}
@@ -286,12 +286,12 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
         {/* Header + mode toggle */}
         <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)' }}>Chat</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Chat</div>
             {onExpand && (
               <button
                 onClick={onExpand}
                 title="Expand chat"
-                style={{ background: 'transparent', border: 'none', color: 'var(--mute)', fontSize: 13, cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
               >
                 ⤢
               </button>
@@ -306,7 +306,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
                   padding: '4px 10px', borderRadius: 100,
                   background: chatMode === mode ? 'var(--accent-bg)' : 'transparent',
                   border: 'none', cursor: 'pointer',
-                  ...MONO, fontSize: 10, fontWeight: chatMode === mode ? 700 : 400,
+                  ...MONO, fontSize: 'var(--fs-micro)', fontWeight: chatMode === mode ? 700 : 400,
                   letterSpacing: '0.06em',
                   color: chatMode === mode ? 'var(--accent)' : 'var(--mute)',
                 }}
@@ -323,7 +323,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
             <RailListItem key={ch.id} label={`# ${ch.name}`} active={selectedChannelId === ch.id} onClick={() => setSelectedChannelId(ch.id)} />
           ))}
           {chatMode === 'dm' && otherMembers.length === 0 && (
-            <div style={{ padding: '6px 8px', ...MONO, fontSize: 10, color: 'var(--mute)' }}>No other members yet.</div>
+            <div style={{ padding: '6px 8px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No other members yet.</div>
           )}
           {chatMode === 'dm' && otherMembers.map(m => (
             <RailListItem key={m.user_id} label={m.username} active={selectedDmUserId === m.user_id} onClick={() => setSelectedDmUserId(m.user_id)} />
@@ -333,7 +333,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
         {/* Thread */}
         {!hasSelection ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
-            <span style={{ ...MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
               {chatMode === 'channel' ? 'SELECT A CHANNEL' : 'SELECT A MEMBER'}
             </span>
           </div>
@@ -364,7 +364,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
 
           {/* Header + mode toggle */}
           <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', marginBottom: 10 }}>Chat</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 10 }}>Chat</div>
             <div style={{ display: 'flex', gap: 6 }}>
               {['channel', 'dm'].map(mode => (
                 <button
@@ -374,7 +374,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
                     padding: '4px 10px', borderRadius: 100,
                     background: chatMode === mode ? 'var(--accent-bg)' : 'transparent',
                     border: 'none', cursor: 'pointer',
-                    ...MONO, fontSize: 10, fontWeight: chatMode === mode ? 700 : 400,
+                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: chatMode === mode ? 700 : 400,
                     letterSpacing: '0.06em',
                     color: chatMode === mode ? 'var(--accent)' : 'var(--mute)',
                   }}
@@ -410,19 +410,19 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
                       }}
                       placeholder="channel-name"
                       maxLength={30}
-                      style={{ width: '100%', padding: '5px 8px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 4, color: 'var(--paper)', ...MONO, fontSize: 11, outline: 'none', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '5px 8px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 4, color: 'var(--paper)', ...MONO, fontSize: 'var(--fs-micro)', outline: 'none', boxSizing: 'border-box' }}
                     />
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button
                         onClick={createChannel}
                         disabled={creatingChannel || !newChannelName.trim()}
-                        style={{ flex: 1, padding: '5px 0', background: creatingChannel || !newChannelName.trim() ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}
+                        style={{ flex: 1, padding: '5px 0', background: creatingChannel || !newChannelName.trim() ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}
                       >
                         {creatingChannel ? '…' : 'CREATE'}
                       </button>
                       <button
                         onClick={() => { setShowNewChannel(false); setNewChannelName(''); }}
-                        style={{ padding: '5px 8px', background: 'transparent', color: 'var(--mute)', border: '1px solid var(--rule)', borderRadius: 4, ...MONO, fontSize: 9, cursor: 'pointer' }}
+                        style={{ padding: '5px 8px', background: 'transparent', color: 'var(--mute)', border: '1px solid var(--rule)', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
                       >
                         ✕
                       </button>
@@ -433,7 +433,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
             )}
 
             {chatMode === 'dm' && otherMembers.length === 0 && (
-              <div style={{ padding: '6px 8px', ...MONO, fontSize: 10, color: 'var(--mute)' }}>No other members yet.</div>
+              <div style={{ padding: '6px 8px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No other members yet.</div>
             )}
 
             {chatMode === 'dm' && otherMembers.map(m => (
@@ -448,7 +448,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
           {!hasSelection ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ ...MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
                 {chatMode === 'channel' ? 'SELECT A CHANNEL' : 'SELECT A MEMBER TO MESSAGE'}
               </span>
             </div>

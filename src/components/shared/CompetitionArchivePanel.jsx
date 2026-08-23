@@ -28,7 +28,7 @@ function ToggleSwitch({ checked, onChange, disabled, labelOn, labelOff }) {
         cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
       }}
     >
-      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: checked ? 'var(--positive)' : 'var(--mute)' }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: checked ? 'var(--positive)' : 'var(--mute)' }}>
         {checked ? labelOn : labelOff}
       </span>
       <span style={{
@@ -71,17 +71,17 @@ export default function CompetitionArchivePanel({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>
         {name ? `${name.toUpperCase()} · ` : ''}ARCHIVE STATUS
       </div>
 
       {archived ? (
-        <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ARCHIVED · </span>
+        <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ARCHIVED · </span>
           {archivedAt ? `Since ${new Date(archivedAt).toLocaleDateString()}. ` : ''}Hidden from your active list.
         </div>
       ) : (
-        <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--warn)', lineHeight: 1.5 }}>
+        <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
           Active — visible in your switcher and lists by default.
         </div>
       )}
@@ -95,7 +95,7 @@ export default function CompetitionArchivePanel({
       />
 
       {message && (
-        <div style={{ fontFamily: BODY, fontSize: 10, color: message.type === 'err' ? 'var(--negative)' : 'var(--positive)' }}>
+        <div style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: message.type === 'err' ? 'var(--negative)' : 'var(--positive)' }}>
           {message.text}
         </div>
       )}

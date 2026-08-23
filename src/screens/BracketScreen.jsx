@@ -41,14 +41,14 @@ function FixtureCard({ fixture, prediction, onPredict }) {
           ? '1px solid rgba(24,201,107,0.35)'
           : result === 'wrong'
           ? '1px solid rgba(240,58,58,0.25)'
-          : '1px solid rgba(255,255,255,0.07)',
+          : '1px solid var(--shell-rule)',
         boxShadow: isLive ? '0 0 12px rgba(24,201,107,0.08)' : 'none',
       }}
     >
       {/* Status bar */}
       <div
         className="flex items-center justify-between px-3 py-1.5"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+        style={{ borderBottom: '1px solid var(--shell-rule)' }}
       >
         <span
           className="text-[9px] font-black uppercase tracking-widest"
@@ -167,7 +167,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
                   fontFamily: 'Archivo Black, sans-serif',
                   background: prediction === key
                     ? isLive ? 'rgba(245,158,11,0.15)' : 'rgba(0,180,216,0.15)'
-                    : 'rgba(255,255,255,0.04)',
+                    : 'var(--shell-fill)',
                   color: prediction === key
                     ? isLive ? 'var(--warn)' : 'var(--cyan)'
                     : 'var(--mute)',

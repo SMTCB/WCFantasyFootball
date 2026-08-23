@@ -75,13 +75,13 @@ export default function PaddockLobbyScreen() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', paddingBottom: 32 }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', padding: '24px 20px 20px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 6 }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 6 }}>
           🏎 Formula 1 · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: 'var(--paper)', margin: 0, lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.1 }}>
           PADDOCK
         </h1>
-        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', margin: '6px 0 0' }}>
+        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text-2)', margin: '6px 0 0' }}>
           Your private prediction group — create one or join a friend's.
         </p>
       </div>
@@ -96,7 +96,7 @@ export default function PaddockLobbyScreen() {
               flex: 1,
               padding: '12px 0',
               fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 10,
+              fontSize: 'var(--fs-micro)',
               fontWeight: 700,
               letterSpacing: '0.14em',
               cursor: 'pointer',
@@ -118,18 +118,18 @@ export default function PaddockLobbyScreen() {
         {tab === 'my' && (
           <div>
             {loading ? (
-              <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', padding: 40 }}>
+              <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', textAlign: 'center', padding: 40 }}>
                 Loading…
               </div>
             ) : myPaddocks.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🏁</div>
-                <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 14 }}>
+                <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🏁</div>
+                <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)' }}>
                   You haven't joined any paddocks yet.
                 </p>
                 <button
                   onClick={() => setTab('create')}
-                  style={{ marginTop: 16, padding: '10px 24px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
+                  style={{ marginTop: 16, padding: '10px 24px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
                 >
                   CREATE YOUR FIRST PADDOCK
                 </button>
@@ -144,17 +144,17 @@ export default function PaddockLobbyScreen() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)' }}>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)' }}>
                             {p.name}
                           </div>
                           {p.archived && <ArchivedBadge />}
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
                             {p.member_count} {p.member_count === 1 ? 'member' : 'members'}
                           </span>
                           {p.role === 'owner' && (
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--f1)', letterSpacing: '0.12em', fontWeight: 700 }}>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--f1)', letterSpacing: '0.12em', fontWeight: 700 }}>
                               OWNER
                             </span>
                           )}
@@ -165,14 +165,14 @@ export default function PaddockLobbyScreen() {
                           <button
                             onClick={() => setSettingsPaddock(p)}
                             aria-label="Paddock settings"
-                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--mute)' }}
+                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
                           >
                             ⚙
                           </button>
                         )}
                         <button
                           onClick={() => enterPaddock(p.paddock_id)}
-                          style={{ padding: '8px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '8px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           ENTER →
                         </button>
@@ -183,10 +183,10 @@ export default function PaddockLobbyScreen() {
                       style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, cursor: 'pointer' }}
                       onClick={() => copyCode(p.invite_code)}
                     >
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--paper)', flex: 1 }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', fontWeight: 700, letterSpacing: '0.2em', color: 'var(--paper)', flex: 1 }}>
                         {p.invite_code}
                       </span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: copied === p.invite_code ? 'var(--positive)' : 'var(--mute)', letterSpacing: '0.1em' }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: copied === p.invite_code ? 'var(--positive)' : 'var(--mute)', letterSpacing: '0.1em' }}>
                         {copied === p.invite_code ? 'COPIED ✓' : 'COPY CODE'}
                       </span>
                     </div>
@@ -195,14 +195,14 @@ export default function PaddockLobbyScreen() {
                 {archivedCount > 0 && (
                   <button
                     onClick={() => setShowArchived(v => !v)}
-                    style={{ padding: '10px', border: 'none', background: 'transparent', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer' }}
+                    style={{ padding: '10px', border: 'none', background: 'transparent', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', cursor: 'pointer' }}
                   >
                     {showArchived ? '▾ HIDE ARCHIVED' : `▸ SHOW ARCHIVED (${archivedCount})`}
                   </button>
                 )}
                 <button
                   onClick={() => setTab('create')}
-                  style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer' }}
+                  style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', cursor: 'pointer' }}
                 >
                   + CREATE ANOTHER PADDOCK
                 </button>
@@ -227,13 +227,13 @@ export default function PaddockLobbyScreen() {
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {myCircles.length > 0 && (
               <div>
-                <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                   Clubhouse (optional)
                 </label>
                 <select
                   value={selectedCircleId ?? ''}
                   onChange={e => setSelectedCircleId(e.target.value || null)}
-                  style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 15, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
                 >
                   <option value="">No clubhouse</option>
                   {myCircles.map(c => (
@@ -243,7 +243,7 @@ export default function PaddockLobbyScreen() {
               </div>
             )}
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                 Paddock Name
               </label>
               <input
@@ -251,14 +251,14 @@ export default function PaddockLobbyScreen() {
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. The Tifosi Garage"
                 maxLength={40}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 15, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
-            {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)' }}>{err}</div>}
+            {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>{err}</div>}
             <button
               type="submit"
               disabled={busy || !name.trim()}
-              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || !name.trim() ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: busy || !name.trim() ? 'default' : 'pointer' }}
             >
               {busy ? 'CREATING…' : 'CREATE PADDOCK →'}
             </button>
@@ -269,7 +269,7 @@ export default function PaddockLobbyScreen() {
         {tab === 'join' && (
           <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                 Invite Code
               </label>
               <input
@@ -277,14 +277,14 @@ export default function PaddockLobbyScreen() {
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="8-CHARACTER CODE"
                 maxLength={8}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700, letterSpacing: '0.25em', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-heading)', fontWeight: 700, letterSpacing: '0.25em', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase' }}
               />
             </div>
-            {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)' }}>{err}</div>}
+            {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>{err}</div>}
             <button
               type="submit"
               disabled={busy || code.trim().length < 6}
-              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
             >
               {busy ? 'JOINING…' : 'JOIN PADDOCK →'}
             </button>

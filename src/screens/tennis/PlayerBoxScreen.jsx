@@ -80,13 +80,13 @@ export default function PlayerBoxScreen() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', paddingBottom: 32 }}>
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '24px 20px 20px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 6 }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 6 }}>
           🎾 Tennis · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
           The Player's Box
         </h1>
-        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: '6px 0 0' }}>
+        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--on-shell-dim)', margin: '6px 0 0' }}>
           Your private prediction group — create one or join a friend's.
         </p>
       </div>
@@ -99,7 +99,7 @@ export default function PlayerBoxScreen() {
             onClick={() => { setTab(t.key); setErr(''); }}
             style={{
               flex: 1, padding: '12px 0',
-              fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600,
+              fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600,
               cursor: 'pointer', border: 'none',
               borderBottom: tab === t.key ? '2px solid var(--ten)' : '2px solid transparent',
               background: 'transparent',
@@ -118,18 +118,18 @@ export default function PlayerBoxScreen() {
         {tab === 'my' && (
           <div>
             {loading ? (
-              <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', padding: 40 }}>
+              <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', textAlign: 'center', padding: 40 }}>
                 Loading…
               </div>
             ) : myBoxes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🎾</div>
-                <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 14, margin: '0 0 16px' }}>
+                <div style={{ fontSize: 'var(--fs-display)', marginBottom: 12 }}>🎾</div>
+                <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)', margin: '0 0 16px' }}>
                   You haven't joined any Player's Boxes yet.
                 </p>
                 <button
                   onClick={() => setTab('create')}
-                  style={{ padding: '10px 24px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '10px 24px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
                 >
                   Create your first box
                 </button>
@@ -141,13 +141,13 @@ export default function PlayerBoxScreen() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)' }}>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)' }}>
                             {b.name}
                           </div>
                           {b.archived && <ArchivedBadge />}
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
                             {b.member_count} {b.member_count === 1 ? 'member' : 'members'}
                           </span>
                         </div>
@@ -157,14 +157,14 @@ export default function PlayerBoxScreen() {
                           <button
                             onClick={() => setSettingsBox(b)}
                             aria-label="Player's Box settings"
-                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--mute)' }}
+                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
                           >
                             ⚙
                           </button>
                         )}
                         <button
                           onClick={() => enterBox(b.player_box_id)}
-                          style={{ padding: '8px 16px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '8px 16px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           Enter →
                         </button>
@@ -174,10 +174,10 @@ export default function PlayerBoxScreen() {
                       style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, cursor: 'pointer' }}
                       onClick={() => copyCode(b.invite_code)}
                     >
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--paper)', flex: 1 }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', fontWeight: 700, letterSpacing: '0.2em', color: 'var(--paper)', flex: 1 }}>
                         {b.invite_code}
                       </span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: copied === b.invite_code ? 'var(--pos)' : 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: copied === b.invite_code ? 'var(--pos)' : 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                         {copied === b.invite_code ? 'Copied ✓' : 'Copy code'}
                       </span>
                     </div>
@@ -186,14 +186,14 @@ export default function PlayerBoxScreen() {
                 {archivedCount > 0 && (
                   <button
                     onClick={() => setShowArchived(v => !v)}
-                    style={{ padding: '10px', border: 'none', background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 12, cursor: 'pointer' }}
+                    style={{ padding: '10px', border: 'none', background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
                   >
                     {showArchived ? 'Hide archived' : `Show archived (${archivedCount})`}
                   </button>
                 )}
                 <button
                   onClick={() => setTab('create')}
-                  style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 6, background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 13, cursor: 'pointer' }}
+                  style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 6, background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer' }}
                 >
                   + Create another box
                 </button>
@@ -217,20 +217,20 @@ export default function PlayerBoxScreen() {
         {tab === 'create' && (
           myCircles.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
-              <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 14, margin: 0 }}>
+              <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)', margin: 0 }}>
                 You need a Clubhouse before creating a Player's Box. Create or join one from the Clubhouse tab first.
               </p>
             </div>
           ) : (
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                 Clubhouse
               </label>
               <select
                 value={selectedCircleId ?? ''}
                 onChange={e => setSelectedCircleId(e.target.value || null)}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 15, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
               >
                 {myCircles.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -238,7 +238,7 @@ export default function PlayerBoxScreen() {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                 Box Name
               </label>
               <input
@@ -246,14 +246,14 @@ export default function PlayerBoxScreen() {
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. The Baseline Crew"
                 maxLength={40}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 15, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
-            {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--neg)' }}>{err}</div>}
+            {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)' }}>{err}</div>}
             <button
               type="submit"
               disabled={busy || !name.trim() || !selectedCircleId}
-              style={{ padding: '13px', background: busy || !name.trim() || !selectedCircleId ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || !name.trim() || !selectedCircleId ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || !name.trim() || !selectedCircleId ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !name.trim() || !selectedCircleId ? 'default' : 'pointer' }}
             >
               {busy ? 'Creating…' : 'Create Player\'s Box →'}
             </button>
@@ -265,7 +265,7 @@ export default function PlayerBoxScreen() {
         {tab === 'join' && (
           <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                 Invite Code
               </label>
               <input
@@ -273,14 +273,14 @@ export default function PlayerBoxScreen() {
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="8-CHARACTER CODE"
                 maxLength={8}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700, letterSpacing: '0.25em', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-heading)', fontWeight: 700, letterSpacing: '0.25em', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase' }}
               />
             </div>
-            {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--neg)' }}>{err}</div>}
+            {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)' }}>{err}</div>}
             <button
               type="submit"
               disabled={busy || code.trim().length < 6}
-              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
             >
               {busy ? 'Joining…' : 'Join Player\'s Box →'}
             </button>

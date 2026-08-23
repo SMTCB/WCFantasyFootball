@@ -6,7 +6,7 @@ const MONO = "'JetBrains Mono', monospace";
 
 const archiveToggleStyle = {
   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-  fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--mute)',
+  fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--mute)',
 };
 
 // "Select a League" picker shown on Squad/Market when the user has multiple
@@ -31,18 +31,18 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
             {eyebrow && (
               <div className="fk-eyebrow" style={{ marginBottom: 6 }}>{eyebrow}</div>
             )}
-            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 30, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
               Select a League
             </div>
           </div>
           {archiveToggle}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 100px 90px 100px', gap: 0, padding: '10px 0 10px 40px', borderBottom: '1px solid var(--rule)' }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>League</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Type</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Members</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 16 }}>Rank</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 40 }}>Pts</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>League</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Type</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Members</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 16 }}>Rank</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 40 }}>Pts</span>
         </div>
         {sortedLeagues.map(l => {
           const tc = TYPE_COLOR[l.type] || 'var(--mute)';
@@ -58,11 +58,11 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
                 borderLeft: '3px solid transparent',
                 cursor: 'pointer', alignItems: 'center',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderLeftColor = tc; e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderLeftColor = tc; e.currentTarget.style.background = 'var(--shell-fill)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderLeftColor = 'transparent'; e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{ padding: '18px 16px 18px 0', minWidth: 0 }}>
-                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {l.name}
                 </div>
               </div>
@@ -71,14 +71,14 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
                 {l.archived && <ArchivedBadge />}
               </div>
               <div style={{ padding: '18px 0', textAlign: 'center' }}>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: 'var(--mute)' }}>{l.members ?? '—'}</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{l.members ?? '—'}</span>
               </div>
               <div style={{ padding: '18px 0', textAlign: 'right', paddingRight: 16, display: 'flex', justifyContent: 'flex-end' }}>
                 <RankBadge rank={l.rank} />
               </div>
               <div style={{ padding: '18px 40px 18px 0', textAlign: 'right' }}>
-                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 18, color: 'var(--positive)' }}>{Math.round(l.totalPoints ?? 0)}</div>
-                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Pts</div>
+                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-heading)', color: 'var(--positive)' }}>{Math.round(l.totalPoints ?? 0)}</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Pts</div>
               </div>
             </div>
           );
@@ -92,12 +92,12 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
             {eyebrow && (
               <div className="fk-eyebrow" style={{ marginBottom: 3 }}>{eyebrow}</div>
             )}
-            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
               Select a League
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
               {sortedLeagues.length} {sortedLeagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
             </div>
             {archiveToggle}
@@ -120,22 +120,22 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
             >
               <RankBadge rank={l.rank} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 14, letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {l.name}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
                   <TypeChip type={l.type} format={l.format} />
                   {l.archived && <ArchivedBadge />}
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
                     {l.members ?? '—'} members
                   </span>
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 18, color: 'var(--positive)' }}>{Math.round(l.totalPoints ?? 0)}</div>
-                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Pts</div>
+                <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-heading)', color: 'var(--positive)' }}>{Math.round(l.totalPoints ?? 0)}</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Pts</div>
               </div>
-              <span style={{ color: 'var(--mute)', fontSize: 14, flexShrink: 0 }}>›</span>
+              <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-body)', flexShrink: 0 }}>›</span>
             </div>
           );
         })}

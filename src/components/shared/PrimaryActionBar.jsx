@@ -73,12 +73,12 @@ export default function PrimaryActionBar({
         {/* Left: state icon + label */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           {stateIcon && (
-            <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{stateIcon}</span>
+            <span style={{ fontSize: 'var(--fs-body-lg)', lineHeight: 1, flexShrink: 0 }}>{stateIcon}</span>
           )}
           <span
             style={{
               fontFamily: DISP,
-              fontSize:   13,
+              fontSize: 'var(--fs-body)',
               color:      textColor,
               letterSpacing: '-0.01em',
               whiteSpace: 'nowrap',
@@ -94,11 +94,11 @@ export default function PrimaryActionBar({
         {isAction && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 12 }}>
             {countdown && (
-              <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
                 {countdown}
               </span>
             )}
-            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, lineHeight: 1 }}>→</span>
+            <span style={{ color: 'var(--on-shell)', fontSize: 'var(--fs-body-lg)', lineHeight: 1 }}>→</span>
           </div>
         )}
       </button>

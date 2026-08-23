@@ -823,18 +823,18 @@
 
       <div class="act">
         <div class="act-id">B1</div>
-        <div class="act-title">Sweep the invisible surfaces</div>
+        <div class="act-title">Sweep the invisible surfaces <span class="chip chip--done">Done · PR #834</span></div>
         <div class="act-body">Map the 156 white-alpha backgrounds and borders onto real tokens — <code>--rule</code> for dividers and card edges, <code>--elev</code> for raised fills, <code>--card</code> for surfaces. Then check the 75 white-alpha text colours individually: some sit on the navy shell and are correct as they are.</div>
         <div class="act-foot"><span><b>Where</b> 48 of 112 files in src/</span><span><b>Effort</b> 1d</span><span><b>Clears</b> 6</span></div>
-        <div class="act-check"><b>Done when:</b> <code>rgba(255,255,255,…)</code> appears in <code>src/</code> only where the surface behind it is genuinely dark.</div>
+        <div class="act-check"><b>Done when:</b> <code>rgba(255,255,255,…)</code> appears in <code>src/</code> only where the surface behind it is genuinely dark. <b>Shipped:</b> consolidated onto shell-scoped tokens (<code>--on-shell*</code>, <code>--shell-rule*</code>, <code>--shell-fill*</code>) across <code>src/</code>.</div>
       </div>
 
       <div class="act">
         <div class="act-id">B2</div>
-        <div class="act-title">Publish the type ramp as tokens</div>
+        <div class="act-title">Publish the type ramp as tokens <span class="chip chip--done">Done · PR #834</span></div>
         <div class="act-body">Add the seven steps as CSS custom properties, then move the declarations onto them: 243 under 11px collapse onto the micro step, 48 at 13–14px rise to body, and the nine sizes above 20px become display and title. Where a 9px Archivo Black label is really a sentence, re-set it as 15px sentence case rather than shrinking it back down.</div>
         <div class="act-foot"><span><b>Where</b> 474 declarations across 112 files</span><span><b>Effort</b> 1.5d</span><span><b>Clears</b> 5</span></div>
-        <div class="act-check"><b>Done when:</b> no type in the product is set below 11px, and every size in <code>src/</code> resolves through a named step.</div>
+        <div class="act-check"><b>Done when:</b> no type in the product is set below 11px, and every size in <code>src/</code> resolves through a named step. <b>Shipped:</b> the codebase had grown to 2,144 literal <code>fontSize</code> declarations across 176 files by ship time (vs. this audit's 474 estimate) — all migrated onto the 7-step ramp.</div>
       </div>
 
       <div class="act">

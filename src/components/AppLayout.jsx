@@ -55,8 +55,8 @@ const MONO_STYLE = { fontFamily: 'JetBrains Mono, monospace' };
 function NavSectionLabel({ children }) {
   return (
     <div style={{
-      ...MONO_STYLE, fontSize: 7, letterSpacing: '0.2em', textTransform: 'uppercase',
-      color: 'rgba(255,255,255,.16)', padding: '10px 8px 4px',
+      ...MONO_STYLE, fontSize: 'var(--fs-micro)', letterSpacing: '0.2em', textTransform: 'uppercase',
+      color: 'var(--on-shell-faint)', padding: '10px 8px 4px',
     }}>
       {children}
     </div>
@@ -90,8 +90,8 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 9px', borderRadius: 7,
-          background: open ? 'rgba(255,255,255,.09)' : 'rgba(255,255,255,.05)',
-          border: '1px solid rgba(255,255,255,.08)', cursor: 'pointer',
+          background: open ? 'var(--shell-fill-strong)' : 'var(--shell-fill)',
+          border: '1px solid var(--shell-rule)', cursor: 'pointer',
         }}
       >
         <span aria-hidden="true" style={{
@@ -99,18 +99,18 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
           background: IDENTITY_COLORS[circles.findIndex(c => c.id === activeCircleId) % IDENTITY_COLORS.length] || IDENTITY_COLORS[0],
         }} />
         <span style={{
-          flex: 1, textAlign: 'left', fontSize: 12.5, fontWeight: 600, color: '#fff',
+          flex: 1, textAlign: 'left', fontSize: 'var(--fs-label)', fontWeight: 600, color: '#fff',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {activeCircle?.name ?? 'Select Clubhouse'}
         </span>
-        <span aria-hidden="true" style={{ fontSize: 10, opacity: 0.6, color: '#fff', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s' }}>⌄</span>
+        <span aria-hidden="true" style={{ fontSize: 'var(--fs-micro)', opacity: 0.6, color: '#fff', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s' }}>⌄</span>
       </button>
 
       {open && (
         <div role="listbox" style={{
           position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
-          background: '#232D3F', border: '1px solid rgba(255,255,255,.1)',
+          background: '#232D3F', border: '1px solid var(--shell-rule-strong)',
           borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.4)', zIndex: 60,
           overflow: 'hidden',
         }}>
@@ -125,9 +125,9 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                   padding: '9px 10px', border: 'none', textAlign: 'left', cursor: 'pointer',
-                  background: isActive ? 'rgba(255,255,255,.08)' : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,.72)',
-                  fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                  background: isActive ? 'var(--shell-fill-strong)' : 'transparent',
+                  color: isActive ? '#fff' : 'var(--on-shell-mid)',
+                  fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
                 }}
               >
                 <span aria-hidden="true" style={{
@@ -135,7 +135,7 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
                   background: IDENTITY_COLORS[i % IDENTITY_COLORS.length],
                 }} />
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-                {isActive && <span aria-hidden="true" style={{ fontSize: 11, color: 'var(--accent)' }}>✓</span>}
+                {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}>✓</span>}
               </button>
             );
           })}
@@ -143,12 +143,12 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
             onClick={() => { setOpen(false); onAdd(); }}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-              padding: '9px 10px', border: 'none', borderTop: '1px solid rgba(255,255,255,.08)',
+              padding: '9px 10px', border: 'none', borderTop: '1px solid var(--shell-rule)',
               textAlign: 'left', cursor: 'pointer', background: 'transparent',
-              color: 'rgba(255,255,255,.55)', fontSize: 12.5, fontWeight: 500,
+              color: 'var(--on-shell-dim)', fontSize: 'var(--fs-label)', fontWeight: 500,
             }}
           >
-            <span aria-hidden="true" style={{ fontSize: 13, width: 7, textAlign: 'center' }}>+</span>
+            <span aria-hidden="true" style={{ fontSize: 'var(--fs-body)', width: 7, textAlign: 'center' }}>+</span>
             Find or create a Clubhouse
           </button>
         </div>
@@ -165,9 +165,9 @@ function NavItem({ label, path, active, dotColor, tag, tagStyle, sub, onClick, b
     borderRadius: 5,
     fontSize: sub ? 12 : 12.5,
     fontWeight: 500,
-    color: active ? '#fff' : hovered ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.46)',
+    color: active ? '#fff' : hovered ? 'var(--on-shell)' : 'var(--on-shell-dim)',
     cursor: 'pointer',
-    background: active ? 'rgba(255,255,255,.09)' : hovered ? 'rgba(255,255,255,.05)' : 'transparent',
+    background: active ? 'var(--shell-fill-strong)' : hovered ? 'var(--shell-fill)' : 'transparent',
     transition: 'all .12s',
     userSelect: 'none',
     textDecoration: 'none',
@@ -190,7 +190,7 @@ function NavItem({ label, path, active, dotColor, tag, tagStyle, sub, onClick, b
       <span style={{ flex: 1 }}>{label}</span>
       {tag && (
         <span style={{
-          ...MONO_STYLE, fontSize: 6.5, letterSpacing: '0.08em', textTransform: 'uppercase',
+          ...MONO_STYLE, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', textTransform: 'uppercase',
           padding: '1.5px 5px', borderRadius: 2, fontWeight: 600, flexShrink: 0, marginLeft: 'auto',
           ...(tagStyle ?? {}),
         }}>
@@ -200,7 +200,7 @@ function NavItem({ label, path, active, dotColor, tag, tagStyle, sub, onClick, b
       {badge > 0 && (
         <span style={{
           minWidth: 16, height: 16, borderRadius: '50%', background: 'var(--danger)',
-          ...MONO_STYLE, fontSize: 9, fontWeight: 700, color: '#fff',
+          ...MONO_STYLE, fontSize: 'var(--fs-micro)', fontWeight: 700, color: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
         }}>
           {badge > 99 ? '99+' : badge}
@@ -259,10 +259,10 @@ export default function AppLayout({ children }) {
       <nav
         data-testid="desktop-nav"
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
-        style={{ background: 'var(--shell)', borderRight: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'var(--shell)', borderRight: '1px solid var(--shell-rule)' }}
       >
         {/* Brand */}
-        <div style={{ padding: '16px 14px 13px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+        <div style={{ padding: '16px 14px 13px', borderBottom: '1px solid var(--shell-rule)' }}>
           <BrandMark theme="dark" compact />
         </div>
 
@@ -283,7 +283,7 @@ export default function AppLayout({ children }) {
             label="Clubhouse"
             path="/clubhouse"
             active={location.pathname.startsWith('/clubhouse') && !location.search.includes('tab=frontrow')}
-            dotColor="rgba(255,255,255,.55)"
+            dotColor="var(--on-shell-dim)"
             badge={unreadCount}
           />
           <NavItem
@@ -314,18 +314,18 @@ export default function AppLayout({ children }) {
             label="Settings"
             path="/settings"
             active={location.pathname === '/settings'}
-            dotColor="rgba(255,255,255,.35)"
+            dotColor="var(--on-shell-faint)"
           />
         </div>
 
         {/* Footer — username */}
-        <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', gap: 9 }}>
-          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 10, color: '#fff', flexShrink: 0 }}>
+        <div style={{ padding: '10px 12px', borderTop: '1px solid var(--shell-rule)', display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: '#fff', flexShrink: 0 }}>
             {username ? username[0].toUpperCase() : 'M'}
           </div>
           <div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.68)', fontWeight: 600 }}>{username ?? 'Manager'}</div>
-            <div style={{ ...MONO_STYLE, fontSize: 7.5, letterSpacing: '0.06em', color: 'rgba(255,255,255,.26)' }}>Multi-sport</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell-mid)', fontWeight: 600 }}>{username ?? 'Manager'}</div>
+            <div style={{ ...MONO_STYLE, fontSize: 'var(--fs-micro)', letterSpacing: '0.06em', color: 'var(--on-shell-faint)' }}>Multi-sport</div>
           </div>
         </div>
       </nav>
@@ -356,13 +356,13 @@ export default function AppLayout({ children }) {
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--paper)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--cyan)'}
             >
-              <span style={{ fontSize: '16px' }}>←</span>
-              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 'var(--fs-body-lg)' }}>←</span>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Back
               </span>
             </button>
           ) : username ? (
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase' }}>
               {username}
             </div>
           ) : (
@@ -371,7 +371,7 @@ export default function AppLayout({ children }) {
           <Link
             to="/settings"
             aria-label="Settings"
-            style={{ color: 'var(--mute)', fontSize: '18px', padding: '8px', lineHeight: 1 }}
+            style={{ color: 'var(--mute)', fontSize: 'var(--fs-heading)', padding: '8px', lineHeight: 1 }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--cyan)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'var(--mute)'}
           >
@@ -415,7 +415,7 @@ export default function AppLayout({ children }) {
           background: 'var(--shell)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          borderTop: '1px solid rgba(255,255,255,0.07)',
+          borderTop: '1px solid var(--shell-rule)',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
@@ -449,7 +449,7 @@ export default function AppLayout({ children }) {
 
                 <span style={{
                   fontFamily:    'JetBrains Mono, monospace',
-                  fontSize:      '10px',
+                  fontSize: 'var(--fs-micro)',
                   letterSpacing: '0.15em',
                   fontWeight:    600,
                   lineHeight:    1,
@@ -469,7 +469,7 @@ export default function AppLayout({ children }) {
                 {key === 'clubhouse' && unreadCount > 0 && (
                   <div
                     className="absolute top-1.5 right-[calc(50%-18px)] flex items-center justify-center rounded-full"
-                    style={{ minWidth: 14, height: 14, background: 'var(--danger)', padding: '0 3px', fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fontWeight: 700, color: '#fff' }}
+                    style={{ minWidth: 14, height: 14, background: 'var(--danger)', padding: '0 3px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, color: '#fff' }}
                   >
                     {unreadCount > 99 ? '99' : unreadCount}
                   </div>

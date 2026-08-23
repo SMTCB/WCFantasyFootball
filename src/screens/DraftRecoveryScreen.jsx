@@ -331,7 +331,7 @@ export default function DraftRecoveryScreen() {
                 : ' — strict no-repeat'}
             </span>
           </div>
-          <span style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px' }}>
+          <span style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}>
             {relaxation.availablePool} available
           </span>
         </div>

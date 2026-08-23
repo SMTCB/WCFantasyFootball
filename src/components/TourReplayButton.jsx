@@ -50,7 +50,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
         border:        '1px solid rgba(224,168,0,0.6)',
         color:         'var(--gold)',
         fontFamily:    MONO,
-        fontSize:      11,
+        fontSize: 'var(--fs-micro)',
         fontWeight:    700,
         display:       'flex',
         alignItems:    'center',
@@ -62,7 +62,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
       {/* Label */}
       <span style={{
         fontFamily:    MONO,
-        fontSize:      9,
+        fontSize: 'var(--fs-micro)',
         letterSpacing: '.2em',
         color:         'var(--gold)',
         fontWeight:    600,

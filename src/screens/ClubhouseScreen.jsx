@@ -61,24 +61,24 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', minHeight: '60vh' }}>
       <div style={{ maxWidth: 560, textAlign: 'center' }}>
-        <div style={{ ...MONO, fontSize: 10.5, letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 14 }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 14 }}>
           Welcome to Frontrow
         </div>
-        <h1 style={{ ...HEAD, fontSize: 26, color: 'var(--paper)', letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 14px' }}>
+        <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--paper)', letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 14px' }}>
           Every game you play lives in one room.
         </h1>
-        <p style={{ ...BODY, fontSize: 14.5, color: 'var(--mute)', lineHeight: 1.6, margin: '0 0 28px' }}>
+        <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)', lineHeight: 1.6, margin: '0 0 28px' }}>
           Create a Clubhouse for your group, or join one with an invite code — football leagues, F1 paddocks and tennis boxes all show up inside it.
         </p>
 
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', textAlign: 'left' }}>
           {/* Create — primary, dark shell fill */}
           <div style={{ flex: '1 1 240px', background: 'var(--shell)', border: '1px solid var(--shell)', borderRadius: 8, padding: '20px 18px', color: '#fff' }}>
-            <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8 }}>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginBottom: 8 }}>
               Start fresh
             </div>
-            <div style={{ ...HEAD, fontSize: 15, marginBottom: 6 }}>Create a Clubhouse</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 14 }}>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', marginBottom: 6 }}>Create a Clubhouse</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)', marginBottom: 14 }}>
               Name it, invite your group, add competitions as you go
             </div>
 
@@ -90,13 +90,13 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. The Friday Night Crew"
                   maxLength={40}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, ...BODY, fontSize: 14, color: '#fff', background: 'rgba(255,255,255,0.08)', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: '#fff', background: 'var(--shell-fill-strong)', outline: 'none', boxSizing: 'border-box' }}
                 />
-                {createErr && <div style={{ ...MONO, fontSize: 10.5, color: '#FF8A8A' }}>{createErr}</div>}
+                {createErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: '#FF8A8A' }}>{createErr}</div>}
                 <button
                   type="submit"
                   disabled={busy === 'create' || !name.trim()}
-                  style={{ display: 'block', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
+                  style={{ display: 'block', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
                 >
                   {busy === 'create' ? 'Creating…' : 'Create Clubhouse'}
                 </button>
@@ -104,7 +104,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
             ) : (
               <button
                 onClick={() => setCreating(true)}
-                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Create Clubhouse
               </button>
@@ -113,23 +113,23 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
 
           {/* Join — secondary, always-visible code input */}
           <div style={{ flex: '1 1 240px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '20px 18px' }}>
-            <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
               Have a code?
             </div>
-            <div style={{ ...HEAD, fontSize: 15, color: 'var(--paper)', marginBottom: 6 }}>Join with an invite</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 6 }}>Join with an invite</div>
             <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
               <input
                 value={code}
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="FK-XXXXX"
                 maxLength={8}
-                style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 6, ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
               />
-              {joinErr && <div style={{ ...MONO, fontSize: 10.5, color: 'var(--danger)' }}>{joinErr}</div>}
+              {joinErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>{joinErr}</div>}
               <button
                 type="submit"
                 disabled={busy === 'join' || code.trim().length < 6}
-                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
+                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
               >
                 {busy === 'join' ? 'Joining…' : 'Join Clubhouse'}
               </button>
@@ -152,14 +152,14 @@ function ShortcutCard({ eyebrow, value, sublabel, onClick }) {
         padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4,
       }}
     >
-      <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '0.14em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', textTransform: 'uppercase' }}>
         {eyebrow}
       </div>
-      <div style={{ ...HEAD, fontSize: 15, color: 'var(--paper)', lineHeight: 1.1 }}>
+      <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.1 }}>
         {value}
       </div>
       {sublabel && (
-        <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)' }}>{sublabel}</div>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{sublabel}</div>
       )}
     </button>
   );
@@ -175,7 +175,7 @@ function AllCompetitions({ competitions, onEnter }) {
   if (allComps.length === 0) return null;
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
+      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
         COMPETITIONS
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
@@ -196,12 +196,12 @@ function AllCompetitions({ competitions, onEnter }) {
               <div style={{ padding: '13px 15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                    <div style={{ ...HEAD, fontSize: 14, color: 'var(--paper)', lineHeight: 1.25 }}>{item.name}</div>
+                    <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.25 }}>{item.name}</div>
                     {item.archived && <ArchivedBadge />}
                   </div>
                   <span style={{
                     flexShrink: 0,
-                    ...MONO, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em',
+                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em',
                     color: meta.color,
                     background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
                     padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase',
@@ -210,12 +210,12 @@ function AllCompetitions({ competitions, onEnter }) {
                   </span>
                 </div>
                 {item.format && (
-                  <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                     {item.format}
                   </div>
                 )}
                 <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-                  <span style={{ ...MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '0.08em' }}>ENTER →</span>
+                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>ENTER →</span>
                 </div>
               </div>
             </button>
@@ -259,17 +259,17 @@ function FeedEntry({ entry, onEnter }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: typeColor }}>{typeLabel}</span>
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', color: typeColor }}>{typeLabel}</span>
           {entry.league_name && (
-            <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.08em' }}>{entry.league_name}</span>
+            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>{entry.league_name}</span>
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-          <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>{ago}</span>
-          {clickable && <span style={{ ...MONO, fontSize: 9, color: 'var(--accent)', letterSpacing: '0.08em' }}>→</span>}
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>{ago}</span>
+          {clickable && <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '0.08em' }}>→</span>}
         </div>
       </div>
-      <div style={{ ...BODY, fontSize: 13, color: 'var(--paper)', lineHeight: 1.4 }}>{entry.headline}</div>
+      <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4 }}>{entry.headline}</div>
     </div>
   );
 }
@@ -291,7 +291,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
 
   if (members.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '48px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
+      <div style={{ textAlign: 'center', padding: '48px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
         No members yet.
       </div>
     );
@@ -310,18 +310,18 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, flexWrap: 'wrap' }}
           >
             <div style={{ width: 32, height: 32, borderRadius: '50%', background: m.role === 'owner' ? 'var(--accent)' : 'var(--elev)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: m.role === 'owner' ? 'var(--on-shell)' : 'var(--paper)' }}>
+              <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: m.role === 'owner' ? 'var(--on-shell)' : 'var(--paper)' }}>
                 {(m.username?.[0] ?? '?').toUpperCase()}
               </span>
             </div>
             <div style={{ flex: 1, minWidth: 120 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ ...MONO, fontSize: 12, color: 'var(--paper)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {m.username}
                 </span>
                 {m.role === 'owner' && (
                   <span style={{
-                    ...MONO, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)',
+                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)',
                     border: '1px solid var(--gold)', borderRadius: 4, padding: '1px 5px', flexShrink: 0,
                   }}>
                     OWNER
@@ -329,7 +329,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
                 )}
               </div>
               {joinDate && (
-                <div style={{ ...MONO, fontSize: 9.5, color: 'var(--mute)', marginTop: 2 }}>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>
                   Joined {joinDate}
                 </div>
               )}
@@ -337,8 +337,8 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
             <div style={{ display: 'flex', gap: 14, flexShrink: 0 }}>
               {meta && (
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ ...MONO, fontSize: 12, fontWeight: 700, color: 'var(--paper)' }}>{meta.trophy_count}</div>
-                  <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '0.06em' }}>TROPHIES</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)' }}>{meta.trophy_count}</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.06em' }}>TROPHIES</div>
                 </div>
               )}
             </div>
@@ -346,7 +346,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
               <button
                 onClick={() => handleKick(m.user_id)}
                 disabled={kicking === m.user_id}
-                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
+                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
               >
                 {kicking === m.user_id ? '…' : 'KICK'}
               </button>
@@ -472,7 +472,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
   }
 
   const sectionLabel = (text) => (
-    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.16em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10, marginTop: 20 }}>
+    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.16em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10, marginTop: 20 }}>
       {text}
     </div>
   );
@@ -480,8 +480,8 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
   const toggle = (label, sublabel, value, onToggle) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
       <div>
-        <div style={{ ...MONO, fontSize: 12, color: 'var(--paper)', fontWeight: 600 }}>{label}</div>
-        {sublabel && <div style={{ ...BODY, fontSize: 12, color: 'var(--mute)', marginTop: 2 }}>{sublabel}</div>}
+        <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)', fontWeight: 600 }}>{label}</div>
+        {sublabel && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>{sublabel}</div>}
       </div>
       <button
         onClick={onToggle}
@@ -511,17 +511,17 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
           value={name}
           onChange={e => setName(e.target.value)}
           maxLength={40}
-          style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 14, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+          style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
         />
         <button
           type="submit"
           disabled={savingName || !name.trim() || name.trim() === circle.name}
-          style={{ padding: '10px 16px', background: savingName || !name.trim() || name.trim() === circle.name ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          style={{ padding: '10px 16px', background: savingName || !name.trim() || name.trim() === circle.name ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
           {savingName ? '…' : 'SAVE'}
         </button>
       </form>
-      {nameMsg && <div style={{ ...MONO, fontSize: 10, color: nameMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 6 }}>{nameMsg}</div>}
+      {nameMsg && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: nameMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 6 }}>{nameMsg}</div>}
 
       {sectionLabel('Visibility & Features')}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -534,12 +534,12 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
         <button
           onClick={loadLinkableLeagues}
           disabled={loadingLeagues}
-          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingLeagues ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 10, letterSpacing: '0.1em', cursor: 'pointer' }}
+          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingLeagues ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', cursor: 'pointer' }}
         >
           {loadingLeagues ? 'LOADING…' : '+ LINK AN EXISTING LEAGUE →'}
         </button>
       ) : linkableLeagues.length === 0 ? (
-        <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
           All your leagues are already linked — or you are not a commissioner of any unlinked league.
         </div>
       ) : (
@@ -547,13 +547,13 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
           {linkableLeagues.map(l => (
             <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
               <div>
-                <div style={{ ...HEAD, fontSize: 13, color: 'var(--paper)' }}>{l.name}</div>
-                {l.format && <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{l.format}</div>}
+                <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{l.name}</div>
+                {l.format && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{l.format}</div>}
               </div>
               <button
                 onClick={() => handleLink(l.id)}
                 disabled={linkingId === l.id}
-                style={{ padding: '7px 14px', background: linkingId === l.id ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                style={{ padding: '7px 14px', background: linkingId === l.id ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
                 {linkingId === l.id ? '…' : 'LINK'}
               </button>
@@ -561,14 +561,14 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
           ))}
         </div>
       )}
-      {linkMsg && <div style={{ ...MONO, fontSize: 10, color: linkMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 8 }}>{linkMsg}</div>}
+      {linkMsg && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: linkMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 8 }}>{linkMsg}</div>}
 
       {sectionLabel('Competition Admins')}
       {competitionAdmins === null ? (
         <button
           onClick={loadCompetitionAdmins}
           disabled={loadingAdmins}
-          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingAdmins ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 10, letterSpacing: '0.1em', cursor: 'pointer' }}
+          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingAdmins ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', cursor: 'pointer' }}
         >
           {loadingAdmins ? 'LOADING…' : '+ MANAGE COMPETITION ADMINS →'}
         </button>
@@ -580,23 +580,23 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
             { label: 'Tennis Boxes', type: 'player_box',  list: competitionAdmins.tennis ?? [] },
           ].map(group => group.list.length === 0 ? null : (
             <div key={group.type}>
-              <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em', marginBottom: 6, textTransform: 'uppercase' }}>{group.label}</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em', marginBottom: 6, textTransform: 'uppercase' }}>{group.label}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {group.list.map(comp => (
                   <div key={comp.id} style={{ padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                      <div style={{ ...HEAD, fontSize: 13, color: 'var(--paper)' }}>{comp.name}</div>
-                      <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', whiteSpace: 'nowrap' }}>Creator: {comp.creator_username ?? '—'}</div>
+                      <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{comp.name}</div>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>Creator: {comp.creator_username ?? '—'}</div>
                     </div>
                     {comp.assigned_admins.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                         {comp.assigned_admins.map(a => (
-                          <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: 'var(--elev)', borderRadius: 6, ...MONO, fontSize: 10, color: 'var(--paper)' }}>
+                          <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: 'var(--elev)', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>
                             {a.username}
                             <button
                               onClick={() => handleRemoveAdmin(group.type, comp.id, a.user_id)}
                               disabled={pendingKey === `remove-${comp.id}-${a.user_id}`}
-                              style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}
+                              style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 0, fontSize: 'var(--fs-label)', lineHeight: 1 }}
                             >
                               ×
                             </button>
@@ -608,7 +608,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
                       <select
                         value={assignPicks[comp.id] ?? ''}
                         onChange={e => setAssignPicks(prev => ({ ...prev, [comp.id]: e.target.value }))}
-                        style={{ flex: 1, padding: '6px 10px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 12, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                        style={{ flex: 1, padding: '6px 10px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
                       >
                         <option value="">Assign admin…</option>
                         {(members ?? [])
@@ -620,7 +620,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
                       <button
                         onClick={() => handleAssignAdmin(group.type, comp.id)}
                         disabled={!assignPicks[comp.id] || pendingKey === `assign-${comp.id}`}
-                        style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         {pendingKey === `assign-${comp.id}` ? '…' : 'ADD'}
                       </button>
@@ -631,13 +631,13 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
             </div>
           ))}
           {(competitionAdmins.leagues ?? []).length === 0 && (competitionAdmins.f1 ?? []).length === 0 && (competitionAdmins.tennis ?? []).length === 0 && (
-            <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
               No competitions linked to this Clubhouse yet.
             </div>
           )}
         </div>
       )}
-      {adminMsg && <div style={{ ...MONO, fontSize: 10, color: 'var(--danger)', marginTop: 8 }}>{adminMsg}</div>}
+      {adminMsg && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 8 }}>{adminMsg}</div>}
     </div>
   );
 }
@@ -675,21 +675,21 @@ function FindTab({ searchClubhouses, joinCircleByCode }) {
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search by name…"
-          style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 14, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+          style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
         />
         <button
           type="submit"
           disabled={busy || query.trim().length < 2}
-          style={{ padding: '10px 16px', background: busy || query.trim().length < 2 ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          style={{ padding: '10px 16px', background: busy || query.trim().length < 2 ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
           {busy ? '…' : 'SEARCH'}
         </button>
       </form>
 
-      {err && <div style={{ ...MONO, fontSize: 11, color: 'var(--danger)', marginBottom: 12 }}>{err}</div>}
+      {err && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginBottom: 12 }}>{err}</div>}
 
       {results !== null && results.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
           No public Clubhouses found for "{query}".
         </div>
       )}
@@ -699,18 +699,18 @@ function FindTab({ searchClubhouses, joinCircleByCode }) {
           {results.map(r => (
             <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
               <div>
-                <div style={{ ...HEAD, fontSize: 14, color: 'var(--paper)' }}>{r.name}</div>
-                <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.08em', marginTop: 2 }}>
+                <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{r.name}</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', marginTop: 2 }}>
                   {r.member_count} {r.member_count === 1 ? 'member' : 'members'}
                 </div>
               </div>
               {r.already_member ? (
-                <span style={{ ...MONO, fontSize: 9, color: 'var(--positive)', fontWeight: 700, letterSpacing: '0.1em' }}>JOINED ✓</span>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', fontWeight: 700, letterSpacing: '0.1em' }}>JOINED ✓</span>
               ) : (
                 <button
                   onClick={() => handleJoin(r.invite_code)}
                   disabled={joining === r.invite_code}
-                  style={{ padding: '8px 14px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  style={{ padding: '8px 14px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
                 >
                   {joining === r.invite_code ? 'JOINING…' : 'JOIN'}
                 </button>
@@ -721,7 +721,7 @@ function FindTab({ searchClubhouses, joinCircleByCode }) {
       )}
 
       {results === null && !busy && (
-        <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 11, color: 'var(--mute)', lineHeight: 1.8 }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.8 }}>
           Search for public Clubhouses by name.<br />
           Private Clubhouses are invite-code only.
         </div>
@@ -741,7 +741,7 @@ const NOTIF_TYPE_META = {
 function NotifList({ notifications, onMarkRead, onNavigate, onNavigated }) {
   if (notifications.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
+      <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
         No notifications yet.
       </div>
     );
@@ -771,10 +771,10 @@ function NotifList({ notifications, onMarkRead, onNavigate, onNavigated }) {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
-            <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
-            <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
+            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
+            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
           </div>
-          <div style={{ ...BODY, fontSize: 12.5, color: 'var(--paper)', lineHeight: 1.4 }}>
+          <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>
             {n.payload?.headline ?? n.payload?.preview ?? n.type}
           </div>
         </div>
@@ -793,18 +793,18 @@ function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNaviga
         title="Notifications"
         style={{
           position: 'relative', width: 32, height: 32, borderRadius: 6,
-          background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
+          background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-strong)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
         {/* Two-tone tray/inbox glyph — CSS-built, not an emoji */}
-        <div style={{ width: 14, height: 11, border: '1.5px solid rgba(255,255,255,0.7)', borderTop: 'none', borderRadius: '0 0 2px 2px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: -1, left: -1.5, right: -1.5, height: 1.5, background: 'rgba(255,255,255,0.7)' }} />
+        <div style={{ width: 14, height: 11, border: '1.5px solid var(--shell-rule-emphasis)', borderTop: 'none', borderRadius: '0 0 2px 2px', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -1, left: -1.5, right: -1.5, height: 1.5, background: 'var(--shell-fill-active)' }} />
         </div>
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4, minWidth: 15, height: 15, borderRadius: 100,
-            background: 'var(--danger)', color: '#fff', ...MONO, fontSize: 8.5, fontWeight: 700,
+            background: 'var(--danger)', color: '#fff', ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
           }}>
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -818,16 +818,16 @@ function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNaviga
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
             <button
               onClick={() => setOpen(false)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--paper)', fontSize: 18, cursor: 'pointer', padding: '2px 4px 2px 0', lineHeight: 1 }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--paper)', fontSize: 'var(--fs-heading)', cursor: 'pointer', padding: '2px 4px 2px 0', lineHeight: 1 }}
               aria-label="Back"
             >
               ←
             </button>
-            <span style={{ ...HEAD, fontSize: 15, color: 'var(--paper)', flex: 1 }}>Notifications</span>
+            <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1 }}>Notifications</span>
             {unreadCount > 0 && (
               <button
                 onClick={onMarkAll}
-                style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
               >
                 MARK ALL READ
               </button>
@@ -848,11 +848,11 @@ function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNaviga
             boxShadow: '0 8px 28px rgba(0,0,0,0.18)', overflow: 'hidden',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid var(--rule)' }}>
-              <span style={{ ...HEAD, fontSize: 13, color: 'var(--paper)' }}>Notifications</span>
+              <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Notifications</span>
               {unreadCount > 0 && (
                 <button
                   onClick={onMarkAll}
-                  style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
                 >
                   MARK ALL READ
                 </button>
@@ -970,13 +970,13 @@ export default function ClubhouseScreen() {
 
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '20px 20px 18px' }}>
-        <div style={{ ...MONO, fontSize: 10, letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 8 }}>
           🏠 THE CLUBHOUSE
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           {/* Left: name + member avatars */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ ...HEAD, fontSize: 24, color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
+            <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
               {activeCircle ? activeCircle.name.toUpperCase() : 'CLUBHOUSE'}
             </h1>
             {activeCircle && (
@@ -988,7 +988,7 @@ export default function ClubhouseScreen() {
                       width: 24, height: 24, borderRadius: '50%',
                       background: AVATAR_COLORS[i % AVATAR_COLORS.length],
                       display: 'grid', placeItems: 'center',
-                      fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: '#fff',
+                      fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: '#fff',
                       border: '2px solid var(--shell)',
                       marginRight: -6, position: 'relative', zIndex: 5 - i,
                       flexShrink: 0,
@@ -1000,16 +1000,16 @@ export default function ClubhouseScreen() {
                 {members.length > 5 && (
                   <div style={{
                     width: 24, height: 24, borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.15)',
+                    background: 'var(--shell-fill-active)',
                     display: 'grid', placeItems: 'center',
-                    ...MONO, fontSize: 7.5, color: 'rgba(255,255,255,0.55)',
+                    ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)',
                     border: '2px solid var(--shell)',
                     marginRight: -6, zIndex: 0, flexShrink: 0,
                   }}>
                     +{members.length - 5}
                   </div>
                 )}
-                <span style={{ ...MONO, fontSize: 8, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.45)', marginLeft: 18, flexShrink: 0 }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--on-shell-dim)', marginLeft: 18, flexShrink: 0 }}>
                   {members.length} {members.length === 1 ? 'MEMBER' : 'MEMBERS'}
                   {activeCircle.is_public && <span style={{ color: 'var(--positive)', marginLeft: 6 }}>· PUBLIC</span>}
                 </span>
@@ -1023,12 +1023,12 @@ export default function ClubhouseScreen() {
               {activeCircle && totalComps > 0 && (
                 <div style={{ display: 'flex', gap: 20 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
-                    <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>SPORTS</div>
+                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)', marginTop: 2 }}>SPORTS</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
-                    <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>COMPETITIONS</div>
+                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)', marginTop: 2 }}>COMPETITIONS</div>
                   </div>
                 </div>
               )}
@@ -1036,12 +1036,12 @@ export default function ClubhouseScreen() {
                 <button
                   onClick={copyCode}
                   title="Copy invite code"
-                  style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
+                  style={{ padding: '6px 12px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-strong)', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
                 >
-                  <span style={{ ...MONO, fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', color: '#fff' }}>
+                  <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, letterSpacing: '0.2em', color: '#fff' }}>
                     {activeCircle.invite_code}
                   </span>
-                  <span style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.1em', color: copied ? 'var(--positive)' : 'rgba(255,255,255,0.4)' }}>
+                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: copied ? 'var(--positive)' : 'var(--on-shell-dim)' }}>
                     {copied ? 'COPIED ✓' : 'COPY CODE'}
                   </span>
                 </button>
@@ -1071,7 +1071,7 @@ export default function ClubhouseScreen() {
                 borderColor: c.id === activeCircleId ? 'var(--accent)' : 'var(--rule)',
                 background: c.id === activeCircleId ? 'var(--accent-bg)' : 'transparent',
                 color: c.id === activeCircleId ? 'var(--accent)' : 'var(--mute)',
-                ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap',
+                ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
               {c.name}
@@ -1081,7 +1081,7 @@ export default function ClubhouseScreen() {
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, ...MONO, fontSize: 11, color: 'var(--mute)' }}>
+        <div style={{ textAlign: 'center', padding: 60, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
           Loading…
         </div>
       ) : myCircles.length === 0 ? (
@@ -1149,17 +1149,17 @@ export default function ClubhouseScreen() {
                 {/* Empty state — no competitions yet */}
                 {competitions.football.length === 0 && competitions.f1.length === 0 && competitions.tennis.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '32px 0 24px' }}>
-                    <div style={{ fontSize: 32, marginBottom: 12 }}>🏟️</div>
-                    <p style={{ ...HEAD, fontSize: 16, color: 'var(--paper)', margin: '0 0 8px' }}>
+                    <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🏟️</div>
+                    <p style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', margin: '0 0 8px' }}>
                       No competitions yet
                     </p>
-                    <p style={{ ...BODY, fontSize: 13, color: 'var(--mute)', margin: '0 0 20px' }}>
+                    <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 20px' }}>
                       Create a Football league, F1 Paddock, or Tennis Player Box to get started.<br />
                       You can also chat and bet without playing.
                     </p>
                     <button
                       onClick={() => navigate('/league')}
-                      style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
+                      style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
                     >
                       + CREATE A COMPETITION →
                     </button>
@@ -1174,19 +1174,19 @@ export default function ClubhouseScreen() {
                     background: '#F2EEE5', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 4,
                   }}
                 >
-                  <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '0.14em', color: '#8A8368', textTransform: 'uppercase' }}>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: '#8A8368', textTransform: 'uppercase' }}>
                     THE FRONTROW{frontpage.edition ? ` · EDITION #${frontpage.edition.edition_number}` : ''}
                   </div>
-                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 15, color: '#1A1A18', fontStyle: frontpage.edition ? 'normal' : 'italic' }}>
+                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 'var(--fs-body)', color: '#1A1A18', fontStyle: frontpage.edition ? 'normal' : 'italic' }}>
                     {frontpage.edition?.headline ?? 'No edition published yet today.'}
                   </div>
-                  <div style={{ ...MONO, fontSize: 10, color: '#8A8368', marginTop: 2 }}>READ THE FRONTROW →</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: '#8A8368', marginTop: 2 }}>READ THE FRONTROW →</div>
                 </button>
 
                 {/* Activity feed */}
                 {feed.length > 0 && (
                   <div>
-                    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
                       Activity
                     </div>
                     {feed.map(entry => (
@@ -1196,7 +1196,7 @@ export default function ClubhouseScreen() {
                 )}
 
                 {feed.length === 0 && totalComps > 0 && (
-                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
                     Activity will appear here once competitions start.
                   </div>
                 )}

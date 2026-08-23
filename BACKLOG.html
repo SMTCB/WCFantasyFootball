@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>186</strong><span>closed</span></div>
+      <div class="total-pill"><strong>187</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (108)</span>
+    <span class="chip" data-filter-kind="done">Shipped (109)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">186</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">187</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">108</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">109</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,36 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">108</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">109</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ design audit b1/b2 — white-alpha token sweep + type ramp (2026-08-23) — no pr yet (pending) 
+
+**context**: the two remaining p1 actions from the 2026-08 design/ux audit, deprioritized after the p0 pass (see the &quot;still open&quot; note on the a1–a3 entry below). full spec, rationale, and finding ids cleared are in `docs/design/design_audit_2026-08.html` (act cards b1/b2) — this entry is deliberately a pointer, not a duplicate. p2-tier audit items, b3&#x27;s remaining raw-button sweep, and b4&#x27;s `warn`→`error` lint-severity flip are explicitly deferred to a later session.
+
+- **b1 — white-alpha token sweep**: consolidated every ad-hoc `rgba(255,255,255,…)` literal in `src/` onto the new `--shell-rule*`/`--shell-fill*`/`--on-shell*` token family in `src/index.css`. found and fixed a classifier bug partway through (a bulk-replacement script was attributing a token to the nearest-matching keyword *anywhere* in the line prefix instead of the *nearest preceding* one, misrouting some border/background/text properties on lines that mix several) — rewrote it to pick by proximity, reverted and re-ran the full sweep, then verified with three targeted greps confirming no property ever received a token from the wrong family. zero raw white-alpha literals remain in `src/` js/jsx (only the token definitions themselves, in `index.css`).
+- **b2 — type ramp**: published the audit&#x27;s 7-step scale (`--fs-display` … `--fs-micro`, `src/index.css`) and migrated every literal `fontsize` declaration in `src/` onto it — both the unitless-number and quoted-`&#x27;npx&#x27;` forms the `eslint.config.js` rule flags (2,144 declarations total, well above the audit&#x27;s original 474-declaration estimate — the codebase has grown substantially since the audit was written). mapped each value to the nearest step using the audit&#x27;s explicit absorption list where a value is named there, nearest-numeric-distance otherwise. the 13px/14px boundary is genuinely ambiguous (mono-family labels round down to `label`, everything else roun" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Design Audit B1/B2 — white-alpha token sweep + type ramp</h3>
+        <p class="card-summary">Context : the two remaining P1 actions from the 2026-08 design/UX audit, deprioritized after the P0 pass (see the "Still open" note on the A1–A3 entry below). Full spec,…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-23</span><span class="foot-refs">no PR yet (pending)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Design Audit B1/B2 — white-alpha token sweep + type ramp</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : the two remaining P1 actions from the 2026-08 design/UX audit, deprioritized after the P0 pass (see the "Still open" note on the A1–A3 entry below). Full spec,…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · no PR yet (pending)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-23</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: the two remaining P1 actions from the 2026-08 design/UX audit, deprioritized after the P0 pass (see the "Still open" note on the A1–A3 entry below). Full spec, rationale, and finding IDs cleared are in <code>docs/design/DESIGN_AUDIT_2026-08.html</code> (act cards B1/B2) — this entry is deliberately a pointer, not a duplicate. P2-tier audit items, B3's remaining raw-button sweep, and B4's <code>warn</code>→<code>error</code> lint-severity flip are explicitly deferred to a later session.</p>
+<ul>
+<li><strong>B1 — white-alpha token sweep</strong>: consolidated every ad-hoc <code>rgba(255,255,255,…)</code> literal in <code>src/</code> onto the new <code>--shell-rule*</code>/<code>--shell-fill*</code>/<code>--on-shell*</code> token family in <code>src/index.css</code>. Found and fixed a classifier bug partway through (a bulk-replacement script was attributing a token to the nearest-matching keyword *anywhere* in the line prefix instead of the *nearest preceding* one, misrouting some border/background/text properties on lines that mix several) — rewrote it to pick by proximity, reverted and re-ran the full sweep, then verified with three targeted greps confirming no property ever received a token from the wrong family. Zero raw white-alpha literals remain in <code>src/</code> JS/JSX (only the token definitions themselves, in <code>index.css</code>).</li>
+<li><strong>B2 — type ramp</strong>: published the audit's 7-step scale (<code>--fs-display</code> … <code>--fs-micro</code>, <code>src/index.css</code>) and migrated every literal <code>fontSize</code> declaration in <code>src/</code> onto it — both the unitless-number and quoted-<code>'Npx'</code> forms the <code>eslint.config.js</code> rule flags (2,144 declarations total, well above the audit's original 474-declaration estimate — the codebase has grown substantially since the audit was written). Mapped each value to the nearest step using the audit's explicit absorption list where a value is named there, nearest-numeric-distance otherwise. The 13px/14px boundary is genuinely ambiguous (mono-family labels round down to <code>label</code>, everything else rounds up to <code>body</code>) — built a same-line/still-open-object mono detector, learning directly from the B1 classifier bug (a same-line-only version over-attributed <code>fontFamily</code> from an already-closed sibling element on 2 of 296 ambiguous declarations; fixed by stopping the lookback at any intervening <code>}}</code>), and hand-verified all 19 mono→<code>label</code> decisions before running the full sweep. Ternary/computed <code>fontSize</code> (e.g. <code>fontSize: isMobile ? 12 : 13</code>) is intentionally out of scope — the eslint rule's AST selector doesn't flag it either, so it wasn't part of what was measured or authorized.</li>
+</ul>
+<p><strong>Verification</strong>: <code>npm run lint</code> — 0 errors, 0 <code>fontSize</code>/white-alpha warnings (624 pre-existing raw-hex-color warnings remain, unrelated, B4 scope). <code>npm run build</code> — clean, no Rolldown TDZ regression. Not exercised in a live browser session this session (no visual/screenshot tooling available in this environment) — verification is lint + build + targeted grep audits confirming no cross-category token misattribution.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ design audit p0s (a1–a3) — auth fields, `--mute` contrast, button states fixed (2026-08-23) — pr #827 
 
 **context**: the previous session delivered and merged a full design/ux audit (`docs/design/design_audit_2026-08.html`, pr #824) covering 14 findings across p0/p1/p2 tiers. the user asked to tackle just the three p0 (critical-tier) actions, ~1 day estimated effort, clearing findings 1, 2, 3, 7, and 14.
@@ -1208,7 +1236,7 @@
 </ul>
 <p><strong>Verification</strong>: <code>npm run lint</code> (0 errors), <code>npm run build</code> (0 errors, no Rolldown TDZ regression), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed). Live-browser verification in the dev server: A1 field computed styles (bg <code>#EDEAE2</code>, border <code>#E2DDD5</code>, radius <code>6px</code>, height ≥44px), label font/color, a real keyboard <code>Tab</code> press correctly triggering the cyan <code>:focus-visible</code> ring (confirmed via <code>document.activeElement</code> + <code>matchesFocusVisible</code>, not a JS-driven <code>.focus()</code> call — that doesn't trigger real <code>:focus-visible</code>), and all four A3 button-state fixes confirmed via the parsed live CSSOM (<code>document.styleSheets</code> rule text), which showed each declared value matching its target hex exactly.</p>
 <p><strong>Not in scope, noted but not fixed</strong>: <code>MarketScreen.jsx</code>'s main player-search input (lines ~942–951) has the same invisible-white-alpha-on-white-card bug that AuthScreen had — not yet added to BACKLOG as its own item.</p>
-<p><strong>Still open</strong>: P1 items B1–B4 from the same audit remain deprioritized/paused per the user's earlier direction — not abandoned, can resume on request.</p>
+<p><strong>Still open</strong>: B1 and B2 shipped 2026-08-23 — see the "✅ Design Audit B1/B2" entry above. B3 (raw-button 44px sweep) and B4 (lint severity <code>warn</code>→<code>error</code>) remain deprioritized/paused per the user's earlier direction — not abandoned, can resume on request.</p>
 <hr></dd></div>
       </dl></template>
       </article>

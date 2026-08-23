@@ -81,7 +81,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--elev)', color: 'var(--mute)', fontSize: '16px' }}
+            style={{ background: 'var(--elev)', color: 'var(--mute)', fontSize: 'var(--fs-body-lg)' }}
           >
             ✕
           </button>

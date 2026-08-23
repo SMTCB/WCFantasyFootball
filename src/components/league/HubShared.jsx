@@ -54,12 +54,12 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
             {leagueName.toUpperCase()}
           </div>
           {cupPhase && cupPhase !== 'pre_cup' && (
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
               {cupPhase.replace(/_/g, ' ').toUpperCase()}
             </span>
           )}
           {leagueMode === 'draft_h2h' && (
-            <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
           )}
           <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--mute)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
             {memberCount}M · GW{gw}
@@ -87,7 +87,7 @@ export function HubActionBar({ onManageSquad, onMarket }) {
           borderTop: 'none', borderBottom: 'none', borderLeft: 'none',
           borderRight: '1px solid var(--rule)',
           color: 'var(--purple)',
-          fontFamily: MONO, fontSize: 12, letterSpacing: '.22em',
+          fontFamily: MONO, fontSize: 'var(--fs-label)', letterSpacing: '.22em',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
         }}
       >
@@ -99,7 +99,7 @@ export function HubActionBar({ onManageSquad, onMarket }) {
         style={{
           padding: '14px 18px', background: 'transparent', border: 'none',
           color: 'var(--positive)',
-          fontFamily: MONO, fontSize: 12, letterSpacing: '.22em',
+          fontFamily: MONO, fontSize: 'var(--fs-label)', letterSpacing: '.22em',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
         }}
       >
@@ -158,15 +158,15 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
 
 // Rank trend chip (▲2 / ▼1 / =)
 export function TrendPill({ trend = 0 }) {
-  if (trend === 0) return <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 10 }}>=</span>;
+  if (trend === 0) return <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)' }}>=</span>;
   const up = trend > 0;
   return (
     <span style={{
-      fontFamily: MONO, fontSize: 10, letterSpacing: '.12em',
+      fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em',
       color: up ? 'var(--positive)' : 'var(--danger)',
       display: 'inline-flex', alignItems: 'center', gap: 3,
     }}>
-      <span style={{ fontFamily: DISPLAY, fontSize: 8 }}>{up ? '▲' : '▼'}</span>
+      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)' }}>{up ? '▲' : '▼'}</span>
       {Math.abs(trend)}
     </span>
   );
@@ -183,7 +183,7 @@ export function FormDots({ form = [] }) {
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           background: `${tone[r] || 'var(--mute)'}22`,
           border: `1px solid ${tone[r] || 'var(--mute)'}55`,
-          fontFamily: MONO, fontSize: 8, color: tone[r] || 'var(--mute)', fontWeight: 600,
+          fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tone[r] || 'var(--mute)', fontWeight: 600,
         }}>{r}</span>
       ))}
     </span>
@@ -221,8 +221,8 @@ export function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right }) {
       background: 'var(--ink-2)', flexShrink: 0,
     }}>
       <span style={{ width: 3, height: 14, background: tone, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
-      {sub && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>· {sub}</span>}
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>· {sub}</span>}
       <span style={{ flex: 1 }} />
       {right}
     </div>
@@ -232,7 +232,7 @@ export function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right }) {
 // Mini button style helper
 export const miniBtnStyle = (color) => ({
   background: 'transparent', border: `1px solid ${color}55`, color,
-  padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+  padding: '4px 8px', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
   cursor: 'pointer',
 });
 
@@ -256,13 +256,13 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
     <div style={{ padding: '10px max(18px, 4vw) 8px', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {backable ? (
-          <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>← BACK</button>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>← BACK</button>
         ) : (
           <>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>COMPETITIVE</span>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>·</span>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{memberCount}M</span>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em', marginLeft: 'auto' }}>GW {gw}</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>COMPETITIVE</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>·</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{memberCount}M</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em', marginLeft: 'auto' }}>GW {gw}</span>
           </>
         )}
         {rightSlot && <div style={{ marginLeft: 'auto' }}>{rightSlot}</div>}
@@ -273,12 +273,12 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
           {backable ? backTitle : leagueName.toUpperCase()}
         </span>
         {cupPhase && cupPhase !== 'pre_cup' && (
-          <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
             {cupPhase.replace(/_/g, ' ').toUpperCase()}
           </span>
         )}
         {leagueMode === 'draft_h2h' && (
-          <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
         )}
       </div>
     </div>
@@ -307,7 +307,7 @@ export function MobFormDots({ form = [], max = 3 }) {
         <span key={i} style={{
           width: 12, height: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           background: `${tone[f] || 'var(--mute)'}22`, border: `1px solid ${tone[f] || 'var(--mute)'}55`,
-          fontFamily: MONO, fontSize: 8, color: tone[f] || 'var(--mute)', fontWeight: 600,
+          fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tone[f] || 'var(--mute)', fontWeight: 600,
         }}>{f}</span>
       ))}
     </span>
@@ -319,8 +319,8 @@ export function MobSection({ label, sub, tone = 'var(--cyan)', right }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px 6px' }}>
       <span style={{ width: 3, height: 12, background: tone, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
-      {sub && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em' }}>· {sub}</span>}
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>· {sub}</span>}
       <span style={{ flex: 1 }} />
       {right}
     </div>

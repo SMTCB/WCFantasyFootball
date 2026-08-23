@@ -81,7 +81,7 @@ export default function PlayerRow({
       {index != null && (
         <span
           className="fk-mono shrink-0"
-          style={{ fontSize: 9, color: 'var(--mute)', width: 20, textAlign: 'right' }}
+          style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 20, textAlign: 'right' }}
         >
           #{String(index + 1).padStart(2, '0')}
         </span>
@@ -100,7 +100,7 @@ export default function PlayerRow({
             <span
               className="fk-display truncate"
               style={{
-                fontSize:    14,
+                fontSize: 'var(--fs-body)',
                 color:       isCaptain ? 'var(--gold)' : 'var(--paper)',
                 letterSpacing: '-0.01em',
               }}
@@ -111,7 +111,7 @@ export default function PlayerRow({
             {showPrice && !isDummy && player.price > 0 && (
               <span
                 className="fk-mono shrink-0"
-                style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '0.04em' }}
+                style={{ fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '0.04em' }}
               >
                 €{Number(player.price).toFixed(1)}M
               </span>
@@ -122,7 +122,7 @@ export default function PlayerRow({
             {player.isJoker && (
               <span
                 className="fk-mono shrink-0"
-                style={{ fontSize: 9, fontWeight: 800, color: 'var(--pos-gk)', border: '1px solid var(--pos-gk)', padding: '2px 6px' }}
+                style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--pos-gk)', border: '1px solid var(--pos-gk)', padding: '2px 6px' }}
               >
                 JOKER
               </span>
@@ -131,7 +131,7 @@ export default function PlayerRow({
             {isSwapTarget && (
               <span
                 className="fk-mono shrink-0"
-                style={{ fontSize: 9, fontWeight: 800, color: 'var(--positive)', border: '1px solid var(--positive)', padding: '2px 6px' }}
+                style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--positive)', border: '1px solid var(--positive)', padding: '2px 6px' }}
               >
                 SWAP
               </span>
@@ -140,7 +140,7 @@ export default function PlayerRow({
             {player.clubEliminated && (
               <span
                 className="fk-mono shrink-0"
-                style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}
+                style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}
               >
                 ELIMINATED
               </span>
@@ -150,7 +150,7 @@ export default function PlayerRow({
           {/* Metadata line — club + fixture timing for the active matchday */}
           <div
             className="fk-mono mt-0.5 flex items-center"
-            style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', gap: 6 }}
+            style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', gap: 6 }}
           >
             <span className="truncate">
               {isDummy
@@ -170,7 +170,7 @@ export default function PlayerRow({
       {showPoints && !isDummy && (
         <div
           className="fk-display shrink-0 tabular-nums"
-          style={{ fontSize: 18, color: 'var(--cyan)', letterSpacing: '-0.02em', minWidth: 28, textAlign: 'right' }}
+          style={{ fontSize: 'var(--fs-heading)', color: 'var(--cyan)', letterSpacing: '-0.02em', minWidth: 28, textAlign: 'right' }}
         >
           {Math.round(player.points ?? 0)}
         </div>

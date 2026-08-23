@@ -34,7 +34,7 @@ export default function StatusDot({ status = 'fit', showLabel = false, mobile = 
         <span
           style={{
             fontFamily:    'JetBrains Mono, monospace',
-            fontSize:      9,
+            fontSize: 'var(--fs-micro)',
             textTransform: 'uppercase',
             letterSpacing: '0.14em',
             color,

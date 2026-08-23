@@ -55,7 +55,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
         <h2
           style={{
             fontFamily: 'Archivo Black, sans-serif',
-            fontSize: 18,
+            fontSize: 'var(--fs-heading)',
             color: 'var(--paper)',
             marginBottom: 24,
             letterSpacing: '0.02em',
@@ -70,7 +70,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
               <kbd
                 style={{
                   fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 11,
+                  fontSize: 'var(--fs-micro)',
                   fontWeight: 700,
                   color: 'var(--cyan)',
                   background: 'rgba(0, 180, 216, 0.12)',
@@ -86,7 +86,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
               <span
                 style={{
                   fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 12,
+                  fontSize: 'var(--fs-label)',
                   color: 'var(--mute)',
                   flex: 1,
                   textAlign: 'left',
@@ -103,7 +103,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
             marginTop: 24,
             paddingTop: 16,
             borderTop: '1px solid var(--rule)',
-            fontSize: 11,
+            fontSize: 'var(--fs-micro)',
             color: 'var(--mute)',
             fontFamily: 'JetBrains Mono, monospace',
             lineHeight: 1.5,

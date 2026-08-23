@@ -18,7 +18,7 @@ function extractActiveCompId(pathname) {
 
 const PILL_STYLE = {
   display: 'flex', alignItems: 'center', gap: 7,
-  fontSize: 12, fontWeight: 600,
+  fontSize: 'var(--fs-label)', fontWeight: 600,
   padding: '0 10px', height: '100%',
   border: 'none', borderBottom: '2px solid transparent',
   background: 'transparent', cursor: 'pointer',
@@ -95,7 +95,7 @@ export function CompetitionTopBar({ competitions, pathname, onAdd }) {
           background: 'transparent',
           border: 'none',
           cursor: 'pointer',
-          fontSize: 16,
+          fontSize: 'var(--fs-body-lg)',
           fontWeight: 700,
           color: 'var(--mute)',
           lineHeight: 1,

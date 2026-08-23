@@ -81,7 +81,7 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
       {/* Visual drag affordance — the whole row is the grab target */}
       <span
         className="text-[var(--mute)] shrink-0 select-none"
-        style={{ fontSize: 13, lineHeight: 1, padding: '0 2px', fontWeight: 900 }}
+        style={{ fontSize: 'var(--fs-body)', lineHeight: 1, padding: '0 2px', fontWeight: 900 }}
         aria-hidden="true"
       >
         ⠿
@@ -554,7 +554,7 @@ export default function DraftScreen() {
                 : ' — strict no-repeat'}
             </span>
           </div>
-          <span style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px' }}>
+          <span style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}>
             {relaxation.availablePool} players available
           </span>
         </div>
@@ -571,7 +571,7 @@ export default function DraftScreen() {
               </span>
               <button
                 onClick={() => setShowScoringModal(true)}
-                style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                 title="Scoring overview"
               >?</button>
             </div>
@@ -636,7 +636,7 @@ export default function DraftScreen() {
                     className="flex items-center gap-2 bg-[var(--elev)] border border-[var(--rule)] rounded-sm px-2 py-2 shadow-xl"
                     style={{ width: '320px', maxWidth: '85vw' }}
                   >
-                    <span className="text-[var(--mute)] shrink-0 select-none" style={{ fontSize: 13, fontWeight: 900 }}>⠿</span>
+                    <span className="text-[var(--mute)] shrink-0 select-none" style={{ fontSize: 'var(--fs-body)', fontWeight: 900 }}>⠿</span>
                     <span
                       className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[activePlayer.position]?.color, background: POS_CONFIG[activePlayer.position]?.bg }}

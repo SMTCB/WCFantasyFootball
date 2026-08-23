@@ -32,7 +32,7 @@ export default function SkipToContent({ targetId = 'main-content' }) {
         color: 'var(--ink)',
         textDecoration: 'none',
         borderRadius: 4,
-        fontSize: 12,
+        fontSize: 'var(--fs-label)',
         fontWeight: 600,
         zIndex: 9999,
         fontFamily: 'Archivo, sans-serif',

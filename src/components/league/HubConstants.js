@@ -12,7 +12,7 @@ export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase()
 
 export const miniBtnStyle = (color) => ({
   background: 'none', border: `1px solid ${color}44`, color,
-  fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+  fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
   padding: '4px 10px', cursor: 'pointer', borderRadius: 2,
   textTransform: 'uppercase',
 });

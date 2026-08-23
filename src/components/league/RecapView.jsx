@@ -17,7 +17,7 @@ function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
       borderBottom: '1px solid var(--rule)', background: 'var(--ink)',
       overflowX: 'auto', flexShrink: 0,
     }}>
-      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
         {mobile ? 'GW' : 'ROUND'}
       </span>
       {allMatchdays.map(md => {
@@ -30,7 +30,7 @@ function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
             border: active ? `1px solid ${isLive ? 'var(--danger)' : 'var(--cyan)'}` : '1px solid var(--rule)',
             background: active ? (isLive ? 'rgba(239,68,68,.12)' : 'rgba(0,180,216,.14)') : 'transparent',
             color: active ? (isLive ? 'var(--danger)' : 'var(--cyan)') : 'var(--mute)',
-            fontFamily: MONO, fontSize: 10, letterSpacing: '.12em', cursor: 'pointer',
+            fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', cursor: 'pointer',
           }}>
             {isLive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
             {n}
@@ -50,14 +50,14 @@ function FixtureRow({ f }) {
   return (
     <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--rule)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', flex: 1, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.home_team}</span>
-        <span style={{ fontFamily: DISPLAY, fontSize: 13, minWidth: 52, textAlign: 'center', color: finished ? 'var(--paper)' : live ? 'var(--danger)' : 'var(--mute)' }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', flex: 1, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.home_team}</span>
+        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', minWidth: 52, textAlign: 'center', color: finished ? 'var(--paper)' : live ? 'var(--danger)' : 'var(--mute)' }}>
           {finished || live ? `${f.home_score ?? '–'} – ${f.away_score ?? '–'}` : ko}
         </span>
-        <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.away_team}</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.away_team}</span>
       </div>
-      {live     && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--danger)', letterSpacing: '.18em' }}>● LIVE</span></div>}
-      {finished && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.14em' }}>FT</span></div>}
+      {live     && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.18em' }}>● LIVE</span></div>}
+      {finished && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>FT</span></div>}
     </div>
   );
 }
@@ -65,7 +65,7 @@ function FixtureRow({ f }) {
 function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
   if (!breakdown || breakdown === 'loading') {
     return (
-      <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
+      <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
         {breakdown === 'loading' ? 'LOADING…' : 'NO SQUAD DATA'}
       </div>
     );
@@ -81,9 +81,9 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
 
   return (
     <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid var(--shell-rule)' }}>
         {['POS', 'PLAYER', 'MIN', 'PTS'].map((h, i) => (
-          <span key={i} style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.18em', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</span>
+          <span key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</span>
         ))}
       </div>
       {breakdown.map((p, i) => {
@@ -109,16 +109,16 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
         return (
           <div key={p.id} style={{
             display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
-            padding: '7px 24px', borderBottom: '1px solid rgba(255,255,255,.03)',
-            background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,.01)',
+            padding: '7px 24px', borderBottom: '1px solid var(--shell-rule)',
+            background: i % 2 === 0 ? 'transparent' : 'var(--shell-fill)',
           }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: posColor, letterSpacing: '.1em' }}>{p.position}</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: posColor, letterSpacing: '.1em' }}>{p.position}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-              {badges.map((b, bi) => <span key={bi} style={{ fontFamily: MONO, fontSize: 8, color: b.c, flexShrink: 0 }}>{b.s}</span>)}
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+              {badges.map((b, bi) => <span key={bi} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: b.c, flexShrink: 0 }}>{b.s}</span>)}
             </div>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
-            <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: p.pts > 0 ? 'var(--positive)' : p.pts < 0 ? 'var(--danger)' : 'var(--mute)' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: p.pts > 0 ? 'var(--positive)' : p.pts < 0 ? 'var(--danger)' : 'var(--mute)' }}>
               {displayPts[i] !== null ? displayPts[i] : (p.hasStats ? '0' : '—')}
             </span>
           </div>
@@ -130,13 +130,13 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           padding: '7px 24px', borderTop: '1px solid rgba(240,58,58,0.25)',
           background: 'rgba(240,58,58,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.1em' }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.1em' }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--danger)' }}>Transfer Penalty</span>
-            <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(240,58,58,0.6)', letterSpacing: '.08em' }}>extra buys</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>Transfer Penalty</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.6)', letterSpacing: '.08em' }}>extra buys</span>
           </div>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--danger)' }}>−{penaltyDeduction}</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>—</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--danger)' }}>−{penaltyDeduction}</span>
         </div>
       )}
       {betDetails.map((b, bi) => (
@@ -145,13 +145,13 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           padding: '7px 24px', borderTop: '1px solid rgba(240,180,0,0.25)',
           background: 'rgba(240,180,0,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', letterSpacing: '.1em' }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.1em' }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Bet won</span>
-            <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(240,180,0,0.6)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Bet won</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.6)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</span>
           </div>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--gold)' }}>+{b.amount}</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>—</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--gold)' }}>+{b.amount}</span>
         </div>
       ))}
       {tradeNet !== 0 && (
@@ -161,34 +161,34 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           borderTop: tradeNet > 0 ? '1px solid rgba(240,180,0,0.25)' : '1px solid rgba(240,58,58,0.25)',
           background: tradeNet > 0 ? 'rgba(240,180,0,0.06)' : 'rgba(240,58,58,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.1em' }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.1em' }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {tradeNet > 0 ? 'Trade received' : 'Trade given'}
             </span>
           </div>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>—</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
             {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`}
           </span>
         </div>
       )}
       {benchBreakdown.length > 0 && (
         <div>
-          <div style={{ height: 1, background: 'rgba(255,255,255,.04)', margin: '0 24px' }} />
+          <div style={{ height: 1, background: 'var(--shell-fill)', margin: '0 24px' }} />
           <div style={{ padding: '5px 24px 2px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.18em' }}>BENCH</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>BENCH</span>
           </div>
           {benchBreakdown.map((p) => (
             <div key={p.id} style={{
               display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
-              padding: '5px 24px', borderBottom: '1px solid rgba(255,255,255,.02)',
+              padding: '5px 24px', borderBottom: '1px solid var(--shell-rule)',
               opacity: 0.45,
             }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>{p.position}</span>
-              <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
-              <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--mute)' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{p.position}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--mute)' }}>
                 {p.pts !== null ? p.pts : '—'}
               </span>
             </div>
@@ -690,63 +690,63 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       <div key={s.user_id}>
         {desktop ? (
           <div onClick={() => toggleBreakdown(s.user_id)} style={rowStyle}>
-            <div style={{ fontFamily: DISPLAY, fontSize: 13, color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <MgrTag mono={mgrMono(name)} hue={hue} />
-              <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
-              {isTop && <span style={{ fontFamily: MONO, fontSize: 8, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em', flexShrink: 0 }}>TOP</span>}
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+              {isTop && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em', flexShrink: 0 }}>TOP</span>}
             </div>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 14, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </span>
               {betPts > 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>+{betPts} BET</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>+{betPts} BET</div>
               )}
               {tradeNet !== 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 7, color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>
                   {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
                 </div>
               )}
               {s.penalty > 0 ? (
-                <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>−{s.penalty} PENALTY</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>−{s.penalty} PENALTY</div>
               ) : isLiveRound && s.pts !== null ? (
-                <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--danger)', letterSpacing: '.14em', marginTop: 1 }}>LIVE</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.14em', marginTop: 1 }}>LIVE</div>
               ) : null}
             </div>
-            <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>
+            <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
               {totalPts != null ? Math.round(totalPts) : '—'}
             </div>
             {h2hEnabled && (
-              <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--gold)' }}>
+              <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
                 {h2hMap[s.user_id] ?? '—'}
               </div>
             )}
-            <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 12, color: 'var(--mute)' }}>{isOpen ? '−' : '+'}</div>
+            <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{isOpen ? '−' : '+'}</div>
           </div>
         ) : (
           <div onClick={() => toggleBreakdown(s.user_id)} style={rowStyle}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 13, color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</span>
             <MgrTag mono={mgrMono(name)} hue={hue} size={20} />
             <div style={{ minWidth: 0 }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{name}</span>
-              <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em' }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{name}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>
                 TOTAL {totalPts !== null ? Math.round(totalPts) : '—'}{h2hEnabled ? ` · H2H ${h2hMap[s.user_id] ?? '—'}` : ''} · TAP FOR BREAKDOWN
               </span>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 16, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </div>
               {betPts > 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: 'var(--gold)' }}>+{betPts} BET</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--gold)' }}>+{betPts} BET</div>
               )}
               {tradeNet !== 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
                   {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
                 </div>
               )}
-              <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: s.penalty > 0 ? 'var(--danger)' : isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)' }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: s.penalty > 0 ? 'var(--danger)' : isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)' }}>
                 {s.penalty > 0 ? `−${s.penalty} XFER` : isLiveRound && s.pts !== null ? 'LIVE' : 'GW'}
               </div>
             </div>
@@ -761,15 +761,15 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   // ── Early returns ────────────────────────────────────────────────────────────
   if (loadingMds) return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING RECAP…</div>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING RECAP…</div>
     </div>
   );
 
   if (!allMatchdays.length) return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 28, marginBottom: 12 }}>📋</div>
-      <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 8 }}>NO COMPLETED MATCHDAY</div>
-      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', opacity: 0.7, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
+      <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>📋</div>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 8 }}>NO COMPLETED MATCHDAY</div>
+      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.7, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
         The recap will appear once the first matchday deadline passes and scores are calculated.
       </div>
     </div>
@@ -783,23 +783,23 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           label={`RECAP · ${roundLabel}`}
           sub="MATCHDAY SCORES"
           tone="var(--gold)"
-          right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>CLICK ROW FOR BREAKDOWN</span>}
+          right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>CLICK ROW FOR BREAKDOWN</span>}
         />
         <MatchdayNav allMatchdays={allMatchdays} selected={selectedMatchday} onSelect={setSelectedMatchday} />
         <div style={{ display: 'grid', gridTemplateColumns: h2hEnabled ? '40px 1fr 80px 80px 60px 24px' : '40px 1fr 80px 80px 24px', gap: 12, padding: '10px 24px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
           {(h2hEnabled ? ['GW#', 'MANAGER', 'GW PTS', 'TOTAL', 'H2H', ''] : ['GW#', 'MANAGER', 'GW PTS', 'TOTAL', '']).map((h, i) => (
-            <div key={i} style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</div>
+            <div key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</div>
           ))}
         </div>
         {loading ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
           </div>
         ) : !hasScores ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 8 }}>
-            <div style={{ fontSize: 28 }}>⏳</div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SCORES PENDING</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--fs-title)' }}>⏳</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>SCORES PENDING</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
               Points are calculated after each match completes.
             </div>
           </div>
@@ -812,7 +812,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
         <HubSectionLabel label="FIXTURES" sub={roundLabel} tone="var(--cyan)" />
         {!fixtures.length
-          ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}><span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>NO FIXTURES</span></div>
+          ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO FIXTURES</span></div>
           : fixtures.map(f => <FixtureRow key={f.id} f={f} />)
         }
       </aside>
@@ -822,18 +822,18 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   // ── Mobile ───────────────────────────────────────────────────────────────────
   return (
     <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <MobSection label={`RECAP · ${roundLabel}`} tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>GW SCORES</span>} />
+      <MobSection label={`RECAP · ${roundLabel}`} tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>GW SCORES</span>} />
       <MatchdayNav allMatchdays={allMatchdays} selected={selectedMatchday} onSelect={setSelectedMatchday} mobile />
 
       {loading ? (
         <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
         </div>
       ) : !hasScores ? (
         <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 6 }}>SCORES PENDING</div>
-          <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 8 }}>⏳</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 6 }}>SCORES PENDING</div>
+          <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5 }}>
             Points are calculated after each match completes.
           </div>
         </div>

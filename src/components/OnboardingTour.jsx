@@ -191,14 +191,14 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
       <div style={{
         ...tooltipStyle,
         background:   'var(--ink-2)',
-        border:       '1px solid rgba(255,255,255,0.1)',
+        border:       '1px solid var(--shell-rule-strong)',
         borderRadius: '12px',
         padding:      '20px',
         boxShadow:    'none',
       }}>
         {/* Step counter */}
         <div style={{
-          fontSize:      '10px',
+          fontSize: 'var(--fs-micro)',
           fontFamily:    'Archivo Black, sans-serif',
           letterSpacing: '0.12em',
           color:         'var(--gold)',
@@ -210,7 +210,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
 
         {/* Title */}
         <div style={{
-          fontSize:     '18px',
+          fontSize: 'var(--fs-heading)',
           fontFamily:   'Archivo Black, sans-serif',
           fontWeight:   800,
           color:        'var(--paper)',
@@ -223,7 +223,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
 
         {/* Body */}
         <p style={{
-          fontSize:     '13px',
+          fontSize: 'var(--fs-body)',
           lineHeight:   1.6,
           color:        'rgba(240,242,245,0.6)',
           marginBottom: '16px',
