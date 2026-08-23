@@ -308,7 +308,7 @@ export default function AppLayout({ children }) {
             active={location.pathname === '/challenges'}
             dotColor="var(--gold)"
             tag="Beta"
-            tagStyle={{ background: 'rgba(184,114,14,.15)', color: 'var(--gold)' }}
+            tagStyle={{ background: 'rgba(184,114,14,.15)', color: 'var(--on-shell-gold)' }}
           />
           <NavItem
             label="Settings"
@@ -423,7 +423,7 @@ export default function AppLayout({ children }) {
           {MOBILE_NAV.map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
-            const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';
+            const activeColor = isLive ? 'var(--on-shell-danger)' : 'var(--on-shell-accent)';
             const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
             const alreadyOnPaddockMobile = key === 'f1-calendar' && /^\/f1\/[^/]+/.test(location.pathname);
             const navTo = (alreadyOnLeague || alreadyOnPaddockMobile)

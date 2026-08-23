@@ -86,6 +86,10 @@
   /* Text on --shell (dark navy) surfaces */
   --on-shell:       #ffffff;               /* full-brightness text on shell/nav headers */
   --on-shell-dim:   rgba(255,255,255,.45); /* muted eyebrow labels on shell */
+  --on-shell-accent: #5FB3E5; /* --cyan retuned for text on --shell — WCAG AA (was 3.02:1) */
+  --on-shell-danger: #F0575A; /* --danger retuned for status text on --shell — WCAG AA (was ~2.53:1) */
+  --on-shell-gold:   #E8A93D; /* --gold retuned for text on --shell — WCAG AA (was ~3.59:1) */
+  --gold-text:       #925A0A; /* --gold retuned for text on light surfaces — WCAG AA (was 3.49:1) */
 
   /* ── Sport accent palette ──────────────────────────────────────────────── */
   --f1:    #E10600;   /* Formula 1 — Ferrari red        */

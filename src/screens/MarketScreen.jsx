@@ -844,7 +844,7 @@ export default function MarketScreen() {
                     </span>
                   </div>
                   {totalPenCost > 0 && (
-                    <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                    <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--on-shell-gold)', fontFamily: 'Archivo Black, sans-serif' }}>
                       -{totalPenCost}pt cost
                     </div>
                   )}
@@ -865,7 +865,7 @@ export default function MarketScreen() {
                 <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
-                <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--on-shell-gold)', fontFamily: 'Archivo Black, sans-serif' }}>
                   {emptySlots} empty
                 </div>
               )}
@@ -910,7 +910,7 @@ export default function MarketScreen() {
             const max    = POS_LIMITS[pos];
             const pct    = (count / max) * 100;
             const status = count === 0 ? 'empty' : count >= max ? 'full' : 'partial';
-            const statusColor = status === 'empty' ? 'var(--danger)' : status === 'full' ? 'var(--positive)' : 'var(--gold)';
+            const statusColor = status === 'empty' ? 'var(--on-shell-danger)' : status === 'full' ? 'var(--positive)' : 'var(--gold)';
             const statusBg    = status === 'empty' ? 'rgba(240,58,58,0.10)' : status === 'full' ? 'rgba(24,201,107,0.10)' : 'rgba(240,180,0,0.08)';
             return (
               <div
