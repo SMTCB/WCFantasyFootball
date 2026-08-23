@@ -877,7 +877,7 @@ export default function LiveScreen() {
               <DeltaPill delta={lg.delta} />
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                 {lg.chip && (
-                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.14em' }}>· {lg.chip.toUpperCase()}</span>
+                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold-text)', letterSpacing: '.14em' }}>· {lg.chip.toUpperCase()}</span>
                 )}
                 {lg.windowStatus && (
                   <span className="font-mono" style={{
@@ -970,11 +970,11 @@ export default function LiveScreen() {
             const isFT         = f.status === 'finished';
             const isPostponed  = f.status === 'postponed' || f.status === 'cancelled' || f.status === 'abandoned';
             const statusLabel  = isPostponed ? 'PST' : isFT ? 'FT' : isHT ? 'HT' : f.minute ? `${f.minute}'` : '—';
-            const statusColor  = isPostponed ? 'var(--gold)' : isFT ? 'var(--mute)' : 'var(--mute)';
+            const statusColor  = isPostponed ? 'var(--gold-text)' : isFT ? 'var(--mute)' : 'var(--mute)';
             return (
               <div key={f.id} style={{ flex: 1, padding: '10px 16px', borderLeft: i ? '1px solid var(--rule)' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
                 {isPostponed ? (
-                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.18em', background: 'rgba(240,180,0,.1)', padding: '2px 5px' }}>PST</span>
+                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold-text)', letterSpacing: '.18em', background: 'rgba(240,180,0,.1)', padding: '2px 5px' }}>PST</span>
                 ) : isFT ? (
                   <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>FT</span>
                 ) : (
@@ -1019,7 +1019,7 @@ export default function LiveScreen() {
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
                     <span style={{ fontFamily: 'Archivo Black', fontSize: 9, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 5px' }}>C</span>
-                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.14em' }}>
+                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold-text)', letterSpacing: '.14em' }}>
                       {(cap.name || '').split(' ').pop().toUpperCase()} — DID NOT PLAY YET
                     </span>
                   </div>
@@ -1065,7 +1065,7 @@ export default function LiveScreen() {
             )}
 
             <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', lineHeight: 1.6 }}>
-              ● PULSE = PLAYER IN A LIVE FIXTURE · <span style={{ color: 'var(--gold)' }}>C</span> = CAPTAIN · NUMBERS ARE GW POINTS
+              ● PULSE = PLAYER IN A LIVE FIXTURE · <span style={{ color: 'var(--gold-text)' }}>C</span> = CAPTAIN · NUMBERS ARE GW POINTS
             </div>
           </div>
 
@@ -1108,13 +1108,13 @@ export default function LiveScreen() {
               ) : hasLiveForActiveTournament ? (
                 <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                   <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
-                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>
+                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginTop: 8 }}>Points will appear once stats are available</div>
                 </div>
 
               ) : (
                 <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                   <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO MATCH ONGOING</div>
-                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
+                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
                 </div>
               )}
             </div>
@@ -1216,13 +1216,13 @@ export default function LiveScreen() {
             return (
               <div key={f.id} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 12, borderTop: i ? '1px solid var(--rule)' : 'none' }}>
                 {isPostponed ? (
-                  <span className="font-mono" style={{ fontSize: 8, color: 'var(--gold)', letterSpacing: '.18em', background: 'rgba(240,180,0,.1)', padding: '1px 4px' }}>PST</span>
+                  <span className="font-mono" style={{ fontSize: 8, color: 'var(--gold-text)', letterSpacing: '.18em', background: 'rgba(240,180,0,.1)', padding: '1px 4px' }}>PST</span>
                 ) : isFT ? (
                   <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>FT</span>
                 ) : (
                   <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: 'var(--danger)' }} />
                 )}
-                <span className="font-mono" style={{ fontSize: 10, color: isPostponed ? 'var(--gold)' : 'var(--mute)', letterSpacing: '.18em' }}>{isHT ? 'HT' : statusLabel}</span>
+                <span className="font-mono" style={{ fontSize: 10, color: isPostponed ? 'var(--gold-text)' : 'var(--mute)', letterSpacing: '.18em' }}>{isHT ? 'HT' : statusLabel}</span>
                 <span style={{ fontFamily: 'Archivo Black', fontSize: 14, marginLeft: 'auto' }}>
                   {teamCode(f.home_team)}
                   <span style={{ color: 'var(--cyan)', margin: '0 6px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
@@ -1274,7 +1274,7 @@ export default function LiveScreen() {
                 <>
                   <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', padding: '10px 0 8px', letterSpacing: '.18em' }}>
                     {buildFormation(squadPlayers)} · CAPTAIN{' '}
-                    <span style={{ color: 'var(--gold)' }}>
+                    <span style={{ color: 'var(--gold-text)' }}>
                       {(() => {
                         const cap = squadPlayers.find(p => p.id === activeLeague?.captainId);
                         return cap ? (cap.name || '').split(' ').pop().toUpperCase() : '—';
@@ -1290,7 +1290,7 @@ export default function LiveScreen() {
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', marginBottom: 8, background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
                           <span style={{ fontFamily: 'Archivo Black', fontSize: 9, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px' }}>C</span>
-                          <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.12em' }}>
+                          <span className="font-mono" style={{ fontSize: 9, color: 'var(--gold-text)', letterSpacing: '.12em' }}>
                             {(cap.name || '').split(' ').pop().toUpperCase()} — DNP
                           </span>
                         </div>
@@ -1369,7 +1369,7 @@ export default function LiveScreen() {
                         {isLive ? (
                           <span className="animate-live-pulse" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--danger)' }} />
                         ) : (
-                          <span className="font-mono" style={{ fontSize: 9, color: isPST ? 'var(--gold)' : 'var(--mute)', letterSpacing: '.1em' }}>
+                          <span className="font-mono" style={{ fontSize: 9, color: isPST ? 'var(--gold-text)' : 'var(--mute)', letterSpacing: '.1em' }}>
                             {statusLabel || new Date(f.kickoff_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         )}
@@ -1427,13 +1427,13 @@ export default function LiveScreen() {
               ) : hasLiveForActiveTournament ? (
                 <div style={{ padding: '32px 18px', textAlign: 'center' }}>
                   <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
-                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>
+                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginTop: 8 }}>Points will appear once stats are available</div>
                 </div>
 
               ) : (
                 <div style={{ padding: '32px 18px', textAlign: 'center' }}>
                   <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO MATCH ONGOING</div>
-                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
+                  <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
                 </div>
               )}
               <div style={{ height: 30 }} />
