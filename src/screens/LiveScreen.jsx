@@ -79,8 +79,8 @@ function MiniPitch({ players, activeLeague, gwLabel }) {
       <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)' }} />
       {/* header */}
       <div style={{ position: 'absolute', top: 10, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>STARTING XI · {formation}</div>
-        <div className="font-mono" style={{ fontSize: 9, color: activeLeague ? activeLeague.tone : 'var(--mute)', letterSpacing: '.22em' }}>
+        <div className="font-mono" style={{ fontSize: 9, color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>STARTING XI · {formation}</div>
+        <div className="font-mono" style={{ fontSize: 9, color: activeLeague ? activeLeague.tone : 'var(--on-shell-dim)', letterSpacing: '.22em' }}>
           {activeLeague ? activeLeague.name.toUpperCase() : (gwLabel || 'GW —')}
         </div>
       </div>

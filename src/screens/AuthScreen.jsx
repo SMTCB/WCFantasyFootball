@@ -128,25 +128,25 @@ export default function AuthScreen() {
   // ── Shared field style ───────────────────────────────────────────────────────
   const fieldStyle = {
     width: '100%',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '4px',
+    minHeight: '44px',
+    background: 'var(--elev)',
+    border: '1px solid var(--rule)',
+    borderRadius: 'var(--radius-md)',
     padding: '12px 16px',
     fontSize: '14px',
     color: 'var(--paper)',
-    outline: 'none',
     fontFamily: 'Archivo, sans-serif',
   };
 
   const labelStyle = {
     display: 'block',
     fontSize: '9px',
-    fontWeight: 800,
+    fontWeight: 700,
     letterSpacing: '0.15em',
     textTransform: 'uppercase',
     color: 'var(--mute)',
     marginBottom: '6px',
-    fontFamily: 'Archivo Black, sans-serif',
+    fontFamily: 'JetBrains Mono, monospace',
   };
 
 
@@ -264,6 +264,7 @@ export default function AuthScreen() {
             onClick={() => switchTab(t.id)}
             style={{
               flex: 1,
+              minHeight: '44px',
               padding: '10px',
               background: 'none',
               border: 'none',
