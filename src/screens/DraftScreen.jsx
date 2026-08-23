@@ -477,9 +477,9 @@ export default function DraftScreen() {
       {/* Header */}
       <div className="bg-[var(--shell)] border-b border-[var(--rule)] px-4 pt-10 pb-4 sticky top-0 z-20">
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--mute)] text-[20px] leading-none">←</button>
+          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--on-shell-dim)] text-[20px] leading-none">←</button>
           <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--mute)] font-serif">
+            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--on-shell-dim)] font-serif">
               Draft
             </div>
             <div className="text-[var(--paper)] font-black text-[15px] uppercase tracking-wider">
@@ -494,12 +494,12 @@ export default function DraftScreen() {
           <div className="flex items-center gap-1.5">
             {deadline
               ? countdown === 'CLOSED'
-                ? <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Submission window closed</span>
+                ? <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Submission window closed</span>
                 : <>
-                    <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Suggested deadline in</span>
+                    <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Suggested deadline in</span>
                     <span className="text-[10px] font-black" style={{ color: 'var(--warn)' }}>{countdown}</span>
                   </>
-              : <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Open until lottery runs</span>
+              : <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Open until lottery runs</span>
             }
           </div>
           <div className="flex gap-3">
@@ -508,7 +508,7 @@ export default function DraftScreen() {
                 <div className="text-[9px] font-black" style={{ color: POS_CONFIG[pos].color }}>
                   {posCounts[pos] ?? 0}
                 </div>
-                <div className="text-[8px] text-[var(--mute)] uppercase">{pos}</div>
+                <div className="text-[8px] text-[var(--on-shell-dim)] uppercase">{pos}</div>
               </div>
             ))}
           </div>
@@ -826,7 +826,7 @@ export default function DraftScreen() {
           className="w-full py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
             background:      list.length > 0 ? 'var(--positive)' : undefined,
-            color:           list.length > 0 ? '#fff'            : 'var(--mute)',
+            color:           list.length > 0 ? '#fff'            : 'var(--on-shell-dim)',
             backgroundColor: list.length === 0 ? 'var(--elev)' : undefined,
           }}
         >

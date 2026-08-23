@@ -891,7 +891,7 @@ export default function SquadScreen() {
             </div>
           </div>
           <div className="text-right">
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
               €{budgetLeft}M
             </div>
@@ -1355,7 +1355,7 @@ export default function SquadScreen() {
             </div>
           </div>
           <div className="text-right" data-tour="squad-budget">
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
               €{budgetLeft}M
             </div>
@@ -2046,7 +2046,7 @@ export default function SquadScreen() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--on-shell-dim)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
                     {selectedPlayer.club}
                     {selectedPlayer.id === captainId && (
                       <span style={{ color: 'var(--gold)', background: 'rgba(224,168,0,0.12)', border: '1px solid rgba(224,168,0,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>

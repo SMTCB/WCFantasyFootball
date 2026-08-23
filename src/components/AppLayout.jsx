@@ -435,7 +435,7 @@ export default function AppLayout({ children }) {
                 key={key}
                 to={navTo}
                 className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-all"
-                style={{ color: isActive ? activeColor : 'var(--mute)' }}
+                style={{ color: isActive ? activeColor : 'var(--on-shell-dim)' }}
               >
                 {/* Top active bar */}
                 {isActive && (

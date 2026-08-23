@@ -75,7 +75,7 @@
   /* Text */
   --paper:    #18202E;   /* primary text */
   --text-2:   #4B5568;   /* secondary text */
-  --mute:     #8A97A8;   /* muted labels */
+  --mute:     #626F80;   /* muted labels */
 
   /* White-label accent cascade — operators override --brand-accent only */
   --brand-accent: #1A6FA8;
@@ -485,7 +485,7 @@ button, a {
   background: var(--cyan);
   color: var(--ink);
 }
-.ffl-btn--primary:hover { background: #1ec3e3; }
+.ffl-btn--primary:hover { background: #14567f; }
 
 .ffl-btn--secondary {
   background: transparent;
@@ -493,8 +493,8 @@ button, a {
   border-color: var(--rule);
 }
 .ffl-btn--secondary:hover {
-  background: rgba(242, 238, 229, 0.06);
-  border-color: rgba(242, 238, 229, 0.2);
+  background: rgba(24, 32, 46, 0.06);
+  border-color: rgba(24, 32, 46, 0.2);
 }
 
 .ffl-btn--ghost {
@@ -505,15 +505,15 @@ button, a {
 
 .ffl-btn--danger {
   background: var(--danger);
-  color: var(--paper);
+  color: #ffffff;
 }
 .ffl-btn--danger:hover { background: #f25c5c; }
 
 .ffl-btn--gold {
-  background: var(--gold);
+  background: #96600c;
   color: var(--ink);
 }
-.ffl-btn--gold:hover { background: #f0b91a; }
+.ffl-btn--gold:hover { background: #7a4a08; }
 
 /* Icon-only — square footprint, no internal letter-spacing weirdness */
 .ffl-btn--icon {
@@ -525,7 +525,7 @@ button, a {
   min-width: 44px;
 }
 .ffl-btn--icon:hover {
-  background: rgba(242, 238, 229, 0.06);
+  background: rgba(24, 32, 46, 0.06);
   color: var(--paper);
 }
 

@@ -254,9 +254,9 @@ export default function DraftRecoveryScreen() {
       {/* Header */}
       <div className="bg-[var(--shell)] border-b border-[var(--rule)] px-4 pt-10 pb-4 sticky top-0 z-20">
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--mute)] text-[20px] leading-none">←</button>
+          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--on-shell-dim)] text-[20px] leading-none">←</button>
           <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--mute)] font-serif">
+            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--on-shell-dim)] font-serif">
               Draft Recovery
             </div>
             <div className="text-[var(--paper)] font-black text-[15px] uppercase tracking-wider">
@@ -270,10 +270,10 @@ export default function DraftRecoveryScreen() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-black" style={{ color: 'var(--warn)' }}>{displaySlots}</span>
-            <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">slots remaining</span>
+            <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">slots remaining</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Budget</span>
+            <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Budget</span>
             <span className="text-[10px] font-black" style={{ color: budgetLeft < 10 ? 'var(--danger)' : 'var(--positive)' }}>
               €{budgetLeft.toFixed(1)}M
             </span>
@@ -291,7 +291,7 @@ export default function DraftRecoveryScreen() {
                 >
                   {pos}
                 </span>
-                <span className="text-[var(--mute)] text-[9px]">×{need}</span>
+                <span className="text-[var(--on-shell-dim)] text-[9px]">×{need}</span>
               </div>
             ))}
           </div>
