@@ -742,7 +742,7 @@
       <h2>Actions, prioritised</h2>
     </div>
 
-    <p class="lede">Twenty items across the four tiers already used in <code>BACKLOG.md</code>, each traceable to the findings it clears. Seven of these (E1–E4, F1–F3) were added after the live-verification pass on 2026-08-23 and are not yet reflected in <code>BACKLOG.md</code>. A1–A3 shipped 2026-08-23 via <a href="https://github.com/SMTCB/WCFantasyFootball/pull/827">PR #827</a>; the four new P0 criticals (E1–E4) mean P0 is not clear yet. P1 is the tier that decides whether any of this holds — <strong>B4 must land with B1 and B2, not after them</strong>, or the sweep starts decaying the week it finishes.</p>
+    <p class="lede">Twenty items across the four tiers already used in <code>BACKLOG.md</code>, each traceable to the findings it clears. Seven of these (E1–E4, F1–F3) were added after the live-verification pass on 2026-08-23; F1–F3 are not yet reflected in <code>BACKLOG.md</code>. A1–A3 shipped 2026-08-23 via <a href="https://github.com/SMTCB/WCFantasyFootball/pull/827">PR #827</a>; E1–E4 shipped 2026-08-23 via <a href="https://github.com/SMTCB/WCFantasyFootball/pull/831">PR #831</a> — P0 is now clear. P1 is the tier that decides whether any of this holds — <strong>B4 must land with B1 and B2, not after them</strong>, or the sweep starts decaying the week it finishes.</p>
 
     <!-- P0 -->
     <div class="tier" style="--tier-color: var(--crit);">
@@ -751,7 +751,7 @@
           <h3>P0 — Blocker</h3>
           <div class="tier-when">Before the maintenance wall comes down</div>
         </div>
-        <div class="tier-total">A1–A3 shipped · E1–E4 ~4.5h remaining</div>
+        <div class="tier-total">A1–A3, E1–E4 shipped — P0 clear</div>
       </div>
 
       <div class="act">
@@ -780,34 +780,34 @@
 
       <div class="act">
         <div class="act-id">E1</div>
-        <div class="act-title">Fix the bottom-nav active-tab colour</div>
+        <div class="act-title">Fix the bottom-nav active-tab colour <span class="chip chip--done">Done · PR #831</span></div>
         <div class="act-body">The active tab's info-blue label (<code>--cyan</code>, aliased to <code>--brand-accent</code> #1A6FA8) sits on the navy <code>--shell</code> background at 3.02:1 — below the 4.5:1 floor for the 10px mono label it's set in. This is global chrome, present on every screen, in both resting and live states. Darken the on-shell variant of the accent rather than the shared token, since <code>--brand-accent</code> also has to hold its own on light surfaces elsewhere.</div>
         <div class="act-foot"><span><b>Where</b> src/components/AppLayout.jsx:426, :438</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 15</span></div>
-        <div class="act-check"><b>Done when:</b> the active-tab label measures ≥4.5:1 against <code>--shell</code> in both the live (red) and non-live (blue) states.</div>
+        <div class="act-check"><b>Done when:</b> the active-tab label measures ≥4.5:1 against <code>--shell</code> in both the live (red) and non-live (blue) states. <b>Shipped:</b> new <code>--on-shell-accent</code> (#5FB3E5, ~7.1:1) and <code>--on-shell-danger</code> (#F0575A, ~4.8:1) tokens.</div>
       </div>
 
       <div class="act">
         <div class="act-id">E2</div>
-        <div class="act-title">Stop using raw <code>--gold</code> as text colour</div>
+        <div class="act-title">Stop using raw <code>--gold</code> as text colour <span class="chip chip--done">Done · PR #831</span></div>
         <div class="act-body">A3 fixed <code>--gold</code> inside the button component, but the raw token is still used directly as a text colour outside it — measuring 3.49–4.24:1 depending on the surface. The header's "Beta" badge is the worst case: 6.5px text at the low end of that range, present on every screen regardless of route. The other instances the live pass caught (Trophy, Market, Live) need the same treatment; grep <code>color: 'var(--gold)'</code> and <code>color:var(--gold)</code> across <code>src/</code> to catch the rest, since this wasn't a component sweep.</div>
         <div class="act-foot"><span><b>Where</b> src/components/AppLayout.jsx:308–311 (Beta badge) + other raw-text sites flagged in the 2026-08-23 live pass</span><span><b>Effort</b> 2h</span><span><b>Clears</b> 16</span></div>
-        <div class="act-check"><b>Done when:</b> <code>var(--gold)</code> resolves to ≥4.5:1 everywhere it's used as text colour in <code>src/</code>, or the site uses the fixed <code>.ffl-btn--gold</code> class instead.</div>
+        <div class="act-check"><b>Done when:</b> <code>var(--gold)</code> resolves to ≥4.5:1 everywhere it's used as text colour in <code>src/</code>, or the site uses the fixed <code>.ffl-btn--gold</code> class instead. <b>Shipped:</b> split into <code>--on-shell-gold</code> (#E8A93D, for --shell contexts: Beta badge, Trophy header, Market sticky-header labels) and <code>--gold-text</code> (#925A0A, for light-surface contexts: LiveScreen's postponed/captain/DNP captions) — one value can't clear both. Fixed the sites the live pass named plus directly-analogous duplicates in the same components; did not sweep the remaining ~80 <code>var(--gold)</code> text usages elsewhere in <code>src/</code> that the pass never actually visited (e.g. AppLayout's identity-color dots, Market's captain badges) — those are unverified and still open.</div>
       </div>
 
       <div class="act">
         <div class="act-id">E3</div>
-        <div class="act-title">Fix red status colour on dark surfaces</div>
+        <div class="act-title">Fix red status colour on dark surfaces <span class="chip chip--done">Done · PR #831</span></div>
         <div class="act-body"><code>--danger</code> was tuned in A3 for danger-button ink, not for red-as-status-indicator on a dark ground — the LIVE badge measures 2.53:1 and the Market position-quota chips (GK/DEF/MID/FWD, empty state) measure 2.33:1, both below even the 3.0:1 large-text floor. These need a dedicated on-dark status-red token rather than a further edit to <code>--danger</code>, which is already correct for its button use.</div>
         <div class="act-foot"><span><b>Where</b> src/screens/LiveScreen.jsx:22 (LIVE badge) · src/screens/MarketScreen.jsx:906–934 (position quota chips)</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 17</span></div>
-        <div class="act-check"><b>Done when:</b> the LIVE badge and the empty-state position chips both measure ≥3.0:1 against their background.</div>
+        <div class="act-check"><b>Done when:</b> the LIVE badge and the empty-state position chips both measure ≥3.0:1 against their background. <b>Correction:</b> LiveScreen.jsx:22 was mis-cited — it renders on the light <code>--ink</code> surface in every real call site (~5.85:1, already passing). The actual 2.53:1 failure is AppLayout.jsx:426's <code>isLive</code> bottom-nav colour on <code>--shell</code>, cleared by E1. <b>Shipped:</b> Market's empty-quota chip now uses <code>--on-shell-danger</code> (~4.8:1); LiveScreen.jsx:22 left unchanged as not actually broken.</div>
       </div>
 
       <div class="act">
         <div class="act-id">E4</div>
-        <div class="act-title">Fix the near-invisible empty-state caption</div>
+        <div class="act-title">Fix the near-invisible empty-state caption <span class="chip chip--done">Done · PR #831</span></div>
         <div class="act-body">The Points Log placeholder on Live sets its text colour from <code>--rule</code> — a hairline-divider token, not a text token — on an off-white card. That pairing measures 1.22:1: effectively unreadable, and the worst ratio in either verification pass. Set it from <code>--muted</code> like every other caption in the product; there is no reason this one used a divider token.</div>
         <div class="act-foot"><span><b>Where</b> src/screens/LiveScreen.jsx:1117, :1436</span><span><b>Effort</b> 30m</span><span><b>Clears</b> 18</span></div>
-        <div class="act-check"><b>Done when:</b> the placeholder caption measures ≥4.5:1 against the card, and no text colour in <code>src/</code> resolves through <code>--rule</code>.</div>
+        <div class="act-check"><b>Done when:</b> the placeholder caption measures ≥4.5:1 against the card, and no text colour in <code>src/</code> resolves through <code>--rule</code>. <b>Shipped:</b> all 4 occurrences fixed (desktop + mobile panes both have this caption twice, not 2 as originally cited) — now <code>--mute</code>.</div>
       </div>
     </div>
 
