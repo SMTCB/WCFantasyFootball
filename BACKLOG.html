@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>185</strong><span>closed</span></div>
+      <div class="total-pill"><strong>186</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -177,7 +177,7 @@
     <span class="chip" data-filter-kind="done">Shipped (108)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
-<span class="chip" data-filter-kind="audit">Audits (5)</span>
+<span class="chip" data-filter-kind="audit">Audits (6)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (3)</span>
   </div>
   <span id="result-count"></span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">185</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">186</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -201,7 +201,7 @@
       <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">108</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
-<div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">5</span></div>
+<div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">3</span></div>
     </div>
   </nav>
@@ -10669,8 +10669,52 @@ supabase functions deploy process-transfer</code></pre>
     </section>
 
     <section class="item-group" id="group-audit" data-group="audit">
-      <h2 class="group-title" style="--tab-color:#b23b3b">Audits <span class="group-count">5</span></h2>
+      <h2 class="group-title" style="--tab-color:#b23b3b">Audits <span class="group-count">6</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="audit" data-search="🔍 design audit — live verification pass (2026-08-23) — findings 15–21, not yet triaged 
+
+**context**: the 2026-08 audit (`docs/design/design_audit_2026-08.html`) had one acknowledged gap — &quot;signed-in screens were assessed from source rather than exercised live.&quot; the user asked how to give live access; local demo mode (`vite_auth_enabled=false` in `.env.local`, gitignored, session-local only — no credentials involved) turned out to already be a built feature flag ([src/context/authcontext.jsx](src/context/authcontext.jsx)), so no new setup was needed. with it enabled, the user said &quot;yes&quot; to running the live pass.
+
+**method**: 8 signed-in routes exercised directly in the local dev server as the zero-data demo account — `/trophy`, `/wallet`, `/settings`, `/squad`, `/league`, `/live`, `/market`, `/recap`. each was scanned with an automated wcag 2.1 contrast walk (a `javascript_tool` snippet, not a persisted script) over every rendered text node, alpha-compositing background color up the full ancestor chain rather than trusting the nearest layer — an earlier version without proper compositing produced one false positive (a translucent badge background misread as opaque) before this was caught and fixed.
+
+**result — original findings**: all 14 held up unchanged against live rendering. no source-derived finding turned out to be wrong.
+
+**result — new findings, live-only** (full detail + exact colors in the audit doc&#x27;s ledger rows 15–21):
+- **critical** — bottom-nav active tab label (info-blue `#1a6fa8` on `--shell`) at 3.02:1, present on every screen as global chrome.
+- **critical** — the header &quot;beta&quot; badge (raw `--gold` `#b8720e` used directly as text, not via the fixed `.ffl-btn--gold` rule) at 3.49–4.24:1 depending on surface, rendered at 6.5px — also ties into finding 5 (no type ramp). present on every screen.
+- **critical** — red status color (`#b91c1c`-family) on dark surfaces: the &quot;live&quot; badge at 2.53:1 and the market screen&#x27;s gk/def/mid/fwd position-count chips at" style="--tab-color:#b23b3b" tabindex="0" data-stamp="AUDIT">
+        <div class="card-top"><span class="badge-mini k-audit">AUDIT</span></div>
+        <h3 class="card-title">Design Audit — Live Verification Pass</h3>
+        <p class="card-summary">Context : the 2026-08 audit ( docs/design/DESIGN_AUDIT_2026-08.html ) had one acknowledged gap — "signed-in screens were assessed from source rather than exercised…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-23</span><span class="foot-refs">findings 15–21, not yet triaged</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-audit">AUDIT</span></div>
+      <h2 class="drawer-title">Design Audit — Live Verification Pass</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : the 2026-08 audit ( docs/design/DESIGN_AUDIT_2026-08.html ) had one acknowledged gap — "signed-in screens were assessed from source rather than exercised…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>AUDIT · findings 15–21, not yet triaged</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-23</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: the 2026-08 audit (<code>docs/design/DESIGN_AUDIT_2026-08.html</code>) had one acknowledged gap — "signed-in screens were assessed from source rather than exercised live." The user asked how to give live access; local demo mode (<code>VITE_AUTH_ENABLED=false</code> in <code>.env.local</code>, gitignored, session-local only — no credentials involved) turned out to already be a built feature flag (<a href="src/context/AuthContext.jsx" target="_blank" rel="noopener">src/context/AuthContext.jsx</a>), so no new setup was needed. With it enabled, the user said "yes" to running the live pass.</p>
+<p><strong>Method</strong>: 8 signed-in routes exercised directly in the local dev server as the zero-data demo account — <code>/trophy</code>, <code>/wallet</code>, <code>/settings</code>, <code>/squad</code>, <code>/league</code>, <code>/live</code>, <code>/market</code>, <code>/recap</code>. Each was scanned with an automated WCAG 2.1 contrast walk (a <code>javascript_tool</code> snippet, not a persisted script) over every rendered text node, alpha-compositing background color up the full ancestor chain rather than trusting the nearest layer — an earlier version without proper compositing produced one false positive (a translucent badge background misread as opaque) before this was caught and fixed.</p>
+<p><strong>Result — original findings</strong>: all 14 held up unchanged against live rendering. No source-derived finding turned out to be wrong.</p>
+<p><strong>Result — new findings, live-only</strong> (full detail + exact colors in the audit doc's ledger rows 15–21):</p>
+<ul>
+<li><strong>Critical</strong> — bottom-nav active tab label (info-blue <code>#1A6FA8</code> on <code>--shell</code>) at 3.02:1, present on every screen as global chrome.</li>
+<li><strong>Critical</strong> — the header "Beta" badge (raw <code>--gold</code> <code>#B8720E</code> used directly as text, not via the fixed <code>.ffl-btn--gold</code> rule) at 3.49–4.24:1 depending on surface, rendered at 6.5px — also ties into finding 5 (no type ramp). Present on every screen.</li>
+<li><strong>Critical</strong> — red status color (<code>#B91C1C</code>-family) on dark surfaces: the "LIVE" badge at 2.53:1 and the Market screen's GK/DEF/MID/FWD position-count chips at 2.33:1 — both below even the large-text 3.0 floor.</li>
+<li><strong>Critical</strong> — near-invisible empty-state caption on the Live screen ("Points Log will appear here when a match is live"): off-white text on an off-white card at <strong>1.22:1</strong>, effectively unreadable. The single worst ratio found in the pass.</li>
+<li><strong>High</strong> — <code>--mute</code> (<code>#626F80</code>, A2's fix) still fails AA against <code>--elev</code> (<code>#EDEAE2</code>) at 4.26:1 — a residual gap in the token darkening A2 just shipped, not a new regression. Confirmed identically on 3 screens; on Settings it carries essentially every field label, helper caption, and the "Save" button text.</li>
+<li><strong>High</strong> — <code>--mute</code> used directly against <code>--shell</code> at 3.19:1 on the Market screen's Budget/Price captions — an instance A2's "18-site sweep" didn't catch (new code since, or a miss).</li>
+<li><strong>High</strong> — old un-migrated <code>--gold</code> used as a solid button fill with white text (League screen's "Join →") at 3.85:1 — same root cause as finding 16, different usage (background vs. text).</li>
+</ul>
+<p><strong>Also confirmed</strong> (not a defect): the leagueless demo-account empty states across Squad, League, Live, Market, Recap, Trophy Cabinet all render cleanly — sensible copy, working CTAs, no crashes or broken layouts. Two background <code>401</code>s fire on page load under demo mode (queries assuming a real session); cosmetic, don't block the UI.</p>
+<p><strong>Not yet done</strong>: these 7 findings are not triaged into P0–P3 tiers or given action IDs/effort estimates — that's a separate scoping pass. The one remaining live-verification gap: the demo account has no seeded league/clubhouse, so squad-builder, league-standings, draft and trade flows with real data are still unverified against live rendering.</p>
+<p><strong>Docs updated</strong>: <code>docs/design/DESIGN_AUDIT_2026-08.html</code> (new ledger rows 15–21, updated "Method &amp; limits" and summary counts), <code>docs/design/README.md</code> (status line + live-pass summary). No code changed this session.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="audit" data-search="🔍 pre-pilot due diligence — technical + functional (2026-08-01) — audit, no code change 
 
 **trigger**: user asked for a technical and functional due diligence before onboarding real testers onto the post-v2-cutover platform (&quot;we should be good to start testing with some users&quot;). this is an audit entry — no application code was changed. every claim below was verified against the live pilot db, the live anon key, or a local build/test run; nothing is inferred from documentation.

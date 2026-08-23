@@ -235,9 +235,9 @@
     <p class="verdict">The system is sound. The product doesn't use it.</p>
     <p class="standfirst">Frontrow ships a well-built token layer and a small set of correct primitives. Across 112 view files there are 4,127 inline style objects, and the canonical <code>Select</code> component is imported by none of them. Everything below follows from that gap — including a sign-in screen whose input fields are currently invisible.</p>
     <div class="meta">
-      <span>22 August 2026</span>
+      <span>22 August 2026 · live pass added 23 August 2026</span>
       <span>Commit 1f4e937</span>
-      <span>14 findings · 3 critical</span>
+      <span>21 findings · 7 critical</span>
       <span>WCAG 2.1 AA</span>
     </div>
   </header>
@@ -273,6 +273,11 @@
     <div class="panel--dark panel">
       <h3>The thesis</h3>
       <p class="body">Fixing the sign-in screen, the four failing button states and the position chips takes about a day. It also fixes nothing structurally. With 4,127 inline style objects and a primitive layer nobody imports, the next screen anyone builds will drift the same way — because hand-writing styles is currently the path of least resistance and the design system is the detour. The work worth committing to is the lint rule and the conversion habit, because those are what stop the gap widening again.</p>
+    </div>
+
+    <div class="panel" style="margin-top: 16px;">
+      <h3>Update — live verification, 23 August 2026</h3>
+      <p class="body">The counts above are the original source-review pass. A live pass across eight signed-in screens (see <a href="#method">Method &amp; limits</a>) added findings 15–21: four more critical and three more high, all real contrast failures a browser rendered, not source-derived estimates. Three of the four new critical items sit in global chrome — the bottom nav's active tab colour and the header's "Beta" badge — so in practical exposure they rank above several of the original fourteen. Detail in the <a href="#ledger">full ledger</a>.</p>
     </div>
   </section>
 
@@ -710,7 +715,18 @@
       </div>
       <div class="panel">
         <h3>What is not covered</h3>
-        <p class="body">Signed-in screens were assessed from source rather than exercised live — entering credentials isn't something I can do. The codebase-wide counts hold regardless, and the token and component findings are code-verified. Anything about flow, state or in-app behaviour is unverified and deliberately absent from this report rather than guessed at.</p>
+        <p class="body">Updated 2026-08-23 — signed-in screens have now been exercised live (see below) via the app's local demo-mode flag, which grants a session with no credentials. The one gap that remains: the demo account has no seeded league or clubhouse, so squad-builder, league-standings, draft and trade flows with real data are still unverified against live rendering — only their leagueless empty states are confirmed.</p>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top: 16px;">
+      <div class="panel">
+        <h3>Live verification pass — 2026-08-23</h3>
+        <p class="body">Eight signed-in routes exercised directly in the browser under local demo mode (Trophy Cabinet, Coin Wallet, Settings, Squad, League, Live, Market, Recap), each scanned with an automated WCAG contrast walk of every rendered text node against its true composited background (alpha-blended up the ancestor chain, not just the nearest opaque layer). All fourteen original findings hold up against live rendering — nothing they predicted turned out to be wrong. Seven further contrast failures surfaced that source review didn't catch, listed as 15–21 in the ledger below; three repeat identically across every screen because they sit in global chrome (the header badge and the bottom nav), so their exposure is wider than most of the original fourteen.</p>
+      </div>
+      <div class="panel">
+        <h3>What held up well</h3>
+        <p class="body">The leagueless empty states — Squad, League, Live, Market, Recap, Trophy Cabinet — all render cleanly with sensible copy and clear calls to action; none crash or show a broken layout for a fresh account with zero data. Two background <code>401</code> requests fire on load under demo mode (queries that assume a real session); they're cosmetic and don't affect the UI.</p>
       </div>
     </div>
   </section>
@@ -905,6 +921,13 @@
           <tr><td class="n">12</td><td class="t">The three brand faces are re-declared inline 1,584 times instead of inherited</td><td><span class="chip chip--low">Low</span></td><td class="w">112 files</td><td class="e">D2</td></tr>
           <tr><td class="n">13</td><td class="t">Glow helpers and the live-ring keyframe still animate dark-theme colours</td><td><span class="chip chip--low">Low</span></td><td class="w">index.css · .glow-* · liveRing</td><td class="e">C2</td></tr>
           <tr><td class="n">14</td><td class="t">Radius mixed inside single components — sign-in fields 4px against a 6px card</td><td><span class="chip chip--low">Low</span></td><td class="w">AuthScreen.jsx</td><td class="e">A1</td></tr>
+          <tr><td class="n">15</td><td class="t">Bottom-nav active tab label — info-blue on shell measures 3.02:1, global chrome on every screen</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · all screens</td><td class="e">Not yet scoped</td></tr>
+          <tr><td class="n">16</td><td class="t">Raw <code>--gold</code> used directly as text colour (not via the fixed button rule) — 3.49–4.24:1; includes the header "Beta" badge at 6.5px, present on every screen</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · header + Trophy, Market, Live</td><td class="e">Not yet scoped</td></tr>
+          <tr><td class="n">17</td><td class="t">Red status colour on dark surfaces — LIVE badge 2.53:1, position-count chips (GK/DEF/MID/FWD) 2.33:1, both below even the large-text floor</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · Live, Market</td><td class="e">Not yet scoped</td></tr>
+          <tr><td class="n">18</td><td class="t">Near-invisible empty-state caption — 1.22:1, off-white text on an off-white card, effectively unreadable</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · Live screen, Points Log</td><td class="e">Not yet scoped</td></tr>
+          <tr><td class="n">19</td><td class="t"><code>--mute</code> still fails AA against <code>--elev</code> at 4.26:1 — a residual gap in A2's fix; carries every field label, helper caption and the Save button text on Settings</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · Settings, Trophy, Wallet</td><td class="e">Not yet scoped</td></tr>
+          <tr><td class="n">20</td><td class="t"><code>--mute</code> used directly against <code>--shell</code> at 3.19:1 — an instance B1's planned sweep hadn't caught as of this pass</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · Market (Budget/Price)</td><td class="e">Not yet scoped</td></tr>
+          <tr><td class="n">21</td><td class="t">Old un-migrated <code>--gold</code> used as a solid button fill with white text — 3.85:1</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · League, "Join →"</td><td class="e">Not yet scoped</td></tr>
         </tbody>
       </table>
     </div>
