@@ -55,4 +55,38 @@ export default defineConfig([
       globals: { ...globals.node, Response: 'readonly', Request: 'readonly', URL: 'readonly' },
     },
   },
+  // Design-token guardrails (B4 — design audit P1). 'warn', not 'error': the
+  // codebase still has ~156 raw white-alpha values (B1) and ~474 raw font-size
+  // declarations (B2) that haven't been swept onto tokens yet, so an 'error'
+  // severity here would fail every PR's lint step today. Flip each rule to
+  // 'error' once its corresponding sweep (B1 for the rgba rule, B2 for the
+  // font-size rules) lands and the codebase is actually clean, or CI won't
+  // catch new violations and this becomes a stale warning nobody reads.
+  {
+    files: ['src/**/*.{js,jsx}'],
+    rules: {
+      'no-restricted-syntax': ['warn',
+        {
+          selector: "Literal[value=/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?([0-9a-fA-F]{2})?$/]",
+          message: 'Raw hex color — use a CSS variable from src/index.css instead.',
+        },
+        {
+          selector: "Property[key.name='fontSize'] > Literal[value=/^-?\\d+(\\.\\d+)?px$/]",
+          message: 'Raw pixel fontSize — use the type-ramp step from src/index.css instead (B2).',
+        },
+        {
+          selector: "Property[key.name='fontSize'] > Literal[raw=/^-?\\d+(\\.\\d+)?$/]",
+          message: 'Raw unitless fontSize (implicit px) — use the type-ramp step from src/index.css instead (B2).',
+        },
+        {
+          selector: "Literal[value=/text-\\[\\d+(\\.\\d+)?px\\]/]",
+          message: 'Raw pixel Tailwind arbitrary text size — use the type-ramp step from src/index.css instead (B2).',
+        },
+        {
+          selector: "Literal[value=/rgba\\(\\s*255\\s*,\\s*255\\s*,\\s*255\\s*,/]",
+          message: "White-alpha rgba() — use a real token (--rule, --elev, --card, --on-shell, --on-shell-dim) instead (B1).",
+        },
+      ],
+    },
+  },
 ])

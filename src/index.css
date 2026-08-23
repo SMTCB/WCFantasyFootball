@@ -75,7 +75,7 @@
   /* Text */
   --paper:    #18202E;   /* primary text */
   --text-2:   #4B5568;   /* secondary text */
-  --mute:     #626F80;   /* muted labels */
+  --mute:     #5C6878;   /* muted labels — retuned for WCAG AA against --elev (was 4.26:1) */
 
   /* White-label accent cascade — operators override --brand-accent only */
   --brand-accent: #1A6FA8;
@@ -479,8 +479,8 @@ button, a {
   width: 100%;
 }
 
-/* Sizes — minHeight always >= 44px on md/lg (WCAG 2.1 AA touch target) */
-.ffl-btn--sm { min-height: 36px; padding:  8px 12px; font-size: 11px; }
+/* Sizes — minHeight always >= 44px (WCAG 2.1 AA touch target, 375px min viewport) */
+.ffl-btn--sm { min-height: 44px; padding:  8px 12px; font-size: 11px; }
 .ffl-btn--md { min-height: 44px; padding: 12px 16px; font-size: 12px; }
 .ffl-btn--lg { min-height: 52px; padding: 14px 20px; font-size: 13px; }
 
