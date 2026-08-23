@@ -18,9 +18,9 @@ function SectionHead({ accent, label, badge }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
       <span style={{ width: 3, height: 14, background: accent, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
       {badge && (
-        <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.18em', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '2px 5px' }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '2px 5px' }}>
           {badge}
         </span>
       )}
@@ -30,7 +30,7 @@ function SectionHead({ accent, label, badge }) {
 
 function EmptyState({ label }) {
   return (
-    <div style={{ padding: '28px 0', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
+    <div style={{ padding: '28px 0', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>
       {label}
     </div>
   );
@@ -131,12 +131,12 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
           const hue  = mgrHue(mgr.username || '');
           return (
             <div key={mgr.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', width: 14, textAlign: 'right' }}>#{i + 1}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 14, textAlign: 'right' }}>#{i + 1}</span>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: hue, flexShrink: 0 }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.1em', color: isMe ? hue : 'var(--mute)', fontWeight: isMe ? 700 : 400 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: isMe ? hue : 'var(--mute)', fontWeight: isMe ? 700 : 400 }}>
                 {(mgr.username || '').toUpperCase()}
               </span>
-              <span style={{ fontFamily: DISPLAY, fontSize: 11, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
                 {mgr.final}
               </span>
             </div>
@@ -198,7 +198,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
           {[...POS_ORDER, 'BET'].map(pos => (
             <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 9, height: 9, background: POS_COLORS[pos], flexShrink: 0 }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{pos}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>{pos}</span>
             </div>
           ))}
         </div>
@@ -213,17 +213,17 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
           <div key={mgr.user_id} style={{ marginBottom: 14 }}>
             {/* Label row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 13, minWidth: 28, textAlign: 'right', color: 'var(--mute)' }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', minWidth: 28, textAlign: 'right', color: 'var(--mute)' }}>
                 #{mgr.rank}
               </span>
               <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-              <span style={{ fontFamily: DISPLAY, fontSize: 12, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontFamily: DISPLAY, fontSize: 15, color: isLeader ? 'var(--gold)' : 'var(--paper)' }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isLeader ? 'var(--gold)' : 'var(--paper)' }}>
                   {mgr.totalPts}
                 </span>
                 {mgr.penaltyPts > 0 && (
-                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--danger)', marginLeft: 5 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginLeft: 5 }}>
                     (inc. -{mgr.penaltyPts} xfer)
                   </span>
                 )}
@@ -245,7 +245,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                         title={`${pos}: ${pts} pts`}
                       >
                         {pct >= 3 && (
-                          <span style={{ fontFamily: MONO, fontSize: 9, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
                             {pts}
                           </span>
                         )}
@@ -260,7 +260,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                         title={`BET: ${mgr.betPts} pts`}
                       >
                         {pct >= 3 && (
-                          <span style={{ fontFamily: MONO, fontSize: 9, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
                             {mgr.betPts}
                           </span>
                         )}
@@ -309,14 +309,14 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
             border: `1px solid ${isMe ? hue + '44' : 'var(--rule)'}`,
             alignItems: 'center',
           }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 15, color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>{i + 1}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>{i + 1}</span>
             <MgrTag mono={mgrMono(m.username || '')} hue={hue} />
             <div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{isMe ? 'You' : m.username}</div>
-              {gwNum && <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>GW{gwNum}</div>}
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)' }}>{isMe ? 'You' : m.username}</div>
+              {gwNum && <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>GW{gwNum}</div>}
             </div>
-            <span style={{ fontFamily: DISPLAY, fontSize: 18, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
-              {m.pts}<span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 3 }}>PTS</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
+              {m.pts}<span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)', marginLeft: 3 }}>PTS</span>
             </span>
           </div>
         );
@@ -352,7 +352,7 @@ function CaptainHitRate({ captainHitData, currentUser }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-                <span style={{ fontFamily: DISPLAY, fontSize: 11 }}>{isMe ? 'You' : mgr.username}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)' }}>{isMe ? 'You' : mgr.username}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 3 }}>
@@ -378,13 +378,13 @@ function CaptainHitRate({ captainHitData, currentUser }) {
                           outlineOffset: 1,
                         }}
                       >
-                        <span style={{ fontFamily: MONO, fontSize: 7, color: 'rgba(0,0,0,0.8)', fontWeight: 700 }}>{gwNum}</span>
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(0,0,0,0.8)', fontWeight: 700 }}>{gwNum}</span>
                       </div>
                     );
                   })}
                 </div>
-                <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>{mgr.hits}/{mgr.total}</span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: pct >= 50 ? 'var(--positive)' : 'var(--danger)', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{mgr.hits}/{mgr.total}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: pct >= 50 ? 'var(--positive)' : 'var(--danger)', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
               </div>
             </div>
 
@@ -395,10 +395,10 @@ function CaptainHitRate({ captainHitData, currentUser }) {
                 background: 'var(--ink-2)', border: `1px solid ${activeRound.hit ? 'var(--positive)' : 'var(--danger)'}44`,
                 borderRadius: 3, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
               }}>
-                <span style={{ fontFamily: MONO, fontSize: 9, color: activeRound.hit ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.16em', flexShrink: 0 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: activeRound.hit ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.16em', flexShrink: 0 }}>
                   GW{activeRound.matchday_id?.split('-r')[1]} · {activeRound.hit ? '✓ HIT' : '✗ MISS'}
                 </span>
-                <span style={{ fontFamily: BODY, fontSize: 11, color: 'var(--paper)' }}>
+                <span style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>
                   Captain <strong>{activeRound.captain_name || activeRound.captain_id}</strong> scored <strong>{activeRound.captain_pts} pts</strong>
                   {activeRound.hit
                     ? <> — best in XI</>
@@ -450,7 +450,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {allGWs.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
             ROUND
           </span>
           {['AGG', ...allGWs].map(gw => {
@@ -462,7 +462,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
                 border: active ? '1px solid var(--cyan)' : '1px solid var(--rule)',
                 background: active ? 'rgba(0,180,216,.14)' : 'transparent',
                 color: active ? 'var(--cyan)' : 'var(--mute)',
-                fontFamily: MONO, fontSize: 10, letterSpacing: '.12em', cursor: 'pointer',
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', cursor: 'pointer',
               }}>
                 {label}
               </button>
@@ -481,29 +481,29 @@ function BenchPointsPanel({ benchData, currentUser }) {
         return (
           <div key={mgr.user_id}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 12, minWidth: 22, textAlign: 'right', color: i === 0 ? 'var(--positive)' : 'var(--mute)' }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', minWidth: 22, textAlign: 'right', color: i === 0 ? 'var(--positive)' : 'var(--mute)' }}>
                 #{i + 1}
               </span>
               <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-              <span style={{ fontFamily: DISPLAY, fontSize: 11, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
                   {mgr.pts}
                 </span>
-                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>MISSED</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 3 }}>MISSED</span>
               </div>
             </div>
             <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
               <div style={{ height: '100%', width: `${barPct}%`, background: barColor, opacity: isMe ? 1 : 0.75 }} />
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 32, marginTop: 3 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 32, marginTop: 3 }}>
               {mgr.sub}
             </div>
           </div>
         );
       })}
 
-      <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 4 }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginTop: 4 }}>
         {selectedGW === 'AGG'
           ? 'AGG — rolling total across all completed rounds · lower = better · 0 = perfect season'
           : `GW${String(selectedGW).replace(/^.*-r/, '')} — missed pts this round · 0 = perfect selection`}
@@ -516,7 +516,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
 
 const ROI_TAB_STYLES = {
   base: {
-    fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', padding: '5px 12px',
+    fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', padding: '5px 12px',
     border: '1px solid var(--rule)', cursor: 'pointer', transition: 'all .15s',
   },
 };
@@ -543,7 +543,7 @@ function RoiPanel({ roiData, currentUser }) {
       {/* ── Manager ROI ───────────────────────────────────────────────── */}
       <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <SectionHead accent="var(--purple)" label="MANAGER ROI · PTS PER £M" />
-        <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
           Season points divided by current XI value. Who extracts the most from their budget?
         </p>
 
@@ -558,16 +558,16 @@ function RoiPanel({ roiData, currentUser }) {
                 return (
                   <div key={mgr.user_id}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 12, minWidth: 22, textAlign: 'right', color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', minWidth: 22, textAlign: 'right', color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>
                         #{i + 1}
                       </span>
                       <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-                      <span style={{ fontFamily: DISPLAY, fontSize: 11, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
+                        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
                           {mgr.roi.toFixed(2)}
                         </span>
-                        <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>PTS/£M</span>
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 3 }}>PTS/£M</span>
                       </div>
                     </div>
                     <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
@@ -577,7 +577,7 @@ function RoiPanel({ roiData, currentUser }) {
                         opacity: isMe ? 1 : 0.7,
                       }} />
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em', marginTop: 3, marginLeft: 32 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', marginTop: 3, marginLeft: 32 }}>
                       {mgr.total_points} PTS · £{mgr.squad_value.toFixed(1)}M XI
                     </div>
                   </div>
@@ -614,7 +614,7 @@ function RoiPanel({ roiData, currentUser }) {
           </div>
         </div>
 
-        <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
           {playerTab === 'best'
             ? 'Pts per £M among players who have played. Underpriced gems that punch above their cost.'
             : 'Lowest pts per £M among players who have played. Big price tags, small returns.'
@@ -628,7 +628,7 @@ function RoiPanel({ roiData, currentUser }) {
               {/* Column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '22px 28px 1fr auto auto auto', gap: 8, alignItems: 'center', padding: '4px 8px', marginBottom: 4 }}>
                 {['#', 'POS', 'PLAYER', 'PTS', '£M', 'ROI'].map(h => (
-                  <span key={h} style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.16em', textAlign: h === 'PLAYER' ? 'left' : 'right' }}>{h}</span>
+                  <span key={h} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textAlign: h === 'PLAYER' ? 'left' : 'right' }}>{h}</span>
                 ))}
               </div>
 
@@ -647,31 +647,31 @@ function RoiPanel({ roiData, currentUser }) {
                       borderRadius: 2,
                     }}
                   >
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: rankColor, textAlign: 'right' }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: rankColor, textAlign: 'right' }}>
                       {i + 1}
                     </span>
                     <span style={{
-                      fontFamily: MONO, fontSize: 8, letterSpacing: '.1em', textAlign: 'center',
+                      fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textAlign: 'center',
                       background: posColor, color: 'rgba(0,0,0,0.8)', padding: '2px 4px', borderRadius: 2, fontWeight: 700,
                     }}>
                       {p.position}
                     </span>
                     <div style={{ overflow: 'hidden', minWidth: 0 }}>
-                      <div style={{ fontFamily: DISPLAY, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.name}
                       </div>
                       {owners.length > 0 && (
-                        <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
+                        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
                           {owners.join(' · ')}
                         </div>
                       )}
                     </div>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 12, textAlign: 'right' }}>{p.pts}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'right' }}>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', textAlign: 'right' }}>{p.pts}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>
                       {p.price.toFixed(1)}
                     </span>
                     <span style={{
-                      fontFamily: DISPLAY, fontSize: 13, textAlign: 'right',
+                      fontFamily: DISPLAY, fontSize: 'var(--fs-body)', textAlign: 'right',
                       color: isGood ? (i === 0 ? 'var(--positive)' : 'var(--paper)') : (i === 0 ? 'var(--danger)' : 'var(--paper)'),
                     }}>
                       {p.roi.toFixed(2)}
@@ -680,7 +680,7 @@ function RoiPanel({ roiData, currentUser }) {
                 );
               })}
 
-              <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 6, textAlign: 'right' }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginTop: 6, textAlign: 'right' }}>
                 ROI = TOTAL PTS ÷ PRICE · PLAYED PLAYERS ONLY
               </div>
             </div>
@@ -727,7 +727,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
             { k: 'LEADER', v: leaderPts,                 tone: 'var(--gold)'  },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px,2vw,16px) clamp(10px,2.5vw,22px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px,4vw,30px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
             </div>
           ))}
@@ -735,14 +735,14 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
       </div>
 
       {statsLoading ? (
-        <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+        <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
 
           {/* ── Row 1: Score Progression (full width) ────────────────── */}
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionHead accent="var(--purple)" label="SCORE PROGRESSION · CUMULATIVE PTS" />
-            <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
               Cumulative season total per gameweek. Steeper slope = higher-scoring round.
             </p>
             <ProgressionChart matchdayPoints={matchdayPoints} currentUser={currentUser} />
@@ -751,7 +751,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           {/* ── Row 2: Season Totals + Position Breakdown (merged, full width) */}
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionHead accent="var(--cyan)" label="SEASON TOTALS · POINTS BY POSITION" />
-            <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
               Sorted by official leaderboard total — the #1 manager always has the longest bar. Segments show points by position (from completed matchdays) plus a BET stripe for bet rewards and trade bonuses. Transfer penalties are noted alongside the total but already reflected in it.
             </p>
             <SeasonTotalsWithPosition topScorers={topScorers} positionPoints={positionPoints} currentUser={currentUser} />
@@ -765,7 +765,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
             </section>
             <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <SectionHead accent="var(--gold)" label="CAPTAINCY · HIT RATE" />
-              <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
                 Did your captain outscore every other player in YOUR XI that gameweek? Two managers with the same captain can have different results — it depends on their other 10 players. Hover each square to see captain pts vs best other player. Only completed gameweeks count.
               </p>
               <CaptainHitRate captainHitData={captainHitData} currentUser={currentUser} />
@@ -780,7 +780,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           {/* ── Row 5: Points left on bench ──────────────────────────── */}
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionHead accent="var(--positive)" label="SELECTION EFFICIENCY · MISSED PTS" />
-            <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
               How many points did you leave on the bench? For each bench player who outscored your worst-performing starter, the difference counts as a missed point. Zero means every bench player scored less than your weakest XI player — perfect selection. Use the round selector to inspect individual gameweeks or AGG for the rolling season total. Only completed matchdays count.
             </p>
             <BenchPointsPanel benchData={benchData} currentUser={currentUser} />

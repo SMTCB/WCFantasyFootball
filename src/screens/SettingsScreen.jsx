@@ -118,14 +118,14 @@ export default function SettingsScreen() {
         <div style={{ marginBottom: 32 }}>
           <h1 style={{
             fontFamily: 'Archivo Black, sans-serif',
-            fontSize: 28,
+            fontSize: 'var(--fs-title)',
             color: 'var(--paper)',
             marginBottom: 8,
             letterSpacing: '0.02em',
           }}>
             Settings
           </h1>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--mute)' }}>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             Manage your account, security, and preferences
           </p>
         </div>
@@ -140,7 +140,7 @@ export default function SettingsScreen() {
         }}>
           <h2 style={{
             fontFamily: 'Archivo Black, sans-serif',
-            fontSize: 13,
+            fontSize: 'var(--fs-body)',
             color: 'var(--paper)',
             marginBottom: 16,
             textTransform: 'uppercase',
@@ -154,7 +154,7 @@ export default function SettingsScreen() {
             <div>
               <label style={{
                 fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
+                fontSize: 'var(--fs-micro)',
                 color: 'var(--mute)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
@@ -163,7 +163,7 @@ export default function SettingsScreen() {
               }}>
                 Username
               </label>
-              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 8, lineHeight: 1.5 }}>
+              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8, lineHeight: 1.5 }}>
                 Shown to other managers in leaderboards, chat, and bets. 3–30 characters. No uniqueness required.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -178,7 +178,7 @@ export default function SettingsScreen() {
                   style={{
                     flex: 1,
                     fontFamily: 'JetBrains Mono, monospace',
-                    fontSize: 13,
+                    fontSize: 'var(--fs-label)',
                     color: 'var(--paper)',
                     padding: '8px 12px',
                     background: 'rgba(24,32,46,.04)',
@@ -192,7 +192,7 @@ export default function SettingsScreen() {
                   disabled={!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim()}
                   style={{
                     fontFamily: 'Archivo Black, sans-serif',
-                    fontSize: 11,
+                    fontSize: 'var(--fs-micro)',
                     fontWeight: 800,
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
@@ -221,7 +221,7 @@ export default function SettingsScreen() {
             <div>
               <label style={{
                 fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
+                fontSize: 'var(--fs-micro)',
                 color: 'var(--mute)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
@@ -232,7 +232,7 @@ export default function SettingsScreen() {
               </label>
               <div style={{
                 fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 13,
+                fontSize: 'var(--fs-label)',
                 color: 'var(--mute)',
                 padding: '8px 12px',
                 background: 'rgba(24,32,46,.02)',
@@ -256,7 +256,7 @@ export default function SettingsScreen() {
         }}>
           <h2 style={{
             fontFamily: 'Archivo Black, sans-serif',
-            fontSize: 13,
+            fontSize: 'var(--fs-body)',
             color: 'var(--paper)',
             marginBottom: 16,
             textTransform: 'uppercase',
@@ -285,7 +285,7 @@ export default function SettingsScreen() {
               disabled={isChangingPassword}
               style={{
                 fontFamily: 'Archivo Black, sans-serif',
-                fontSize: 11,
+                fontSize: 'var(--fs-micro)',
                 fontWeight: 800,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
@@ -318,7 +318,7 @@ export default function SettingsScreen() {
             onClick={handleReplayTour}
             style={{
               fontFamily: 'Archivo Black, sans-serif',
-              fontSize: 11,
+              fontSize: 'var(--fs-micro)',
               fontWeight: 800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -346,7 +346,7 @@ export default function SettingsScreen() {
             onClick={handleLogout}
             style={{
               fontFamily: 'Archivo Black, sans-serif',
-              fontSize: 11,
+              fontSize: 'var(--fs-micro)',
               fontWeight: 800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -374,7 +374,7 @@ export default function SettingsScreen() {
         {/* Footer */}
         <div style={{
           textAlign: 'center',
-          fontSize: 10,
+          fontSize: 'var(--fs-micro)',
           color: 'var(--mute)',
           fontFamily: 'JetBrains Mono, monospace',
           letterSpacing: '0.08em',

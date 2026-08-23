@@ -39,9 +39,9 @@ export function ReactionStrip({
               transition: 'border-color .1s, background .1s',
             }}
           >
-            <span style={{ fontSize: 13, lineHeight: 1 }}>{emoji}</span>
+            <span style={{ fontSize: 'var(--fs-body)', lineHeight: 1 }}>{emoji}</span>
             {count > 0 && (
-              <span style={{ fontFamily: ftMono, fontSize: 9, color: mine ? ftInk : ftMute }}>
+              <span style={{ fontFamily: ftMono, fontSize: 'var(--fs-micro)', color: mine ? ftInk : ftMute }}>
                 {count}
               </span>
             )}
@@ -83,7 +83,7 @@ export function LettersPanel({
         style={{
           background: 'none', border: 'none', padding: 0, cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: 5,
-          fontFamily: ftMono, fontSize: 9, letterSpacing: '.16em', color: ftMute,
+          fontFamily: ftMono, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: ftMute,
         }}
       >
         <span>✉</span>
@@ -92,7 +92,7 @@ export function LettersPanel({
             ? `${letters.length} LETTER${letters.length !== 1 ? 'S' : ''}`
             : 'WRITE A LETTER'}
         </span>
-        <span style={{ fontSize: 7 }}>{open ? '▲' : '▼'}</span>
+        <span style={{ fontSize: 'var(--fs-micro)' }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
@@ -105,10 +105,10 @@ export function LettersPanel({
             }}>
               {letters.map(l => (
                 <div key={l.id}>
-                  <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 12.5, color: ftInk, lineHeight: 1.4 }}>
+                  <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'var(--fs-label)', color: ftInk, lineHeight: 1.4 }}>
                     "{l.text}"
                   </span>
-                  <span style={{ fontFamily: ftMono, fontSize: 9, color: ftMute, marginLeft: 8 }}>
+                  <span style={{ fontFamily: ftMono, fontSize: 'var(--fs-micro)', color: ftMute, marginLeft: 8 }}>
                     — {usernameFor(l.user_id)} · {timeAgoFT(l.created_at)}
                   </span>
                   {(l.user_id === currentUserId || isCommissioner) && (
@@ -117,7 +117,7 @@ export function LettersPanel({
                       title="Delete"
                       style={{
                         marginLeft: 6, background: 'none', border: 'none',
-                        cursor: 'pointer', color: ftMute, fontSize: 9, padding: 0,
+                        cursor: 'pointer', color: ftMute, fontSize: 'var(--fs-micro)', padding: 0,
                         lineHeight: 1, verticalAlign: 'middle',
                       }}
                     >✕</button>
@@ -138,7 +138,7 @@ export function LettersPanel({
               onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
               style={{
                 flex: 1, minWidth: 0,
-                fontFamily: ftSerif, fontSize: 12,
+                fontFamily: ftSerif, fontSize: 'var(--fs-label)',
                 border: `1px solid ${ftRule}`, background: 'transparent',
                 padding: '5px 8px', color: ftInk, outline: 'none',
               }}
@@ -148,7 +148,7 @@ export function LettersPanel({
               disabled={!draft.trim() || sending}
               style={{
                 flexShrink: 0,
-                fontFamily: ftMono, fontSize: 9, letterSpacing: '.14em',
+                fontFamily: ftMono, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
                 padding: '0 10px',
                 background: !draft.trim() ? 'transparent' : ftInk,
                 color: !draft.trim() ? ftMute : '#F2EEE5',
@@ -159,7 +159,7 @@ export function LettersPanel({
               {sending ? '…' : 'SEND →'}
             </button>
           </div>
-          <div style={{ fontFamily: ftMono, fontSize: 8, color: ftMute, marginTop: 3 }}>
+          <div style={{ fontFamily: ftMono, fontSize: 'var(--fs-micro)', color: ftMute, marginTop: 3 }}>
             {140 - draft.length} chars remaining
           </div>
         </div>

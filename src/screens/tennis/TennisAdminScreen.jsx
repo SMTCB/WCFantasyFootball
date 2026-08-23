@@ -107,8 +107,8 @@ export default function TennisAdminScreen() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--mute)', fontSize: 12 }}>ADMIN ACCESS REQUIRED</p>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🔒</div>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>ADMIN ACCESS REQUIRED</p>
         </div>
       </div>
     );
@@ -118,13 +118,13 @@ export default function TennisAdminScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '20px 16px' }}>
-        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontFamily: 'Archivo, sans-serif', fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 10 }}>
+        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--on-shell-dim)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Tennis
         </button>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 4 }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 4 }}>
           Admin
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 24, color: 'var(--on-shell)', margin: 0 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>
           Tennis Admin Panel
         </h1>
       </div>
@@ -133,16 +133,16 @@ export default function TennisAdminScreen() {
 
         {/* Tournament selector */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', marginBottom: 16 }}>
-          <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+          <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
             Select Tournament
           </label>
           {loading ? (
-            <div style={{ color: 'var(--mute)', fontSize: 13, fontFamily: 'Archivo, sans-serif' }}>Loading…</div>
+            <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-body)', fontFamily: 'Archivo, sans-serif' }}>Loading…</div>
           ) : (
             <select
               value={selected ?? ''}
               onChange={e => { setSelected(e.target.value || null); setMsg(''); setErr(''); setEliminatedIds([]); }}
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
             >
               <option value="">— Choose —</option>
               {tournaments.map(x => (
@@ -180,15 +180,15 @@ export default function TennisAdminScreen() {
             {/* Seed players (non-ATP) */}
             {!isAtp && ['upcoming', 'roster_open'].includes(t.status) && (
               <Section title="Seed Player List">
-                <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--mute)', margin: '0 0 10px' }}>
-                  Paste a JSON array: <code style={{ fontSize: 11 }}>[{`{"player_name":"Djokovic","seed":1,"tier":1,"nationality":"SRB"}`}, …]</code>
+                <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '0 0 10px' }}>
+                  Paste a JSON array: <code style={{ fontSize: 'var(--fs-micro)' }}>[{`{"player_name":"Djokovic","seed":1,"tier":1,"nationality":"SRB"}`}, …]</code>
                 </p>
                 <textarea
                   value={playersJson}
                   onChange={e => setPlayersJson(e.target.value)}
                   rows={5}
                   placeholder='[{"player_name":"Djokovic","seed":1,"tier":1,"nationality":"SRB"}]'
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--paper)', background: 'var(--card)', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
                 />
                 <AdminBtn label="Seed Players" onClick={seedPlayers} disabled={busy || !playersJson.trim()} />
               </Section>
@@ -197,28 +197,28 @@ export default function TennisAdminScreen() {
             {/* Enter round results (non-ATP, in_progress / qf_captain_open) */}
             {!isAtp && ['in_progress', 'qf_captain_open'].includes(t.status) && (
               <Section title="Enter Round Results — Eliminated Players">
-                <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--mute)', margin: '0 0 10px' }}>
+                <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '0 0 10px' }}>
                   Select all players eliminated in this round, and set the round they were eliminated in.
                 </p>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'Archivo, sans-serif', fontSize: 11, color: 'var(--mute)' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                     Round reached
                     <select
                       value={eliminatedRound}
                       onChange={e => setEliminatedRound(e.target.value)}
-                      style={{ padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                      style={{ padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
                     >
                       {ROUND_REACHED_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </label>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'Archivo, sans-serif', fontSize: 11, color: 'var(--mute)' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                     Rounds won
                     <input
                       type="number"
                       min={0}
                       value={eliminatedRoundsWon}
                       onChange={e => setEliminatedRoundsWon(e.target.value)}
-                      style={{ width: 80, padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                      style={{ width: 80, padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
                     />
                   </label>
                 </div>
@@ -241,14 +241,14 @@ export default function TennisAdminScreen() {
                     value={atpMatchNumber}
                     onChange={e => setAtpMatchNumber(e.target.value)}
                     placeholder="Match # (1–15)"
-                    style={{ flex: 1, minWidth: 100, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                    style={{ flex: 1, minWidth: 100, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
                   />
                   <input
                     type="text"
                     value={atpWinnerId}
                     onChange={e => setAtpWinnerId(e.target.value)}
                     placeholder="Winner player UUID"
-                    style={{ flex: 2, minWidth: 180, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                    style={{ flex: 2, minWidth: 180, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
                   />
                 </div>
                 <AdminBtn label="Enter Result" onClick={enterAtpResult} disabled={busy || !atpMatchNumber || !atpWinnerId} />
@@ -256,8 +256,8 @@ export default function TennisAdminScreen() {
             )}
 
             {/* Feedback */}
-            {msg && <div style={{ padding: '10px 14px', background: 'rgba(22,101,52,0.08)', border: '1px solid var(--pos)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--pos)', marginTop: 12 }}>{msg}</div>}
-            {err && <div style={{ padding: '10px 14px', background: 'rgba(185,28,28,0.07)', border: '1px solid var(--neg)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--neg)', marginTop: 12 }}>{err}</div>}
+            {msg && <div style={{ padding: '10px 14px', background: 'rgba(22,101,52,0.08)', border: '1px solid var(--pos)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--pos)', marginTop: 12 }}>{msg}</div>}
+            {err && <div style={{ padding: '10px 14px', background: 'rgba(185,28,28,0.07)', border: '1px solid var(--neg)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)', marginTop: 12 }}>{err}</div>}
           </>
         )}
       </div>
@@ -268,7 +268,7 @@ export default function TennisAdminScreen() {
 function Section({ title, children }) {
   return (
     <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', marginBottom: 14 }}>
-      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', marginBottom: 12 }}>{title}</div>
+      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 12 }}>{title}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{children}</div>
     </div>
   );
@@ -279,7 +279,7 @@ function AdminBtn({ label, onClick, disabled, accent }) {
     <button
       onClick={onClick}
       disabled={disabled}
-      style={{ padding: '10px 18px', background: disabled ? 'var(--mute)' : accent ? 'var(--ten)' : 'var(--elev)', color: disabled ? '#fff' : accent ? '#fff' : 'var(--paper)', border: `1px solid ${accent ? 'var(--ten)' : 'var(--rule)'}`, borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: disabled ? 'default' : 'pointer' }}
+      style={{ padding: '10px 18px', background: disabled ? 'var(--mute)' : accent ? 'var(--ten)' : 'var(--elev)', color: disabled ? '#fff' : accent ? '#fff' : 'var(--paper)', border: `1px solid ${accent ? 'var(--ten)' : 'var(--rule)'}`, borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: disabled ? 'default' : 'pointer' }}
     >
       {label}
     </button>
@@ -309,20 +309,20 @@ function PlayerMultiSelect({ tournamentId, selected, onChange }) {
   return (
     <div>
       {!loaded ? (
-        <button onClick={load} style={{ padding: '8px 14px', border: '1px solid var(--rule)', borderRadius: 6, background: 'var(--elev)', fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)', cursor: 'pointer', marginBottom: 10 }}>
+        <button onClick={load} style={{ padding: '8px 14px', border: '1px solid var(--rule)', borderRadius: 6, background: 'var(--elev)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', cursor: 'pointer', marginBottom: 10 }}>
           Load active players
         </button>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 280, overflowY: 'auto', marginBottom: 10 }}>
           {players.map(p => (
-            <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: `1px solid ${selected.includes(p.id) ? 'var(--neg)' : 'var(--rule)'}`, borderRadius: 6, background: selected.includes(p.id) ? 'rgba(185,28,28,0.06)' : 'var(--card)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--paper)' }}>
+            <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: `1px solid ${selected.includes(p.id) ? 'var(--neg)' : 'var(--rule)'}`, borderRadius: 6, background: selected.includes(p.id) ? 'rgba(185,28,28,0.06)' : 'var(--card)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>
               <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggle(p.id)} style={{ accentColor: 'var(--neg)' }} />
               {p.player_name}
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>T{p.tier}</span>
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 'auto' }}>T{p.tier}</span>
             </label>
           ))}
           {players.length === 0 && (
-            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--mute)' }}>No active players found.</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>No active players found.</div>
           )}
         </div>
       )}

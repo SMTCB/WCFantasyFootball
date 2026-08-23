@@ -71,7 +71,7 @@ export default function TabStrip({
                 flex: '0 0 auto',
                 padding: '12px 14px',
                 fontFamily: MONO,
-                fontSize: 10,
+                fontSize: 'var(--fs-micro)',
                 fontWeight: 700,
                 letterSpacing: '0.14em',
                 cursor: 'pointer',
@@ -91,7 +91,7 @@ export default function TabStrip({
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
               )}
               {!!t.count && (
-                <span style={{ fontFamily: MONO, fontSize: 9, color: isActive ? accent : 'var(--danger)', fontWeight: 700 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: isActive ? accent : 'var(--danger)', fontWeight: 700 }}>
                   {t.count}
                 </span>
               )}
@@ -115,7 +115,7 @@ export default function TabStrip({
               borderRadius: 4,
               color: isActive ? 'var(--ink)' : 'var(--mute)',
               fontFamily: MONO,
-              fontSize: 10,
+              fontSize: 'var(--fs-micro)',
               letterSpacing: '.18em',
               fontWeight: 600,
               display: 'inline-flex',
@@ -128,7 +128,7 @@ export default function TabStrip({
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             )}
             {!!t.count && !isActive && (
-              <span style={{ color: accent, fontSize: 9 }}>{t.count}</span>
+              <span style={{ color: accent, fontSize: 'var(--fs-micro)' }}>{t.count}</span>
             )}
           </button>
         );

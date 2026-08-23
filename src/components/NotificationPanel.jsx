@@ -127,7 +127,7 @@ export default function NotificationPanel({ notifications, unreadCount, onMarkAs
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ borderTop: '1px solid var(--shell-rule)' }}>
               <button
                 onClick={() => { onClearAll?.(); setIsOpen(false); }}
                 className="w-full py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors hover:bg-white/5"

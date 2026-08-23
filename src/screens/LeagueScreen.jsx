@@ -753,11 +753,11 @@ export default function LeagueScreen() {
           <h1 className="fz-display text-[var(--paper)] text-[18px]">Choose Clubhouse</h1>
         </div>
         <div className="p-4 flex flex-col gap-4 mt-4">
-          <p style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.16em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 4 }}>
+          <p style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 4 }}>
             Link this league to a Clubhouse so all members can access it together
           </p>
           {circlesLoading ? (
-            <p style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.12em' }}>LOADING…</p>
+            <p style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>LOADING…</p>
           ) : myCircles.length > 0 ? (
             <div className="flex flex-col gap-2">
               {myCircles.map(c => (
@@ -768,18 +768,18 @@ export default function LeagueScreen() {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '14px 16px',
-                    border: `1px solid ${selectedCircleId === c.id ? 'var(--gold)' : 'rgba(255,255,255,0.1)'}`,
+                    border: `1px solid ${selectedCircleId === c.id ? 'var(--gold)' : 'var(--shell-rule-strong)'}`,
                     background: selectedCircleId === c.id ? 'rgba(181,147,58,0.07)' : 'var(--surface)',
                     cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s',
                   }}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 12, letterSpacing: '.1em', color: 'var(--paper)', fontWeight: 700 }}>{c.name}</span>
-                    <span style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', textTransform: 'uppercase' }}>{c.role}</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-label)', letterSpacing: '.1em', color: 'var(--paper)', fontWeight: 700 }}>{c.name}</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--mute)', textTransform: 'uppercase' }}>{c.role}</span>
                   </div>
                   {selectedCircleId === c.id && (
                     <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ color: 'var(--paper)', fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>
+                      <span style={{ color: 'var(--paper)', fontSize: 'var(--fs-micro)', fontWeight: 900, lineHeight: 1 }}>✓</span>
                     </span>
                   )}
                 </button>
@@ -787,9 +787,9 @@ export default function LeagueScreen() {
             </div>
           ) : (
             <div style={{ padding: '20px 0', textAlign: 'center' }}>
-              <p style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.12em', lineHeight: 1.6 }}>
+              <p style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', lineHeight: 1.6 }}>
                 YOU DON&apos;T HAVE A CLUBHOUSE YET<br />
-                <span style={{ color: 'rgba(255,255,255,0.3)' }}>Create one in the Clubhouse tab first,<br />or continue without linking.</span>
+                <span style={{ color: 'var(--on-shell-faint)' }}>Create one in the Clubhouse tab first,<br />or continue without linking.</span>
               </p>
             </div>
           )}
@@ -868,17 +868,17 @@ export default function LeagueScreen() {
                 onClick={e => e.stopPropagation()}
                 style={{
                   background: 'var(--ink-2, #111)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  border: '1px solid var(--shell-rule-strong)',
                   width: '100%', maxWidth: 520,
                   maxHeight: '82vh', overflowY: 'auto',
                   display: 'flex', flexDirection: 'column',
                   boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
                 }}
               >
-                <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--shell-rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 3, height: 12, background: 'var(--cyan, #00b4d8)', flexShrink: 0 }} />
-                  <span style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.22em', color: 'var(--paper, #e8e8e8)', flex: 1, textTransform: 'uppercase' }}>League Mode — Classic vs Draft</span>
-                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+                  <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper, #e8e8e8)', flex: 1, textTransform: 'uppercase' }}>League Mode — Classic vs Draft</span>
+                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'none', border: 'none', color: 'var(--on-shell-dim)', cursor: 'pointer', fontSize: 'var(--fs-heading)', lineHeight: 1 }}>✕</button>
                 </div>
                 <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {[
@@ -894,7 +894,7 @@ export default function LeagueScreen() {
                       ],
                     },
                     {
-                      label: 'CLASSIC', color: 'rgba(255,255,255,0.6)',
+                      label: 'CLASSIC', color: 'var(--on-shell-mid)',
                       summary: 'All managers build freely. The same player can appear in multiple squads simultaneously.',
                       rows: [
                         ['Market', 'Fully open — buy any player at any time, no uniqueness rules.'],
@@ -918,26 +918,26 @@ export default function LeagueScreen() {
                   ].map(({ label, color, summary, rows }) => (
                     <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.2em', color, fontWeight: 700 }}>{label}</span>
-                        <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+                        <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color, fontWeight: 700 }}>{label}</span>
+                        <span style={{ flex: 1, height: 1, background: 'var(--shell-fill-strong)' }} />
                       </div>
-                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: 0 }}>{summary}</p>
+                      <p style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell)', lineHeight: 1.5, margin: 0 }}>{summary}</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {rows.map(([k, v]) => (
                           <div key={k} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 10 }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '.14em', color: 'rgba(255,255,255,0.35)', paddingTop: 2, textTransform: 'uppercase' }}>{k}</span>
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.55 }}>{v}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--on-shell-faint)', paddingTop: 2, textTransform: 'uppercase' }}>{k}</span>
+                            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', lineHeight: 1.55 }}>{v}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   ))}
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5, margin: 0, borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 14 }}>
+                  <p style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-faint)', lineHeight: 1.5, margin: 0, borderTop: '1px solid var(--shell-rule)', paddingTop: 14 }}>
                     Regardless of mode: position rules always apply (1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD) and the max 3 players per club rule applies to final squads in all formats.
                   </p>
                 </div>
-                <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)', padding: '6px 14px', fontSize: 9, letterSpacing: '.2em', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}>CLOSE</button>
+                <div style={{ padding: '10px 18px', borderTop: '1px solid var(--shell-rule)', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'transparent', border: '1px solid var(--shell-rule-strong)', color: 'var(--on-shell-dim)', padding: '6px 14px', fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}>CLOSE</button>
                 </div>
               </div>
             </div>
@@ -950,7 +950,7 @@ export default function LeagueScreen() {
                 type="button"
                 onClick={() => setShowModeHelp(true)}
                 title="What's the difference?"
-                style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace' }}
+                style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid var(--shell-rule-emphasis)', background: 'transparent', color: 'var(--on-shell-dim)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace' }}
               >?</button>
             </div>
             <div className="flex flex-col gap-3">
@@ -1007,7 +1007,7 @@ export default function LeagueScreen() {
               >
                 <div className="flex items-center gap-2 w-full">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Draft + H2H</span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px', letterSpacing: '.14em' }}>⚔️ H2H</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px', letterSpacing: '.14em' }}>⚔️ H2H</span>
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Draft league with a parallel head-to-head competition each matchday.</span>
                 <ul className="flex flex-col gap-[3px]">
@@ -1080,12 +1080,12 @@ export default function LeagueScreen() {
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
                   data-tour="league-invite"
                   disabled={!joinCode}
-                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
+                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
                 >+ INVITE</button>
                 <button
                   onClick={() => view === 'commissioner' ? replayCommissionerTour() : replayLeagueTour()}
                   title={view === 'commissioner' ? 'Replay admin tour' : 'Replay league tour'}
-                  style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid var(--shell-rule-strong)', background: 'var(--shell-fill)', color: 'var(--on-shell-dim)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >?</button>
               </div>
             }
@@ -1119,7 +1119,7 @@ export default function LeagueScreen() {
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
                   data-tour="league-invite"
                   disabled={!joinCode}
-                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
+                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
                 >+ INVITE</button>
               </div>
             }
@@ -1128,13 +1128,13 @@ export default function LeagueScreen() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
             <button
               onClick={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
-              style={{ padding: '10px 14px', background: 'transparent', border: 'none', borderRight: '1px solid var(--rule)', color: 'var(--purple, #A855F7)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              style={{ padding: '10px 14px', background: 'transparent', border: 'none', borderRight: '1px solid var(--rule)', color: 'var(--purple, #A855F7)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
               ⬜ SQUAD
             </button>
             <button
               onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
-              style={{ padding: '10px 14px', background: 'transparent', border: 'none', color: 'var(--positive)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              style={{ padding: '10px 14px', background: 'transparent', border: 'none', color: 'var(--positive)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
               ⬜ MARKET
             </button>
@@ -1151,10 +1151,10 @@ export default function LeagueScreen() {
             onClick={() => setView('commissioner')}
             style={{ background: 'rgba(240,180,0,0.12)', borderBottom: '1px solid rgba(240,180,0,0.25)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
           >
-            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
               ⚙ DRAFT LEAGUE — SET A DRAFT DEADLINE IN THE ADMIN TAB TO OPEN SUBMISSIONS
             </span>
-            <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)' }}>→</span>
           </div>
         )}
 
@@ -1170,13 +1170,13 @@ export default function LeagueScreen() {
               onClick={() => setView('commissioner')}
               style={{ background: 'rgba(240,180,0,0.10)', borderBottom: '1px solid rgba(240,180,0,0.22)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
             >
-              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
                 {deadlinePassed ? '⏰' : '📋'} DRAFT SUBMISSIONS — {draftSubmissionCount}/{memberCount} MANAGERS
                 {deadlinePassed
                   ? ' — DEADLINE PASSED · RUN LOTTERY WHEN READY'
                   : ` · DEADLINE ${fmtDeadline}`}
               </span>
-              <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)' }}>→</span>
             </div>
           );
         })()}
@@ -1189,10 +1189,10 @@ export default function LeagueScreen() {
           const bg = isCritical ? '#B71C1C' : isWarning ? '#E65100' : '#1B5E20';
           return (
             <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)} style={{ background: bg, color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
-              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
                 {isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} DRAFT {isCritical ? `${Math.max(0, Math.floor(hoursLeft))}H LEFT — SUBMIT NOW` : isWarning ? `${Math.floor(hoursLeft)}H LEFT` : 'IS OPEN'} — SUBMIT YOUR RANKED LIST
               </span>
-              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>→</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>→</span>
             </div>
           );
         })()}
@@ -1201,14 +1201,14 @@ export default function LeagueScreen() {
         {draftAllocated && mySquadPlayerCount === null && !draftOpen && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                 No squad yet
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
                 Head to the market to sign players and build your squad
               </div>
             </div>
-            <button onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MARKET →
             </button>
           </div>
@@ -1221,14 +1221,14 @@ export default function LeagueScreen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                 Squad too small — {mySquadPlayerCount}/11 players
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
                 Need {11 - mySquadPlayerCount} more player{11 - mySquadPlayerCount !== 1 ? 's' : ''} to field a starting XI
               </div>
             </div>
-            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
             </button>
           </div>
@@ -1239,14 +1239,14 @@ export default function LeagueScreen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                 Squad incomplete — {mySquadPlayerCount}/15 players
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
                 {15 - mySquadPlayerCount} empty slot{15 - mySquadPlayerCount !== 1 ? 's' : ''} — sign more players to complete your squad
               </div>
             </div>
-            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
             </button>
           </div>
@@ -1292,20 +1292,20 @@ export default function LeagueScreen() {
                  borderBottom: '1px solid rgba(224,168,0,0.25)',
                  flexShrink: 0,
                }}>
-                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>
+                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--gold)' }}>
                    ⇄ TRADE PROPOSALS
                  </span>
                  {incomingTrades.length > 0 && (
-                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.16em', color: 'var(--positive)' }}>
+                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--positive)' }}>
                      {incomingTrades.length} INCOMING
                    </span>
                  )}
                  {outgoingTrades.length > 0 && (
-                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
+                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)' }}>
                      {outgoingTrades.length} SENT
                    </span>
                  )}
-                 <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 10, color: 'var(--mute)', flex: 1 }}>
+                 <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', flex: 1 }}>
                    · Tap a manager&apos;s card to accept, decline or cancel
                  </span>
                </div>
@@ -1420,7 +1420,7 @@ export default function LeagueScreen() {
                     {/* Incoming trade proposals */}
                     {incomingTrades.length > 0 && (
                       <div>
-                        <h3 style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
+                        <h3 style={{ color: 'var(--gold)', fontSize: 'var(--fs-label)', fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
                           INCOMING OFFERS ({incomingTrades.length})
                         </h3>
                         {incomingTrades.map(p => (
@@ -1429,22 +1429,22 @@ export default function LeagueScreen() {
                             borderRadius: 4, padding: '12px 16px', marginBottom: 8,
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <span style={{ color: 'var(--paper)', fontSize: 12, fontWeight: 700 }}>
+                              <span style={{ color: 'var(--paper)', fontSize: 'var(--fs-label)', fontWeight: 700 }}>
                                 {p.proposer_player?.name} <span style={{ color: 'var(--mute)' }}>for</span> {p.target_player?.name}
                               </span>
-                              <span style={{ color: 'var(--mute)', fontSize: 10 }}>
+                              <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>
                                 {new Date(p.created_at).toLocaleDateString()}
                               </span>
                             </div>
                             {(p.cash_sweetener !== 0 || p.points_sweetener > 0) && (
                               <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
                                 {p.cash_sweetener !== 0 && (
-                                  <span style={{ color: p.cash_sweetener > 0 ? 'var(--positive)' : 'var(--danger)', fontSize: 11, fontWeight: 700 }}>
+                                  <span style={{ color: p.cash_sweetener > 0 ? 'var(--positive)' : 'var(--danger)', fontSize: 'var(--fs-micro)', fontWeight: 700 }}>
                                     {p.cash_sweetener > 0 ? `+€${p.cash_sweetener}M (you receive)` : `-€${Math.abs(p.cash_sweetener)}M (you pay)`}
                                   </span>
                                 )}
                                 {p.points_sweetener > 0 && (
-                                  <span style={{ color: 'var(--gold)', fontSize: 11, fontWeight: 700 }}>
+                                  <span style={{ color: 'var(--gold)', fontSize: 'var(--fs-micro)', fontWeight: 700 }}>
                                     +{p.points_sweetener} pts sweetener
                                   </span>
                                 )}
@@ -1461,7 +1461,7 @@ export default function LeagueScreen() {
                                   }
                                 }}
                                 style={{
-                                  background: 'var(--positive)', color: 'var(--on-shell)', fontSize: 11,
+                                  background: 'var(--positive)', color: 'var(--on-shell)', fontSize: 'var(--fs-micro)',
                                   fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
                                 }}
                               >
@@ -1477,7 +1477,7 @@ export default function LeagueScreen() {
                                   }
                                 }}
                                 style={{
-                                  background: 'var(--ink-3)', color: 'var(--mute)', fontSize: 11,
+                                  background: 'var(--ink-3)', color: 'var(--mute)', fontSize: 'var(--fs-micro)',
                                   fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
                                 }}
                               >
@@ -1492,7 +1492,7 @@ export default function LeagueScreen() {
                     {/* Outgoing proposals I've sent */}
                     {outgoingTrades.length > 0 && (
                       <div>
-                        <h3 style={{ color: 'var(--mute)', fontSize: 12, fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
+                        <h3 style={{ color: 'var(--mute)', fontSize: 'var(--fs-label)', fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
                           SENT OFFERS ({outgoingTrades.length})
                         </h3>
                         {outgoingTrades.map(p => (
@@ -1501,10 +1501,10 @@ export default function LeagueScreen() {
                             borderRadius: 4, padding: '12px 16px', marginBottom: 8,
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <span style={{ color: 'var(--paper)', fontSize: 12, fontWeight: 700 }}>
+                              <span style={{ color: 'var(--paper)', fontSize: 'var(--fs-label)', fontWeight: 700 }}>
                                 {p.proposer_player?.name} <span style={{ color: 'var(--mute)' }}>for</span> {p.target_player?.name}
                               </span>
-                              <span style={{ color: 'var(--mute)', fontSize: 10 }}>awaiting response</span>
+                              <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>awaiting response</span>
                             </div>
                             <button
                               onClick={async () => {
@@ -1516,7 +1516,7 @@ export default function LeagueScreen() {
                                 }
                               }}
                               style={{
-                                background: 'transparent', color: 'var(--danger)', fontSize: 10,
+                                background: 'transparent', color: 'var(--danger)', fontSize: 'var(--fs-micro)',
                                 fontWeight: 700, padding: '4px 10px', borderRadius: 2,
                                 border: '1px solid var(--danger)', cursor: 'pointer',
                               }}
@@ -1657,7 +1657,7 @@ export default function LeagueScreen() {
                      {activeLeague?.leagues?.format === 'noduplicate' && managerTeamView.user_id !== currentUser?.id && (
                        <button
                          onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
-                         style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--accent)', background: 'transparent', border: '1px solid rgba(26,111,168,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
+                         style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--accent)', background: 'transparent', border: '1px solid rgba(26,111,168,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
                        >TRADE</button>
                      )}
                    </div>
@@ -1703,7 +1703,7 @@ export default function LeagueScreen() {
           border:        `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'var(--rule)'}`,
           borderRight:   'none',
           color:         'var(--paper)',
-          fontSize:      '13px',
+          fontSize: 'var(--fs-body)',
           fontFamily:    MONO,
           fontWeight:    700,
           letterSpacing: '0.2em',
@@ -1717,7 +1717,7 @@ export default function LeagueScreen() {
         className="ffl-btn ffl-btn--gold ffl-btn--md"
         style={{
           fontFamily:    MONO,
-          fontSize:      '11px',
+          fontSize: 'var(--fs-micro)',
           letterSpacing: '0.14em',
           flexShrink:    0,
         }}
@@ -1732,7 +1732,7 @@ export default function LeagueScreen() {
   const visibleLeagues = showArchived ? leagues : leagues.filter(l => !l.leagues?.archived);
 
   const archiveToggle = archivedLeagueCount > 0 && (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
       <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />
       Show archived ({archivedLeagueCount})
     </label>
@@ -1740,7 +1740,7 @@ export default function LeagueScreen() {
 
   const emptyState = (
     <div className="p-8 text-center">
-      <div className="fk-display" style={{ fontSize: 24, color: 'var(--gold)', marginBottom: '12px' }}>FFL</div>
+      <div className="fk-display" style={{ fontSize: 'var(--fs-title)', color: 'var(--gold)', marginBottom: '12px' }}>FFL</div>
       <div className="text-[13px] font-bold uppercase tracking-wide text-[var(--paper)] mb-2">No leagues yet</div>
       <div className="text-[11px] text-text-secondary mb-6">Create a league or enter a friend's invite code below.</div>
       <button onClick={() => setView('create')} className="px-6 py-3 bg-cyan text-white text-[11px] font-bold uppercase tracking-wider">
@@ -1756,16 +1756,16 @@ export default function LeagueScreen() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '28px 40px 20px', borderBottom: '1px solid var(--rule)' }}>
           <div>
             <div className="fk-eyebrow" style={{ marginBottom: 6 }}>Season</div>
-            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 30, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>My Leagues</div>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>My Leagues</div>
           </div>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
             {archiveToggle}
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
               {visibleLeagues.length} {visibleLeagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
             </div>
             <button
               onClick={() => setView('create')}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 11, letterSpacing: '.16em', cursor: 'pointer', textTransform: 'uppercase' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', cursor: 'pointer', textTransform: 'uppercase' }}
             >
               + Create League
             </button>
@@ -1777,10 +1777,10 @@ export default function LeagueScreen() {
         ) : visibleLeagues.length === 0 ? emptyState : (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr 140px 140px', gap: 0, padding: '10px 40px', borderBottom: '1px solid var(--rule)' }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Rank</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>League</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Type</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right' }}>Total Pts</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Rank</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>League</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Type</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right' }}>Total Pts</span>
             </div>
             {visibleLeagues.map(l => {
               const { type, format } = deriveLeagueType(l.leagues ?? {});
@@ -1796,17 +1796,17 @@ export default function LeagueScreen() {
                     borderLeft: '3px solid transparent',
                     cursor: 'pointer', alignItems: 'center', transition: 'all .1s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderLeftColor = TYPE_COLOR[type] || 'var(--mute)'; e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderLeftColor = TYPE_COLOR[type] || 'var(--mute)'; e.currentTarget.style.background = 'var(--shell-fill)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderLeftColor = 'transparent'; e.currentTarget.style.background = 'transparent'; }}
                 >
                   <div style={{ padding: '20px 0' }}>
-                    <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, color: medal, lineHeight: 1 }}>{l.rank ? `#${l.rank}` : '—'}</span>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', color: medal, lineHeight: 1 }}>{l.rank ? `#${l.rank}` : '—'}</span>
                   </div>
                   <div style={{ padding: '20px 16px 20px 12px', minWidth: 0 }}>
-                    <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {l.leagues?.name || l.name}
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', marginTop: 4 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', marginTop: 4 }}>
                       {l.member_count ?? '—'} members
                     </div>
                   </div>
@@ -1815,8 +1815,8 @@ export default function LeagueScreen() {
                     {l.leagues?.archived && <ArchivedBadge />}
                   </div>
                   <div style={{ textAlign: 'right', padding: '20px 0' }}>
-                    <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, color: 'var(--positive)' }}>{Math.round(l.total_points || 0)}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', marginLeft: 5 }}>Pts</span>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', color: 'var(--positive)' }}>{Math.round(l.total_points || 0)}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', marginLeft: 5 }}>Pts</span>
                   </div>
                 </div>
               );
@@ -1827,14 +1827,14 @@ export default function LeagueScreen() {
         {/* Invite code — inline at bottom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '20px 40px', borderTop: '1px solid var(--rule)', marginTop: 'auto' }}>
           <div style={{ flexShrink: 0 }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
-            <div style={{ fontSize: 13, color: 'var(--mute)' }}>Enter below to join a friend's league</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>Enter below to join a friend's league</div>
           </div>
           <div style={{ flex: 1, display: 'flex', maxWidth: 440 }}>
             {inviteForm}
           </div>
           {joinError && (
-            <div style={{ fontSize: '12px', color: 'var(--danger)', fontFamily: MONO, flexShrink: 0 }}>{joinError}</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--danger)', fontFamily: MONO, flexShrink: 0 }}>{joinError}</div>
           )}
         </div>
       </div>
@@ -1844,11 +1844,11 @@ export default function LeagueScreen() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px 12px', borderBottom: '1px solid var(--rule)' }}>
           <div>
             <div className="fk-eyebrow" style={{ marginBottom: 3 }}>Season</div>
-            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>My Leagues</div>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>My Leagues</div>
           </div>
           <button
             onClick={() => setView('create')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', cursor: 'pointer', textTransform: 'uppercase' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', cursor: 'pointer', textTransform: 'uppercase' }}
           >
             + New
           </button>
@@ -1873,10 +1873,10 @@ export default function LeagueScreen() {
               >
                 <div style={{ width: 36, flexShrink: 0, textAlign: 'center' }}>
                   <RankBadge rank={l.rank} />
-                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginTop: 2 }}>{l.member_count ?? '—'}P</div>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>{l.member_count ?? '—'}P</div>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 13, letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {l.leagues?.name || l.name}
                   </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
@@ -1885,8 +1885,8 @@ export default function LeagueScreen() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 20, color: 'var(--positive)', lineHeight: 1 }}>{Math.round(l.total_points || 0)}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase', marginTop: 2 }}>Pts Total</div>
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-heading)', color: 'var(--positive)', lineHeight: 1 }}>{Math.round(l.total_points || 0)}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase', marginTop: 2 }}>Pts Total</div>
                 </div>
               </div>
             );
@@ -1895,11 +1895,11 @@ export default function LeagueScreen() {
 
         {/* Invite row */}
         <div style={{ padding: '16px 18px', borderTop: '2px solid var(--rule)', marginTop: 4 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
-          <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 12 }}>Enter below to join a friend's league</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
+          <div style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)', marginBottom: 12 }}>Enter below to join a friend's league</div>
           {inviteForm}
           {joinError && (
-            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--danger)', fontFamily: MONO }}>{joinError}</div>
+            <div style={{ marginTop: '8px', fontSize: 'var(--fs-label)', color: 'var(--danger)', fontFamily: MONO }}>{joinError}</div>
           )}
         </div>
       </div>

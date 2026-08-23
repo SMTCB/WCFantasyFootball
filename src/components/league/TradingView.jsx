@@ -12,10 +12,10 @@ function SectionHeader({ label, count, tone = 'var(--gold)' }) {
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
       <span style={{ width: 3, alignSelf: 'stretch', background: tone, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: tone }}>{label}</span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: tone }}>{label}</span>
       {count > 0 && (
         <span style={{
-          fontFamily: MONO, fontSize: 9, letterSpacing: '.1em',
+          fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em',
           background: `${tone}22`, color: tone,
           padding: '1px 7px', borderRadius: 2,
         }}>{count}</span>
@@ -63,7 +63,7 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
         display: 'flex', alignItems: 'center', gap: 8,
         background: isWinner ? 'rgba(255,196,0,0.06)' : 'transparent',
       }}>
-        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: isWinner ? 'var(--gold)' : 'var(--mute)' }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: isWinner ? 'var(--gold)' : 'var(--mute)' }}>
           {isWinner ? '🏆 YOU WON' : isSeller ? '⏳ AWAITING BUYER' : '⏳ PENDING'}
         </span>
       </div>
@@ -74,25 +74,25 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
           width: 36, height: 36, flexShrink: 0,
           border: `1px solid ${posColor}40`, color: posColor, background: `${posColor}0d`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: MONO, fontSize: 9, fontWeight: 900,
+          fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 900,
         }}>{player?.position ?? '?'}</div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 14, color: 'var(--paper)' }}>
+          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>
             {player?.name ?? '—'}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2, letterSpacing: '.1em' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2, letterSpacing: '.1em' }}>
             {player?.club}
           </div>
         </div>
 
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 18, color: 'var(--gold)', lineHeight: 1 }}>
+          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-heading)', color: 'var(--gold)', lineHeight: 1 }}>
             €{Number(listing.current_bid).toFixed(1)}M
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>winning bid</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>winning bid</div>
           {listing.bidder_name && (
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', marginTop: 4, letterSpacing: '.1em' }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginTop: 4, letterSpacing: '.1em' }}>
               {listing.bidder_name}
             </div>
           )}
@@ -106,7 +106,7 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
             <div style={{
               padding: '8px 12px',
               background: 'rgba(120,120,120,0.08)', border: '1px solid var(--rule)',
-              fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', lineHeight: 1.6,
+              fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--mute)', lineHeight: 1.6,
             }}>
               ⏳ TRANSFER WINDOW CLOSED — your confirmation will be available when it reopens.
               The purchase will be void if you miss the next window.
@@ -120,7 +120,7 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
                 background: busy ? 'rgba(255,196,0,0.1)' : 'var(--gold)',
                 color: busy ? 'var(--mute)' : 'var(--ink)',
                 border: 'none', cursor: busy ? 'wait' : 'pointer',
-                fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', fontWeight: 900,
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', fontWeight: 900,
                 opacity: busy ? 0.6 : 1,
               }}
             >
@@ -184,18 +184,18 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
           flexShrink: 0, width: 36, height: 36,
           border: `1px solid ${posColor}40`, color: posColor, background: `${posColor}0d`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: MONO, fontSize: 9, fontWeight: 900,
+          fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 900,
         }}>
           {isIncoming ? 'IN' : 'OUT'}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 13, color: 'var(--paper)', lineHeight: 1.2 }}>
+          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.2 }}>
             {proposal.proposer_player?.name ?? '—'}
-            <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 10, fontWeight: 400 }}> ⇄ </span>
+            <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 400 }}> ⇄ </span>
             {proposal.target_player?.name ?? '—'}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 3, letterSpacing: '.1em' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3, letterSpacing: '.1em' }}>
             <span style={{ color: 'var(--paper)' }}>{proposal.proposer_name ?? '?'}</span>
             <span style={{ color: 'var(--mute)' }}> → </span>
             <span style={{ color: 'var(--paper)' }}>{proposal.target_name ?? '?'}</span>
@@ -208,9 +208,9 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
 
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           {statusLabel ? (
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: statusColor }}>{statusLabel}</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: statusColor }}>{statusLabel}</span>
           ) : (
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>
               {new Date(proposal.created_at).toLocaleDateString()}
             </span>
           )}
@@ -221,24 +221,24 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
         windowOpen ? (
           <div style={{ display: 'flex', gap: 8 }}>
             <button disabled={busy} onClick={() => handleAction(onAccept, 'accept', 'Trade accepted! Squads updated.')}
-              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: 'none', cursor: busy ? 'wait' : 'pointer', background: 'var(--positive)', color: '#000', opacity: busy ? 0.5 : 1 }}>
+              style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: 'none', cursor: busy ? 'wait' : 'pointer', background: 'var(--positive)', color: '#000', opacity: busy ? 0.5 : 1 }}>
               ACCEPT
             </button>
             <button disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
-              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1 }}>
+              style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1 }}>
               DECLINE
             </button>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
-              fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)',
-              padding: '5px 10px', border: '1px solid var(--rule)', background: 'rgba(255,255,255,0.02)',
+              fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--mute)',
+              padding: '5px 10px', border: '1px solid var(--rule)', background: 'var(--shell-fill)',
             }}>
               ⏳ WINDOW CLOSED — accept when transfer window reopens
             </div>
             <button disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
-              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '5px 10px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1, flexShrink: 0 }}>
+              style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '5px 10px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1, flexShrink: 0 }}>
               DECLINE
             </button>
           </div>
@@ -246,7 +246,7 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
       )}
       {isPending && isProposer && !isIncoming && (
         <button disabled={busy} onClick={() => handleAction(onCancel, 'cancel', 'Offer cancelled.')}
-          style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '5px 12px', border: '1px solid rgba(239,68,68,0.35)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--danger)', opacity: busy ? 0.5 : 1 }}>
+          style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '5px 12px', border: '1px solid rgba(239,68,68,0.35)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--danger)', opacity: busy ? 0.5 : 1 }}>
           CANCEL OFFER
         </button>
       )}
@@ -291,23 +291,23 @@ export default function TradingView({
              onClick={() => setShowHelp(false)}>
           <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', maxWidth: 480, width: '100%', padding: 28, position: 'relative' }}
                onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--mute)', fontSize: 18, cursor: 'pointer' }}>✕</button>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--gold)', letterSpacing: '.22em', marginBottom: 16 }}>TRADING FLOOR · HOW IT WORKS</div>
+            <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-heading)', cursor: 'pointer' }}>✕</button>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.22em', marginBottom: 16 }}>TRADING FLOOR · HOW IT WORKS</div>
 
-            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>🔨 AUCTIONS</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>🔨 AUCTIONS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
               List any player from your squad for auction. A 48-hour bidding window opens — managers bid above the starting price in increments. When the deadline passes the highest bidder is notified. They must <strong style={{ color: 'var(--paper)' }}>CONFIRM PURCHASE</strong> during the next open transfer window to complete the deal. Sellers can hit <strong style={{ color: 'var(--paper)' }}>SELL NOW</strong> at any point to close the auction immediately at the current bid.
             </div>
             <div style={{ height: 1, background: 'var(--rule)', margin: '0 0 16px' }} />
 
-            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>⇄ TRADE PROPOSALS</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>⇄ TRADE PROPOSALS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
               Click <strong style={{ color: 'var(--paper)' }}>TRADE</strong> on any player in another manager's roster to propose a direct swap. Add a cash sweetener (±€10M budget shift) or a points penalty (you give up ranking points) to balance unequal values. The target manager receives your proposal and can accept or decline. Accepted trades execute immediately.
             </div>
             <div style={{ height: 1, background: 'var(--rule)', margin: '0 0 16px' }} />
 
-            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>📊 THE COUNTERS</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.6 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>📊 THE COUNTERS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>
               <strong style={{ color: 'var(--paper)' }}>AUCTIONS</strong> — all live auctions in the league.<br/>
               <strong style={{ color: 'var(--paper)' }}>MY BIDS</strong> — auctions where you currently hold the highest bid.<br/>
               <strong style={{ color: 'var(--paper)' }}>PROPOSALS</strong> — pending trade proposals sent or received by you.<br/>
@@ -332,10 +332,10 @@ export default function TradingView({
               title="How auctions & trades work"
               style={{
                 flexShrink: 0, width: 20, height: 20, borderRadius: '50%',
-                border: '1px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.05)',
-                color: 'rgba(255,255,255,0.4)',
-                fontFamily: MONO, fontSize: 11, fontWeight: 700,
+                border: '1px solid var(--shell-rule-strong)',
+                background: 'var(--shell-fill)',
+                color: 'var(--on-shell-dim)',
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 alignSelf: 'center',
               }}
@@ -349,7 +349,7 @@ export default function TradingView({
             { k: 'PROPOSALS',  v: allLeagueProposals.length,                                tone: 'var(--cyan)'   },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px,2vw,14px) clamp(10px,2.5vw,20px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px,4vw,28px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
             </div>
           ))}
@@ -380,15 +380,15 @@ export default function TradingView({
         <SectionHeader label="AUCTIONS" count={auctions?.length ?? 0} tone="var(--gold)" />
 
         {auctionsLoading && (
-          <div style={{ padding: '24px 16px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
+          <div style={{ padding: '24px 16px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>
             SYNCING…
           </div>
         )}
 
         {!auctionsLoading && (auctions?.length ?? 0) === 0 && (pendingAuctions?.length ?? 0) === 0 && (
           <div style={{ padding: '24px 16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>NO ACTIVE AUCTIONS</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>NO ACTIVE AUCTIONS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6 }}>
               List a player for auction from your Squad screen to start bidding.
             </div>
           </div>
@@ -424,7 +424,7 @@ export default function TradingView({
             <button onClick={() => setShowAuctionHistory(v => !v)} style={{
               width: '100%', padding: '10px 16px', background: 'transparent',
               border: 'none', borderTop: '1px solid var(--rule)',
-              fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+              fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
               color: 'var(--mute)', cursor: 'pointer', textAlign: 'left',
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
@@ -433,19 +433,19 @@ export default function TradingView({
             </button>
             {showAuctionHistory && closedAuctions.map(a => (
               <div key={a.id} style={{ padding: '10px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10, opacity: 0.6 }}>
-                <div style={{ width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 9, fontWeight: 900, color: POS_COLOR[a.players?.position] ?? 'var(--mute)', border: `1px solid ${POS_COLOR[a.players?.position] ?? 'var(--rule)'}40` }}>
+                <div style={{ width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 900, color: POS_COLOR[a.players?.position] ?? 'var(--mute)', border: `1px solid ${POS_COLOR[a.players?.position] ?? 'var(--rule)'}40` }}>
                   {a.players?.position ?? '?'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 12, color: 'var(--paper)' }}>{a.players?.name ?? '—'}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em', marginTop: 2 }}>{a.players?.club}</div>
+                  <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{a.players?.name ?? '—'}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', marginTop: 2 }}>{a.players?.club}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: a.status === 'sold' ? 'var(--positive)' : 'var(--mute)' }}>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: a.status === 'sold' ? 'var(--positive)' : 'var(--mute)' }}>
                     {a.status === 'sold' ? '✓ SOLD' : '— CANCELLED'}
                   </div>
                   {a.current_bid != null && (
-                    <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', marginTop: 2 }}>€{Number(a.current_bid).toFixed(1)}M</div>
+                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', marginTop: 2 }}>€{Number(a.current_bid).toFixed(1)}M</div>
                   )}
                 </div>
               </div>
@@ -456,7 +456,7 @@ export default function TradingView({
         {/* ══ LEAGUE PROPOSALS — all pending trades across the league ══ */}
         <SectionHeader label="LEAGUE PROPOSALS" count={allLeagueProposals.length} tone="var(--cyan)" />
         {allLeagueProposals.length === 0 && (
-          <div style={{ padding: '16px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em' }}>NO PENDING PROPOSALS</div>
+          <div style={{ padding: '16px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>NO PENDING PROPOSALS</div>
         )}
         {thirdPartyProposals.map(p => (
           <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
@@ -465,7 +465,7 @@ export default function TradingView({
         ))}
         {/* Own proposals already visible in INCOMING / SENT below — show a summary line when there are any */}
         {(incoming.length > 0 || outgoing.length > 0) && thirdPartyProposals.length < allLeagueProposals.length && (
-          <div style={{ padding: '8px 16px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ padding: '8px 16px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', borderBottom: '1px solid var(--rule)' }}>
             + YOUR PROPOSALS ARE SHOWN BELOW
           </div>
         )}
@@ -473,7 +473,7 @@ export default function TradingView({
         {/* ══ INCOMING TRADE OFFERS ══ */}
         <SectionHeader label="INCOMING OFFERS" count={incoming.length} tone="var(--cyan)" />
         {incoming.length === 0 && (
-          <div style={{ padding: '16px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em' }}>NO PENDING OFFERS</div>
+          <div style={{ padding: '16px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>NO PENDING OFFERS</div>
         )}
         {incoming.map(p => (
           <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
@@ -485,7 +485,7 @@ export default function TradingView({
         {/* ══ SENT TRADE OFFERS ══ */}
         <SectionHeader label="SENT OFFERS" count={outgoing.length} tone="var(--mute)" />
         {outgoing.length === 0 && (
-          <div style={{ padding: '16px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em' }}>NO OUTGOING OFFERS</div>
+          <div style={{ padding: '16px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>NO OUTGOING OFFERS</div>
         )}
         {outgoing.map(p => (
           <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
@@ -497,7 +497,7 @@ export default function TradingView({
         {/* ══ TRADE HISTORY ══ */}
         {history.length > 0 && (
           <div>
-            <button onClick={() => setShowTradeHistory(v => !v)} style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', borderTop: '1px solid var(--rule)', fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => setShowTradeHistory(v => !v)} style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', borderTop: '1px solid var(--rule)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>{showTradeHistory ? '▾' : '▸'}</span>
               LEAGUE TRADE HISTORY ({history.length})
             </button>
@@ -512,9 +512,9 @@ export default function TradingView({
         {/* Empty state */}
         {totalActive === 0 && !auctionsLoading && (
           <div style={{ padding: '40px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 28 }}>🤝</div>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVITY YET</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, maxWidth: 300, textAlign: 'center' }}>
+            <div style={{ fontSize: 'var(--fs-title)' }}>🤝</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVITY YET</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, maxWidth: 300, textAlign: 'center' }}>
               List a player for auction from your Squad screen, or propose a trade from the league leaderboard.
             </div>
           </div>

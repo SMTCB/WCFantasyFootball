@@ -69,7 +69,7 @@ function DaySeparator({ label }) {
       background: 'var(--ink-2)',
       borderBottom: '1px solid var(--rule)',
     }}>
-      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0 }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0 }}>
         {label}
       </span>
       <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
@@ -80,7 +80,7 @@ function DaySeparator({ label }) {
 function LeagueTag({ name }) {
   return (
     <span style={{
-      fontFamily: MONO, fontSize: 10, fontWeight: 800, letterSpacing: '.12em',
+      fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '.12em',
       color: 'var(--cyan)', padding: '3px 8px',
       border: '1px solid rgba(26,111,168,.35)',
       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -106,12 +106,12 @@ function FeedItem({ item }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            fontFamily: MONO, fontSize: 10, fontWeight: 800, letterSpacing: '.14em',
+            fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '.14em',
             padding: '3px 7px',
             border: `1px solid ${meta.color}`,
             color: meta.color, flexShrink: 0,
           }}>{meta.badge}</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
             {timeAgo(item.ts)}
           </span>
         </div>
@@ -120,14 +120,14 @@ function FeedItem({ item }) {
 
       {/* Row 2+: content */}
       {item.kind === 'transfer' ? (
-        <div style={{ fontFamily: BODY, fontSize: 12, color: 'var(--paper)', lineHeight: 1.4 }}>
+        <div style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>
           {item.text}
         </div>
       ) : (
         <>
           {item.headline && (
             <div style={{
-              fontFamily: BODY, fontSize: 12, fontWeight: 600,
+              fontFamily: BODY, fontSize: 'var(--fs-label)', fontWeight: 600,
               color: 'var(--paper)', lineHeight: 1.35,
               marginBottom: Array.isArray(item.bullets) && item.bullets.length ? 7 : 0,
             }}>
@@ -138,7 +138,7 @@ function FeedItem({ item }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {item.bullets.map((b, i) => (
                 <div key={i} style={{
-                  fontFamily: BODY, fontSize: 12, color: 'var(--paper)',
+                  fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)',
                   lineHeight: 1.5, opacity: 0.85,
                 }}>{b}</div>
               ))}
@@ -161,7 +161,7 @@ function LiveMatchdayCard({ card }) {
   const { gwLabel, totalPts, roundComplete, fixtures, noGamePlayers, leagueName } = card;
 
   return (
-    <div style={{ borderBottom: '2px solid var(--rule)', background: 'rgba(255,255,255,.018)' }}>
+    <div style={{ borderBottom: '2px solid var(--rule)', background: 'var(--shell-fill)' }}>
 
       {/* Header */}
       <div style={{
@@ -175,11 +175,11 @@ function LiveMatchdayCard({ card }) {
               background: 'var(--danger)', flexShrink: 0,
             }} />
           )}
-          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--paper)', flexShrink: 0 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--paper)', flexShrink: 0 }}>
             {gwLabel}
           </span>
           <span style={{
-            fontFamily: MONO, fontSize: 8, letterSpacing: '.14em', flexShrink: 0,
+            fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', flexShrink: 0,
             color: roundComplete ? 'var(--positive)' : 'var(--danger)',
             padding: '1px 5px',
             border: `1px solid ${roundComplete ? 'rgba(22,101,52,.4)' : 'rgba(185,28,28,.4)'}`,
@@ -187,17 +187,17 @@ function LiveMatchdayCard({ card }) {
             {roundComplete ? 'COMPLETE' : 'IN PROGRESS'}
           </span>
           <span style={{
-            fontFamily: MONO, fontSize: 9, color: 'var(--mute)',
+            fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {(leagueName || '').toUpperCase()}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 3, flexShrink: 0 }}>
-          <span style={{ fontFamily: DISPLAY, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--paper)' }}>
+          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', letterSpacing: '-0.02em', color: 'var(--paper)' }}>
             {totalPts}
           </span>
-          <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em' }}>PTS</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>PTS</span>
         </div>
       </div>
 
@@ -209,15 +209,15 @@ function LiveMatchdayCard({ card }) {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '5px 20px',
-            background: 'rgba(255,255,255,.025)',
+            background: 'var(--shell-fill)',
           }}>
             <span style={{
-              fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', flexShrink: 0,
+              fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', flexShrink: 0,
               color: fx.status === 'live' ? 'var(--danger)' : fx.status === 'finished' ? 'var(--positive)' : 'var(--mute)',
             }}>
               {fx.status === 'live' ? 'LIVE' : fx.status === 'finished' ? 'FT' : fx.kickoffStr}
             </span>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
               {fx.home_team}{fx.status !== 'scheduled' ? ` ${fx.home_score}–${fx.away_score} ` : ' vs '}{fx.away_team}
             </span>
           </div>
@@ -230,36 +230,36 @@ function LiveMatchdayCard({ card }) {
               <div key={p.id} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '7px 20px',
-                borderTop: '1px solid rgba(255,255,255,.04)',
+                borderTop: '1px solid var(--shell-rule)',
               }}>
                 <span style={{
-                  fontFamily: MONO, fontSize: 8,
+                  fontFamily: MONO, fontSize: 'var(--fs-micro)',
                   color: POS_COLOR[p.position] ?? 'var(--mute)',
                   width: 24, flexShrink: 0,
                 }}>
                   {p.position}
                 </span>
                 <span style={{
-                  fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em',
+                  fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em',
                   flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {p.name.split(' ').pop().toUpperCase()}
                 </span>
                 {p.isCaptain && (
                   <span style={{
-                    fontFamily: DISPLAY, fontSize: 8,
+                    fontFamily: DISPLAY, fontSize: 'var(--fs-micro)',
                     background: 'var(--gold)', color: 'var(--ink)',
                     padding: '0 4px', flexShrink: 0,
                   }}>C</span>
                 )}
                 <span style={{
-                  fontFamily: MONO, fontSize: 9, color: 'var(--mute)',
+                  fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)',
                   width: 28, textAlign: 'right', flexShrink: 0,
                 }}>
                   {showPts && p.minutes != null ? `${p.minutes}'` : '—'}
                 </span>
                 <span style={{
-                  fontFamily: DISPLAY, fontSize: 14,
+                  fontFamily: DISPLAY, fontSize: 'var(--fs-body)',
                   color: showPts && p.rawPts > 0 ? 'var(--paper)' : 'var(--mute)',
                   width: 24, textAlign: 'right', flexShrink: 0,
                 }}>
@@ -277,7 +277,7 @@ function LiveMatchdayCard({ card }) {
           padding: '6px 20px 9px',
           borderTop: '1px solid var(--rule)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>
             {'NO FIXTURE · '}
             {noGamePlayers.map(p => p.name.split(' ').pop().toUpperCase()).join(' · ')}
           </span>
@@ -562,10 +562,10 @@ export default function RecapScreen() {
         borderBottom: '1px solid var(--rule)',
         flexShrink: 0,
       }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 4 }}>
+        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 4 }}>
           {todayStr} · ALL LEAGUES
         </div>
-        <div style={{ fontFamily: DISPLAY, fontSize: 22, letterSpacing: '-0.01em', color: 'var(--paper)' }}>
+        <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', letterSpacing: '-0.01em', color: 'var(--paper)' }}>
           MY DIGEST
         </div>
       </div>
@@ -582,7 +582,7 @@ export default function RecapScreen() {
       {/* ── Feed ───────────────────────────────────────────────────────────── */}
       {loading ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>
             LOADING…
           </span>
         </div>
@@ -593,12 +593,12 @@ export default function RecapScreen() {
             alignItems: 'center', justifyContent: 'center',
             padding: '48px 24px', textAlign: 'center',
           }}>
-            <div style={{ fontSize: 32, marginBottom: 14 }}>📋</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 18, color: 'var(--paper)', marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 14 }}>📋</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: 'var(--paper)', marginBottom: 8 }}>
               ALL QUIET
             </div>
             <div style={{
-              fontFamily: BODY, fontSize: 13, color: 'var(--mute)',
+              fontFamily: BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)',
               lineHeight: 1.55, maxWidth: 280,
             }}>
               No activity in your leagues in the last 7 days.

@@ -30,7 +30,7 @@ export default function GazetteNews({
 
   return (
     <div style={{ marginTop: 24, borderTop: `1px solid ${ftRule}`, paddingTop: 20 }}>
-      <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: ftRed, marginBottom: 14 }}>
+      <div style={{ fontFamily: ftMono, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: ftRed, marginBottom: 14 }}>
         FROM THE COMMISSIONER
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(entries.length, 3)}, 1fr)`, gap: 24 }}>
@@ -40,23 +40,23 @@ export default function GazetteNews({
           return (
             <div key={e.id} style={{ borderLeft: i > 0 ? `1px solid ${ftRule}` : 'none', paddingLeft: i > 0 ? 20 : 0 }}>
               {isClassified && (
-                <div style={{ fontFamily: ftMono, fontSize: 8, letterSpacing: '.22em', color: ftRed, marginBottom: 4 }}>
+                <div style={{ fontFamily: ftMono, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: ftRed, marginBottom: 4 }}>
                   CLASSIFIED
                 </div>
               )}
-              <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 15, lineHeight: 1.25, color: ftInk, marginBottom: 6 }}>
+              <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 'var(--fs-body)', lineHeight: 1.25, color: ftInk, marginBottom: 6 }}>
                 {e.headline}
               </div>
               {bullets.length > 0 && (
                 <ul style={{ margin: 0, padding: '0 0 0 14px' }}>
                   {bullets.map((b, bi) => (
-                    <li key={bi} style={{ fontFamily: ftSerif, fontSize: 12, color: ftMute, lineHeight: 1.5, marginBottom: 2 }}>
+                    <li key={bi} style={{ fontFamily: ftSerif, fontSize: 'var(--fs-label)', color: ftMute, lineHeight: 1.5, marginBottom: 2 }}>
                       {typeof b === 'string' ? b : b?.text ?? ''}
                     </li>
                   ))}
                 </ul>
               )}
-              <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.16em', color: ftMute, marginTop: 8 }}>
+              <div style={{ fontFamily: ftMono, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: ftMute, marginTop: 8 }}>
                 {new Date(e.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
               </div>
             </div>

@@ -30,14 +30,14 @@ export default function F1StandingsScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', marginBottom: 4 }}>
           PADDOCK STANDINGS · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: 'var(--on-shell)', margin: 0 }}>STANDINGS</h1>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>STANDINGS</h1>
       </div>
 
       {paddock?.archived && (
-        <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.1em', color: 'var(--mute)' }}>
+        <div style={{ padding: '8px 16px', background: 'var(--shell-fill)', borderBottom: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)' }}>
           ARCHIVED — this paddock is inactive.
         </div>
       )}
@@ -48,7 +48,7 @@ export default function F1StandingsScreen() {
           <button
             key={key}
             onClick={() => setView(key)}
-            style={{ flex: 1, padding: '11px 0', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: view === key ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: view === key ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}
+            style={{ flex: 1, padding: '11px 0', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: view === key ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: view === key ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}
           >
             {label}
           </button>
@@ -71,14 +71,14 @@ export default function F1StandingsScreen() {
           renderName={(m, isMe) => (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, color: 'var(--paper)' }}>
+                <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)' }}>
                   {m.display_name}
                 </span>
                 {isMe && (
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--f1)', letterSpacing: '0.1em' }}>YOU</span>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--f1)', letterSpacing: '0.1em' }}>YOU</span>
                 )}
               </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', marginTop: 1 }}>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 1 }}>
                 {m.races_scored} race{m.races_scored !== 1 ? 's' : ''} scored
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function F1StandingsScreen() {
         />
 
         {sorted.length > 0 && (
-          <div style={{ margin: '16px 16px 0', padding: '10px 12px', background: 'var(--elev)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+          <div style={{ margin: '16px 16px 0', padding: '10px 12px', background: 'var(--elev)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
             SCORING: 10 pts exact P1 · 8 exact P2 · 6 exact P3 · 3 wrong podium spot · 5 each for DNF / team / special · 3 all-correct bonus
           </div>
         )}

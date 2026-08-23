@@ -37,7 +37,7 @@ export default function BrandMark({ theme = 'dark', scale = 1, compact = false }
         <TiersMark size={16} />
         <span style={{
           fontFamily: 'Archivo Black, sans-serif',
-          fontSize:   '15px',
+          fontSize: 'var(--fs-body)',
           fontWeight: 900,
           color:      wordmarkColor,
           lineHeight: 1,
@@ -59,7 +59,7 @@ export default function BrandMark({ theme = 'dark', scale = 1, compact = false }
       <TiersMark size={36} />
       <span style={{
         fontFamily: 'Archivo Black, sans-serif',
-        fontSize:   '32px',
+        fontSize: 'var(--fs-title)',
         fontWeight: 900,
         color:      wordmarkColor,
         lineHeight: 1,

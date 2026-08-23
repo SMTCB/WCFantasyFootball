@@ -312,7 +312,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             <button
               onClick={handleSkip}
               style={{
-                fontSize:      '11px',
+                fontSize: 'var(--fs-micro)',
                 color:         'var(--mute)',
                 letterSpacing: '0.05em',
                 fontFamily:    'Archivo Black, sans-serif',
@@ -331,7 +331,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         <div
           className="fk-display"
           style={{
-            fontSize:     '36px',
+            fontSize: 'var(--fs-title)',
             lineHeight:   1,
             marginBottom: '20px',
             color:        'var(--gold)',
@@ -343,7 +343,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         {/* Kicker */}
         <div
           style={{
-            fontSize:      '10px',
+            fontSize: 'var(--fs-micro)',
             fontFamily:    'Archivo Black, sans-serif',
             letterSpacing: '0.15em',
             color:         'var(--gold)',
@@ -374,7 +374,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         {/* Body */}
         <p
           style={{
-            fontSize:     '14px',
+            fontSize: 'var(--fs-body)',
             lineHeight:   1.65,
             color:        'var(--text-2)',
             marginBottom: '36px',
@@ -397,7 +397,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
               style={{
                 width: '100%',
                 fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 16,
+                fontSize: 'var(--fs-body-lg)',
                 color: 'var(--paper)',
                 textAlign: 'center',
                 padding: '12px 16px',
@@ -410,11 +410,11 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
               }}
             />
             {usernameError && (
-              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)', textAlign: 'center', letterSpacing: '.08em' }}>
+              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', textAlign: 'center', letterSpacing: '.08em' }}>
                 {usernameError}
               </p>
             )}
-            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', textAlign: 'center', letterSpacing: '.08em' }}>
+            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', letterSpacing: '.08em' }}>
               3–30 characters · can be changed later in Settings
             </p>
           </div>
@@ -432,7 +432,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                   onClick={() => { setClubhouseMode(m); setClubhouseError(''); }}
                   style={{
                     flex: 1, padding: '9px 0', border: 'none', cursor: 'pointer',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '0.08em',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                     background: clubhouseMode === m ? 'var(--accent)' : 'transparent',
                     color: clubhouseMode === m ? '#fff' : 'var(--mute)',
@@ -453,7 +453,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 maxLength={40}
                 autoFocus
                 style={{
-                  width: '100%', padding: '12px 14px', fontFamily: 'Archivo, sans-serif', fontSize: 15,
+                  width: '100%', padding: '12px 14px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)',
                   color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
                   borderRadius: 6, outline: 'none', boxSizing: 'border-box',
                 }}
@@ -467,7 +467,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 maxLength={8}
                 autoFocus
                 style={{
-                  width: '100%', padding: '12px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: 18,
+                  width: '100%', padding: '12px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-heading)',
                   fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
                   color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
                   borderRadius: 6, outline: 'none', boxSizing: 'border-box',
@@ -476,7 +476,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             )}
 
             {clubhouseError && (
-              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)', letterSpacing: '.08em', margin: 0 }}>
+              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.08em', margin: 0 }}>
                 {clubhouseError}
               </p>
             )}
@@ -492,7 +492,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             padding:       '14px 24px',
             background:    'var(--gold)',
             color:         'var(--paper)',
-            fontSize:      '13px',
+            fontSize: 'var(--fs-body)',
             fontFamily:    'Archivo Black, sans-serif',
             fontWeight:    800,
             letterSpacing: '0.08em',
@@ -516,7 +516,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           style={{
             textAlign:     'center',
             marginTop:     '20px',
-            fontSize:      '10px',
+            fontSize: 'var(--fs-micro)',
             color:         'var(--mute)',
             fontFamily:    'Archivo Black, sans-serif',
             letterSpacing: '0.1em',
@@ -530,7 +530,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
       <div
         style={{
           marginTop:     '20px',
-          fontSize:      '11px',
+          fontSize: 'var(--fs-micro)',
           color:         'var(--mute)',
           fontFamily:    'Archivo Black, sans-serif',
           letterSpacing: '0.08em',

@@ -123,14 +123,14 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         {/* GW card */}
         <div style={{ padding: '18px 22px', borderRight: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE · SEASON</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 4, letterSpacing: '-0.02em' }}>GW {currentGW}</div>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{members.length} MANAGERS · STANDINGS</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE · SEASON</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', marginTop: 4, letterSpacing: '-0.02em' }}>GW {currentGW}</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{members.length} MANAGERS · STANDINGS</div>
           </div>
           {members[0] && (
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{Math.round(members[0].total_points ?? 0)}</div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', marginTop: 4 }}>LEAD SCORE</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--positive)' }}>{Math.round(members[0].total_points ?? 0)}</div>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', marginTop: 4 }}>LEAD SCORE</div>
             </div>
           )}
         </div>
@@ -141,19 +141,19 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           const medal = ['var(--gold)', '#C0C0C0', '#CD7F32'][idx];
           return (
             <div key={m.user_id} style={{ padding: '18px 22px', borderRight: idx < 2 ? '1px solid var(--rule)' : 'none', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <div style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${medal}18`, border: `1px solid ${medal}66`, fontFamily: DISPLAY, fontSize: 22, color: medal }}>
+              <div style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${medal}18`, border: `1px solid ${medal}66`, fontFamily: DISPLAY, fontSize: 'var(--fs-title)', color: medal }}>
                 {idx + 1}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <MgrTag mono={mgrMono(mName)} hue={hue} />
-                  <div style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mName}</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mName}</div>
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>RANK #{idx + 1}</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>RANK #{idx + 1}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{Math.round(m.total_points ?? 0)}</div>
-                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.18em' }}>TOT</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--positive)' }}>{Math.round(m.total_points ?? 0)}</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.18em' }}>TOT</div>
               </div>
             </div>
           );
@@ -164,20 +164,20 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
       <div className="lg:hidden" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '14px 18px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
         {/* Your rank */}
         <div style={{ padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: '2px solid var(--cyan)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.2em' }}>YOUR RANK</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.2em' }}>YOUR RANK</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 24 }}>{myRank}</span>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>/ {members.length}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{myRank}</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>/ {members.length}</span>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{myPts !== '—' ? Math.round(myPts) : '—'} TOT</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{myPts !== '—' ? Math.round(myPts) : '—'} TOT</div>
         </div>
         {/* Leader */}
         <div style={{ padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: '2px solid var(--gold)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', letterSpacing: '.2em' }}>LEADER · {mgrMono(leaderName)}</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.2em' }}>LEADER · {mgrMono(leaderName)}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 24 }}>{leader?.total_points != null ? Math.round(leader.total_points) : '—'}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{leader?.total_points != null ? Math.round(leader.total_points) : '—'}</span>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{leaderName}</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{leaderName}</div>
         </div>
       </div>
 
@@ -203,8 +203,8 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <MgrTag mono={mgrMono(mName)} hue={hue} />
                   <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>{mName}</span>
-                    {m.rank === 1 && <span style={{ fontFamily: DISPLAY, fontSize: 8, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em' }}>LEADER</span>}
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>{mName}</span>
+                    {m.rank === 1 && <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em' }}>LEADER</span>}
                   </div>
                 </div>
               );
@@ -232,7 +232,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
 
         {/* Activity rail */}
         <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)' }}>
-          <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>RECENT</span>} />
+          <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>RECENT</span>} />
           {/* Feed */}
           {(() => {
             const capped   = capBreakingNews(entries);
@@ -241,9 +241,9 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               : capped.filter(e => (ENTRY_META[e.entry_type]?.filter ?? 'GAME') === activityFilter);
             if (filtered.length === 0) return (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 18px', gap: 8 }}>
-                <div style={{ fontSize: 24 }}>⚽</div>
-                <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em', textAlign: 'center' }}>NO ACTIVITY YET</div>
-                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 'var(--fs-title)' }}>⚽</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', textAlign: 'center' }}>NO ACTIVITY YET</div>
+                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
                   Draft results, rank changes, match scores, and league news will appear here as the season unfolds.
                 </div>
               </div>
@@ -256,15 +256,15 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                     <div key={e.id} style={{ padding: '12px 18px', borderBottom: '1px solid var(--rule)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                         <span style={{
-                          fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
+                          fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
                           padding: '2px 5px', border: `1px solid ${meta.color}`,
                           color: meta.color, flexShrink: 0,
                         }}>{meta.badge}</span>
-                        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                           {timeAgo(e.published_at)}
                         </span>
                       </div>
-                      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35, marginBottom: e.bullets?.length ? 6 : 0 }}>
+                      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35, marginBottom: e.bullets?.length ? 6 : 0 }}>
                         {e.headline}
                       </div>
                       {parseBullets(e.bullets).length > 0 && (
@@ -273,7 +273,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                             const text = bulletText(b);
                             if (!text) return null;
                             return (
-                              <div key={i} style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
+                              <div key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
                                 {text}
                               </div>
                             );
@@ -288,7 +288,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           })()}
           {/* Filter bar */}
           <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>FILTER</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>FILTER</span>
             <div style={{ display: 'flex', gap: 6 }}>
               {['ALL', 'GAME', 'TRADES'].map((f) => {
                 const active = activityFilter === f;
@@ -297,7 +297,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                     key={f}
                     onClick={() => setActivityFilter(f)}
                     style={{
-                      fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+                      fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
                       padding: '3px 6px',
                       border: `1px solid ${active ? 'var(--cyan)' : 'var(--rule)'}`,
                       color: active ? 'var(--cyan)' : 'var(--mute)',
@@ -317,11 +317,11 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         <MobSection
           label="STANDINGS"
           tone="var(--cyan)"
-          right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>SORT · TOT</span>}
+          right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>SORT · TOT</span>}
         />
         {membersLoading && members.length === 0 ? (
           <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING…</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING…</div>
           </div>
         ) : members.map((m) => {
           const isMe = currentUser && m.user_id === currentUser.id;
@@ -340,29 +340,29 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             >
               {/* Rank + trend */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ fontFamily: DISPLAY, fontSize: 14 }}>{m.rank || '—'}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{m.rank || '—'}</span>
               </div>
               {/* Monogram */}
               <MgrTag mono={mgrMono(mName)} hue={hue} size={20} />
               {/* Name + captain stub */}
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mName}</span>
-                  {m.rank === 1 && <span style={{ fontFamily: DISPLAY, fontSize: 7, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em', flexShrink: 0 }}>1st</span>}
+                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mName}</span>
+                  {m.rank === 1 && <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em', flexShrink: 0 }}>1st</span>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                   <span style={{ width: 5, height: 5, background: 'var(--gold)', display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em' }}>C · —</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>C · —</span>
                 </div>
               </div>
               {/* Form dots */}
               <MobFormDots form={[]} />
               {/* Points */}
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: 14 }}>{Math.round(m.total_points ?? 0)}</div>
-                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>TOT</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{Math.round(m.total_points ?? 0)}</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>TOT</div>
                 {h2hEnabled && (
-                  <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>
                     {h2hMap[m.user_id] ?? '—'} H2H
                   </div>
                 )}
@@ -375,14 +375,14 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         <MobSection
           label="LEAGUE ACTIVITY"
           tone="var(--gold)"
-          right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>RECENT</span>}
+          right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>RECENT</span>}
         />
         {(() => {
           if (entries.length === 0) return (
             <div style={{ padding: '24px 18px', textAlign: 'center' }}>
-              <div style={{ fontSize: 20, marginBottom: 8 }}>⚽</div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 6 }}>NO ACTIVITY YET</div>
-              <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
+              <div style={{ fontSize: 'var(--fs-heading)', marginBottom: 8 }}>⚽</div>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 6 }}>NO ACTIVITY YET</div>
+              <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
                 Draft results, rank changes, and league news will appear here as the season unfolds.
               </div>
             </div>
@@ -392,12 +392,12 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             return (
               <div key={e.id} style={{ padding: '11px 18px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.16em', padding: '1px 4px', border: `1px solid ${meta.color}`, color: meta.color, flexShrink: 0 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', padding: '1px 4px', border: `1px solid ${meta.color}`, color: meta.color, flexShrink: 0 }}>
                     {meta.badge}
                   </span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>{timeAgo(e.published_at)}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{timeAgo(e.published_at)}</span>
                 </div>
-                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
                   {e.headline}
                 </div>
               </div>

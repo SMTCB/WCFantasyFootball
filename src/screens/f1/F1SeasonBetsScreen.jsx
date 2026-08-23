@@ -18,7 +18,7 @@ const SEASON_FIELDS = [
 ];
 
 function FieldInput({ field, value, onChange, disabled, races }) {
-  const style = { width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, color: value ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1, boxSizing: 'border-box' };
+  const style = { width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: value ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1, boxSizing: 'border-box' };
 
   if (field.type === 'driver') {
     return (
@@ -103,23 +103,23 @@ export default function F1SeasonBetsScreen() {
 
   const answered = SEASON_FIELDS.filter(f => bet[f.key]).length;
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>LOADING…</div>;
+  if (loading) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)' }}>LOADING…</div>;
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', marginBottom: 4 }}>
           SEASON PREDICTIONS · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: 'var(--on-shell)', margin: 0 }}>SEASON BETS</h1>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>SEASON BETS</h1>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', marginTop: 4 }}>
           10 pts per correct prediction · {answered}/{SEASON_FIELDS.length} answered
         </div>
       </div>
 
       {isLocked && (
-        <div style={{ margin: '12px 16px', padding: '10px 14px', background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)' }}>
+        <div style={{ margin: '12px 16px', padding: '10px 14px', background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>
           🔒 Season bets are locked
         </div>
       )}
@@ -132,7 +132,7 @@ export default function F1SeasonBetsScreen() {
               {yearResults?.[field.key] && (
                 <span style={{
                   position: 'absolute', top: 10, right: 12,
-                  fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                  fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em',
                   padding: '2px 7px', borderRadius: 3,
                   background: isCorrect ? 'rgba(21,128,61,0.12)' : 'rgba(185,28,28,0.1)',
                   color: isCorrect ? 'var(--positive)' : 'var(--danger)',
@@ -140,7 +140,7 @@ export default function F1SeasonBetsScreen() {
                   {isCorrect ? '✓ +10' : `✗ ${yearResults[field.key]}`}
                 </span>
               )}
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase', paddingRight: yearResults?.[field.key] ? 90 : 0 }}>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase', paddingRight: yearResults?.[field.key] ? 90 : 0 }}>
                 {field.label}
               </div>
               <FieldInput
@@ -154,13 +154,13 @@ export default function F1SeasonBetsScreen() {
           );
         })}
 
-        {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)', padding: '8px 12px', background: 'rgba(185,28,28,0.06)', borderRadius: 6 }}>{err}</div>}
+        {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', padding: '8px 12px', background: 'rgba(185,28,28,0.06)', borderRadius: 6 }}>{err}</div>}
 
         {!isLocked && (
           <button
             type="submit"
             disabled={saving}
-            style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
+            style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
           >
             {saved ? '✓ SEASON BETS SAVED' : saving ? 'SAVING…' : 'SAVE SEASON BETS'}
           </button>

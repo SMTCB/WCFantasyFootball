@@ -18,11 +18,11 @@ export default function CompetitionSettingsModal({
   return (
     <BottomSheet onClose={onClose} maxWidth={420}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 16px 12px' }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.2em', color: 'var(--text)' }}>SETTINGS</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--text)' }}>SETTINGS</span>
         <button
           type="button"
           onClick={onClose}
-          style={{ background: 'transparent', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 11, letterSpacing: '.1em', cursor: 'pointer', padding: 4 }}
+          style={{ background: 'transparent', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', cursor: 'pointer', padding: 4 }}
         >
           CLOSE
         </button>

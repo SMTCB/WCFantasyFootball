@@ -48,10 +48,10 @@ function FtSection({ label, content, sectionKey, ft }) {
   if (!content) return null;
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ fontFamily: FT_MONO, fontSize: 8, letterSpacing: '.2em', color: FT_MUTE, textTransform: 'uppercase', marginBottom: 6 }}>
+      <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: FT_MUTE, textTransform: 'uppercase', marginBottom: 6 }}>
         {label}
       </div>
-      <p style={{ fontFamily: FT_BODY, fontSize: 14, color: FT_SECTION_TEXT, lineHeight: 1.65, margin: '0 0 8px' }}>
+      <p style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-body)', color: FT_SECTION_TEXT, lineHeight: 1.65, margin: '0 0 8px' }}>
         {content}
       </p>
       <ReactionStrip
@@ -87,10 +87,10 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
 
       {/* Masthead — single combined meta line with inline regenerate control, double-rule close */}
       <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 18, borderBottom: `3px double ${FT_INK}` }}>
-        <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 28, letterSpacing: '-0.01em', color: FT_INK, lineHeight: 1, marginBottom: 6 }}>
+        <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-title)', letterSpacing: '-0.01em', color: FT_INK, lineHeight: 1, marginBottom: 6 }}>
           FORZA TIMES
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: FT_MONO, fontSize: 8, letterSpacing: '.16em', color: FT_MUTE, textTransform: 'uppercase' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_MUTE, textTransform: 'uppercase' }}>
           <span>EDITION #{edition.edition_number} · {dateLabel.toUpperCase()} · {circleName}</span>
           {isOwner && (
             cooldownLabel ? (
@@ -104,7 +104,7 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
                   background: 'transparent',
                   color: FT_GOLD,
                   fontFamily: FT_MONO,
-                  fontSize: 8,
+                  fontSize: 'var(--fs-micro)',
                   fontWeight: 700,
                   letterSpacing: '.16em',
                   textTransform: 'uppercase',
@@ -118,22 +118,22 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
           )}
         </div>
         {genError && (
-          <div style={{ fontFamily: FT_MONO, fontSize: 10, color: 'var(--danger)', marginTop: 8 }}>{genError}</div>
+          <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 8 }}>{genError}</div>
         )}
       </div>
 
       {/* Lead story */}
       {edition.headline && (
         <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 22, lineHeight: 1.2, color: FT_INK, margin: '0 0 10px' }}>
+          <h2 style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-title)', lineHeight: 1.2, color: FT_INK, margin: '0 0 10px' }}>
             {edition.headline}
           </h2>
           {edition.deck && (
-            <p style={{ fontFamily: FT_SERIF, fontSize: 14.5, lineHeight: 1.65, color: FT_INK, margin: '0 0 8px', fontStyle: 'italic' }}>
+            <p style={{ fontFamily: FT_SERIF, fontSize: 'var(--fs-body)', lineHeight: 1.65, color: FT_INK, margin: '0 0 8px', fontStyle: 'italic' }}>
               {edition.deck}
             </p>
           )}
-          <div style={{ fontFamily: FT_MONO, fontSize: 9, letterSpacing: '.14em', color: FT_MUTE, marginTop: 10 }}>
+          <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: FT_MUTE, marginTop: 10 }}>
             By the Forza Times Desk
           </div>
           <ReactionStrip
@@ -176,11 +176,11 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
 function EmptyState({ isOwner, onGenerate, generating, genError }) {
   return (
     <div style={{ background: FT_PAPER, color: FT_INK, padding: '48px 20px', textAlign: 'center' }}>
-      <div style={{ fontFamily: FT_SLAB, fontSize: 24, letterSpacing: '.04em', color: FT_INK, marginBottom: 4 }}>
+      <div style={{ fontFamily: FT_SLAB, fontSize: 'var(--fs-title)', letterSpacing: '.04em', color: FT_INK, marginBottom: 4 }}>
         FORZA TIMES
       </div>
       <div style={{ height: 2, background: FT_INK, maxWidth: 200, margin: '0 auto 20px' }} />
-      <p style={{ fontFamily: FT_SERIF, fontSize: 14, color: FT_MUTE, fontStyle: 'italic', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
+      <p style={{ fontFamily: FT_SERIF, fontSize: 'var(--fs-body)', color: FT_MUTE, fontStyle: 'italic', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
         No edition published yet today. The Forza Times will come to life once your leagues kick off.
       </p>
       {isOwner && (
@@ -194,7 +194,7 @@ function EmptyState({ isOwner, onGenerate, generating, genError }) {
               background: FT_GOLD,
               color: FT_PAPER,
               fontFamily: FT_MONO,
-              fontSize: 10,
+              fontSize: 'var(--fs-micro)',
               fontWeight: 700,
               letterSpacing: '.16em',
               cursor: generating ? 'default' : 'pointer',
@@ -203,9 +203,9 @@ function EmptyState({ isOwner, onGenerate, generating, genError }) {
             {generating ? 'GENERATING…' : 'PUBLISH SPECIAL EDITION →'}
           </button>
           {genError && (
-            <div style={{ fontFamily: FT_MONO, fontSize: 10, color: 'var(--danger)', marginTop: 10 }}>{genError}</div>
+            <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 10 }}>{genError}</div>
           )}
-          <p style={{ fontFamily: FT_MONO, fontSize: 9, color: FT_MUTE, letterSpacing: '.1em', marginTop: 10 }}>
+          <p style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: FT_MUTE, letterSpacing: '.1em', marginTop: 10 }}>
             AS CLUBHOUSE OWNER · MAX 1 PER 4 HOURS
           </p>
         </div>
@@ -243,7 +243,7 @@ export default function ClubhouseFrontpage({ circleId, circleName, isOwner }) {
   if (ft.loading) {
     return (
       <div style={{ background: FT_PAPER, padding: '48px 20px', textAlign: 'center' }}>
-        <div style={{ fontFamily: FT_MONO, fontSize: 10, letterSpacing: '.16em', color: FT_MUTE }}>
+        <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_MUTE }}>
           LOADING FORZA TIMES…
         </div>
       </div>

@@ -46,7 +46,7 @@ function DateDivider({ label, mobile }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: mobile ? '10px 16px 4px' : '10px 0 4px' }}>
       <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{label}</span>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{label}</span>
       <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
     </div>
   );
@@ -65,12 +65,12 @@ function MessageBody({ text, onHashtagClick }) {
         <span
           key={`h${i++}`}
           onClick={() => onHashtagClick(token)}
-          style={{ color: 'var(--gold)', fontFamily: MONO, fontSize: 12, padding: '0 2px', background: 'rgba(240,180,0,.1)', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(240,180,0,.5)' }}
+          style={{ color: 'var(--gold)', fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '0 2px', background: 'rgba(240,180,0,.1)', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(240,180,0,.5)' }}
         >{token}</span>
       );
     } else {
       parts.push(
-        <span key={`m${i++}`} style={{ color: 'var(--cyan)', fontFamily: MONO, fontSize: 12, padding: '0 2px', background: 'rgba(0,180,216,.08)' }}>{token}</span>
+        <span key={`m${i++}`} style={{ color: 'var(--cyan)', fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '0 2px', background: 'rgba(0,180,216,.08)' }}>{token}</span>
       );
     }
     last = match.index + token.length;
@@ -143,26 +143,26 @@ export default function ChatView({
             right={
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {searchTerm && searchTerm.startsWith('#') && (
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.14em' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.14em' }}>
                     HASHTAG · {searchTerm}
                   </span>
                 )}
                 {searchTerm && !searchTerm.startsWith('#') && (
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>
                     {resultCount} RESULT{resultCount !== 1 ? 'S' : ''}
                   </span>
                 )}
                 <div style={{ display: 'flex', gap: 0, alignItems: 'center', background: 'var(--ink)', border: '1px solid var(--rule)' }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', padding: '4px 8px', letterSpacing: '.18em' }}>#</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '4px 8px', letterSpacing: '.18em' }}>#</span>
                   <input
                     type="text"
                     placeholder="search hashtag or text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--paper)', padding: '4px 10px 4px 0', fontFamily: "'Archivo', sans-serif", fontSize: 11, outline: 'none', width: 180 }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--paper)', padding: '4px 10px 4px 0', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', outline: 'none', width: 180 }}
                   />
                   {searchTerm && (
-                    <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 9, border: 'none', borderLeft: '1px solid var(--rule)' }}>✕</button>
+                    <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 'var(--fs-micro)', border: 'none', borderLeft: '1px solid var(--rule)' }}>✕</button>
                   )}
                 </div>
               </div>
@@ -172,11 +172,11 @@ export default function ChatView({
           {/* Pinned banner */}
           {pinnedMessage && (
             <div style={{ padding: '10px 20px', background: 'rgba(224,168,0,.06)', borderBottom: '1px solid rgba(224,168,0,.27)', display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span style={{ fontFamily: 'Archivo Black', fontSize: 10, color: 'var(--gold)', padding: '2px 6px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
-              <span style={{ fontFamily: 'Archivo,sans-serif', fontSize: 12, color: 'var(--paper)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: 'var(--gold)', padding: '2px 6px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
+              <span style={{ fontFamily: 'Archivo,sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 "{pinnedMessage.message}"
               </span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', flexShrink: 0 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', flexShrink: 0 }}>
                 — @{pinnedMessage.userName} · {new Date(pinnedMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
@@ -186,17 +186,17 @@ export default function ChatView({
           <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {chatLoading && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
-                <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING MESSAGES…</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING MESSAGES…</span>
               </div>
             )}
             {!chatLoading && messages.length === 0 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
-                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages yet. Start the conversation!</span>
+                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No messages yet. Start the conversation!</span>
               </div>
             )}
             {!chatLoading && messages.length > 0 && searchTerm && filteredMessages.length === 0 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
-                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages match "{searchTerm}"</span>
+                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No messages match "{searchTerm}"</span>
               </div>
             )}
             {filteredMessages.map((msg, idx) => {
@@ -211,8 +211,8 @@ export default function ChatView({
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 13, color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
-                      <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     {editingMessageId === msg.id ? (
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -220,7 +220,7 @@ export default function ChatView({
                           type="text"
                           value={editingText}
                           onChange={(e) => setEditingText(e.target.value)}
-                          style={{ flex: 1, background: 'var(--ink-2)', border: '1px solid var(--cyan)', color: 'var(--paper)', padding: '4px 8px', fontFamily: "'Archivo', sans-serif", fontSize: 12, outline: 'none' }}
+                          style={{ flex: 1, background: 'var(--ink-2)', border: '1px solid var(--cyan)', color: 'var(--paper)', padding: '4px 8px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', outline: 'none' }}
                           autoFocus
                         />
                         <button onClick={async () => { const r = await editMessage(msg.id, editingText); if (r.ok) setEditingMessageId(null); }} style={{ ...miniBtnStyle('var(--cyan)'), padding: '4px 10px' }}>SAVE</button>
@@ -228,7 +228,7 @@ export default function ChatView({
                       </div>
                     ) : (
                       <>
-                        <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', lineHeight: 1.45 }}>
+                        <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.45 }}>
                           {msg.isDeleted ? (
                             <span style={{ fontStyle: 'italic', color: 'var(--mute)' }}>[deleted]</span>
                           ) : (
@@ -236,7 +236,7 @@ export default function ChatView({
                           )}
                         </div>
                         {msg.editedAt && !msg.isDeleted && (
-                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>(edited)</div>
+                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>(edited)</div>
                         )}
                         {msg.isOwnMessage && !msg.isDeleted && (
                           <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
@@ -257,7 +257,7 @@ export default function ChatView({
           {/* Composer */}
           <div style={{ borderTop: '1px solid var(--rule)', padding: '14px 20px', background: 'var(--ink-2)', flexShrink: 0 }}>
             {Object.values(typingUsers).length > 0 && (
-              <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', marginBottom: 8, fontStyle: 'italic' }}>
+              <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8, fontStyle: 'italic' }}>
                 {Object.values(typingUsers).map(t => t.name).join(', ')} {Object.keys(typingUsers).length === 1 ? 'is' : 'are'} typing…
               </div>
             )}
@@ -270,13 +270,13 @@ export default function ChatView({
                   onChange={(e) => { const v = e.target.value; setChatInput(v); parseMentionPattern(v); broadcastTyping(); }}
                   onKeyDown={handleKeyDown}
                   disabled={chatSending}
-                  style={{ flex: 1, background: 'transparent', padding: '12px 0', fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', outline: 'none', opacity: chatSending ? 0.5 : 1 }}
+                  style={{ flex: 1, background: 'transparent', padding: '12px 0', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-body)', color: 'var(--paper)', outline: 'none', opacity: chatSending ? 0.5 : 1 }}
                 />
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={!chatInput.trim() || chatSending}
-                  style={{ background: 'var(--cyan)', color: 'var(--ink)', border: 'none', padding: '8px 14px', fontFamily: DISPLAY, fontSize: 12, letterSpacing: '.18em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1 }}
+                  style={{ background: 'var(--cyan)', color: 'var(--ink)', border: 'none', padding: '8px 14px', fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '.18em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1 }}
                 >
                   {chatSending ? '…' : 'SEND ↵'}
                 </button>
@@ -284,7 +284,7 @@ export default function ChatView({
               {mentionMatches.length > 0 && mentionSearch && (
                 <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, background: 'var(--ink-3)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 192, overflow: 'auto' }}>
                   {mentionMatches.map((member) => (
-                    <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 16px', fontFamily: "'Archivo', sans-serif", fontSize: 12, color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                    <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 16px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
                       <span style={{ fontWeight: 700 }}>@{member.name}</span>
                     </button>
                   ))}
@@ -301,7 +301,7 @@ export default function ChatView({
             <HubSectionLabel label={`TRENDING · ${trendingHashtags.length}`} tone="var(--cyan)" />
             <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflow: 'auto' }}>
               {trendingHashtags.length === 0 ? (
-                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', padding: '8px' }}>No hashtags yet</span>
+                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '8px' }}>No hashtags yet</span>
               ) : (
                 trendingHashtags.slice(0, 10).map(({ tag, count }) => (
                   <button
@@ -315,7 +315,7 @@ export default function ChatView({
                       borderRadius: 3,
                       color: searchTerm === tag ? 'var(--cyan)' : 'var(--paper)',
                       fontFamily: MONO,
-                      fontSize: 10,
+                      fontSize: 'var(--fs-micro)',
                       cursor: 'pointer',
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -324,7 +324,7 @@ export default function ChatView({
                     }}
                   >
                     <span>{tag}</span>
-                    <span style={{ color: 'var(--mute)', fontSize: 9 }}>{count}</span>
+                    <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>{count}</span>
                   </button>
                 ))
               )}
@@ -343,8 +343,8 @@ export default function ChatView({
                     <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--ink-2)' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>You</div>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{m.users?.username || 'you'}</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em' }}>You</div>
+                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{m.users?.username || 'you'}</div>
                   </div>
                 </div>
               ))}
@@ -357,8 +357,8 @@ export default function ChatView({
                       <MgrTag mono={mgrMono(mName)} hue={hue} size={22} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>{mName}</div>
-                      <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{mName.toLowerCase()}</div>
+                      <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em' }}>{mName}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{mName.toLowerCase()}</div>
                     </div>
                   </div>
                 );
@@ -377,22 +377,22 @@ export default function ChatView({
 
       {/* Channel header pill — single pill since channels feature is removed */}
       <div style={{ display: 'flex', gap: 6, padding: '10px 16px', borderBottom: '1px solid var(--rule)', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        <span style={{ flex: '0 0 auto', padding: '6px 10px', background: 'rgba(0,180,216,.08)', border: '1px solid var(--cyan)', color: 'var(--cyan)', fontFamily: DISPLAY, fontSize: 11, letterSpacing: '-0.01em', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        <span style={{ flex: '0 0 auto', padding: '6px 10px', background: 'rgba(0,180,216,.08)', border: '1px solid var(--cyan)', color: 'var(--cyan)', fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '-0.01em', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           #league-chat
-          {(unreadCount || 0) > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontFamily: MONO, fontSize: 8, padding: '0 4px', letterSpacing: '.1em' }}>{unreadCount}</span>}
+          {(unreadCount || 0) > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontFamily: MONO, fontSize: 'var(--fs-micro)', padding: '0 4px', letterSpacing: '.1em' }}>{unreadCount}</span>}
         </span>
         {/* Hashtag search pill */}
         <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', background: searchTerm ? 'rgba(0,180,216,.08)' : 'transparent', border: `1px solid ${searchTerm ? 'var(--cyan)' : 'var(--rule)'}`, padding: '0 10px', gap: 4 }}>
-          <span style={{ fontFamily: MONO, fontSize: 11, color: searchTerm ? 'var(--cyan)' : 'var(--mute)', letterSpacing: '.18em' }}>#</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: searchTerm ? 'var(--cyan)' : 'var(--mute)', letterSpacing: '.18em' }}>#</span>
           <input
             type="text"
             placeholder="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--paper)', fontFamily: "'Archivo', sans-serif", fontSize: 11, width: searchTerm ? 90 : 52 }}
+            style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--paper)', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', width: searchTerm ? 90 : 52 }}
           />
           {searchTerm && (
-            <button onClick={clearSearch} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 9, cursor: 'pointer', padding: 0 }}>✕</button>
+            <button onClick={clearSearch} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer', padding: 0 }}>✕</button>
           )}
         </div>
         {/* Mobile trending hashtags */}
@@ -410,12 +410,12 @@ export default function ChatView({
                   borderRadius: 3,
                   color: searchTerm === tag ? 'var(--cyan)' : 'var(--paper)',
                   fontFamily: MONO,
-                  fontSize: 9,
+                  fontSize: 'var(--fs-micro)',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                 }}
               >
-                {tag} <span style={{ fontSize: 8, color: 'var(--mute)' }}>({count})</span>
+                {tag} <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>({count})</span>
               </button>
             ))}
           </div>
@@ -425,10 +425,10 @@ export default function ChatView({
       {/* Pinned banner */}
       {pinnedMessage && (
         <div style={{ padding: '8px 16px', background: 'rgba(224,168,0,.06)', borderBottom: '1px solid rgba(224,168,0,.27)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-          <span style={{ fontFamily: 'Archivo Black', fontSize: 8, color: 'var(--gold)', padding: '2px 5px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
-          <span style={{ fontFamily: 'Archivo,sans-serif', fontSize: 11, color: 'var(--paper)', lineHeight: 1.4, flex: 1, overflow: 'hidden' }}>
+          <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: 'var(--gold)', padding: '2px 5px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
+          <span style={{ fontFamily: 'Archivo,sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--paper)', lineHeight: 1.4, flex: 1, overflow: 'hidden' }}>
             "{pinnedMessage.message}"
-            <span style={{ fontFamily: MONO, color: 'var(--mute)', fontSize: 9, marginLeft: 4, letterSpacing: '.16em' }}>— @{pinnedMessage.userName}</span>
+            <span style={{ fontFamily: MONO, color: 'var(--mute)', fontSize: 'var(--fs-micro)', marginLeft: 4, letterSpacing: '.16em' }}>— @{pinnedMessage.userName}</span>
           </span>
         </div>
       )}
@@ -437,12 +437,12 @@ export default function ChatView({
       <div style={{ flex: 1, overflow: 'auto' }}>
         {chatLoading && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 24 }}>
-            <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING…</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING…</span>
           </div>
         )}
         {!chatLoading && messages.length === 0 && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 24 }}>
-            <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages yet.</span>
+            <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No messages yet.</span>
           </div>
         )}
         {filteredMessages.map((msg, idx) => {
@@ -457,10 +457,10 @@ export default function ChatView({
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 12, color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
-                <div style={{ fontFamily: 'Archivo,sans-serif', fontSize: 12, color: 'var(--paper)', lineHeight: 1.4 }}>
+                <div style={{ fontFamily: 'Archivo,sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>
                   {msg.isDeleted ? (
                     <span style={{ fontStyle: 'italic', color: 'var(--mute)' }}>[deleted]</span>
                   ) : (
@@ -469,8 +469,8 @@ export default function ChatView({
                 </div>
                 {msg.isOwnMessage && !msg.isDeleted && (
                   <div style={{ display: 'flex', gap: 4, marginTop: 3 }}>
-                    <button onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={{ ...miniBtnStyle('var(--mute)'), fontSize: 8, padding: '1px 5px' }}>EDIT</button>
-                    <button onClick={() => deleteMessage(msg.id)} style={{ ...miniBtnStyle('var(--danger)'), fontSize: 8, padding: '1px 5px' }}>DEL</button>
+                    <button onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={{ ...miniBtnStyle('var(--mute)'), fontSize: 'var(--fs-micro)', padding: '1px 5px' }}>EDIT</button>
+                    <button onClick={() => deleteMessage(msg.id)} style={{ ...miniBtnStyle('var(--danger)'), fontSize: 'var(--fs-micro)', padding: '1px 5px' }}>DEL</button>
                   </div>
                 )}
               </div>
@@ -484,7 +484,7 @@ export default function ChatView({
       {/* Composer — pinned at bottom */}
       <div style={{ borderTop: '1px solid var(--rule)', padding: '10px 14px', background: 'var(--ink-2)', flexShrink: 0 }}>
         {Object.values(typingUsers).length > 0 && (
-          <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', marginBottom: 6, fontStyle: 'italic' }}>
+          <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6, fontStyle: 'italic' }}>
             {Object.values(typingUsers).map(t => t.name).join(', ')} typing…
           </div>
         )}
@@ -502,19 +502,19 @@ export default function ChatView({
               onChange={(e) => { const v = e.target.value; setChatInput(v); parseMentionPattern(v); broadcastTyping(); }}
               onKeyDown={handleKeyDown}
               disabled={chatSending}
-              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', padding: '8px 0', fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--paper)', opacity: chatSending ? 0.5 : 1 }}
+              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', padding: '8px 0', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--paper)', opacity: chatSending ? 0.5 : 1 }}
             />
           </div>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!chatInput.trim() || chatSending}
-            style={{ padding: '8px 12px', background: 'var(--cyan)', color: 'var(--ink)', border: 0, fontFamily: 'Archivo Black,sans-serif', fontSize: 11, letterSpacing: '.16em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1, flexShrink: 0 }}
+            style={{ padding: '8px 12px', background: 'var(--cyan)', color: 'var(--ink)', border: 0, fontFamily: 'Archivo Black,sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.16em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1, flexShrink: 0 }}
           >↵</button>
           {mentionMatches.length > 0 && mentionSearch && (
             <div style={{ position: 'absolute', bottom: '100%', left: 30, right: 0, background: 'var(--ink-3)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 160, overflow: 'auto' }}>
               {mentionMatches.map((member) => (
-                <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 12px', fontFamily: "'Archivo', sans-serif", fontSize: 12, color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 12px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
                   @{member.name}
                 </button>
               ))}

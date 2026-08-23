@@ -42,7 +42,7 @@ function Sparkline({ data, myColor = 'var(--positive)', rivalColor = 'var(--dang
     <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ height }}>
       {/* Grid lines */}
       {[0.25, 0.5, 0.75].map(f => (
-        <line key={f} x1={0} y1={height * f} x2={width} y2={height * f} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />
+        <line key={f} x1={0} y1={height * f} x2={width} y2={height * f} stroke="var(--shell-rule)" strokeWidth={1} />
       ))}
 
       {/* Rival line */}
@@ -183,7 +183,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             </div>
             <button
               onClick={onClose}
-              className="fk-mono w-8 h-8 flex items-center justify-center text-text-tertiary hover:text-white transition-colors" style={{ border: '1px solid var(--rule)', fontSize: 14 }}
+              className="fk-mono w-8 h-8 flex items-center justify-center text-text-tertiary hover:text-white transition-colors" style={{ border: '1px solid var(--rule)', fontSize: 'var(--fs-body)' }}
             >
               ×
             </button>

@@ -35,14 +35,14 @@ export default function PowerToolCard({
       {/* Label */}
       <div
         className="fk-display"
-        style={{ fontSize: 11, color: isActive ? accentColor : 'var(--paper)', letterSpacing: '-0.01em' }}
+        style={{ fontSize: 'var(--fs-micro)', color: isActive ? accentColor : 'var(--paper)', letterSpacing: '-0.01em' }}
       >
         {label.toUpperCase()}
       </div>
 
       {/* Description */}
       {description && (
-        <div style={{ fontSize: 9, color: 'var(--mute)', lineHeight: 1.4, fontFamily: 'Archivo, sans-serif' }}>
+        <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.4, fontFamily: 'Archivo, sans-serif' }}>
           {description}
         </div>
       )}
@@ -51,7 +51,7 @@ export default function PowerToolCard({
       {actionLabel && (
         <div
           className="fk-mono"
-          style={{ fontSize: 8, color: isActive ? accentColor : 'var(--mute)', letterSpacing: '0.18em' }}
+          style={{ fontSize: 'var(--fs-micro)', color: isActive ? accentColor : 'var(--mute)', letterSpacing: '0.18em' }}
         >
           {isActive ? 'ACTIVE' : actionLabel.toUpperCase()}
         </div>

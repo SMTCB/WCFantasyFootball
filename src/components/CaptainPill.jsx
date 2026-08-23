@@ -7,7 +7,7 @@ export default function CaptainPill({ triple = false }) {
     <span
       style={{
         fontFamily:    'Archivo Black, sans-serif',
-        fontSize:      9,
+        fontSize: 'var(--fs-micro)',
         fontWeight:    900,
         background:    'var(--gold)',
         color:         'var(--ink)',

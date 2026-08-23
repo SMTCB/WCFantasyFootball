@@ -105,13 +105,13 @@ export default function PlayerCard({
         <div>
           <div
             className="fk-mono"
-            style={{ fontSize: 8, color: toneColor, letterSpacing: '0.14em' }}
+            style={{ fontSize: 'var(--fs-micro)', color: toneColor, letterSpacing: '0.14em' }}
           >
             {player.position} SLOT
           </div>
           <div
             className="fk-mono"
-            style={{ fontSize: 7, color: 'var(--mute)', marginTop: 1 }}
+            style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 1 }}
           >
             + SIGN
           </div>
@@ -154,7 +154,7 @@ export default function PlayerCard({
           border:         numBorder,
           color:          numColor,
           fontFamily:     'Archivo Black, sans-serif',
-          fontSize:       12,
+          fontSize: 'var(--fs-label)',
           fontWeight:     900,
           display:        'flex',
           alignItems:     'center',
