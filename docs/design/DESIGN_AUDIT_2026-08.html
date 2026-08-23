@@ -20,6 +20,7 @@
     --med-bg:   #E7E9EE;
     --low-bg:   #EDEAE2;
     --good:     #166534;
+    --good-bg:  #E3F0E6;
     --inverse-ground: #18202E;
     --inverse-ink:    #FFFFFF;
     --inverse-ink-2:  #C3CAD6;
@@ -53,6 +54,7 @@
       --med-bg:   #222B36;
       --low-bg:   #1C242E;
       --good:     #7FDCA4;
+      --good-bg:  #14261C;
       --inverse-ground: #1C242E;
       --inverse-ink:    #F2EEE5;
       --inverse-ink-2:  #C3CAD6;
@@ -79,6 +81,7 @@
     --med-bg:   #222B36;
     --low-bg:   #1C242E;
     --good:     #7FDCA4;
+    --good-bg:  #14261C;
     --inverse-ground: #1C242E;
     --inverse-ink:    #F2EEE5;
     --inverse-ink-2:  #C3CAD6;
@@ -156,6 +159,7 @@
   .chip--high { background: var(--high-bg); color: var(--high); }
   .chip--med  { background: var(--med-bg);  color: var(--ink-2); }
   .chip--low  { background: var(--low-bg);  color: var(--ink-2); }
+  .chip--done { background: var(--good-bg); color: var(--good); }
 
   /* ── ledger / tables ──────────────────────────────── */
   .scroll { overflow-x: auto; }
@@ -212,7 +216,7 @@
   .act { display: grid; grid-template-columns: 72px 1fr; gap: 4px 18px; padding: 22px 26px; border-bottom: 1px solid var(--rule); }
   .act:last-child { border-bottom: 0; }
   .act-id { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--tier-color); font-variant-numeric: tabular-nums; }
-  .act-title { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: -0.005em; line-height: 1.25; color: var(--ink); }
+  .act-title { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: -0.005em; line-height: 1.25; color: var(--ink); display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .act-body { grid-column: 2; font-size: 15.5px; line-height: 1.55; color: var(--ink-2); }
   .act-foot { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px 20px; padding-top: 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
   .act-foot b { color: var(--ink-2); font-weight: 500; }
@@ -738,7 +742,7 @@
       <h2>Actions, prioritised</h2>
     </div>
 
-    <p class="lede">Thirteen items across the four tiers already used in <code>BACKLOG.md</code>, each traceable to the findings it clears. P0 is roughly one day and removes every critical finding. P1 is the tier that decides whether any of this holds — <strong>B4 must land with B1 and B2, not after them</strong>, or the sweep starts decaying the week it finishes.</p>
+    <p class="lede">Twenty items across the four tiers already used in <code>BACKLOG.md</code>, each traceable to the findings it clears. Seven of these (E1–E4, F1–F3) were added after the live-verification pass on 2026-08-23 and are not yet reflected in <code>BACKLOG.md</code>. A1–A3 shipped 2026-08-23 via <a href="https://github.com/SMTCB/WCFantasyFootball/pull/827">PR #827</a>; the four new P0 criticals (E1–E4) mean P0 is not clear yet. P1 is the tier that decides whether any of this holds — <strong>B4 must land with B1 and B2, not after them</strong>, or the sweep starts decaying the week it finishes.</p>
 
     <!-- P0 -->
     <div class="tier" style="--tier-color: var(--crit);">
@@ -747,12 +751,12 @@
           <h3>P0 — Blocker</h3>
           <div class="tier-when">Before the maintenance wall comes down</div>
         </div>
-        <div class="tier-total">~1 day · clears findings 1, 2, 3, 7, 14</div>
+        <div class="tier-total">A1–A3 shipped · E1–E4 ~4.5h remaining</div>
       </div>
 
       <div class="act">
         <div class="act-id">A1</div>
-        <div class="act-title">Rebuild the sign-in fields</div>
+        <div class="act-title">Rebuild the sign-in fields <span class="chip chip--done">Done · PR #827</span></div>
         <div class="act-body">Replace the white-alpha fill and border with a solid <code>#9A9488</code> boundary at 3.0:1. Restore a visible focus state as a 2px <code>--accent</code> border where <code>outline: none</code> currently stands alone. Move the field radius from 4px to the system's 6px, re-set labels and tabs in JetBrains Mono at 11–12px, and raise the tab strip and reset link to 44px.</div>
         <div class="act-foot"><span><b>Where</b> src/screens/AuthScreen.jsx:129–140, :260</span><span><b>Effort</b> 2h</span><span><b>Clears</b> 1, 7, 14</span></div>
         <div class="act-check"><b>Done when:</b> the field boundary measures ≥3:1 against the card, tabbing through the form shows focus at every stop, and no target is under 44px at a 375px viewport.</div>
@@ -760,7 +764,7 @@
 
       <div class="act">
         <div class="act-id">A2</div>
-        <div class="act-title">Darken the muted token</div>
+        <div class="act-title">Darken the muted token <span class="chip chip--done">Done · PR #827</span></div>
         <div class="act-body">Change <code>--mute</code> from <code>#8A97A8</code> to <code>#626F80</code>. One line, and it lifts every secondary label in the product from 2.69:1 to 4.63:1 at once. Budget the rest of the time for a visual regression pass — this token appears on almost every screen, so it is worth looking at each one before merging.</div>
         <div class="act-foot"><span><b>Where</b> src/index.css:78</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 2</span></div>
         <div class="act-check"><b>Done when:</b> no text token measures below 4.5:1 against <code>--bg</code> or <code>--card</code>.</div>
@@ -768,10 +772,42 @@
 
       <div class="act">
         <div class="act-id">A3</div>
-        <div class="act-title">Fix the failing button states</div>
+        <div class="act-title">Fix the failing button states <span class="chip chip--done">Done · PR #827</span></div>
         <div class="act-body">Four value swaps on <code>.ffl-btn</code>: <code>primary:hover</code> #1EC3E3 → #14567F, <code>gold</code> #B8720E → #96600C, <code>gold:hover</code> #F0B91A → #7A4A08, and <code>danger</code> ink from <code>--paper</code> to <code>#FFFFFF</code>. While in the file, replace the two <code>rgba(242,238,229,.06)</code> hover fills on the <code>secondary</code> and <code>icon</code> variants, which are invisible on a light ground.</div>
         <div class="act-foot"><span><b>Where</b> src/index.css:440–535</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 3</span></div>
         <div class="act-check"><b>Done when:</b> every button variant measures ≥4.5:1 label-on-fill in both resting and hover states, and every hover produces a visible change.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">E1</div>
+        <div class="act-title">Fix the bottom-nav active-tab colour</div>
+        <div class="act-body">The active tab's info-blue label (<code>--cyan</code>, aliased to <code>--brand-accent</code> #1A6FA8) sits on the navy <code>--shell</code> background at 3.02:1 — below the 4.5:1 floor for the 10px mono label it's set in. This is global chrome, present on every screen, in both resting and live states. Darken the on-shell variant of the accent rather than the shared token, since <code>--brand-accent</code> also has to hold its own on light surfaces elsewhere.</div>
+        <div class="act-foot"><span><b>Where</b> src/components/AppLayout.jsx:426, :438</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 15</span></div>
+        <div class="act-check"><b>Done when:</b> the active-tab label measures ≥4.5:1 against <code>--shell</code> in both the live (red) and non-live (blue) states.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">E2</div>
+        <div class="act-title">Stop using raw <code>--gold</code> as text colour</div>
+        <div class="act-body">A3 fixed <code>--gold</code> inside the button component, but the raw token is still used directly as a text colour outside it — measuring 3.49–4.24:1 depending on the surface. The header's "Beta" badge is the worst case: 6.5px text at the low end of that range, present on every screen regardless of route. The other instances the live pass caught (Trophy, Market, Live) need the same treatment; grep <code>color: 'var(--gold)'</code> and <code>color:var(--gold)</code> across <code>src/</code> to catch the rest, since this wasn't a component sweep.</div>
+        <div class="act-foot"><span><b>Where</b> src/components/AppLayout.jsx:308–311 (Beta badge) + other raw-text sites flagged in the 2026-08-23 live pass</span><span><b>Effort</b> 2h</span><span><b>Clears</b> 16</span></div>
+        <div class="act-check"><b>Done when:</b> <code>var(--gold)</code> resolves to ≥4.5:1 everywhere it's used as text colour in <code>src/</code>, or the site uses the fixed <code>.ffl-btn--gold</code> class instead.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">E3</div>
+        <div class="act-title">Fix red status colour on dark surfaces</div>
+        <div class="act-body"><code>--danger</code> was tuned in A3 for danger-button ink, not for red-as-status-indicator on a dark ground — the LIVE badge measures 2.53:1 and the Market position-quota chips (GK/DEF/MID/FWD, empty state) measure 2.33:1, both below even the 3.0:1 large-text floor. These need a dedicated on-dark status-red token rather than a further edit to <code>--danger</code>, which is already correct for its button use.</div>
+        <div class="act-foot"><span><b>Where</b> src/screens/LiveScreen.jsx:22 (LIVE badge) · src/screens/MarketScreen.jsx:906–934 (position quota chips)</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 17</span></div>
+        <div class="act-check"><b>Done when:</b> the LIVE badge and the empty-state position chips both measure ≥3.0:1 against their background.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">E4</div>
+        <div class="act-title">Fix the near-invisible empty-state caption</div>
+        <div class="act-body">The Points Log placeholder on Live sets its text colour from <code>--rule</code> — a hairline-divider token, not a text token — on an off-white card. That pairing measures 1.22:1: effectively unreadable, and the worst ratio in either verification pass. Set it from <code>--muted</code> like every other caption in the product; there is no reason this one used a divider token.</div>
+        <div class="act-foot"><span><b>Where</b> src/screens/LiveScreen.jsx:1117, :1436</span><span><b>Effort</b> 30m</span><span><b>Clears</b> 18</span></div>
+        <div class="act-check"><b>Done when:</b> the placeholder caption measures ≥4.5:1 against the card, and no text colour in <code>src/</code> resolves through <code>--rule</code>.</div>
       </div>
     </div>
 
@@ -782,7 +818,7 @@
           <h3>P1 — High</h3>
           <div class="tier-when">First sprint after launch</div>
         </div>
-        <div class="tier-total">~3 days · clears findings 5, 6, 8</div>
+        <div class="tier-total">~3 days + F1–F3 ~2h · clears findings 5, 6, 8, 19, 20, 21</div>
       </div>
 
       <div class="act">
@@ -815,6 +851,30 @@
         <div class="act-body">Three rules in <code>eslint.config.js</code>, scoped to <code>src/</code>: ban raw hex outside the token file, ban raw pixel values in <code>fontSize</code> and <code>text-[…]</code>, and ban <code>rgba(255,255,255,…)</code> outright. This is the highest-leverage item in the report and the cheapest — without it, B1 and B2 are a one-off cleanup that decays.</div>
         <div class="act-foot"><span><b>Where</b> eslint.config.js</span><span><b>Effort</b> 3h</span><span><b>Clears</b> nothing directly — protects B1, B2, C1, C3</span></div>
         <div class="act-check"><b>Done when:</b> CI fails a PR that introduces a raw hex, a raw pixel font size, or a white-alpha value in <code>src/</code>.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">F1</div>
+        <div class="act-title">Close the residual <code>--mute</code>-on-<code>--elev</code> gap</div>
+        <div class="act-body">A2 fixed <code>--mute</code> against <code>--bg</code> and <code>--card</code>, but <code>--elev</code> is a lighter raised surface the fix didn't account for — the pair still measures 4.26:1, just under AA. This token carries field labels, helper captions, and (in its disabled/loading state) the password-update button's text on Settings, plus card labels on Trophy and Wallet. Either darken <code>--mute</code> further (re-checking it doesn't then fail elsewhere) or give <code>--elev</code>-mounted text its own token.</div>
+        <div class="act-foot"><span><b>Where</b> src/screens/SettingsScreen.jsx:293–294 · src/screens/TrophyCabinetScreen.jsx:129–131 · src/screens/WalletScreen.jsx:94–100, :190–196</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 19</span></div>
+        <div class="act-check"><b>Done when:</b> <code>--mute</code> (or its replacement) measures ≥4.5:1 against <code>--elev</code> as well as <code>--bg</code> and <code>--card</code>.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">F2</div>
+        <div class="act-title">Stop pairing <code>--mute</code> with <code>--shell</code></div>
+        <div class="act-body">Market's sticky header sets <code>background: var(--shell)</code>, and the Budget label and its "M" unit suffix directly beneath it are coloured with <code>--mute</code> — 3.19:1, an instance B1's planned sweep hadn't caught as of the live pass. <code>--mute</code> is tuned for the light card surfaces, not the navy shell; use <code>--on-shell-dim</code>, the token already used for muted labels elsewhere on shell backgrounds.</div>
+        <div class="act-foot"><span><b>Where</b> src/screens/MarketScreen.jsx:746 (header), :857, :865 (Budget label + unit)</span><span><b>Effort</b> 30m</span><span><b>Clears</b> 20</span></div>
+        <div class="act-check"><b>Done when:</b> the Budget label and unit measure ≥4.5:1 against <code>--shell</code>, and no <code>--mute</code> text sits directly on a <code>--shell</code> background in <code>src/</code>.</div>
+      </div>
+
+      <div class="act">
+        <div class="act-id">F3</div>
+        <div class="act-title">Migrate the last raw <code>--gold</code> button fill</div>
+        <div class="act-body">League's "Join →" button pre-dates the <code>.ffl-btn--gold</code> component fix from A3 — it sets <code>background: var(--gold)</code> and <code>color: var(--ink-2)</code> (white) directly rather than using the class, and inherits the old 3.85:1 ratio A3 already solved everywhere else. Swap it onto <code>.ffl-btn--gold</code>.</div>
+        <div class="act-foot"><span><b>Where</b> src/screens/LeagueScreen.jsx:1714–1733</span><span><b>Effort</b> 30m</span><span><b>Clears</b> 21</span></div>
+        <div class="act-check"><b>Done when:</b> the "Join →" button uses <code>.ffl-btn--gold</code> and measures ≥4.5:1 label-on-fill.</div>
       </div>
     </div>
 
@@ -921,13 +981,13 @@
           <tr><td class="n">12</td><td class="t">The three brand faces are re-declared inline 1,584 times instead of inherited</td><td><span class="chip chip--low">Low</span></td><td class="w">112 files</td><td class="e">D2</td></tr>
           <tr><td class="n">13</td><td class="t">Glow helpers and the live-ring keyframe still animate dark-theme colours</td><td><span class="chip chip--low">Low</span></td><td class="w">index.css · .glow-* · liveRing</td><td class="e">C2</td></tr>
           <tr><td class="n">14</td><td class="t">Radius mixed inside single components — sign-in fields 4px against a 6px card</td><td><span class="chip chip--low">Low</span></td><td class="w">AuthScreen.jsx</td><td class="e">A1</td></tr>
-          <tr><td class="n">15</td><td class="t">Bottom-nav active tab label — info-blue on shell measures 3.02:1, global chrome on every screen</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · all screens</td><td class="e">Not yet scoped</td></tr>
-          <tr><td class="n">16</td><td class="t">Raw <code>--gold</code> used directly as text colour (not via the fixed button rule) — 3.49–4.24:1; includes the header "Beta" badge at 6.5px, present on every screen</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · header + Trophy, Market, Live</td><td class="e">Not yet scoped</td></tr>
-          <tr><td class="n">17</td><td class="t">Red status colour on dark surfaces — LIVE badge 2.53:1, position-count chips (GK/DEF/MID/FWD) 2.33:1, both below even the large-text floor</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · Live, Market</td><td class="e">Not yet scoped</td></tr>
-          <tr><td class="n">18</td><td class="t">Near-invisible empty-state caption — 1.22:1, off-white text on an off-white card, effectively unreadable</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · Live screen, Points Log</td><td class="e">Not yet scoped</td></tr>
-          <tr><td class="n">19</td><td class="t"><code>--mute</code> still fails AA against <code>--elev</code> at 4.26:1 — a residual gap in A2's fix; carries every field label, helper caption and the Save button text on Settings</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · Settings, Trophy, Wallet</td><td class="e">Not yet scoped</td></tr>
-          <tr><td class="n">20</td><td class="t"><code>--mute</code> used directly against <code>--shell</code> at 3.19:1 — an instance B1's planned sweep hadn't caught as of this pass</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · Market (Budget/Price)</td><td class="e">Not yet scoped</td></tr>
-          <tr><td class="n">21</td><td class="t">Old un-migrated <code>--gold</code> used as a solid button fill with white text — 3.85:1</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · League, "Join →"</td><td class="e">Not yet scoped</td></tr>
+          <tr><td class="n">15</td><td class="t">Bottom-nav active tab label — info-blue on shell measures 3.02:1, global chrome on every screen</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · all screens</td><td class="e">E1</td></tr>
+          <tr><td class="n">16</td><td class="t">Raw <code>--gold</code> used directly as text colour (not via the fixed button rule) — 3.49–4.24:1; includes the header "Beta" badge at 6.5px, present on every screen</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · header + Trophy, Market, Live</td><td class="e">E2</td></tr>
+          <tr><td class="n">17</td><td class="t">Red status colour on dark surfaces — LIVE badge 2.53:1, position-count chips (GK/DEF/MID/FWD) 2.33:1, both below even the large-text floor</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · Live, Market</td><td class="e">E3</td></tr>
+          <tr><td class="n">18</td><td class="t">Near-invisible empty-state caption — 1.22:1, off-white text on an off-white card, effectively unreadable</td><td><span class="chip chip--crit">Critical</span></td><td class="w">Live-verified · Live screen, Points Log</td><td class="e">E4</td></tr>
+          <tr><td class="n">19</td><td class="t"><code>--mute</code> still fails AA against <code>--elev</code> at 4.26:1 — a residual gap in A2's fix; carries every field label, helper caption and the Save button text on Settings</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · Settings, Trophy, Wallet</td><td class="e">F1</td></tr>
+          <tr><td class="n">20</td><td class="t"><code>--mute</code> used directly against <code>--shell</code> at 3.19:1 — an instance B1's planned sweep hadn't caught as of this pass</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · Market (Budget/Price)</td><td class="e">F2</td></tr>
+          <tr><td class="n">21</td><td class="t">Old un-migrated <code>--gold</code> used as a solid button fill with white text — 3.85:1</td><td><span class="chip chip--high">High</span></td><td class="w">Live-verified · League, "Join →"</td><td class="e">F3</td></tr>
         </tbody>
       </table>
     </div>
