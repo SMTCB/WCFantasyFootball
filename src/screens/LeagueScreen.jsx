@@ -1714,19 +1714,11 @@ export default function LeagueScreen() {
       <button
         type="submit"
         disabled={joinLoading || joinCode.trim().length < 4}
+        className="ffl-btn ffl-btn--gold ffl-btn--md"
         style={{
-          padding:       '11px 20px',
-          background:    'var(--gold)',
-          color:         'var(--ink-2)',
-          fontSize:      '11px',
           fontFamily:    MONO,
-          fontWeight:    700,
+          fontSize:      '11px',
           letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          border:        '1px solid var(--gold)',
-          cursor:        joinLoading ? 'wait' : 'pointer',
-          opacity:       (joinLoading || joinCode.trim().length < 4) ? 0.5 : 1,
-          whiteSpace:    'nowrap',
           flexShrink:    0,
         }}
       >

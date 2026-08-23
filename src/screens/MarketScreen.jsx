@@ -854,15 +854,15 @@ export default function MarketScreen() {
 
             {/* Budget + empty slots */}
             <div className="text-right" data-tour="market-budget">
-              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>
+              <div className="fz-label" style={{ color: 'var(--on-shell-dim)', fontSize: 10 }}>
                 Budget{basket.length > 0 ? ' (est.)' : ''}
               </div>
               <div
                 className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: effectiveBudget < 5 ? 'var(--danger)' : 'var(--cyan)' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: effectiveBudget < 5 ? 'var(--on-shell-danger)' : 'var(--on-shell-accent)' }}
               >
                 €{effectiveBudget.toFixed(1)}
-                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
+                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--on-shell-dim)' }}>M</span>
               </div>
               {emptySlots > 0 && (
                 <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--on-shell-gold)', fontFamily: 'Archivo Black, sans-serif' }}>

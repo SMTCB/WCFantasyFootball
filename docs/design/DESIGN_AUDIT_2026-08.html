@@ -839,42 +839,42 @@
 
       <div class="act">
         <div class="act-id">B3</div>
-        <div class="act-title">Raise every control to 44px</div>
+        <div class="act-title">Raise every control to 44px <span class="chip chip--med">Partial · PR #833</span></div>
         <div class="act-body">Start with <code>.ffl-btn--sm</code>, which is 36px — below the minimum on a product whose smallest supported viewport is 375px. Then sweep the hand-rolled controls: any tap target under 44px either grows or gains padding around it.</div>
         <div class="act-foot"><span><b>Where</b> src/index.css:440–535 and 447 raw buttons</span><span><b>Effort</b> 3h</span><span><b>Clears</b> 8</span></div>
-        <div class="act-check"><b>Done when:</b> nothing interactive measures under 44px in either dimension at 375px.</div>
+        <div class="act-check"><b>Done when:</b> nothing interactive measures under 44px in either dimension at 375px. <b>Shipped:</b> <code>.ffl-btn--sm</code> raised to 44px (confirmed ~14 real call sites, all in Challenge/Auth/Squad). The 447-raw-button sweep is still open — this only covers controls already on the <code>Button</code> component.</div>
       </div>
 
       <div class="act">
         <div class="act-id">B4</div>
-        <div class="act-title">Add the lint rules that stop regression</div>
+        <div class="act-title">Add the lint rules that stop regression <span class="chip chip--med">Partial · PR #833</span></div>
         <div class="act-body">Three rules in <code>eslint.config.js</code>, scoped to <code>src/</code>: ban raw hex outside the token file, ban raw pixel values in <code>fontSize</code> and <code>text-[…]</code>, and ban <code>rgba(255,255,255,…)</code> outright. This is the highest-leverage item in the report and the cheapest — without it, B1 and B2 are a one-off cleanup that decays.</div>
         <div class="act-foot"><span><b>Where</b> eslint.config.js</span><span><b>Effort</b> 3h</span><span><b>Clears</b> nothing directly — protects B1, B2, C1, C3</span></div>
-        <div class="act-check"><b>Done when:</b> CI fails a PR that introduces a raw hex, a raw pixel font size, or a white-alpha value in <code>src/</code>.</div>
+        <div class="act-check"><b>Done when:</b> CI fails a PR that introduces a raw hex, a raw pixel font size, or a white-alpha value in <code>src/</code>. <b>Shipped:</b> all three rules landed as <code>no-restricted-syntax</code> at <b>warn</b> severity (3068 existing hits — B1/B2 haven't landed yet, so <code>error</code> would fail lint on effectively every file today). Flip to <code>error</code> once B1 and B2 clear the codebase, or this decays into a warning nobody reads.</div>
       </div>
 
       <div class="act">
         <div class="act-id">F1</div>
-        <div class="act-title">Close the residual <code>--mute</code>-on-<code>--elev</code> gap</div>
+        <div class="act-title">Close the residual <code>--mute</code>-on-<code>--elev</code> gap <span class="chip chip--done">Done · PR #833</span></div>
         <div class="act-body">A2 fixed <code>--mute</code> against <code>--bg</code> and <code>--card</code>, but <code>--elev</code> is a lighter raised surface the fix didn't account for — the pair still measures 4.26:1, just under AA. This token carries field labels, helper captions, and (in its disabled/loading state) the password-update button's text on Settings, plus card labels on Trophy and Wallet. Either darken <code>--mute</code> further (re-checking it doesn't then fail elsewhere) or give <code>--elev</code>-mounted text its own token.</div>
         <div class="act-foot"><span><b>Where</b> src/screens/SettingsScreen.jsx:293–294 · src/screens/TrophyCabinetScreen.jsx:129–131 · src/screens/WalletScreen.jsx:94–100, :190–196</span><span><b>Effort</b> 1h</span><span><b>Clears</b> 19</span></div>
-        <div class="act-check"><b>Done when:</b> <code>--mute</code> (or its replacement) measures ≥4.5:1 against <code>--elev</code> as well as <code>--bg</code> and <code>--card</code>.</div>
+        <div class="act-check"><b>Done when:</b> <code>--mute</code> (or its replacement) measures ≥4.5:1 against <code>--elev</code> as well as <code>--bg</code> and <code>--card</code>. <b>Shipped:</b> darkened <code>--mute</code> (#626F80 → #5C6878, ~4.71:1 vs <code>--elev</code>); its already-passing ratios against <code>--bg</code> (~4.63:1) and <code>--card</code> (~5.12:1) only improved, since <code>--elev</code> was the lightest of the three.</div>
       </div>
 
       <div class="act">
         <div class="act-id">F2</div>
-        <div class="act-title">Stop pairing <code>--mute</code> with <code>--shell</code></div>
+        <div class="act-title">Stop pairing <code>--mute</code> with <code>--shell</code> <span class="chip chip--done">Done · PR #833</span></div>
         <div class="act-body">Market's sticky header sets <code>background: var(--shell)</code>, and the Budget label and its "M" unit suffix directly beneath it are coloured with <code>--mute</code> — 3.19:1, an instance B1's planned sweep hadn't caught as of the live pass. <code>--mute</code> is tuned for the light card surfaces, not the navy shell; use <code>--on-shell-dim</code>, the token already used for muted labels elsewhere on shell backgrounds.</div>
         <div class="act-foot"><span><b>Where</b> src/screens/MarketScreen.jsx:746 (header), :857, :865 (Budget label + unit)</span><span><b>Effort</b> 30m</span><span><b>Clears</b> 20</span></div>
-        <div class="act-check"><b>Done when:</b> the Budget label and unit measure ≥4.5:1 against <code>--shell</code>, and no <code>--mute</code> text sits directly on a <code>--shell</code> background in <code>src/</code>.</div>
+        <div class="act-check"><b>Done when:</b> the Budget label and unit measure ≥4.5:1 against <code>--shell</code>, and no <code>--mute</code> text sits directly on a <code>--shell</code> background in <code>src/</code>. <b>Shipped:</b> label + unit moved to <code>--on-shell-dim</code>. Also caught the budget value itself (line 862, not in the original citation) — it used raw <code>--cyan</code>/<code>--danger</code> directly on <code>--shell</code>, the same E1-class bug at the same 3.02:1 ratio; moved to <code>--on-shell-accent</code>/<code>--on-shell-danger</code>.</div>
       </div>
 
       <div class="act">
         <div class="act-id">F3</div>
-        <div class="act-title">Migrate the last raw <code>--gold</code> button fill</div>
+        <div class="act-title">Migrate the last raw <code>--gold</code> button fill <span class="chip chip--done">Done · PR #833</span></div>
         <div class="act-body">League's "Join →" button pre-dates the <code>.ffl-btn--gold</code> component fix from A3 — it sets <code>background: var(--gold)</code> and <code>color: var(--ink-2)</code> (white) directly rather than using the class, and inherits the old 3.85:1 ratio A3 already solved everywhere else. Swap it onto <code>.ffl-btn--gold</code>.</div>
         <div class="act-foot"><span><b>Where</b> src/screens/LeagueScreen.jsx:1714–1733</span><span><b>Effort</b> 30m</span><span><b>Clears</b> 21</span></div>
-        <div class="act-check"><b>Done when:</b> the "Join →" button uses <code>.ffl-btn--gold</code> and measures ≥4.5:1 label-on-fill.</div>
+        <div class="act-check"><b>Done when:</b> the "Join →" button uses <code>.ffl-btn--gold</code> and measures ≥4.5:1 label-on-fill. <b>Shipped:</b> now uses <code>ffl-btn ffl-btn--gold ffl-btn--md</code> (also picks up B3's 44px floor for free).</div>
       </div>
     </div>
 
