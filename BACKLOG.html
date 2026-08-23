@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-08-22. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-08-23. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>184</strong><span>closed</span></div>
+      <div class="total-pill"><strong>185</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (107)</span>
+    <span class="chip" data-filter-kind="done">Shipped (108)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (5)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">184</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">185</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">107</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">108</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">5</span></div>
@@ -1179,8 +1179,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">107</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">108</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ design audit p0s (a1–a3) — auth fields, `--mute` contrast, button states fixed (2026-08-23) — pr #827 
+
+**context**: the previous session delivered and merged a full design/ux audit (`docs/design/design_audit_2026-08.html`, pr #824) covering 14 findings across p0/p1/p2 tiers. the user asked to tackle just the three p0 (critical-tier) actions, ~1 day estimated effort, clearing findings 1, 2, 3, 7, and 14.
+
+- **a1 — auth screen fields** ([src/screens/authscreen.jsx](src/screens/authscreen.jsx)): the sign-in/sign-up fields had a near-invisible `rgba(255,255,255,0.04)` fill on `rgba(255,255,255,0.1)` border (~1.00:1 contrast against the card), `outline: &#x27;none&#x27;` blocking keyboard focus visibility, an oversized/mismatched label (archivo black 9px instead of the system&#x27;s jetbrains mono), and sub-44px touch targets on the tab strip. rebuilt to use the established `var(--elev)` / `var(--rule)` field pattern (already correct elsewhere, e.g. `marketscreen.jsx`&#x27;s team search), removed the focus-blocking `outline: none` so the global `:focus-visible` rule applies, switched the label to jetbrains mono, and set `minheight: 44px` on fields and tabs.
+- **a2 — `--mute` token contrast** ([src/index.css](src/index.css)): `--mute` (`#8a97a8`) failed wcag aa against light surfaces. darkened to `#626f80`. before the global change, swept every `--shell`-surface (dark) site that misused `var(--mute)` directly instead of the existing `var(--on-shell-dim)` token — 18 sites across `applayout.jsx` (1), `draftrecoveryscreen.jsx` (5), `draftscreen.jsx` (7), `squadscreen.jsx` (3), `livescreen.jsx` (2) — so darkening the shared token wouldn&#x27;t create a new contrast regression on the dark shell while fixing the original one on light surfaces. `authscreen.jsx` and `f1racebetscreen.jsx` were checked and confirmed already safe (no `--mute` usage inside their `--shell` blocks).
+- **a3 — button state contrast** (`src/index.css`, `.ffl-btn` rules): fixed four failing states confirmed via manual wcag rela" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Design Audit P0s (A1–A3) — auth fields, <code>--mute</code> contrast, button states fixed</h3>
+        <p class="card-summary">Context : the previous session delivered and merged a full design/UX audit ( docs/design/DESIGN_AUDIT_2026-08.html , PR #824) covering 14 findings across P0/P1/P2 tiers.…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-23</span><span class="foot-refs">PR #827</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Design Audit P0s (A1–A3) — auth fields, <code>--mute</code> contrast, button states fixed</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : the previous session delivered and merged a full design/UX audit ( docs/design/DESIGN_AUDIT_2026-08.html , PR #824) covering 14 findings across P0/P1/P2 tiers.…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #827</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-23</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: the previous session delivered and merged a full design/UX audit (<code>docs/design/DESIGN_AUDIT_2026-08.html</code>, PR #824) covering 14 findings across P0/P1/P2 tiers. The user asked to tackle just the three P0 (critical-tier) actions, ~1 day estimated effort, clearing findings 1, 2, 3, 7, and 14.</p>
+<ul>
+<li><strong>A1 — Auth screen fields</strong> (<a href="src/screens/AuthScreen.jsx" target="_blank" rel="noopener">src/screens/AuthScreen.jsx</a>): the sign-in/sign-up fields had a near-invisible <code>rgba(255,255,255,0.04)</code> fill on <code>rgba(255,255,255,0.1)</code> border (~1.00:1 contrast against the card), <code>outline: 'none'</code> blocking keyboard focus visibility, an oversized/mismatched label (Archivo Black 9px instead of the system's JetBrains Mono), and sub-44px touch targets on the tab strip. Rebuilt to use the established <code>var(--elev)</code> / <code>var(--rule)</code> field pattern (already correct elsewhere, e.g. <code>MarketScreen.jsx</code>'s team search), removed the focus-blocking <code>outline: none</code> so the global <code>:focus-visible</code> rule applies, switched the label to JetBrains Mono, and set <code>minHeight: 44px</code> on fields and tabs.</li>
+<li><strong>A2 — <code>--mute</code> token contrast</strong> (<a href="src/index.css" target="_blank" rel="noopener">src/index.css</a>): <code>--mute</code> (<code>#8A97A8</code>) failed WCAG AA against light surfaces. Darkened to <code>#626F80</code>. Before the global change, swept every <code>--shell</code>-surface (dark) site that misused <code>var(--mute)</code> directly instead of the existing <code>var(--on-shell-dim)</code> token — 18 sites across <code>AppLayout.jsx</code> (1), <code>DraftRecoveryScreen.jsx</code> (5), <code>DraftScreen.jsx</code> (7), <code>SquadScreen.jsx</code> (3), <code>LiveScreen.jsx</code> (2) — so darkening the shared token wouldn't create a new contrast regression on the dark shell while fixing the original one on light surfaces. <code>AuthScreen.jsx</code> and <code>F1RaceBetScreen.jsx</code> were checked and confirmed already safe (no <code>--mute</code> usage inside their <code>--shell</code> blocks).</li>
+<li><strong>A3 — Button state contrast</strong> (<code>src/index.css</code>, <code>.ffl-btn</code> rules): fixed four failing states confirmed via manual WCAG relative-luminance computation — <code>primary:hover</code> (<code>#1EC3E3</code>→<code>#14567F</code>), <code>gold</code> rest state (<code>#B8720E</code>→<code>#96600C</code>, a scoped <code>.ffl-btn--gold</code> override rather than a global <code>--gold</code> token change, since <code>--gold</code> has 296 other usages across badges/icons/borders), <code>gold:hover</code> (<code>#F0B91A</code>→<code>#7A4A08</code>), <code>danger</code> text (<code>var(--paper)</code>→<code>#FFFFFF</code>). Also replaced two invisible <code>rgba(242,238,229,.06)</code> white-tinted hover fills on <code>secondary</code>/<code>icon</code> variants with the codebase's correct <code>rgba(24,32,46,X)</code> paper-tinted pattern (already used in <code>LiveScreen.jsx</code>/<code>SettingsScreen.jsx</code>).</li>
+</ul>
+<p><strong>Verification</strong>: <code>npm run lint</code> (0 errors), <code>npm run build</code> (0 errors, no Rolldown TDZ regression), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed). Live-browser verification in the dev server: A1 field computed styles (bg <code>#EDEAE2</code>, border <code>#E2DDD5</code>, radius <code>6px</code>, height ≥44px), label font/color, a real keyboard <code>Tab</code> press correctly triggering the cyan <code>:focus-visible</code> ring (confirmed via <code>document.activeElement</code> + <code>matchesFocusVisible</code>, not a JS-driven <code>.focus()</code> call — that doesn't trigger real <code>:focus-visible</code>), and all four A3 button-state fixes confirmed via the parsed live CSSOM (<code>document.styleSheets</code> rule text), which showed each declared value matching its target hex exactly.</p>
+<p><strong>Not in scope, noted but not fixed</strong>: <code>MarketScreen.jsx</code>'s main player-search input (lines ~942–951) has the same invisible-white-alpha-on-white-card bug that AuthScreen had — not yet added to BACKLOG as its own item.</p>
+<p><strong>Still open</strong>: P1 items B1–B4 from the same audit remain deprioritized/paused per the user's earlier direction — not abandoned, can resume on request.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ club-switch-1 — clubhouse sidebar switcher duplicate-badge bug fixed (2026-08-22) — pr #822 
 
 **symptom**: user reported the left sidebar&#x27;s clubhouse switcher showing 60+ small colored badges with cryptic 2-letter labels (dm/md/wc/m&#x27;), many sharing the same label — user has only 4 real clubhouse memberships.
