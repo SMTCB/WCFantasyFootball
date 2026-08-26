@@ -13,6 +13,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
+import { processLeagueWishlistDraft } from '../_shared/wishlistDraft.ts';
 
 const FN      = 'auto-open-transfer-window';
 const supabase = createClient(
@@ -75,6 +76,18 @@ Deno.serve(async (req) => {
         if (existingWindow) {
           // Window already exists, skip
           continue;
+        }
+
+        // Resolve any opted-in wishlist draft submissions for this round before
+        // the market opens to everyone else — this is what removes the
+        // "whoever's online first" timezone bias for draft-mode leagues.
+        // No-ops fast for non-draft leagues and rounds with zero participants.
+        // A failure here must never block the window from opening for
+        // everyone else, so it's isolated in its own try/catch.
+        try {
+          await processLeagueWishlistDraft(supabase, league.id, nextRound);
+        } catch (err) {
+          await logError(FN, 'error', 'wishlist draft pre-step failed', { leagueId: league.id, round: nextRound, error: err.message });
         }
 
         // ── 3. Create new transfer window for next round ────────────────────

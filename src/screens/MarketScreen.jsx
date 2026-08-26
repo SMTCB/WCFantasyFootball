@@ -25,6 +25,7 @@ import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import RelaxationBanner from '../components/RelaxationBanner';
+import WishlistDraftBanner from '../components/WishlistDraftBanner';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import { useShowArchived } from '../hooks/useShowArchived';
@@ -738,6 +739,9 @@ export default function MarketScreen() {
       <RelaxationBanner
         show={isDraftLeague && !relaxation.loading && relaxationRepeatsAllowed === 1}
       />
+
+      {/* Wishlist Draft Banner — recurring opt-in allocation, draft-mode leagues only */}
+      {activeLeague && <WishlistDraftBanner leagueId={activeLeague} />}
 
       {/* â"€â"€ Sticky Header â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       <div
