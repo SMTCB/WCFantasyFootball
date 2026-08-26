@@ -160,14 +160,21 @@ export default function F1RaceBetScreen() {
                 ARCHIVED — this paddock is inactive.
               </div>
             )}
-            {isLocked && (
+            {race.status === 'finished' ? (
+              <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--shell-fill)', borderRadius: 6, border: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)' }}>
+                🏁 Race finished
+              </div>
+            ) : isLocked ? (
               <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(185,28,28,0.08)', borderRadius: 6, border: '1px solid rgba(185,28,28,0.2)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>
                 🔒 Picks locked — qualifying has started
               </div>
-            )}
-            {!isLocked && existing && (
+            ) : existing ? (
               <div style={{ marginTop: 8, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>
-                ✓ Picks saved — you can update until qualifying starts
+                ✓ Picks saved — you can update anytime until they lock (5 min before race start)
+              </div>
+            ) : (
+              <div style={{ marginTop: 8, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+                Picks open — save anytime, edit as often as you like, until they lock 5 min before race start
               </div>
             )}
           </div>

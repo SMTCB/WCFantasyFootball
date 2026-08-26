@@ -296,7 +296,6 @@ export default function AppLayout({ children }) {
             path="/clubhouse?tab=frontrow"
             active={location.pathname.startsWith('/clubhouse') && location.search.includes('tab=frontrow')}
             dotColor="var(--gold)"
-            sub
           />
           <NavItem
             label="Trophy Cabinet"
@@ -383,6 +382,10 @@ export default function AppLayout({ children }) {
             ⚙
           </Link>
         </div>
+
+        {/* Desktop-only breathing room above the competition top bar — it sits flush under the
+            mobile top bar's spot on small screens, but needs a gap from the viewport edge on desktop. */}
+        <div className="hidden lg:block" style={{ height: 12 }} />
 
         {/* Competition top bar — flat list of competition tabs (sport-colored) */}
         <CompetitionTopBar
