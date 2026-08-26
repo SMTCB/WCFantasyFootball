@@ -51,6 +51,10 @@ verify_jwt = false
 [functions.run-reverse-standings-draft]
 entrypoint = "./functions/run-reverse-standings-draft/index.js"
 
+[functions.run-wishlist-draft]
+entrypoint = "./functions/run-wishlist-draft/index.js"
+verify_jwt = false
+
 [functions.sync-fixtures]
 entrypoint = "./functions/sync-fixtures/index.js"
 verify_jwt = false
