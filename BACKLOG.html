@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>191</strong><span>closed</span></div>
+      <div class="total-pill"><strong>192</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (113)</span>
+    <span class="chip" data-filter-kind="done">Shipped (114)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">191</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">192</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">113</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">114</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,32 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">113</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">114</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ sidebar hierarchy clarity — clubhouse-scoped nav vs account (2026-08-26) — pr #840 
+
+**context**: two of the design questions from the same 2026-08-26 user report — the &quot;clubhouse&quot; switcher dropdown and the nav item directly below it both being labeled &quot;clubhouse&quot; (confusing/redundant), and trophy cabinet/coin challenges sitting under a &quot;community&quot; header that wrongly implied they were cross-clubhouse features when both are actually scoped to `activecircleid` exactly like the frontrow tab.
+
+**what shipped**: renamed the &quot;clubhouse&quot; nav item to &quot;frontpage&quot; (the landing tab *inside* the active clubhouse); merged frontpage / the frontrow / trophy cabinet / coin challenges into one honest &quot;this clubhouse&quot; section; split &quot;settings&quot; — the only truly account-level item — into its own &quot;account&quot; section; the clubhouse switcher now always renders with a permanent &quot;your clubhouses&quot; label instead of hiding itself until a user belongs to 2+ clubhouses. lint/build clean, verified live in dev server (demo mode) including the zero-clubhouses empty state.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Sidebar hierarchy clarity — Clubhouse-scoped nav vs Account</h3>
+        <p class="card-summary">Context : two of the design questions from the same 2026-08-26 user report — the "Clubhouse" switcher dropdown and the nav item directly below it both being labeled…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PR #840</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Sidebar hierarchy clarity — Clubhouse-scoped nav vs Account</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : two of the design questions from the same 2026-08-26 user report — the "Clubhouse" switcher dropdown and the nav item directly below it both being labeled…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #840</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: two of the design questions from the same 2026-08-26 user report — the "Clubhouse" switcher dropdown and the nav item directly below it both being labeled "Clubhouse" (confusing/redundant), and Trophy Cabinet/Coin Challenges sitting under a "Community" header that wrongly implied they were cross-clubhouse features when both are actually scoped to <code>activeCircleId</code> exactly like the FrontRow tab.</p>
+<p><strong>What shipped</strong>: renamed the "Clubhouse" nav item to "Frontpage" (the landing tab *inside* the active clubhouse); merged Frontpage / The FrontRow / Trophy Cabinet / Coin Challenges into one honest "This Clubhouse" section; split "Settings" — the only truly account-level item — into its own "Account" section; the clubhouse switcher now always renders with a permanent "Your Clubhouses" label instead of hiding itself until a user belongs to 2+ clubhouses. Lint/build clean, verified live in dev server (demo mode) including the zero-clubhouses empty state.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft — recurring asynchronous transfer-window allocation (2026-08-26) — pr #841 
 
 **context**: user&#x27;s cross-timezone fairness complaint from the 2026-08-26 report (draft-mode league markets open first-come-first-served, favoring managers who happen to be online — &quot;in a group of 10 participants usually we have 6 or 7 that are really &#x27;following&#x27; the game, while the others are just there for the social part&quot;). a staggered/rotating market-open-time alternative was proposed and explicitly rejected by the user in favor of a ranked-wishlist-draft mechanic, since a fixed slot still requires synchronous presence. user then explicitly asked to build and ship it to **all draft-mode leagues from day one**, no single-league pilot, ahead of an upcoming extended pilot.
@@ -1216,23 +1240,23 @@
 
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ trophy cabinet crash + create competition/activity panel ux (2026-08-26) — prs #838, #839 
 
-**context**: user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. one other bug (empty members tab) and two design-proposal asks (sidebar redundancy, sidebar/nav hierarchy redesign) from the same report are tracked separately below / still owed as write-ups. the third design-proposal ask (draft-mode wishlist feature) shipped as the wishlist draft feature — see the &quot;✅ wishlist draft&quot; entry below.
+**context**: user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. the two design-proposal asks from the same report (sidebar redundancy, sidebar/nav hierarchy redesign) later shipped as pr #840 — see the &quot;✅ sidebar hierarchy clarity&quot; entry below. the third design-proposal ask (draft-mode wishlist feature) shipped as pr #841 — see the &quot;✅ wishlist draft&quot; entry above. only the empty members tab bug from that report remains open, unconfirmed.
 
 - **trophy cabinet crash (pr #838)**: clicking &quot;trophy cabinet&quot; in the sidebar crashed with &quot;trophycabinet crashed unexpectedly.&quot; root cause: `trophycabinetscreen.jsx` called `useclubhouse()` directly instead of the shared `useclubhousecontext()` that `applayout.jsx`/`clubhousescreen.jsx`/`challengescreen.jsx` all correctly use — this created a second, independent hook instance with its own fetch cycle. separately, `get_clubhouse_competitions` rpc returns `{error: &#x27;not_member&#x27;}` **in-band** (a 200 ok, not a thrown error) when its internal membership check fails, unlike `get_circle_feed`/`get_circle_meta_standings` which both `return;` an empty set on the same check — that malformed shape has no `football`/`f1`/`tennis` keys, so `trophycabinetscreen.jsx`&#x27;s unguarded `competitions.football.length` threw exactly the reported `typeerror`. fixed by switching to `useclubhousecontext()`, adding optional chaining (`competitions.football?.length ?? 0`) as defense-in-depth, and hardening `useclubhouse.js`&#x27;s `fetchcircledata` to treat the `not_member` sentinel the same as a failed request (skip the `setcompetitions` call) across all 5 of its parallel queries, with `console.error` added on any query failure for future diagnosis. ci fully green (build/lint/security/unit/e2e/android/ios/vercel) before merge.
-- **empty members tab — investigated, not conclusively fixed**: a real wc-pilot league&#x27;s clubhouse showed &quot;0 memb" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+- **empty members tab — investigated, not conclusively fixed**: a rea" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
         <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
         <h3 class="card-title">Trophy Cabinet crash + Create Competition/Activity panel UX</h3>
-        <p class="card-summary">Context : user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. One other bug (empty Members…</p>
+        <p class="card-summary">Context : user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. The two design-proposal asks…</p>
         <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PRs #838, #839</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
       <h2 class="drawer-title">Trophy Cabinet crash + Create Competition/Activity panel UX</h2>
       <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Context : user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. One other bug (empty Members…</p></dd></div>
+        <div class="field"><dt>Description</dt><dd><p>Context : user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. The two design-proposal asks…</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #838, #839</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. One other bug (empty Members tab) and two design-proposal asks (sidebar redundancy, sidebar/nav hierarchy redesign) from the same report are tracked separately below / still owed as write-ups. The third design-proposal ask (draft-mode wishlist feature) shipped as the Wishlist Draft feature — see the "✅ Wishlist Draft" entry below.</p>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. The two design-proposal asks from the same report (sidebar redundancy, sidebar/nav hierarchy redesign) later shipped as PR #840 — see the "✅ Sidebar hierarchy clarity" entry below. The third design-proposal ask (draft-mode wishlist feature) shipped as PR #841 — see the "✅ Wishlist Draft" entry above. Only the empty Members tab bug from that report remains open, unconfirmed.</p>
 <ul>
 <li><strong>Trophy Cabinet crash (PR #838)</strong>: clicking "Trophy Cabinet" in the sidebar crashed with "TrophyCabinet crashed unexpectedly." Root cause: <code>TrophyCabinetScreen.jsx</code> called <code>useClubhouse()</code> directly instead of the shared <code>useClubhouseContext()</code> that <code>AppLayout.jsx</code>/<code>ClubhouseScreen.jsx</code>/<code>ChallengeScreen.jsx</code> all correctly use — this created a second, independent hook instance with its own fetch cycle. Separately, <code>get_clubhouse_competitions</code> RPC returns <code>{error: 'NOT_MEMBER'}</code> <strong>in-band</strong> (a 200 OK, not a thrown error) when its internal membership check fails, unlike <code>get_circle_feed</code>/<code>get_circle_meta_standings</code> which both <code>RETURN;</code> an empty set on the same check — that malformed shape has no <code>football</code>/<code>f1</code>/<code>tennis</code> keys, so <code>TrophyCabinetScreen.jsx</code>'s unguarded <code>competitions.football.length</code> threw exactly the reported <code>TypeError</code>. Fixed by switching to <code>useClubhouseContext()</code>, adding optional chaining (<code>competitions.football?.length ?? 0</code>) as defense-in-depth, and hardening <code>useClubhouse.js</code>'s <code>fetchCircleData</code> to treat the <code>NOT_MEMBER</code> sentinel the same as a failed request (skip the <code>setCompetitions</code> call) across all 5 of its parallel queries, with <code>console.error</code> added on any query failure for future diagnosis. CI fully green (Build/Lint/Security/Unit/E2E/Android/iOS/Vercel) before merge.</li>
 <li><strong>Empty Members tab — investigated, not conclusively fixed</strong>: a real WC-pilot league's Clubhouse showed "0 MEMBERS" despite 11 real members. DB/RLS layer confirmed entirely correct (<code>circle_members</code> has the rows, <code>is_circle_member()</code> RLS policy verified correct for the actual account, <code>users</code> table read policy is <code>USING (true)</code>) — could not reproduce the exact client-side trigger without live session/network logs. The <code>useClubhouse.js</code> hardening above is a plausible mitigation (if the members query itself ever raced with a <code>NOT_MEMBER</code>-shaped competitions response corrupting state) but is <strong>not a confirmed root cause fix</strong> — if it recurs, check the browser console (now logs on any of the 5 <code>fetchCircleData</code> queries failing).</li>
