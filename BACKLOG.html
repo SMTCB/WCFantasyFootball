@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>194</strong><span>closed</span></div>
+      <div class="total-pill"><strong>195</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (116)</span>
+    <span class="chip" data-filter-kind="done">Shipped (117)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">194</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">195</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">116</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">117</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,44 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">116</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">117</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 paddock feedback round 2 — calendar merge, picks clarity, report parity, top bar/sidebar polish (2026-08-26) — pr #848 
+
+**context**: the &quot;cascais 16 f1&quot; paddock creator sent a second, 8-item feedback pass after pr #846 went live (6 screenshots attached). diagnosed and fixed the 6 items that were pure code changes on `claude/f1-picks-report-chat-fixes`, verified live against the real paddock (real production supabase data, not demo mode) before merging. the remaining 2 items are held for user input — see below.
+
+- **paddocks merged into calendar, separator removed** — [f1homescreen.jsx](src/screens/f1/f1homescreen.jsx)&#x27;s old two-section toggle (calendar vs. paddocks) is gone. the 2×2 &quot;paddock shortcuts&quot; grid now renders inline at the bottom of the single calendar view, below the hero card, leaderboard preview, and full season list.
+- **misleading picks lock banner** — [f1racebetscreen.jsx](src/screens/f1/f1racebetscreen.jsx) previously showed the same &quot;picks open, save anytime&quot; copy for a race 2 months out as it did moments before lock, and a stale &quot;picks locked — qualifying has started&quot; for races that had already finished. now branches on `race.status === &#x27;finished&#x27;` first (🏁 &quot;race finished&quot;), then the existing lock check, so a finished race never claims qualifying &quot;has started&quot; in the present tense.
+- **report screen breakdown showing &quot;+0&quot; for every category** — root cause: every currently-scored round (1, 2, 3, 6–13) was written by an older scoring pipeline using a different `f1_scores.breakdown` key schema (`podium_p1_pts`, `wrong_spot_pts` as one lump sum, `dnf_pts`, etc.) that predates the current `p1`/`p2`/`p3`/`dnf`/`team`/`special`/`bonus` schema [f1reportscreen.jsx](src/screens/f1/f1reportscreen.jsx) was reading. added a `normalizebreakdown()` translation helper so old-schema rows render correctly without touching any stored data, plus a new &quot;🎯 podium (right driver, wrong spot)&quot; row surfacing the old schema&#x27;s `wrong_spot_pts` bucket, which the current" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">F1 paddock feedback round 2 — calendar merge, picks clarity, report parity, top bar/sidebar polish</h3>
+        <p class="card-summary">Context : the "Cascais 16 F1" paddock creator sent a second, 8-item feedback pass after PR #846 went live (6 screenshots attached). Diagnosed and fixed the 6 items that…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PR #848</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">F1 paddock feedback round 2 — calendar merge, picks clarity, report parity, top bar/sidebar polish</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : the "Cascais 16 F1" paddock creator sent a second, 8-item feedback pass after PR #846 went live (6 screenshots attached). Diagnosed and fixed the 6 items that…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #848</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: the "Cascais 16 F1" paddock creator sent a second, 8-item feedback pass after PR #846 went live (6 screenshots attached). Diagnosed and fixed the 6 items that were pure code changes on <code>claude/f1-picks-report-chat-fixes</code>, verified live against the real paddock (real production Supabase data, not demo mode) before merging. The remaining 2 items are held for user input — see below.</p>
+<ul>
+<li><strong>PADDOCKS merged into CALENDAR, separator removed</strong> — <a href="src/screens/f1/F1HomeScreen.jsx" target="_blank" rel="noopener">F1HomeScreen.jsx</a>'s old two-section toggle (CALENDAR vs. PADDOCKS) is gone. The 2×2 "Paddock Shortcuts" grid now renders inline at the bottom of the single CALENDAR view, below the hero card, leaderboard preview, and full season list.</li>
+<li><strong>Misleading PICKS lock banner</strong> — <a href="src/screens/f1/F1RaceBetScreen.jsx" target="_blank" rel="noopener">F1RaceBetScreen.jsx</a> previously showed the same "picks open, save anytime" copy for a race 2 months out as it did moments before lock, and a stale "picks locked — qualifying has started" for races that had already finished. Now branches on <code>race.status === 'finished'</code> first (🏁 "Race finished"), then the existing lock check, so a finished race never claims qualifying "has started" in the present tense.</li>
+<li><strong>Report screen breakdown showing "+0" for every category</strong> — root cause: every currently-scored round (1, 2, 3, 6–13) was written by an older scoring pipeline using a different <code>f1_scores.breakdown</code> key schema (<code>podium_p1_pts</code>, <code>wrong_spot_pts</code> as one lump sum, <code>dnf_pts</code>, etc.) that predates the current <code>p1</code>/<code>p2</code>/<code>p3</code>/<code>dnf</code>/<code>team</code>/<code>special</code>/<code>bonus</code> schema <a href="src/screens/f1/F1ReportScreen.jsx" target="_blank" rel="noopener">F1ReportScreen.jsx</a> was reading. Added a <code>normalizeBreakdown()</code> translation helper so old-schema rows render correctly without touching any stored data, plus a new "🎯 Podium (right driver, wrong spot)" row surfacing the old schema's <code>wrong_spot_pts</code> bucket, which the current UI had no row for at all. Verified against real production data — R1's breakdown now shows each member's actual per-category points instead of a uniform +0.</li>
+<li><strong>Top bar too close to the viewport edge</strong> — added a 12px desktop-only spacer (<code>hidden lg:block</code>) in <a href="src/components/AppLayout.jsx" target="_blank" rel="noopener">AppLayout.jsx</a> directly above the competition tab strip; mobile is unaffected (it already sits under the mobile top bar).</li>
+<li><strong>Sidebar "The FrontRow" bullet smaller than other items</strong> — same file: it was the only <code>NavItem</code> still passing a leftover <code>sub</code> prop, shrinking its dot/padding/font relative to the other four. Removed; all five now render identically (5px dot, 7.5px/10px padding, 12.5px font — confirmed via computed styles).</li>
+</ul>
+<p><strong>Deferred, not implemented — need user input before proceeding:</strong></p>
+<ul>
+<li><strong>CALENDAR/PICKS overlap + "don't like PICKS tab"</strong> — an open design question, not a bug; needs a recommendation put to the user rather than a unilateral nav change.</li>
+<li><strong>"Chat is not correct, only for this clubhouse"</strong> — root-caused to Cascais 16's circle (<code>f5cc62be-1ca3-4d49-a0a5-3997e7319e6c</code>) having zero rows in <code>clubhouse_channels</code>, unlike every other clubhouse which gets a default "General" channel at creation time. Fix is a one-row <code>INSERT</code> (<code>clubhouse_channels(circle_id, name, is_default, created_by) VALUES ('f5cc62be-...', 'General', true, 'd0f0cb5a-...')</code>) but withheld pending a fresh, explicit in-session "yes, run it" per the standing DB-write approval rule.</li>
+</ul>
+<p>Verified: <code>npm run lint</code> (0 errors, only pre-existing unrelated warnings), <code>npm run build</code> (clean, no Rolldown TDZ), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed), plus live-browser verification against real production data for every item above.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 paddock pilot feedback batch — admin gate, calendar, nav, report parity (2026-08-26) — pr #846 
 
 **context**: the &quot;cascais 16 f1&quot; paddock creator tested the live pilot after the earlier f1 data migration and reported 7 issues, comparing against the original single-tenant reference platform (`smtcb/fantasyf1`). diagnosed and fixed all 7 on `claude/f1-paddock-pilot-fixes`, verified live against the real paddock (logged in as a real non-creator member, not demo mode) before merging.
