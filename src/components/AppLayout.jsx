@@ -18,7 +18,6 @@ import {
   NavIconRecap,
   NavIconClubhouse,
   NavIconF1Calendar,
-  NavIconF1Picks,
   NavIconF1Standings,
   NavIconF1Report,
 } from './NavIcons';
@@ -36,7 +35,6 @@ function buildF1Nav(paddockId) {
   const base = paddockId ? `/f1/${paddockId}` : '/f1';
   return [
     { key: 'f1-calendar',  label: 'CAL',      path: base,                    Icon: NavIconF1Calendar  },
-    { key: 'f1-picks',     label: 'PICKS',    path: `${base}/picks`,         Icon: NavIconF1Picks     },
     { key: 'f1-standings', label: 'STD',      path: `${base}/standings`,     Icon: NavIconF1Standings },
     { key: 'f1-report',    label: 'REPORT',   path: `${base}/report`,        Icon: NavIconF1Report    },
     { key: 'clubhouse',    label: 'CLUB',     path: '/clubhouse',            Icon: NavIconClubhouse   },
