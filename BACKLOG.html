@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>195</strong><span>closed</span></div>
+      <div class="total-pill"><strong>196</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (117)</span>
+    <span class="chip" data-filter-kind="done">Shipped (118)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">195</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">196</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">117</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">118</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,7 +1179,7 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">117</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">118</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 paddock feedback round 2 — calendar merge, picks clarity, report parity, top bar/sidebar polish (2026-08-26) — pr #848 
 
@@ -1208,12 +1208,43 @@
 <li><strong>Top bar too close to the viewport edge</strong> — added a 12px desktop-only spacer (<code>hidden lg:block</code>) in <a href="src/components/AppLayout.jsx" target="_blank" rel="noopener">AppLayout.jsx</a> directly above the competition tab strip; mobile is unaffected (it already sits under the mobile top bar).</li>
 <li><strong>Sidebar "The FrontRow" bullet smaller than other items</strong> — same file: it was the only <code>NavItem</code> still passing a leftover <code>sub</code> prop, shrinking its dot/padding/font relative to the other four. Removed; all five now render identically (5px dot, 7.5px/10px padding, 12.5px font — confirmed via computed styles).</li>
 </ul>
-<p><strong>Deferred, not implemented — need user input before proceeding:</strong></p>
-<ul>
-<li><strong>CALENDAR/PICKS overlap + "don't like PICKS tab"</strong> — an open design question, not a bug; needs a recommendation put to the user rather than a unilateral nav change.</li>
-<li><strong>"Chat is not correct, only for this clubhouse"</strong> — root-caused to Cascais 16's circle (<code>f5cc62be-1ca3-4d49-a0a5-3997e7319e6c</code>) having zero rows in <code>clubhouse_channels</code>, unlike every other clubhouse which gets a default "General" channel at creation time. Fix is a one-row <code>INSERT</code> (<code>clubhouse_channels(circle_id, name, is_default, created_by) VALUES ('f5cc62be-...', 'General', true, 'd0f0cb5a-...')</code>) but withheld pending a fresh, explicit in-session "yes, run it" per the standing DB-write approval rule.</li>
-</ul>
+<p>Both items originally deferred here — the CALENDAR/PICKS overlap design question and the missing Cascais 16 chat channel — are now resolved. See "✅ F1 PICKS folded into CALENDAR" directly below for the former; the latter was a one-row <code>INSERT</code> into <code>clubhouse_channels</code> (circle <code>f5cc62be-1ca3-4d49-a0a5-3997e7319e6c</code>, <code>General</code>/<code>is_default=true</code>, <code>created_by</code> set to the paddock creator), run with fresh in-session approval and confirmed live in the DB — no PR, data-only fix, same pattern as the earlier <code>DATA-3</code> per-clubhouse channel backfill.</p>
 <p>Verified: <code>npm run lint</code> (0 errors, only pre-existing unrelated warnings), <code>npm run build</code> (clean, no Rolldown TDZ), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed), plus live-browser verification against real production data for every item above.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 picks folded into calendar — race rows expand in place (2026-08-26) — pr #850 
+
+**context**: the last open item from the round-2 feedback batch above — &quot;don&#x27;t like the picks tab&quot; plus the calendar/picks overlap — needed a design recommendation before any nav change. recommended folding picks into calendar the same way paddocks was merged in for pr #848 (race cards expand in place to reveal the pick form, instead of a separate tab); user approved (&quot;let&#x27;s go with your suggestion&quot;).
+
+- extracted the pick-submission form out of the old standalone `f1racebetscreen.jsx` into a new [f1racepickform.jsx](src/screens/f1/f1racepickform.jsx), scoped to a single `{ race, paddock }` — no url params, no races-list fetch, no round-selector strip.
+- [f1homescreen.jsx](src/screens/f1/f1homescreen.jsx)&#x27;s calendar race rows now toggle an `expandedround` state — clicking a row (or the hero&#x27;s &quot;next race&quot; button, which also scrolls to it) reveals `f1racepickform` inline below that row instead of navigating away. every row is clickable now (the old `isdimmed`-disables-click behavior for non-&quot;next&quot; races is gone; `isdimmed` is now purely a cosmetic opacity on collapsed rows).
+- removed the picks entry from both independent f1 nav configs — [competitionscreennav.jsx](src/components/competitionscreennav.jsx) (desktop) and [applayout.jsx](src/components/applayout.jsx) (mobile bottom nav) — each has its own `buildf1screens`/`buildf1nav` list and had to be edited separately.
+- old `/f1/:paddockid/picks/:round?` links redirect to the paddock&#x27;s calendar root (`f1picksredirect` in [app.jsx](src/app.jsx), same `navigate`-based pattern as the existing `joinroute`) instead of 404ing, so bookmarked/shared links keep working.
+- deleted the now-orphaned `f1racebetscreen.jsx`.
+
+verified live against the real &quot;cascais 16 f1&quot; paddock (not demo mode): picks gone from desktop and mobile nav; hero button and calendar rows correctly expand/collapse; an upcoming race (r15) and a finished race (r13) both ren" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">F1 PICKS folded into CALENDAR — race rows expand in place</h3>
+        <p class="card-summary">Context : the last open item from the round-2 feedback batch above — "don't like the PICKS tab" plus the CALENDAR/PICKS overlap — needed a design recommendation before…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PR #850</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">F1 PICKS folded into CALENDAR — race rows expand in place</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : the last open item from the round-2 feedback batch above — "don't like the PICKS tab" plus the CALENDAR/PICKS overlap — needed a design recommendation before…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #850</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: the last open item from the round-2 feedback batch above — "don't like the PICKS tab" plus the CALENDAR/PICKS overlap — needed a design recommendation before any nav change. Recommended folding PICKS into CALENDAR the same way PADDOCKS was merged in for PR #848 (race cards expand in place to reveal the pick form, instead of a separate tab); user approved ("Let's go with your suggestion").</p>
+<ul>
+<li>Extracted the pick-submission form out of the old standalone <code>F1RaceBetScreen.jsx</code> into a new <a href="src/screens/f1/F1RacePickForm.jsx" target="_blank" rel="noopener">F1RacePickForm.jsx</a>, scoped to a single <code>{ race, paddock }</code> — no URL params, no races-list fetch, no round-selector strip.</li>
+<li><a href="src/screens/f1/F1HomeScreen.jsx" target="_blank" rel="noopener">F1HomeScreen.jsx</a>'s CALENDAR race rows now toggle an <code>expandedRound</code> state — clicking a row (or the hero's "next race" button, which also scrolls to it) reveals <code>F1RacePickForm</code> inline below that row instead of navigating away. Every row is clickable now (the old <code>isDimmed</code>-disables-click behavior for non-"next" races is gone; <code>isDimmed</code> is now purely a cosmetic opacity on collapsed rows).</li>
+<li>Removed the PICKS entry from both independent F1 nav configs — <a href="src/components/CompetitionScreenNav.jsx" target="_blank" rel="noopener">CompetitionScreenNav.jsx</a> (desktop) and <a href="src/components/AppLayout.jsx" target="_blank" rel="noopener">AppLayout.jsx</a> (mobile bottom nav) — each has its own <code>buildF1Screens</code>/<code>buildF1Nav</code> list and had to be edited separately.</li>
+<li>Old <code>/f1/:paddockId/picks/:round?</code> links redirect to the paddock's CALENDAR root (<code>F1PicksRedirect</code> in <a href="src/App.jsx" target="_blank" rel="noopener">App.jsx</a>, same <code>Navigate</code>-based pattern as the existing <code>JoinRoute</code>) instead of 404ing, so bookmarked/shared links keep working.</li>
+<li>Deleted the now-orphaned <code>F1RaceBetScreen.jsx</code>.</li>
+</ul>
+<p>Verified live against the real "Cascais 16 F1" paddock (not demo mode): PICKS gone from desktop and mobile nav; hero button and calendar rows correctly expand/collapse; an upcoming race (R15) and a finished race (R13) both render correctly (R13 shows the race-result block and no Save button since picks are locked); old <code>/picks/:round</code> URLs redirect to CALENDAR; Paddock Shortcuts grid still renders (now 3 cards, PICKS removed). <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ). This closes out the entire 8-item F1 paddock feedback batch — no open items remain from that report.</p></dd></div>
       </dl></template>
       </article>
 
