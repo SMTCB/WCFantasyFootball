@@ -29,7 +29,9 @@ import { MONO, DISPLAY } from '../components/league/HubConstants';
 import { TypeChip, RankBadge, ArchivedBadge } from '../components/league/LeagueBadges';
 import { useShowArchived } from '../hooks/useShowArchived';
 import { deriveLeagueType, TYPE_COLOR } from '../components/league/LeagueBadgeHelpers';
+import BetsTabHub             from '../components/league/BetsTabHub';
 import LeagueDetailView       from '../components/league/LeagueDetailView';
+import BettingLeaderboardView from '../components/league/BettingLeaderboardView';
 import TradingView            from '../components/league/TradingView';
 import StatsView              from '../components/league/StatsView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
@@ -45,12 +47,25 @@ const LEAGUE_TOUR_STEPS = [
   {
     target: 'league-tabs',
     title:  'League Tabs',
-    body:   'Switch between Standings, Recap, Trading, and Stats. Commissioners also see an Admin tab.',
+    body:   'Switch between Standings, Recap, Bets, Trading, and Stats. Commissioners also see an Admin tab.',
   },
   {
     target: 'league-invite',
     title:  'Invite Your Mates',
     body:   'Share your league\'s invite code to bring new managers in. Once they join, the draft order is set automatically.',
+  },
+];
+
+const BETS_TOUR_STEPS = [
+  {
+    target: 'bets-header',
+    title:  'Bets & Predictions',
+    body:   'The Commissioner posts weekly challenges here — predict outcomes to earn bonus points. Picks lock at the deadline.',
+  },
+  {
+    target: 'bets-list',
+    title:  'Open Bets',
+    body:   'Each card shows the question, the options, and how many points you\'ll win. Tap an option to submit your pick.',
   },
 ];
 
@@ -103,7 +118,7 @@ export default function LeagueScreen() {
   const {
     showLeagueTour, completeLeagueTour, replayLeagueTour,
     showCommissionerTour, completeCommissionerTour, replayCommissionerTour,
-    replayBetsTour,
+    showBetsTour, completeBetsTour, replayBetsTour,
   } = useOnboarding();
 
   const [leagues, setLeagues] = useState([]);
@@ -185,7 +200,7 @@ export default function LeagueScreen() {
   const [joinCode,     setJoinCode]     = useState(() => searchParams.get('joinCode') ?? '');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
-  const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications } = useNotifications(activeLeague?.league_id);
+  const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications, clearByType: clearNotificationsByType } = useNotifications(activeLeague?.league_id);
   const {
     incoming: incomingTrades,
     outgoing: outgoingTrades,
@@ -330,12 +345,14 @@ export default function LeagueScreen() {
   // fetchOpenBets, fetchBetSubmissions, resolveBet — all from useCommissioner above.
   const viewToTab = (v) => {
     if (v === 'detail') return 'leaderboard';
+    if (v === 'betting_leaderboard') return 'betting';
     if (v === 'commissioner') return 'admin';
     if (v === 'auctions') return 'trading'; // legacy deep-link compat
     return v;
   };
   const tabToView = (t) => {
     if (t === 'leaderboard') return 'detail';
+    if (t === 'betting') return 'betting_leaderboard';
     if (t === 'admin') return 'commissioner';
     if (t === 'auctions') return 'trading'; // legacy deep-link compat
     return t;
@@ -619,6 +636,13 @@ export default function LeagueScreen() {
   // Only apply on initial league load (activeLeague change), not on every searchParam change
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLeague?.league_id]);
+
+  // U42: Auto-clear only bet-type notification badge when viewing bets tab
+  useEffect(() => {
+    if (view === 'bets' && activeLeague?.league_id && notificationCount > 0) {
+      clearNotificationsByType('bet');
+    }
+  }, [view, activeLeague?.league_id, notificationCount, clearNotificationsByType]);
 
   // Realtime subscription: league standings — handles UPDATE (points change) and INSERT (new member joins)
   useEffect(() => {
@@ -1045,6 +1069,13 @@ export default function LeagueScreen() {
             onSkip={completeLeagueTour}
           />
         )}
+        {showBetsTour && view === 'bets' && (
+          <OnboardingTour
+            steps={BETS_TOUR_STEPS}
+            onComplete={completeBetsTour}
+            onSkip={completeBetsTour}
+          />
+        )}
         {showCommissionerTour && view === 'commissioner' && isCommissioner && (() => {
           const isDraftLeague = activeLeague?.leagues?.format === 'noduplicate';
           const filteredSteps = COMMISSIONER_TOUR_STEPS.filter(s => isDraftLeague || !s.draftOnly);
@@ -1259,6 +1290,7 @@ export default function LeagueScreen() {
             active={viewToTab(view)}
             onTab={setTab}
             isCommissioner={isCommissioner}
+            notifyBets={notificationCount > 0}
             notifyTrading={(pendingAuctions ?? []).some(a => a.highest_bidder_id === user?.id && transferWindow.status === 'open') || auctions.some(a => a.highest_bidder_id === user?.id) || incomingTrades.length > 0}
             h2hEnabled={h2hEnabled}
             isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
@@ -1271,6 +1303,7 @@ export default function LeagueScreen() {
             active={viewToTab(view)}
             onTab={setTab}
             isCommissioner={isCommissioner}
+            notifyBets={notificationCount > 0}
             notifyTrading={(pendingAuctions ?? []).some(a => a.highest_bidder_id === user?.id && transferWindow.status === 'open') || auctions.some(a => a.highest_bidder_id === user?.id) || incomingTrades.length > 0}
             h2hEnabled={h2hEnabled}
             isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}

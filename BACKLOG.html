@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>188</strong><span>closed</span></div>
+      <div class="total-pill"><strong>189</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (110)</span>
+    <span class="chip" data-filter-kind="done">Shipped (111)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">188</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">189</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">110</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">111</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,7 +1179,7 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">110</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">111</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ design audit b1/b2 — white-alpha token sweep + type ramp (2026-08-23) — no pr yet (pending) 
 
@@ -1411,6 +1411,39 @@ user reported (via the app ui) still seeing all 7 pilot leagues bundled under on
 <li>Inserted a <code>General</code> / <code>is_default=true</code> row into <code>clubhouse_channels</code> for each of the 7 <code>DATA-3</code> clubhouses, <code>created_by</code> set to that clubhouse's actual owner (matching what <code>create_circle()</code> would have done) — verified all 7 now have exactly one default channel and chat works.</li>
 <li><strong>Third bug found once the orphaned circle was gone and its <code>circle_leagues</code> rows went with it</strong>: none of the 7 <code>DATA-3</code> clubhouses had ever had a <code>circle_leagues</code> row of their own — that migration only ran <code>UPDATE leagues SET circle_id=...</code> (the FK leagues actually use) but never inserted the <code>circle_leagues</code> junction row that <code>get_clubhouse_competitions()</code> reads to build the "Competitions" list. Every clubhouse home page showed "No competitions yet" even though the league itself was correctly attached via <code>leagues.circle_id</code>. Fixed with <code>INSERT INTO circle_leagues (circle_id, league_id) SELECT circle_id, id FROM leagues WHERE circle_id IN (&lt;the 7 new circle ids&gt;)</code> — sourced from the authoritative <code>leagues.circle_id</code> column rather than a hand-typed mapping — verified each of the 7 clubhouses now lists exactly its one league.</li>
 <li>User-approved this session via explicit "yes. go ahead."</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ data-5 — restored league-level bets tab, dropped by ch-5 regression (2026-08-26) — pr pending, no db change 
+
+sixth issue from the same 2026-08-26 clubhouse report: the football &quot;bets&quot; feature had disappeared from every league entirely — not a data bug, a code regression. root-caused to commit `ffa0d3e` (&quot;feat: ch-5 — strip frontpage/bets/chat from leaguescreen (#611)&quot;, 2026-06-23), which stripped all three from `leaguescreen.jsx`&#x27;s navigation on the assumption all three would be rebuilt at the clubhouse level. chat and frontpage were in fact rebuilt there and work correctly today — bets never was. `betstabhub.jsx`/`bettingleaderboardview.jsx` and their `usebettingleaderboard` hook were never deleted, just orphaned; a prior, incomplete restoration attempt (found already in place before this fix) had partially re-added the hook call and view-render blocks but left them unreachable — no nav tab pointed at them, and the imports for both view components were still missing.
+
+user chose &quot;restore league-level bets tab&quot; (of three options presented) — put bets back on each league&#x27;s own nav, exactly as before ch-5, without touching chat/frontpage&#x27;s now-correct clubhouse-level home.
+
+- `hubshared.jsx`: added `notifybets` param + `bets`/`betting` entries back to both `hubtabs` (desktop, `id:`-based) and `hubtabpills` (mobile) — the mobile version had been refactored since ch-5 to use the shared `tabstrip` component (`key:`-based `tabs[]` prop), so the restoration matches that current shape rather than the pre-ch5 inline jsx.
+- `leaguescreen.jsx`: added the missing `betstabhub`/`bettingleaderboardview` imports, restored `bets_tour_steps`, the `showbetstour`/`completebetstour` destructure, `clearnotificationsbytype` destructure, `betting_leaderboard`↔`betting` view/tab mappings, the bet-notification auto-clear effect, the bets onboarding-tour render block, and `notifybets` prop wiring on both tab bars.
+- verified: `npm run lint` clean (0 errors), production `npm run build` clea" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">DATA-5 — restored League-level Bets tab, dropped by CH-5 regression</h3>
+        <p class="card-summary">Sixth issue from the same 2026-08-26 clubhouse report: the football "Bets" feature had disappeared from every league entirely — not a data bug, a code regression.…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PR pending, no DB change</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">DATA-5 — restored League-level Bets tab, dropped by CH-5 regression</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Sixth issue from the same 2026-08-26 clubhouse report: the football "Bets" feature had disappeared from every league entirely — not a data bug, a code regression.…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR pending, no DB change</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Sixth issue from the same 2026-08-26 clubhouse report: the football "Bets" feature had disappeared from every league entirely — not a data bug, a code regression. Root-caused to commit <code>ffa0d3e</code> ("feat: CH-5 — strip Frontpage/Bets/Chat from LeagueScreen (#611)", 2026-06-23), which stripped all three from <code>LeagueScreen.jsx</code>'s navigation on the assumption all three would be rebuilt at the Clubhouse level. Chat and Frontpage were in fact rebuilt there and work correctly today — Bets never was. <code>BetsTabHub.jsx</code>/<code>BettingLeaderboardView.jsx</code> and their <code>useBettingLeaderboard</code> hook were never deleted, just orphaned; a prior, incomplete restoration attempt (found already in place before this fix) had partially re-added the hook call and view-render blocks but left them unreachable — no nav tab pointed at them, and the imports for both view components were still missing.</p>
+<p>User chose "Restore League-level Bets tab" (of three options presented) — put Bets back on each league's own nav, exactly as before CH-5, without touching Chat/Frontpage's now-correct Clubhouse-level home.</p>
+<ul>
+<li><code>HubShared.jsx</code>: added <code>notifyBets</code> param + <code>bets</code>/<code>betting</code> entries back to both <code>HubTabs</code> (desktop, <code>id:</code>-based) and <code>HubTabPills</code> (mobile) — the mobile version had been refactored since CH-5 to use the shared <code>TabStrip</code> component (<code>key:</code>-based <code>tabs[]</code> prop), so the restoration matches that current shape rather than the pre-CH5 inline JSX.</li>
+<li><code>LeagueScreen.jsx</code>: added the missing <code>BetsTabHub</code>/<code>BettingLeaderboardView</code> imports, restored <code>BETS_TOUR_STEPS</code>, the <code>showBetsTour</code>/<code>completeBetsTour</code> destructure, <code>clearNotificationsByType</code> destructure, <code>betting_leaderboard</code>↔<code>betting</code> view/tab mappings, the bet-notification auto-clear effect, the bets onboarding-tour render block, and <code>notifyBets</code> prop wiring on both tab bars.</li>
+<li>Verified: <code>npm run lint</code> clean (0 errors), production <code>npm run build</code> clean (no Rolldown TDZ regression — the historically fragile crash pattern this codebase has hit 3 times before), 84/84 <code>platform.spec.js</code> green on both browsers.</li>
+<li><strong>Not verified live in-browser</strong>: reaching an actual league screen locally requires creating a demo Clubhouse/league, which would write into the live pilot Supabase DB (single-environment setup, no dev/staging split) — skipped per the Pilot Safeguards rule against seeding test data without a prior confirmed ask. Flagging as an open verification gap; first real pilot-league click-through should confirm the Bets tab renders and <code>BetsTabHub</code> fetches without runtime error.</li>
 </ul>
 <hr></dd></div>
       </dl></template>

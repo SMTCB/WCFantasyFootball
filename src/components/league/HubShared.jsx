@@ -110,12 +110,14 @@ export function HubActionBar({ onManageSquad, onMarket }) {
   );
 }
 
-// League hub navigation — Chat, Frontpage and Bets live in Clubhouse (CH-5)
-export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
+// League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5)
+export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'LEADERBOARD' },
     ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     { id: 'recap',       label: 'RECAP' },
+    { id: 'bets',        label: 'BETS',    notify: notifyBets },
+    { id: 'betting',     label: 'BETTING' },
     // TRADING tab (auctions + trade proposals) is draft-only — Classic leagues use
     // shared player pools so exclusive ownership transfers don't apply.
     ...(isDraftLeague ? [{ id: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
@@ -286,11 +288,13 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
 }
 
 // Mobile horizontal-scroll hub tab pills — replaces HubTabs on mobile viewports.
-export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
+export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
     { key: 'leaderboard', label: 'BOARD' },
     ...(h2hEnabled ? [{ key: 'h2h', label: 'H2H ⚔️' }] : []),
     { key: 'recap',       label: 'RECAP' },
+    { key: 'bets',        label: 'BETS',    notify: notifyBets },
+    { key: 'betting',     label: 'BETTING' },
     ...(isDraftLeague ? [{ key: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
     { key: 'stats',       label: 'STATS' },
     ...(isCommissioner ? [{ key: 'admin', label: 'ADMIN' }] : []),
