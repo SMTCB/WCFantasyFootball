@@ -813,16 +813,20 @@ export default function LeagueScreen() {
             <div style={{ padding: '20px 0', textAlign: 'center' }}>
               <p style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', lineHeight: 1.6 }}>
                 YOU DON&apos;T HAVE A CLUBHOUSE YET<br />
-                <span style={{ color: 'var(--on-shell-faint)' }}>Create one in the Clubhouse tab first,<br />or continue without linking.</span>
+                <span style={{ color: 'var(--on-shell-faint)' }}>Every league needs a Clubhouse — create one first.</span>
               </p>
             </div>
           )}
           <button
             type="button"
-            onClick={() => setCreateLeagueStep(1)}
-            className="w-full mt-2 bg-cyan text-white font-bold py-4 uppercase tracking-wider"
+            onClick={() => {
+              if (myCircles.length === 0) { navigate('/clubhouse?tab=find'); return; }
+              setCreateLeagueStep(1);
+            }}
+            disabled={myCircles.length > 0 && !selectedCircleId}
+            className="w-full mt-2 bg-cyan text-white font-bold py-4 uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {selectedCircleId ? 'Continue' : 'Continue without Clubhouse'}
+            {myCircles.length === 0 ? 'Create a Clubhouse' : 'Continue'}
           </button>
         </div>
       </div>
