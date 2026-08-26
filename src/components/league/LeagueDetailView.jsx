@@ -64,6 +64,7 @@ function timeAgo(iso) {
 
 export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, currentGW = '—', onH2h, onViewManager, h2hEnabled = false }) {
   const [activityFilter, setActivityFilter] = useState('ALL');
+  const [activityCollapsed, setActivityCollapsed] = useState(false);
   const [entries, setEntries] = useState([]);
   const [h2hStandings, setH2hStandings] = useState([]); // { user_id, total_h2h_pts, h2h_rank }
   const channelRef = useRef(null);
@@ -182,7 +183,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
       </div>
 
       {/* ── DESKTOP: standings table + activity rail ───────────────────── */}
-      <div className="hidden lg:grid" style={{ flex: 1, gridTemplateColumns: '1fr 400px', minHeight: 0 }}>
+      <div className="hidden lg:grid" style={{ flex: 1, gridTemplateColumns: activityCollapsed ? '1fr 40px' : '1fr 400px', minHeight: 0, transition: 'grid-template-columns 0.15s ease' }}>
         {/* Standings table */}
         <div data-tour="league-standings" style={{ display: 'flex', flexDirection: 'column', overflow: 'auto', borderRight: '1px solid var(--rule)' }}>
           <CompetitionResultsHeader
@@ -231,8 +232,40 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         </div>
 
         {/* Activity rail */}
-        <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)' }}>
-          <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>RECENT</span>} />
+        <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'hidden' }}>
+          {activityCollapsed ? (
+            <button
+              onClick={() => setActivityCollapsed(false)}
+              aria-label="Expand league activity"
+              style={{
+                flex: 1, background: 'transparent', border: 'none', borderLeft: '1px solid var(--rule)',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'flex-start', gap: 10, paddingTop: 16, color: 'var(--mute)',
+              }}
+            >
+              <span style={{ fontSize: 'var(--fs-body)' }}>‹</span>
+              <span style={{
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--gold)',
+                writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+              }}>ACTIVITY</span>
+            </button>
+          ) : (
+          <>
+          <HubSectionLabel
+            label="LEAGUE ACTIVITY"
+            sub="LIVE"
+            tone="var(--gold)"
+            right={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>RECENT</span>
+                <button
+                  onClick={() => setActivityCollapsed(true)}
+                  aria-label="Collapse league activity"
+                  style={{ background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', cursor: 'pointer', padding: '2px 6px', fontSize: 'var(--fs-micro)', lineHeight: 1 }}
+                >›</button>
+              </div>
+            }
+          />
           {/* Feed */}
           {(() => {
             const capped   = capBreakingNews(entries);
@@ -309,6 +342,8 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               })}
             </div>
           </div>
+          </>
+          )}
         </aside>
       </div>
 
