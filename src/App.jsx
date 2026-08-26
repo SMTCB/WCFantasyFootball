@@ -1,4 +1,4 @@
-import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { isNative } from './lib/capacitor';
 import { AuthProvider } from './context/AuthContext';
@@ -46,7 +46,6 @@ const ClubhouseScreen       = lazy(() => import('./screens/ClubhouseScreen'));
 // F1 module
 const PaddockLobbyScreen    = lazy(() => import('./screens/f1/PaddockLobbyScreen'));
 const F1HomeScreen          = lazy(() => import('./screens/f1/F1HomeScreen'));
-const F1RaceBetScreen       = lazy(() => import('./screens/f1/F1RaceBetScreen'));
 const F1SeasonBetsScreen    = lazy(() => import('./screens/f1/F1SeasonBetsScreen'));
 const F1StandingsScreen     = lazy(() => import('./screens/f1/F1StandingsScreen'));
 const F1ReportScreen        = lazy(() => import('./screens/f1/F1ReportScreen'));
@@ -77,6 +76,14 @@ function JoinRoute() {
   const code = searchParams.get('code') ?? '';
   // Pass the join code through to LeagueScreen via query param.
   return <Navigate to={`/league?joinCode=${code}`} replace />;
+}
+
+// F1PicksRedirect: the standalone PICKS screen was folded into CALENDAR
+// (race rows expand in place). Bounces old bookmarked/shared /picks links
+// to the paddock's CALENDAR screen instead of 404ing.
+function F1PicksRedirect() {
+  const { paddockId } = useParams();
+  return <Navigate to={`/f1/${paddockId}`} replace />;
 }
 
 // ── AppRoutes lives inside Router so useNavigate (used by OnboardingWizard) works
@@ -138,7 +145,7 @@ function AppRoutes() {
                   {/* F1 Module */}
                   <Route path="/f1"                         element={<ErrorBoundary screen="F1Lobby"><PaddockLobbyScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId"              element={<ErrorBoundary screen="F1Home"><F1HomeScreen /></ErrorBoundary>} />
-                  <Route path="/f1/:paddockId/picks/:round?" element={<ErrorBoundary screen="F1Picks"><F1RaceBetScreen /></ErrorBoundary>} />
+                  <Route path="/f1/:paddockId/picks/:round?" element={<F1PicksRedirect />} />
                   <Route path="/f1/:paddockId/season"       element={<ErrorBoundary screen="F1Season"><F1SeasonBetsScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId/standings"    element={<ErrorBoundary screen="F1Standings"><F1StandingsScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId/report"       element={<ErrorBoundary screen="F1Report"><F1ReportScreen /></ErrorBoundary>} />

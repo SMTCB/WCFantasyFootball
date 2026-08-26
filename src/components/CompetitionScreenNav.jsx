@@ -6,7 +6,6 @@ import {
   NavIconMarket,
   NavIconRecap,
   NavIconF1Calendar,
-  NavIconF1Picks,
   NavIconF1Standings,
   NavIconF1Report,
   NavIconF1Season,
@@ -24,7 +23,6 @@ function buildF1Screens(paddockId) {
   const base = paddockId ? `/f1/${paddockId}` : '/f1';
   return [
     { key: 'f1-cal',  label: 'CALENDAR',  path: base,                    Icon: NavIconF1Calendar  },
-    { key: 'f1-pick', label: 'PICKS',     path: `${base}/picks`,         Icon: NavIconF1Picks     },
     { key: 'f1-std',  label: 'STANDINGS', path: `${base}/standings`,     Icon: NavIconF1Standings },
     { key: 'f1-rep',  label: 'REPORT',    path: `${base}/report`,        Icon: NavIconF1Report    },
     { key: 'f1-sea',  label: 'SEASON',    path: `${base}/season`,        Icon: NavIconF1Season    },

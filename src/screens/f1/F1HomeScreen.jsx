@@ -8,6 +8,7 @@ import { getFlag } from '../../lib/f1/f1-data';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
+import F1RacePickForm from './F1RacePickForm';
 
 // Checkered-flag motif — pure CSS checkerboard, no image asset. Recurs sparingly
 // as a decorative divider under the F1 Home header (and above Report's podium viz).
@@ -89,6 +90,7 @@ export default function F1HomeScreen() {
   const [showSelector, setShowSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_paddocks');
+  const [expandedRound, setExpandedRound] = useState(null);
 
   const archivedPaddockCount = myPaddocks.filter(p => p.archived).length;
   const visiblePaddocks = showArchived ? myPaddocks : myPaddocks.filter(p => !p.archived);
@@ -131,9 +133,15 @@ export default function F1HomeScreen() {
   const PADDOCK_CARDS = [
     { label: 'Championship\nStandings', icon: '🏆', path: `/f1/${paddockId}/standings` },
     { label: 'Year\nBets',              icon: '📅', path: `/f1/${paddockId}/season` },
-    { label: 'Race\nBets',              icon: '🎯', path: `/f1/${paddockId}/picks` },
     { label: 'Report',                  icon: '📊', path: `/f1/${paddockId}/report` },
   ];
+
+  function goToPicks(round) {
+    setExpandedRound(round);
+    requestAnimationFrame(() => {
+      document.getElementById(`f1-race-row-${round}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
@@ -253,7 +261,7 @@ export default function F1HomeScreen() {
                 )}
               </div>
               <button
-                onClick={() => navigate(`/f1/${paddockId}/picks/${nextRace.round_number}`)}
+                onClick={() => goToPicks(nextRace.round_number)}
                 style={{ display: 'block', width: '100%', padding: '10px', background: '#fff', color: 'var(--f1)', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
               >
                 SUBMIT PICKS FOR R{nextRace.round_number} →
@@ -303,34 +311,36 @@ export default function F1HomeScreen() {
               const isPast = race.status !== 'finished' && new Date(race.race_date) < now;
               // Only genuinely-upcoming rows past the next race dim; finished races stay full opacity.
               const isDimmed = race.status === 'scheduled' && !isNext;
+              const isExpanded = expandedRound === race.round_number;
               return (
-                <button
-                  key={race.id}
-                  onClick={() => !isDimmed && navigate(`/f1/${paddockId}/picks/${race.round_number}`)}
-                  disabled={isDimmed}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isNext ? 'var(--f1)' : 'var(--rule)'}`, borderLeft: isNext ? '3px solid var(--f1)' : `1px solid var(--rule)`, borderRadius: 6, cursor: isDimmed ? 'default' : 'pointer', opacity: isDimmed ? 0.42 : 1, textAlign: 'left', width: '100%' }}
-                >
-                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', minWidth: 24, textAlign: 'right' }}>
-                    R{race.round_number}
-                  </span>
-                  <span style={{ fontSize: 'var(--fs-body-lg)' }}>{getFlag(race.gp_name)}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {race.gp_name}
-                    </div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 1 }}>
-                      {new Date(race.race_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      {race.is_saturday ? ' · SPRINT' : ''}
-                    </div>
-                  </div>
-                  {race.status === 'finished' && race.result_p1 ? (
-                    <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>
-                      🏆 {race.result_p1.split(' ').pop()}
+                <div key={race.id} id={`f1-race-row-${race.round_number}`}>
+                  <button
+                    onClick={() => setExpandedRound(isExpanded ? null : race.round_number)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isNext ? 'var(--f1)' : 'var(--rule)'}`, borderLeft: isNext ? '3px solid var(--f1)' : `1px solid var(--rule)`, borderBottom: isExpanded ? 'none' : undefined, borderRadius: isExpanded ? '6px 6px 0 0' : 6, cursor: 'pointer', opacity: isDimmed && !isExpanded ? 0.42 : 1, textAlign: 'left', width: '100%' }}
+                  >
+                    <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', minWidth: 24, textAlign: 'right' }}>
+                      R{race.round_number}
                     </span>
-                  ) : (
-                    <RaceStatusBadge race={race} isNext={isNext} isPast={isPast} />
-                  )}
-                </button>
+                    <span style={{ fontSize: 'var(--fs-body-lg)' }}>{getFlag(race.gp_name)}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {race.gp_name}
+                      </div>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 1 }}>
+                        {new Date(race.race_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        {race.is_saturday ? ' · SPRINT' : ''}
+                      </div>
+                    </div>
+                    {race.status === 'finished' && race.result_p1 ? (
+                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>
+                        🏆 {race.result_p1.split(' ').pop()}
+                      </span>
+                    ) : (
+                      <RaceStatusBadge race={race} isNext={isNext} isPast={isPast} />
+                    )}
+                  </button>
+                  {isExpanded && <F1RacePickForm race={race} paddock={activePaddock} />}
+                </div>
               );
             })}
           </div>
