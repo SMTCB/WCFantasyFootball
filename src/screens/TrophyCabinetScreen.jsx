@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useClubhouse } from '../hooks/useClubhouse';
+import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useAuth } from '../hooks/useAuth';
 import { useIsMobile } from '../hooks/useViewport';
 import { supabase } from '../lib/supabase';
@@ -78,7 +78,7 @@ function ActivityItem({ item }) {
 export default function TrophyCabinetScreen() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const { activeCircle, activeCircleId, competitions, feed, metaStandings } = useClubhouse();
+  const { activeCircle, activeCircleId, competitions, feed, metaStandings } = useClubhouseContext();
   const [trophies, setTrophies] = useState([]);
 
   const username = user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? 'Manager';
@@ -119,9 +119,9 @@ export default function TrophyCabinetScreen() {
   };
 
   const activeSports = [
-    competitions.football.length > 0 && 'football',
-    competitions.f1.length > 0       && 'f1',
-    competitions.tennis.length > 0   && 'tennis',
+    (competitions.football?.length ?? 0) > 0 && 'football',
+    (competitions.f1?.length ?? 0)       > 0 && 'f1',
+    (competitions.tennis?.length ?? 0)   > 0 && 'tennis',
   ].filter(Boolean);
 
   // Shareable card — rendered inline on mobile, in sidebar on desktop
