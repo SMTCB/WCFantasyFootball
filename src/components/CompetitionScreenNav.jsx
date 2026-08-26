@@ -47,6 +47,7 @@ export function CompetitionScreenNav({ pathname, paddockId }) {
 
   const screens     = isFoot ? FOOTBALL_SCREENS : isF1 ? buildF1Screens(paddockId) : TENNIS_SCREENS;
   const activeColor = isF1 ? 'var(--f1)' : isTennis ? 'var(--ten)' : 'var(--accent)';
+  const homePath     = isFoot ? null : isF1 ? (paddockId ? `/f1/${paddockId}` : '/f1') : '/tennis';
 
   return (
     <div
@@ -63,7 +64,7 @@ export function CompetitionScreenNav({ pathname, paddockId }) {
       {screens.map(({ key, label, path, Icon, isLive }) => {
         const isActive =
           pathname === path ||
-          (path !== '/f1' && path !== '/tennis' && pathname.startsWith(path + '/'));
+          (path !== homePath && pathname.startsWith(path + '/'));
         const liveColor = 'var(--danger)';
         const color = isActive ? (isLive ? liveColor : activeColor) : 'var(--mute)';
 

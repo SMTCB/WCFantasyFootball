@@ -47,7 +47,7 @@ function useCountdown(targetDate) {
 // Status pill vocabulary: upcoming=grey, open (next race)=solid f1-red "Picks open",
 // live=gold, quali=blue-tinted "Qualifying" — the one place blue survives inside F1,
 // since it's state signaling (a session type), not brand identity.
-function RaceStatusBadge({ race, isNext }) {
+function RaceStatusBadge({ race, isNext, isPast }) {
   let bg, color, label;
   if (race.status === 'race') {
     bg = 'var(--gold)'; color = '#fff'; label = '🔴 LIVE';
@@ -55,6 +55,8 @@ function RaceStatusBadge({ race, isNext }) {
     bg = 'rgba(26,111,168,0.12)'; color = 'var(--accent)'; label = 'QUALIFYING';
   } else if (isNext) {
     bg = 'var(--f1)'; color = '#fff'; label = 'PICKS OPEN';
+  } else if (isPast) {
+    bg = 'var(--elev)'; color = 'var(--mute)'; label = 'RESULTS PENDING';
   } else {
     bg = 'var(--elev)'; color = 'var(--mute)'; label = 'UPCOMING';
   }
@@ -287,6 +289,38 @@ export default function F1HomeScreen() {
             </div>
           )}
 
+          {/* Leaderboard preview */}
+          {leaderboard.length > 0 && (
+            <>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
+                Top of the Paddock
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {leaderboard.slice(0, 5).map(m => {
+                  const isMe = user && m.user_id === user.id;
+                  return (
+                    <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isMe ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isMe ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, padding: '10px 12px' }}>
+                      <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: m.rank <= 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 20 }}>
+                        {m.rank <= 3 ? ['🥇','🥈','🥉'][m.rank - 1] : m.rank}
+                      </span>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)', fontWeight: isMe ? 700 : 400, flex: 1 }}>
+                        {m.display_name}{isMe ? ' (You)' : ''}
+                      </span>
+                      <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)' }}>{m.total_points}</span>
+                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>PTS</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => navigate(`/f1/${paddockId}/standings`)}
+                style={{ display: 'block', width: '100%', marginBottom: 20, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--f1)', letterSpacing: '0.12em', textAlign: 'center' }}
+              >
+                FULL STANDINGS →
+              </button>
+            </>
+          )}
+
           {/* Full calendar */}
           <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
             2026 Season Calendar
@@ -294,6 +328,7 @@ export default function F1HomeScreen() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {races.map(race => {
               const isNext = race.id === nextRace?.id;
+              const isPast = race.status !== 'finished' && new Date(race.race_date) < now;
               // Only genuinely-upcoming rows past the next race dim; finished races stay full opacity.
               const isDimmed = race.status === 'scheduled' && !isNext;
               return (
@@ -321,7 +356,7 @@ export default function F1HomeScreen() {
                       🏆 {race.result_p1.split(' ').pop()}
                     </span>
                   ) : (
-                    <RaceStatusBadge race={race} isNext={isNext} />
+                    <RaceStatusBadge race={race} isNext={isNext} isPast={isPast} />
                   )}
                 </button>
               );
@@ -358,38 +393,6 @@ export default function F1HomeScreen() {
               </button>
             ))}
           </div>
-
-          {/* Leaderboard preview */}
-          {leaderboard.length > 0 && (
-            <>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
-                Top of the Paddock
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {leaderboard.slice(0, 5).map(m => {
-                  const isMe = user && m.user_id === user.id;
-                  return (
-                    <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isMe ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isMe ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, padding: '10px 12px' }}>
-                      <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: m.rank <= 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 20 }}>
-                        {m.rank <= 3 ? ['🥇','🥈','🥉'][m.rank - 1] : m.rank}
-                      </span>
-                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)', fontWeight: isMe ? 700 : 400, flex: 1 }}>
-                        {m.display_name}{isMe ? ' (You)' : ''}
-                      </span>
-                      <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)' }}>{m.total_points}</span>
-                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>PTS</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <button
-                onClick={() => navigate(`/f1/${paddockId}/standings`)}
-                style={{ display: 'block', width: '100%', marginTop: 10, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--f1)', letterSpacing: '0.12em', textAlign: 'center' }}
-              >
-                FULL STANDINGS →
-              </button>
-            </>
-          )}
         </div>
       )}
     </div>
