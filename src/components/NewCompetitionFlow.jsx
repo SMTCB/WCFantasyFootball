@@ -118,6 +118,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
   function close() { onClose(); }
 
   async function handleCreate() {
+    if (!circleId) { setError('A competition must belong to a Clubhouse — create one first.'); return; }
     if (!name.trim()) { setError('Name is required'); return; }
     if (sport === 'football' && !tournamentId) { setError('Select a tournament'); return; }
     setLoading(true); setError(null);

@@ -384,6 +384,7 @@ export default function AppLayout({ children }) {
           competitions={competitions}
           pathname={location.pathname}
           onAdd={() => setShowNewCompFlow(true)}
+          hasClubhouse={myCircles.length > 0}
         />
 
         {/* Competition screen nav — screens within the active sport/competition */}

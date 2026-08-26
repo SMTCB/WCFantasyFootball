@@ -174,10 +174,10 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (114)</span>
+    <span class="chip" data-filter-kind="done">Shipped (115)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
-<span class="chip" data-filter-kind="audit">Audits (7)</span>
+<span class="chip" data-filter-kind="audit">Audits (6)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (3)</span>
   </div>
   <span id="result-count"></span>
@@ -198,10 +198,10 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">114</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">115</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
-<div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">7</span></div>
+<div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">3</span></div>
     </div>
   </nav>
@@ -1179,8 +1179,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">114</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">115</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse rpc/schema bugs + standalone-competition ui gap (2026-08-26) — pr #844, migrations 194–196 + 256–259 
+
+**context**: user pasted a raw production browser console log from loading a real clubhouse (`c987f174-9ed1-47a1-80b6-4c2b2949950b`), flagged as possibly relevant to the still-open empty members-tab bug (see the pr #838/#839 entry below), plus a separate explicit ask: &quot;one thing critical to check: it should never be possible to create a standalone competition. it always needs to be assigned to a clubhouse.&quot; all five items were diagnosed via live db inspection (`pg_get_functiondef`, `information_schema.columns`, `pg_constraint`, and one direct rpc execution) and read-only code review, then fixed and applied to production in the same session with explicit per-item approval.
+
+- **standalone-competition invariant — closed end-to-end**: db layer was already solid (`leagues.circle_id`/`paddocks.circle_id`/`player_boxes.circle_id` all `not null`), but [leaguescreen.jsx](src/screens/leaguescreen.jsx)&#x27;s legacy &quot;initialize campaign&quot; wizard offered a dead-end **&quot;continue without clubhouse&quot;** button that always failed on a raw `not null` toast. removed that button and redirected the &quot;+&quot; entry points (`competitiontopbar.jsx`, `applayout.jsx`) to clubhouse creation whenever the user has zero clubhouses, so the ui now makes the invariant unreachable rather than reachable-but-broken. added a db-level failsafe on top (migration 259): `create_league`/`create_paddock`/`create_player_box` now explicitly `raise exception &#x27;circle_required&#x27;` on a null `p_circle_id` and `&#x27;not_circle_member&#x27;` if the caller isn&#x27;t actually a member of the circle they passed — defense-in-depth against any future ui regression, and closes a separate gap where a user could link a competition to a clubhouse they don&#x27;t belong to.
+- **`get_circle_feed` rpc** — fixed the `gazette_entries.created_at` → `published_at` column reference (migration in the 256 batch).
+- **`get_circle_meta_standings` rpc** — f" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Clubhouse RPC/schema bugs + standalone-competition UI gap</h3>
+        <p class="card-summary">Context : user pasted a raw production browser console log from loading a real Clubhouse ( c987f174-9ed1-47a1-80b6-4c2b2949950b ), flagged as possibly relevant to the…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PR #844, migrations 194–196 + 256–259</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Clubhouse RPC/schema bugs + standalone-competition UI gap</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : user pasted a raw production browser console log from loading a real Clubhouse ( c987f174-9ed1-47a1-80b6-4c2b2949950b ), flagged as possibly relevant to the…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #844, migrations 194–196 + 256–259</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user pasted a raw production browser console log from loading a real Clubhouse (<code>c987f174-9ed1-47a1-80b6-4c2b2949950b</code>), flagged as possibly relevant to the still-open empty Members-tab bug (see the PR #838/#839 entry below), plus a separate explicit ask: "one thing critical to check: it should never be possible to create a standalone competition. It always needs to be assigned to a clubhouse." All five items were diagnosed via live DB inspection (<code>pg_get_functiondef</code>, <code>information_schema.columns</code>, <code>pg_constraint</code>, and one direct RPC execution) and read-only code review, then fixed and applied to production in the same session with explicit per-item approval.</p>
+<ul>
+<li><strong>Standalone-competition invariant — closed end-to-end</strong>: DB layer was already solid (<code>leagues.circle_id</code>/<code>paddocks.circle_id</code>/<code>player_boxes.circle_id</code> all <code>NOT NULL</code>), but <a href="src/screens/LeagueScreen.jsx" target="_blank" rel="noopener">LeagueScreen.jsx</a>'s legacy "Initialize Campaign" wizard offered a dead-end <strong>"Continue without Clubhouse"</strong> button that always failed on a raw <code>NOT NULL</code> toast. Removed that button and redirected the "+" entry points (<code>CompetitionTopBar.jsx</code>, <code>AppLayout.jsx</code>) to Clubhouse creation whenever the user has zero Clubhouses, so the UI now makes the invariant unreachable rather than reachable-but-broken. Added a DB-level failsafe on top (migration 259): <code>create_league</code>/<code>create_paddock</code>/<code>create_player_box</code> now explicitly <code>RAISE EXCEPTION 'CIRCLE_REQUIRED'</code> on a null <code>p_circle_id</code> and <code>'NOT_CIRCLE_MEMBER'</code> if the caller isn't actually a member of the circle they passed — defense-in-depth against any future UI regression, and closes a separate gap where a user could link a competition to a Clubhouse they don't belong to.</li>
+<li><strong><code>get_circle_feed</code> RPC</strong> — fixed the <code>gazette_entries.created_at</code> → <code>published_at</code> column reference (migration in the 256 batch).</li>
+<li><strong><code>get_circle_meta_standings</code> RPC</strong> — fixed the ambiguous <code>user_id</code> column collision between the <code>RETURNS TABLE</code> declaration and the internal membership-check subquery (migration 257).</li>
+<li><strong>Empty Members tab</strong> — root cause confirmed and fixed: <code>circle_members.user_id</code>'s FK pointed at <code>auth.users(id)</code> instead of <code>public.users(id)</code> like every other membership table, so PostgREST couldn't resolve the <code>users(username)</code> embed. Corrected the FK target (migration 258); zero orphaned rows confirmed before the change.</li>
+<li><strong>Clubhouse Frontpage tab — resolved as a deployment gap, not a design gap</strong>: further investigation found the genuinely Clubhouse-level Frontpage feature (a real <code>circle_id</code> column, RLS policies, an Edge Function circle-mode, the frontend hook, and the "Forza Times" UI component) was <strong>already fully built</strong> in the codebase — migrations 194–196 had been drafted and committed but never applied to production, almost certainly dropped during the 2026-07-24 maintenance-mode cutover (bounded precisely via live introspection: 193 and 197 were confirmed applied, only 194/195/196 were missing). User confirmed the product intent explicitly: *"The frontpage is at clubhouse level... The goal is for this to be the newspaper of the clubhouse, not of a particular league... a social element, on the clubhouse, not only a specific league."* Applied all three to production after a fresh backup: <strong>194</strong> adds <code>circle_id</code> + scope-check constraints + partial unique indexes + 6 new RLS policies to <code>frontpage_editions</code>/<code>frontpage_reactions</code>/<code>frontpage_comments</code>; <strong>195</strong> adds 4 owner-only Clubhouse-settings RPCs (<code>update_circle_settings</code>, <code>kick_circle_member</code>, <code>link_league_to_circle</code>, <code>get_owner_linkable_leagues</code>) that were also silently dead this whole time; <strong>196</strong> adds 3 notification triggers fanning Frontpage editions, breaking-news gazette entries, and DMs into <code>clubhouse_notifications</code>. No new app code was needed — verified live via <code>information_schema</code>/<code>pg_proc</code>/<code>pg_trigger</code> that all expected objects now exist.</li>
+<li><strong>Sentry/CSP gap</strong> — still open, low priority, not addressed this session: <code>connect-src</code> doesn't whitelist the Sentry ingest domain, so production errors from this whole investigation never reached monitoring. One-line CSP fix whenever convenient (location not yet confirmed — likely <code>vercel.json</code> or <code>middleware.js</code>).</li>
+<li><strong><code>supabase/schema.sql</code></strong> regenerated from production to capture all of 194–196 and 256–259 in one pass; diff spot-checked for exactly the expected new objects, nothing unrelated.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ sidebar hierarchy clarity — clubhouse-scoped nav vs account (2026-08-26) — pr #840 
 
 **context**: two of the design questions from the same 2026-08-26 user report — the &quot;clubhouse&quot; switcher dropdown and the nav item directly below it both being labeled &quot;clubhouse&quot; (confusing/redundant), and trophy cabinet/coin challenges sitting under a &quot;community&quot; header that wrongly implied they were cross-clubhouse features when both are actually scoped to `activecircleid` exactly like the frontrow tab.
@@ -10851,38 +10883,8 @@ supabase functions deploy process-transfer</code></pre>
     </section>
 
     <section class="item-group" id="group-audit" data-group="audit">
-      <h2 class="group-title" style="--tab-color:#b23b3b">Audits <span class="group-count">7</span></h2>
+      <h2 class="group-title" style="--tab-color:#b23b3b">Audits <span class="group-count">6</span></h2>
       <div class="card-grid">
-      <article class="card" data-status="closed" data-priority="none" data-kind="audit" data-search="🔍 clubhouse rpc/schema bugs + standalone-competition ui gap (2026-08-26) — found via user-supplied console log, not yet fixed 
-
-**context**: user pasted a raw production browser console log from loading a real clubhouse (`c987f174-9ed1-47a1-80b6-4c2b2949950b`), flagged as possibly relevant to the still-open empty members-tab bug (see the pr #838/#839 entry below), plus a separate explicit ask: &quot;one thing critical to check: it should never be possible to create a standalone competition. it always needs to be assigned to a clubhouse.&quot; all five items below were diagnosed via live db inspection (`pg_get_functiondef`, `information_schema.columns`, `pg_constraint`, and one direct rpc execution) and read-only code review — no migration, deploy, or fix applied yet, per the standing per-item-approval rule. each needs an explicit go-ahead before any write.
-
-- **standalone-competition invariant — mostly enforced, one live ui hole**: at the db layer this is solid — `leagues.circle_id`, `paddocks.circle_id`, and `player_boxes.circle_id` are all `not null` with no default, so no rpc (including a legacy 3-arg `create_league` overload with no circle concept at all, confirmed unreferenced from `src/`) can actually persist a circle-less competition; the insert fails outright. but [leaguescreen.jsx](src/screens/leaguescreen.jsx:825)&#x27;s &quot;initialize campaign&quot; league-creation wizard — reachable from three separate buttons (lines 1779, 1800, 1883), distinct from the newer circle-scoped `newcompetitionflow.jsx` — offers a **&quot;continue without clubhouse&quot;** button and tells clubhouse-less users to &quot;continue without linking.&quot; taking that path always fails with a raw, user-facing `not null` constraint-violation toast rather than either succeeding (it can&#x27;t) or failing gracefully. no standalone competition is ever created, but the dead-end ui path should be removed — frontend-only fix, no migration needed.
-- **`get_circle_feed` rpc broken**: references `gazette_entries.created_at`, a column that " style="--tab-color:#b23b3b" tabindex="0" data-stamp="AUDIT">
-        <div class="card-top"><span class="badge-mini k-audit">AUDIT</span></div>
-        <h3 class="card-title">Clubhouse RPC/schema bugs + standalone-competition UI gap</h3>
-        <p class="card-summary">Context : user pasted a raw production browser console log from loading a real Clubhouse ( c987f174-9ed1-47a1-80b6-4c2b2949950b ), flagged as possibly relevant to the…</p>
-        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">found via user-supplied console log, not yet fixed</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini k-audit">AUDIT</span></div>
-      <h2 class="drawer-title">Clubhouse RPC/schema bugs + standalone-competition UI gap</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Context : user pasted a raw production browser console log from loading a real Clubhouse ( c987f174-9ed1-47a1-80b6-4c2b2949950b ), flagged as possibly relevant to the…</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>AUDIT · found via user-supplied console log, not yet fixed</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user pasted a raw production browser console log from loading a real Clubhouse (<code>c987f174-9ed1-47a1-80b6-4c2b2949950b</code>), flagged as possibly relevant to the still-open empty Members-tab bug (see the PR #838/#839 entry below), plus a separate explicit ask: "one thing critical to check: it should never be possible to create a standalone competition. It always needs to be assigned to a clubhouse." All five items below were diagnosed via live DB inspection (<code>pg_get_functiondef</code>, <code>information_schema.columns</code>, <code>pg_constraint</code>, and one direct RPC execution) and read-only code review — no migration, deploy, or fix applied yet, per the standing per-item-approval rule. Each needs an explicit go-ahead before any write.</p>
-<ul>
-<li><strong>Standalone-competition invariant — mostly enforced, one live UI hole</strong>: at the DB layer this is solid — <code>leagues.circle_id</code>, <code>paddocks.circle_id</code>, and <code>player_boxes.circle_id</code> are all <code>NOT NULL</code> with no default, so no RPC (including a legacy 3-arg <code>create_league</code> overload with no circle concept at all, confirmed unreferenced from <code>src/</code>) can actually persist a circle-less competition; the insert fails outright. But <a href="src/screens/LeagueScreen.jsx:825" target="_blank" rel="noopener">LeagueScreen.jsx</a>'s "Initialize Campaign" league-creation wizard — reachable from three separate buttons (lines 1779, 1800, 1883), distinct from the newer circle-scoped <code>NewCompetitionFlow.jsx</code> — offers a <strong>"Continue without Clubhouse"</strong> button and tells Clubhouse-less users to "continue without linking." Taking that path always fails with a raw, user-facing <code>NOT NULL</code> constraint-violation toast rather than either succeeding (it can't) or failing gracefully. No standalone competition is ever created, but the dead-end UI path should be removed — frontend-only fix, no migration needed.</li>
-<li><strong><code>get_circle_feed</code> RPC broken</strong>: references <code>gazette_entries.created_at</code>, a column that has never existed (the table has always used <code>published_at</code> — confirmed since its original <code>02_draft_system.sql</code> definition). Broken since migration 188; surfaces as a 400 on every Clubhouse activity-feed load.</li>
-<li><strong><code>get_circle_meta_standings</code> RPC broken</strong>: <code>RETURNS TABLE(user_id uuid, ...)</code> collides with a bare <code>user_id</code> reference inside an internal <code>NOT EXISTS</code> membership-check subquery — ambiguous column, confirmed by directly executing the RPC against production (<code>42702</code> error). Breaks Clubhouse standings/meta display.</li>
-<li><strong>Empty Members tab — now root-caused</strong> (previously investigated in the PR #838 entry below, not conclusively fixed then): <code>circle_members.user_id</code> has an FK to <code>auth.users(id)</code>, unlike every other membership table in the codebase (<code>league_members</code>, <code>squads</code>, etc.), which correctly reference <code>public.users(id)</code>. PostgREST can't resolve the <code>users(username)</code> embed in <a href="src/hooks/useClubhouse.js:73" target="_blank" rel="noopener">useClubhouse.js:73</a> against the wrong-schema FK, so the query 400s with <code>PGRST200</code>.</li>
-<li><strong>Clubhouse Frontpage tab fully broken for every Clubhouse</strong>: <a href="src/hooks/useClubhouseFrontpage.js" target="_blank" rel="noopener">useClubhouseFrontpage.js</a> filters <code>frontpage_editions</code>/<code>frontpage_reactions</code>/<code>frontpage_comments</code> by a <code>circle_id</code> column that doesn't exist on any of those three tables — they only have <code>league_id</code> (the older, working <a href="src/hooks/useFrontpageEdition.js" target="_blank" rel="noopener">useFrontpageEdition.js</a> filters correctly). Looks like a half-finished piece of the Clubhouse redesign rather than a regression. Needs a product decision before a fix can be scoped: keep Frontpage league-scoped (Clubhouse view resolves via member leagues) or add a real <code>circle_id</code> column to all three tables.</li>
-<li><strong>Also noted, low priority</strong>: the console log shows Sentry error-report delivery silently blocked by CSP — <code>connect-src</code> doesn't whitelist the Sentry ingest domain, so production errors aren't reaching monitoring. One-line CSP fix whenever convenient (location not yet confirmed — likely <code>vercel.json</code> or <code>middleware.js</code>).</li>
-</ul></dd></div>
-      </dl></template>
-      </article>
-
       <article class="card" data-status="closed" data-priority="none" data-kind="audit" data-search="🔍 design audit — live verification pass (2026-08-23) — findings 15–21, not yet triaged 
 
 **context**: the 2026-08 audit (`docs/design/design_audit_2026-08.html`) had one acknowledged gap — &quot;signed-in screens were assessed from source rather than exercised live.&quot; the user asked how to give live access; local demo mode (`vite_auth_enabled=false` in `.env.local`, gitignored, session-local only — no credentials involved) turned out to already be a built feature flag ([src/context/authcontext.jsx](src/context/authcontext.jsx)), so no new setup was needed. with it enabled, the user said &quot;yes&quot; to running the live pass.

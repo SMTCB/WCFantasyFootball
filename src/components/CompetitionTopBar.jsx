@@ -26,7 +26,7 @@ const PILL_STYLE = {
   transition: 'color .12s, border-color .12s',
 };
 
-export function CompetitionTopBar({ competitions, pathname, onAdd }) {
+export function CompetitionTopBar({ competitions, pathname, onAdd, hasClubhouse = true }) {
   const navigate = useNavigate();
   const active = extractActiveCompId(pathname);
   const isClubhouseHome = /^\/clubhouse(\/[^/]+)?$/.test(pathname);
@@ -84,10 +84,11 @@ export function CompetitionTopBar({ competitions, pathname, onAdd }) {
         );
       })}
 
-      {/* + Add competition */}
+      {/* + Add competition — a competition must always belong to a Clubhouse, so
+          without one this redirects to Clubhouse creation instead of opening the form */}
       <button
-        onClick={onAdd}
-        title="Add competition"
+        onClick={hasClubhouse ? onAdd : () => navigate('/clubhouse?tab=find')}
+        title={hasClubhouse ? 'Add competition' : 'Create a Clubhouse first'}
         style={{
           marginLeft: 'auto',
           flexShrink: 0,
