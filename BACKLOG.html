@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>193</strong><span>closed</span></div>
+      <div class="total-pill"><strong>194</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (115)</span>
+    <span class="chip" data-filter-kind="done">Shipped (116)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">193</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">194</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">115</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">116</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,42 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">115</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">116</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 paddock pilot feedback batch — admin gate, calendar, nav, report parity (2026-08-26) — pr #846 
+
+**context**: the &quot;cascais 16 f1&quot; paddock creator tested the live pilot after the earlier f1 data migration and reported 7 issues, comparing against the original single-tenant reference platform (`smtcb/fantasyf1`). diagnosed and fixed all 7 on `claude/f1-paddock-pilot-fixes`, verified live against the real paddock (logged in as a real non-creator member, not demo mode) before merging.
+
+- **admin access denied to the paddock creator** — [f1adminscreen.jsx](src/screens/f1/f1adminscreen.jsx) was gating on the stale global `users.is_admin` flag (`false` for the creator&#x27;s account). now calls the existing `is_competition_admin(&#x27;paddock&#x27;, paddockid)` rpc (migration 243), which correctly recognizes the paddock&#x27;s `created_by` or the linked circle&#x27;s owner. no db change needed.
+- **bahrain gp &amp; saudi arabian gp shown as &quot;upcoming&quot; despite being cancelled** — both never existed in the reference platform&#x27;s calendar, confirming they were dropped upstream. confirmed zero dependent rows in `f1_bets_race`/`f1_scores` for rounds 4-5 across both f1 paddocks on the platform, dumped a full db backup, got explicit in-session &quot;yes, run it&quot; approval, then ran `delete from f1_races where season = 2026 and round_number in (4, 5);`. remaining rounds keep their original numbers (gap after round 3) rather than renumbering — no ui dependency on sequential round numbers found, and renumbering would touch 19 already-scored rows for no functional benefit.
+- **dutch gp shown as &quot;upcoming&quot; despite having already happened** — [f1homescreen.jsx](src/screens/f1/f1homescreen.jsx)&#x27;s `racestatusbadge` fell through to a generic &quot;upcoming&quot; for any race whose `race_date` had passed but wasn&#x27;t yet scored (`status` only flips to `finished` when an admin submits results). now shows &quot;results pending&quot; for that case.
+- **tab underline artifact stays lit on the home tab** — found in two places sharing the same root " style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">F1 Paddock pilot feedback batch — admin gate, calendar, nav, report parity</h3>
+        <p class="card-summary">Context : the "Cascais 16 F1" paddock creator tested the live pilot after the earlier F1 data migration and reported 7 issues, comparing against the original…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PR #846</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">F1 Paddock pilot feedback batch — admin gate, calendar, nav, report parity</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : the "Cascais 16 F1" paddock creator tested the live pilot after the earlier F1 data migration and reported 7 issues, comparing against the original…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #846</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: the "Cascais 16 F1" paddock creator tested the live pilot after the earlier F1 data migration and reported 7 issues, comparing against the original single-tenant reference platform (<code>SMTCB/FantasyF1</code>). Diagnosed and fixed all 7 on <code>claude/f1-paddock-pilot-fixes</code>, verified live against the real paddock (logged in as a real non-creator member, not demo mode) before merging.</p>
+<ul>
+<li><strong>Admin access denied to the paddock creator</strong> — <a href="src/screens/f1/F1AdminScreen.jsx" target="_blank" rel="noopener">F1AdminScreen.jsx</a> was gating on the stale global <code>users.is_admin</code> flag (<code>false</code> for the creator's account). Now calls the existing <code>is_competition_admin('paddock', paddockId)</code> RPC (migration 243), which correctly recognizes the paddock's <code>created_by</code> or the linked circle's owner. No DB change needed.</li>
+<li><strong>Bahrain GP &amp; Saudi Arabian GP shown as "UPCOMING" despite being cancelled</strong> — both never existed in the reference platform's calendar, confirming they were dropped upstream. Confirmed zero dependent rows in <code>f1_bets_race</code>/<code>f1_scores</code> for rounds 4-5 across both F1 paddocks on the platform, dumped a full DB backup, got explicit in-session "yes, run it" approval, then ran <code>DELETE FROM f1_races WHERE season = 2026 AND round_number IN (4, 5);</code>. Remaining rounds keep their original numbers (gap after round 3) rather than renumbering — no UI dependency on sequential round numbers found, and renumbering would touch 19 already-scored rows for no functional benefit.</li>
+<li><strong>Dutch GP shown as "UPCOMING" despite having already happened</strong> — <a href="src/screens/f1/F1HomeScreen.jsx" target="_blank" rel="noopener">F1HomeScreen.jsx</a>'s <code>RaceStatusBadge</code> fell through to a generic "UPCOMING" for any race whose <code>race_date</code> had passed but wasn't yet scored (<code>status</code> only flips to <code>finished</code> when an admin submits results). Now shows "RESULTS PENDING" for that case.</li>
+<li><strong>Tab underline artifact stays lit on the home tab</strong> — found in two places sharing the same root cause: the group's home path (e.g. <code>/f1/&lt;id&gt;</code>) is a genuine string-prefix of every sibling sub-route path, so a naive <code>pathname.startsWith(path)</code> check matched both the home tab and the actual active tab simultaneously. Fixed in <a href="src/components/CompetitionScreenNav.jsx" target="_blank" rel="noopener">CompetitionScreenNav.jsx</a> (desktop nav, the one originally reported) by excluding the group's home path from prefix-matching; the identical bug was then found independently in <a href="src/components/AppLayout.jsx" target="_blank" rel="noopener">AppLayout.jsx</a>'s mobile bottom nav during verification (confirmed via computed-style check: CAL and STD were both lit at once) and fixed the same way.</li>
+<li><strong>Report screen only showed the logged-in user's bets</strong> — <a href="src/screens/f1/F1ReportScreen.jsx" target="_blank" rel="noopener">F1ReportScreen.jsx</a> hardcoded <code>.eq('user_id', user.id)</code>, a pure client-side choice, not an RLS restriction (<code>f1_bets_race</code>/<code>f1_bets_year</code>/<code>f1_scores</code> all have public-read policies). Rewritten to fetch paddock membership via the existing <code>get_paddock_leaderboard</code> RPC and show every member's picks — Race Bets tab lists all members per finished race with the same P1/P2/P3/DNF/Team/Special breakdown; new Year Bets tab shows all members' season picks once <code>f1_year_results.is_bets_locked</code> is true, a placeholder before that. No new migration or RPC needed.</li>
+<li><strong>Standings didn't flag season points as preliminary</strong> — <a href="src/screens/f1/F1StandingsScreen.jsx" target="_blank" rel="noopener">F1StandingsScreen.jsx</a> now reads <code>f1_year_results.is_final</code> (already existed in schema, never read) and shows an amber "SEASON PTS ARE PRELIMINARY" banner while false.</li>
+<li><strong>Combined dashboard request</strong> — folded the existing top-5 leaderboard preview (previously only shown on a separate PADDOCKS tab) into the CALENDAR tab's render, between the hero card and the full race list — no new route/tab, matches the reference platform's single-screen Dashboard without inventing new navigation.</li>
+</ul>
+<p>Verified: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed), plus a full live-browser walkthrough logged in as a real non-creator paddock member — admin gate correctly denied, RESULTS PENDING badges correct, only one tab underline lit on both desktop and mobile nav, Report screen showing all 7 members' race and year bets, Standings preliminary banner rendering, combined dashboard rendering, and Bahrain/Saudi Arabia confirmed removed from the live calendar post-delete.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse rpc/schema bugs + standalone-competition ui gap (2026-08-26) — pr #844, migrations 194–196 + 256–259 
 
 **context**: user pasted a raw production browser console log from loading a real clubhouse (`c987f174-9ed1-47a1-80b6-4c2b2949950b`), flagged as possibly relevant to the still-open empty members-tab bug (see the pr #838/#839 entry below), plus a separate explicit ask: &quot;one thing critical to check: it should never be possible to create a standalone competition. it always needs to be assigned to a clubhouse.&quot; all five items were diagnosed via live db inspection (`pg_get_functiondef`, `information_schema.columns`, `pg_constraint`, and one direct rpc execution) and read-only code review, then fixed and applied to production in the same session with explicit per-item approval.
