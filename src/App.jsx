@@ -37,6 +37,7 @@ const RecapScreen           = lazy(() => import('./screens/RecapScreen'));
 const BracketScreen         = lazy(() => import('./screens/BracketScreen'));
 const DraftScreen           = lazy(() => import('./screens/DraftScreen'));
 const DraftRecoveryScreen   = lazy(() => import('./screens/DraftRecoveryScreen'));
+const WishlistDraftScreen   = lazy(() => import('./screens/WishlistDraftScreen'));
 const SettingsScreen        = lazy(() => import('./screens/SettingsScreen'));
 const WalletScreen          = lazy(() => import('./screens/WalletScreen'));
 const ChallengeScreen       = lazy(() => import('./screens/ChallengeScreen'));
@@ -124,6 +125,7 @@ function AppRoutes() {
                   <Route path="/league/:leagueId" element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId/draft" element={<ErrorBoundary screen="Draft"><DraftScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId/draft/recover" element={<ErrorBoundary screen="DraftRecovery"><DraftRecoveryScreen /></ErrorBoundary>} />
+                  <Route path="/league/:leagueId/wishlist" element={<ErrorBoundary screen="WishlistDraft"><WishlistDraftScreen /></ErrorBoundary>} />
                   <Route path="/live"             element={<ErrorBoundary screen="Live"><LiveScreen /></ErrorBoundary>} />
                   <Route path="/market"           element={<ErrorBoundary screen="Market"><MarketScreen /></ErrorBoundary>} />
                   <Route path="/recap"            element={<ErrorBoundary screen="Recap"><RecapScreen /></ErrorBoundary>} />

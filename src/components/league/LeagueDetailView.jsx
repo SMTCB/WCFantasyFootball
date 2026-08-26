@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { CompetitionResultsHeader } from '../competition/CompetitionResultsHeader';
 
 // Maps gazette entry_type (DB enum) to a filter category and display label.
-// Current enum values: draft_report, breaking_news, activity, auction_result, trade_result, p2p_challenge, p2p_result
+// Current enum values: draft_report, breaking_news, activity, auction_result, trade_result, p2p_challenge, p2p_result, wishlist_draft_report
 const ENTRY_META = {
   draft_report:     { filter: 'GAME',   badge: 'DRAFT',      color: 'var(--gold)' },
   breaking_news:    { filter: 'GAME',   badge: 'NEWS',       color: 'var(--danger)' },
@@ -19,6 +19,7 @@ const ENTRY_META = {
   classified:       { filter: 'GAME',   badge: 'CLASSIFIED', color: 'var(--gold)' },
   p2p_challenge:    { filter: 'TRADES', badge: 'CHALLENGE',  color: 'var(--gold)' },
   p2p_result:       { filter: 'TRADES', badge: 'P2P',        color: 'var(--gold)' },
+  wishlist_draft_report: { filter: 'GAME', badge: 'WISHLIST', color: 'var(--gold)' },
 };
 
 // Normalise a single gazette bullet to a display string.

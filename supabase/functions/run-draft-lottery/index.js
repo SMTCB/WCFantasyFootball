@@ -8,6 +8,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
+import { normalisePosition, shuffleOrder, runSnakeDraft } from '../_shared/snakeDraft.ts';
 
 const FN           = 'run-draft-lottery';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -237,67 +238,25 @@ async function runLottery(leagueId, phase = 'group') {
     // giving higher-ranked picks genuine priority over lower-ranked ones.
 
     // Assign random initial snake order (Fisher-Yates)
-    const snakeOrder = submissions.map(s => s.user_id);
-    for (let i = snakeOrder.length - 1; i > 0; i--) {
-      const roll = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
-      const j    = Math.floor(roll * (i + 1));
-      [snakeOrder[i], snakeOrder[j]] = [snakeOrder[j], snakeOrder[i]];
-    }
-
-    // One pointer per manager — position in their wish list, never resets
-    const pointers = {};
-    for (const sub of submissions) pointers[sub.user_id] = 0;
+    const snakeOrder = shuffleOrder(submissions.map(s => s.user_id));
 
     const submissionMap = {};
     for (const sub of submissions) submissionMap[sub.user_id] = sub.player_ids;
 
-    const maxRounds = Math.max(...submissions.map(s => s.player_ids.length), 0);
-
     // Count players skipped because an earlier manager in the snake order
     // already took them — i.e. genuine wishlist conflicts the lottery resolved.
-    // (contestedPlayers declared in the outer scope so the final return can see it.)
-
-    for (let round = 0; round < maxRounds; round++) {
-      const roundOrder = round % 2 === 0 ? [...snakeOrder] : [...snakeOrder].reverse();
-
-      for (const uid of roundOrder) {
-        const u = userState[uid];
-        if (u.allocated.length >= SQUAD_SIZE) continue;
-
-        const list = submissionMap[uid] || [];
-
-        // Walk forward from pointer: skip taken/invalid, take first valid pick
-        while (pointers[uid] < list.length) {
-          const pid = list[pointers[uid]];
-          pointers[uid]++;
-
-          if (taken.has(pid)) { contestedPlayers++; continue; }
-
-          const player = playerMap[pid];
-          if (!player) continue;
-
-          const pos    = normalisePosition(player.position);
-          const teamId = player.forza_team_id;
-          const clubCnt = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
-
-          if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
-          if (u.budgetUsed + player.price > budget)    continue;
-          if (teamId && CLUB_CAP < 99 && clubCnt >= CLUB_CAP) continue;
-
-          u.allocated.push(pid);
-          u.posCounts[pos]++;
-          if (teamId) u.clubCounts[teamId] = clubCnt + 1;
-          u.budgetUsed += player.price;
-          taken.add(pid);
-          break;
-        }
-      }
-
-      // Early exit: all squads full
-      if (Object.values(userState).every(u => u.allocated.length >= SQUAD_SIZE)) break;
-      // Early exit: all wish lists exhausted
-      if (Object.keys(pointers).every(uid => pointers[uid] >= (submissionMap[uid]?.length ?? 0))) break;
-    }
+    const { contestedPlayers: contested } = runSnakeDraft({
+      order:         snakeOrder,
+      submissionMap,
+      userState,
+      playerMap,
+      taken,
+      squadSize:     SQUAD_SIZE,
+      posCaps:       SQUAD_POS_CAPS,
+      budget,
+      clubCap:       CLUB_CAP,
+    });
+    contestedPlayers += contested;
 
     allocations = {};
     for (const [uid, u] of Object.entries(userState)) {
@@ -501,17 +460,7 @@ function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-// DB seed uses 'FW' not 'FWD' — normalise to match SQUAD_POS_CAPS keys
-function normalisePosition(pos) {
-  if (!pos) return 'MID';
-  const p = pos.toUpperCase().trim();
-  if (p === 'FW' || p === 'FWD') return 'FWD';
-  if (p === 'GK')  return 'GK';
-  if (p === 'DEF') return 'DEF';
-  if (p === 'MID') return 'MID';
-  return 'MID';
-}
+// normalisePosition now lives in ../_shared/snakeDraft.ts (imported above).
 
 function respond(status, body) {
   return new Response(JSON.stringify(body), {
