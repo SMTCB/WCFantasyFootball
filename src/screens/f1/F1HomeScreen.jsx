@@ -88,7 +88,6 @@ export default function F1HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [showSelector, setShowSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [section, setSection] = useState('calendar'); // 'calendar' | 'paddocks'
   const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_paddocks');
 
   const archivedPaddockCount = myPaddocks.filter(p => p.archived).length;
@@ -228,34 +227,7 @@ export default function F1HomeScreen() {
 
       <CheckeredStrip />
 
-      {/* CALENDAR | PADDOCKS section bar */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)', background: 'var(--elev)' }}>
-        {[['calendar', 'CALENDAR'], ['paddocks', 'PADDOCKS']].map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setSection(key)}
-            style={{
-              flex: 1,
-              padding: '11px 0',
-              background: 'none',
-              border: 'none',
-              borderBottom: section === key ? '2px solid var(--f1)' : '2px solid transparent',
-              cursor: 'pointer',
-              ...MONO,
-              fontSize: 'var(--fs-micro)',
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              color: section === key ? 'var(--f1)' : 'var(--mute)',
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── CALENDAR section ──────────────────────────────────────── */}
-      {section === 'calendar' && (
-        <div style={{ padding: '16px 16px 0' }}>
+      <div style={{ padding: '16px 16px 0' }}>
           {/* Next Race countdown — solid f1-red fill, the module's single highest-priority element */}
           {nextRace && nextRace.status !== 'finished' && (
             <div style={{ background: 'var(--f1)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
@@ -362,22 +334,11 @@ export default function F1HomeScreen() {
               );
             })}
           </div>
-        </div>
-      )}
 
-      {/* ── PADDOCKS section ──────────────────────────────────────── */}
-      {section === 'paddocks' && (
-        <div style={{ padding: '20px 16px' }}>
-
-          {/* My Picks shortcut */}
-          <button
-            onClick={() => navigate(`/f1/${paddockId}/picks`)}
-            style={{ display: 'block', width: '100%', marginBottom: 20, padding: '13px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', boxSizing: 'border-box' }}
-          >
-            MY PICKS →
-          </button>
-
-          {/* 2×2 card grid */}
+          {/* Shortcuts */}
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', margin: '20px 0 10px' }}>
+            Paddock Shortcuts
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
             {PADDOCK_CARDS.map(card => (
               <button
@@ -394,7 +355,6 @@ export default function F1HomeScreen() {
             ))}
           </div>
         </div>
-      )}
     </div>
   );
 }

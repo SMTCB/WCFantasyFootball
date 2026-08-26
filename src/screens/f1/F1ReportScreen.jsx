@@ -14,6 +14,24 @@ const YEAR_FIELD_KEYS = [
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 
+// Older scored rounds were written with a legacy key schema (podium_p1_pts, wrong_spot_pts as a
+// single lump sum, etc.) before the current per-position p1/p2/p3 schema. Map old → new shape so
+// the breakdown always renders, regardless of which pipeline scored a given round.
+function normalizeBreakdown(raw) {
+  if (!raw) return {};
+  if (raw.p1 !== undefined || raw.p2 !== undefined || raw.p3 !== undefined) return raw;
+  return {
+    p1: raw.podium_p1_pts ?? 0,
+    p2: raw.podium_p2_pts ?? 0,
+    p3: raw.podium_p3_pts ?? 0,
+    dnf: raw.dnf_pts ?? 0,
+    team: raw.team_pts ?? 0,
+    special: raw.special_pts ?? 0,
+    bonus: raw.all_correct_bonus ?? raw.podium_bonus_pts ?? 0,
+    wrongSpot: raw.wrong_spot_pts ?? 0,
+  };
+}
+
 export default function F1ReportScreen() {
   const { paddockId } = useParams();
   const { user } = useAuth();
@@ -164,7 +182,7 @@ export default function F1ReportScreen() {
                         {sortedMembers.map(member => {
                           const bet = betMap[`${member.user_id}_${race.round_number}`];
                           const score = scoreMap[`${member.user_id}_${race.round_number}`];
-                          const breakdown = score?.breakdown ?? {};
+                          const breakdown = normalizeBreakdown(score?.breakdown);
                           const isMe = member.user_id === user?.id;
 
                           return (
@@ -196,6 +214,12 @@ export default function F1ReportScreen() {
                                       </span>
                                     </div>
                                   ))}
+                                  {breakdown.wrongSpot > 0 && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 6, border: '1px solid rgba(184,114,14,0.2)' }}>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', flex: 1 }}>🎯 Podium (right driver, wrong spot)</span>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--gold)' }}>+{breakdown.wrongSpot}</span>
+                                    </div>
+                                  )}
                                   {breakdown.bonus > 0 && (
                                     <div style={{ padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 6, border: '1px solid rgba(184,114,14,0.2)', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
                                       ⭐ All Correct Bonus +{breakdown.bonus}
