@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>189</strong><span>closed</span></div>
+      <div class="total-pill"><strong>190</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (111)</span>
+    <span class="chip" data-filter-kind="done">Shipped (112)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">189</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">190</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">111</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">112</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,37 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">111</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">112</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ trophy cabinet crash + create competition/activity panel ux (2026-08-26) — prs #838, #839 
+
+**context**: user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. two other bugs (empty members tab) and three design-proposal asks (sidebar redundancy, sidebar/nav hierarchy redesign, draft-mode wishlist feature) from the same report are tracked separately below / still owed as write-ups.
+
+- **trophy cabinet crash (pr #838)**: clicking &quot;trophy cabinet&quot; in the sidebar crashed with &quot;trophycabinet crashed unexpectedly.&quot; root cause: `trophycabinetscreen.jsx` called `useclubhouse()` directly instead of the shared `useclubhousecontext()` that `applayout.jsx`/`clubhousescreen.jsx`/`challengescreen.jsx` all correctly use — this created a second, independent hook instance with its own fetch cycle. separately, `get_clubhouse_competitions` rpc returns `{error: &#x27;not_member&#x27;}` **in-band** (a 200 ok, not a thrown error) when its internal membership check fails, unlike `get_circle_feed`/`get_circle_meta_standings` which both `return;` an empty set on the same check — that malformed shape has no `football`/`f1`/`tennis` keys, so `trophycabinetscreen.jsx`&#x27;s unguarded `competitions.football.length` threw exactly the reported `typeerror`. fixed by switching to `useclubhousecontext()`, adding optional chaining (`competitions.football?.length ?? 0`) as defense-in-depth, and hardening `useclubhouse.js`&#x27;s `fetchcircledata` to treat the `not_member` sentinel the same as a failed request (skip the `setcompetitions` call) across all 5 of its parallel queries, with `console.error` added on any query failure for future diagnosis. ci fully green (build/lint/security/unit/e2e/android/ios/vercel) before merge.
+- **empty members tab — investigated, not conclusively fixed**: a real wc-pilot league&#x27;s clubhouse showed &quot;0 members&quot; despite 11 real members. db/rls layer confirmed entirely correct (`circle_members` has the rows, `is_ci" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Trophy Cabinet crash + Create Competition/Activity panel UX</h3>
+        <p class="card-summary">Context : user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. Two other bugs (empty Members…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">PRs #838, #839</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Trophy Cabinet crash + Create Competition/Activity panel UX</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. Two other bugs (empty Members…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #838, #839</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user reported 4 issues in one message with screenshots; this entry covers the two bugs/features addressed with code this session. Two other bugs (empty Members tab) and three design-proposal asks (sidebar redundancy, sidebar/nav hierarchy redesign, draft-mode wishlist feature) from the same report are tracked separately below / still owed as write-ups.</p>
+<ul>
+<li><strong>Trophy Cabinet crash (PR #838)</strong>: clicking "Trophy Cabinet" in the sidebar crashed with "TrophyCabinet crashed unexpectedly." Root cause: <code>TrophyCabinetScreen.jsx</code> called <code>useClubhouse()</code> directly instead of the shared <code>useClubhouseContext()</code> that <code>AppLayout.jsx</code>/<code>ClubhouseScreen.jsx</code>/<code>ChallengeScreen.jsx</code> all correctly use — this created a second, independent hook instance with its own fetch cycle. Separately, <code>get_clubhouse_competitions</code> RPC returns <code>{error: 'NOT_MEMBER'}</code> <strong>in-band</strong> (a 200 OK, not a thrown error) when its internal membership check fails, unlike <code>get_circle_feed</code>/<code>get_circle_meta_standings</code> which both <code>RETURN;</code> an empty set on the same check — that malformed shape has no <code>football</code>/<code>f1</code>/<code>tennis</code> keys, so <code>TrophyCabinetScreen.jsx</code>'s unguarded <code>competitions.football.length</code> threw exactly the reported <code>TypeError</code>. Fixed by switching to <code>useClubhouseContext()</code>, adding optional chaining (<code>competitions.football?.length ?? 0</code>) as defense-in-depth, and hardening <code>useClubhouse.js</code>'s <code>fetchCircleData</code> to treat the <code>NOT_MEMBER</code> sentinel the same as a failed request (skip the <code>setCompetitions</code> call) across all 5 of its parallel queries, with <code>console.error</code> added on any query failure for future diagnosis. CI fully green (Build/Lint/Security/Unit/E2E/Android/iOS/Vercel) before merge.</li>
+<li><strong>Empty Members tab — investigated, not conclusively fixed</strong>: a real WC-pilot league's Clubhouse showed "0 MEMBERS" despite 11 real members. DB/RLS layer confirmed entirely correct (<code>circle_members</code> has the rows, <code>is_circle_member()</code> RLS policy verified correct for the actual account, <code>users</code> table read policy is <code>USING (true)</code>) — could not reproduce the exact client-side trigger without live session/network logs. The <code>useClubhouse.js</code> hardening above is a plausible mitigation (if the members query itself ever raced with a <code>NOT_MEMBER</code>-shaped competitions response corrupting state) but is <strong>not a confirmed root cause fix</strong> — if it recurs, check the browser console (now logs on any of the 5 <code>fetchCircleData</code> queries failing).</li>
+<li><strong>Create Competition sport info popover (PR #839)</strong>: added an "i" button next to the Sport selector (Football/Tennis/F1) on <code>NewCompetitionFlow.jsx</code> showing an overview, Classic-vs-Draft mode descriptions (football only), and an H2H note per sport. Verified live in dev server (demo mode) — popover renders correctly, no new console errors, closed without creating data.</li>
+<li><strong>Collapsible League Activity panel (PR #839)</strong>: the right-hand "League Activity" rail on <code>LeagueDetailView.jsx</code>'s Leaderboard screen can run very long — added a toggle collapsing it to a slim 40px labeled strip, one click to re-expand. Lint/build clean; <strong>not exercised against real league data</strong> — no safe way to reach a populated Leaderboard screen without writing test data into the shared pilot DB, per the Pilot Safeguards. Should be spot-checked on a real league.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ design audit b1/b2 — white-alpha token sweep + type ramp (2026-08-23) — no pr yet (pending) 
 
 **context**: the two remaining p1 actions from the 2026-08 design/ux audit, deprioritized after the p0 pass (see the &quot;still open&quot; note on the a1–a3 entry below). full spec, rationale, and finding ids cleared are in `docs/design/design_audit_2026-08.html` (act cards b1/b2) — this entry is deliberately a pointer, not a duplicate. p2-tier audit items, b3&#x27;s remaining raw-button sweep, and b4&#x27;s `warn`→`error` lint-severity flip are explicitly deferred to a later session.
