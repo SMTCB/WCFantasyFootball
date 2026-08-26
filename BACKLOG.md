@@ -241,6 +241,19 @@ All 7 real WC-pilot leagues had been sharing one clubhouse (circle `b379c63e-809
 - Verified: each of the 7 leagues now has a distinct `circle_id` whose `circle_members` count exactly matches its `league_members` count; 0 leagues reference the old shared circle; exactly 7 owners exist across the 7 new circles (1 each, correctly the commissioner).
 - Old shared circle left in place, orphaned but not deleted — reversible, consistent with Pilot Safeguards' no-DROP-without-explicit-confirmation rule.
 - User-approved this session via explicit "Yes, proceed."
+- **Follow-up 2026-08-26 (DATA-4, below): the orphaned circle was still reachable/navigable and its members list was never cleared, so it kept leaking all 7 leagues' names to all ~30 original members. It has now been deleted.**
+
+---
+
+## ✅ DATA-4 — delete orphaned pilot clubhouse + backfill missing chat channels (2026-08-26) — live data fix, no PR
+
+User reported (via the app UI) still seeing all 7 pilot leagues bundled under one clubhouse and being able to see "Miami WC Fantasy Testers" despite not being a member — turned out they were still looking at the old orphaned circle from `DATA-3` (`b379c63e-809f-4dc7-9de1-0fff52f989b8`), which was left in place rather than deleted. Investigating this also surfaced a second bug: none of the 7 new split clubhouses from `DATA-3` had a default chat channel, because that migration inserted directly into `circles` rather than going through `create_circle()` (the only place that auto-creates the "General" `clubhouse_channels` row) — so chat was stuck on "SELECT A CHANNEL" with no input box on every one of the 7 new clubhouses, not just the orphaned one.
+
+- Confirmed via live query that `leagues.circle_id` for all 7 leagues already correctly pointed at the new (not orphaned) circles, and that no other table (`p2p_challenges`, `direct_messages`, `trophy_ledger`, `clubhouse_notifications`, `paddocks`, `player_boxes`) held any rows against the orphaned circle — a clean, contained deletion.
+- Backed up the affected rows first (`backups/pre_stale_clubhouse_cleanup_20260826_102247.json` — full `circles`/`circle_leagues`/`circle_members` rows for the orphaned circle) since `supabase db dump --linked` doesn't support per-table filtering on this CLI version; fell back to the documented SELECT-to-JSON method.
+- `DELETE FROM circles WHERE id = 'b379c63e-809f-4dc7-9de1-0fff52f989b8'` — cascaded cleanly to 7 `circle_leagues` rows and 40 `circle_members` rows (verified all three at 0 afterward). The URL from the user's screenshot (`/clubhouse/b379c63e-...`) is now dead.
+- Inserted a `General` / `is_default=true` row into `clubhouse_channels` for each of the 7 `DATA-3` clubhouses, `created_by` set to that clubhouse's actual owner (matching what `create_circle()` would have done) — verified all 7 now have exactly one default channel and chat works.
+- User-approved this session via explicit "yes. go ahead."
 
 ---
 

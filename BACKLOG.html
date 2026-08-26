@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-08-23. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-08-26. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>187</strong><span>closed</span></div>
+      <div class="total-pill"><strong>188</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (109)</span>
+    <span class="chip" data-filter-kind="done">Shipped (110)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">187</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">188</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">109</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">110</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,7 +1179,7 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">109</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">110</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ design audit b1/b2 — white-alpha token sweep + type ramp (2026-08-23) — no pr yet (pending) 
 
@@ -1352,6 +1352,7 @@ all 7 real wc-pilot leagues had been sharing one clubhouse (circle `b379c63e-809
 - verified: each of the 7 leagues now has a distinct `circle_id` whose `circle_members` count exactly matches its `league_members` count; 0 leagues reference the old shared circle; exactly 7 owners exist across the 7 new circles (1 each, correctly the commissioner).
 - old shared circle left in place, orphaned but not deleted — reversible, consistent with pilot safeguards&#x27; no-drop-without-explicit-confirmation rule.
 - user-approved this session via explicit &quot;yes, proceed.&quot;
+- **follow-up 2026-08-26 (data-4, below): the orphaned circle was still reachable/navigable and its members list was never cleared, so it kept leaking all 7 leagues&#x27; names to all ~30 original members. it has now been deleted.**
 
 ---
 
@@ -1376,6 +1377,39 @@ all 7 real wc-pilot leagues had been sharing one clubhouse (circle `b379c63e-809
 <li>Verified: each of the 7 leagues now has a distinct <code>circle_id</code> whose <code>circle_members</code> count exactly matches its <code>league_members</code> count; 0 leagues reference the old shared circle; exactly 7 owners exist across the 7 new circles (1 each, correctly the commissioner).</li>
 <li>Old shared circle left in place, orphaned but not deleted — reversible, consistent with Pilot Safeguards' no-DROP-without-explicit-confirmation rule.</li>
 <li>User-approved this session via explicit "Yes, proceed."</li>
+<li><strong>Follow-up 2026-08-26 (DATA-4, below): the orphaned circle was still reachable/navigable and its members list was never cleared, so it kept leaking all 7 leagues' names to all ~30 original members. It has now been deleted.</strong></li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ data-4 — delete orphaned pilot clubhouse + backfill missing chat channels (2026-08-26) — live data fix, no pr 
+
+user reported (via the app ui) still seeing all 7 pilot leagues bundled under one clubhouse and being able to see &quot;miami wc fantasy testers&quot; despite not being a member — turned out they were still looking at the old orphaned circle from `data-3` (`b379c63e-809f-4dc7-9de1-0fff52f989b8`), which was left in place rather than deleted. investigating this also surfaced a second bug: none of the 7 new split clubhouses from `data-3` had a default chat channel, because that migration inserted directly into `circles` rather than going through `create_circle()` (the only place that auto-creates the &quot;general&quot; `clubhouse_channels` row) — so chat was stuck on &quot;select a channel&quot; with no input box on every one of the 7 new clubhouses, not just the orphaned one.
+
+- confirmed via live query that `leagues.circle_id` for all 7 leagues already correctly pointed at the new (not orphaned) circles, and that no other table (`p2p_challenges`, `direct_messages`, `trophy_ledger`, `clubhouse_notifications`, `paddocks`, `player_boxes`) held any rows against the orphaned circle — a clean, contained deletion.
+- backed up the affected rows first (`backups/pre_stale_clubhouse_cleanup_20260826_102247.json` — full `circles`/`circle_leagues`/`circle_members` rows for the orphaned circle) since `supabase db dump --linked` doesn&#x27;t support per-table filtering on this cli version; fell back to the documented select-to-json method.
+- `delete from circles where id = &#x27;b379c63e-809f-4dc7-9de1-0fff52f989b8&#x27;` — cascaded cleanly to 7 `circle_leagues` rows and 40 `circle_members` rows (verified all three at 0 afterward). the url from the user&#x27;s screenshot (`/clubhouse/b379c63e-...`) is now dead.
+- inserted a `general` / `is_default=true` row into `clubhouse_channels` for each of the 7 `data-3` clubhouses, `created_by` set to that clubhouse&#x27;s actual owner (matching what `create_circle()` would have done" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">DATA-4 — delete orphaned pilot clubhouse + backfill missing chat channels</h3>
+        <p class="card-summary">User reported (via the app UI) still seeing all 7 pilot leagues bundled under one clubhouse and being able to see "Miami WC Fantasy Testers" despite not being a member —…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-26</span><span class="foot-refs">live data fix, no PR</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">DATA-4 — delete orphaned pilot clubhouse + backfill missing chat channels</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User reported (via the app UI) still seeing all 7 pilot leagues bundled under one clubhouse and being able to see "Miami WC Fantasy Testers" despite not being a member —…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · live data fix, no PR</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-26</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>User reported (via the app UI) still seeing all 7 pilot leagues bundled under one clubhouse and being able to see "Miami WC Fantasy Testers" despite not being a member — turned out they were still looking at the old orphaned circle from <code>DATA-3</code> (<code>b379c63e-809f-4dc7-9de1-0fff52f989b8</code>), which was left in place rather than deleted. Investigating this also surfaced a second bug: none of the 7 new split clubhouses from <code>DATA-3</code> had a default chat channel, because that migration inserted directly into <code>circles</code> rather than going through <code>create_circle()</code> (the only place that auto-creates the "General" <code>clubhouse_channels</code> row) — so chat was stuck on "SELECT A CHANNEL" with no input box on every one of the 7 new clubhouses, not just the orphaned one.</p>
+<ul>
+<li>Confirmed via live query that <code>leagues.circle_id</code> for all 7 leagues already correctly pointed at the new (not orphaned) circles, and that no other table (<code>p2p_challenges</code>, <code>direct_messages</code>, <code>trophy_ledger</code>, <code>clubhouse_notifications</code>, <code>paddocks</code>, <code>player_boxes</code>) held any rows against the orphaned circle — a clean, contained deletion.</li>
+<li>Backed up the affected rows first (<code>backups/pre_stale_clubhouse_cleanup_20260826_102247.json</code> — full <code>circles</code>/<code>circle_leagues</code>/<code>circle_members</code> rows for the orphaned circle) since <code>supabase db dump --linked</code> doesn't support per-table filtering on this CLI version; fell back to the documented SELECT-to-JSON method.</li>
+<li><code>DELETE FROM circles WHERE id = 'b379c63e-809f-4dc7-9de1-0fff52f989b8'</code> — cascaded cleanly to 7 <code>circle_leagues</code> rows and 40 <code>circle_members</code> rows (verified all three at 0 afterward). The URL from the user's screenshot (<code>/clubhouse/b379c63e-...</code>) is now dead.</li>
+<li>Inserted a <code>General</code> / <code>is_default=true</code> row into <code>clubhouse_channels</code> for each of the 7 <code>DATA-3</code> clubhouses, <code>created_by</code> set to that clubhouse's actual owner (matching what <code>create_circle()</code> would have done) — verified all 7 now have exactly one default channel and chat works.</li>
+<li>User-approved this session via explicit "yes. go ahead."</li>
 </ul>
 <hr></dd></div>
       </dl></template>
