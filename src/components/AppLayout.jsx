@@ -78,7 +78,6 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  if (circles.length <= 1) return null;
   const activeCircle = circles.find(c => c.id === activeCircleId);
 
   return (
@@ -266,7 +265,8 @@ export default function AppLayout({ children }) {
           <BrandMark theme="dark" compact />
         </div>
 
-        {/* Multi-Clubhouse switcher — only renders for users in >1 Clubhouse */}
+        {/* Clubhouse switcher — always visible, even with a single Clubhouse */}
+        <NavSectionLabel>Your Clubhouses</NavSectionLabel>
         <ClubhouseSwitcher
           circles={myCircles}
           activeCircleId={activeCircleId}
@@ -277,10 +277,10 @@ export default function AppLayout({ children }) {
         {/* Nav — clubhouse-centric, never morphs */}
         <div style={{ padding: '8px 6px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0, scrollbarWidth: 'none' }}>
 
-          {/* CLUBHOUSE */}
-          <NavSectionLabel>Clubhouse</NavSectionLabel>
+          {/* THIS CLUBHOUSE — all items here are scoped to the active clubhouse above */}
+          <NavSectionLabel>This Clubhouse</NavSectionLabel>
           <NavItem
-            label="Clubhouse"
+            label="Frontpage"
             path="/clubhouse"
             active={location.pathname.startsWith('/clubhouse') && !location.search.includes('tab=frontrow')}
             dotColor="var(--on-shell-dim)"
@@ -293,9 +293,6 @@ export default function AppLayout({ children }) {
             dotColor="var(--gold)"
             sub
           />
-
-          {/* COMMUNITY */}
-          <NavSectionLabel>Community</NavSectionLabel>
           <NavItem
             label="Trophy Cabinet"
             path="/trophy"
@@ -310,6 +307,9 @@ export default function AppLayout({ children }) {
             tag="Beta"
             tagStyle={{ background: 'rgba(184,114,14,.15)', color: 'var(--on-shell-gold)' }}
           />
+
+          {/* ACCOUNT — the one item here that is NOT clubhouse-scoped */}
+          <NavSectionLabel>Account</NavSectionLabel>
           <NavItem
             label="Settings"
             path="/settings"
