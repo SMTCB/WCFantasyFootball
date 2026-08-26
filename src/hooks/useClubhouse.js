@@ -79,8 +79,20 @@ export function useClubhouse() {
         .limit(50),
       supabase.rpc('get_circle_meta_standings', { p_circle_id: circleId }),
     ]);
-    if (!compRes.error) setCompetitions(compRes.data ?? { football: [], f1: [], tennis: [] });
-    if (!feedRes.error) setFeed(feedRes.data ?? []);
+    // get_clubhouse_competitions returns { error: 'NOT_MEMBER' } in-band (200 OK) when the
+    // membership check fails server-side — that shape lacks football/f1/tennis keys and will
+    // crash any consumer that reads competitions.<sport>.length without a fallback. Treat it
+    // the same as a failed request rather than let it corrupt state.
+    if (!compRes.error && !compRes.data?.error) {
+      setCompetitions(compRes.data ?? { football: [], f1: [], tennis: [] });
+    } else if (compRes.error) {
+      console.error('fetchCircleData: get_clubhouse_competitions failed', compRes.error);
+    }
+    if (!feedRes.error) {
+      setFeed(feedRes.data ?? []);
+    } else {
+      console.error('fetchCircleData: get_circle_feed failed', feedRes.error);
+    }
     if (!membersRes.error) {
       setMembers(
         (membersRes.data ?? []).map(row => ({
@@ -90,6 +102,8 @@ export function useClubhouse() {
           joined_at: row.joined_at,
         }))
       );
+    } else {
+      console.error('fetchCircleData: circle_members fetch failed', membersRes.error);
     }
     if (!notifRes.error) setNotifications(notifRes.data ?? []);
     if (!metaRes.error) setMetaStandings(metaRes.data ?? []);
