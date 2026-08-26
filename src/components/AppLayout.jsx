@@ -220,6 +220,11 @@ export default function AppLayout({ children }) {
 
   // Mobile bottom bar is the active competition's screens; sidebar never changes
   const MOBILE_NAV = sport === 'f1' ? buildF1Nav(competitionId) : sport === 'tennis' ? TENNIS_NAV : FOOTBALL_NAV;
+  // The group's own "home" tab path is a real prefix of every sibling sub-route path
+  // (e.g. f1-calendar's `/f1/<id>` is a prefix of `/f1/<id>/standings`) — exclude it from
+  // the startsWith prefix-match below so only one tab lights up at a time.
+  const mobileNavHomePath = sport === 'f1' ? (competitionId ? `/f1/${competitionId}` : '/f1')
+    : sport === 'tennis' ? '/tennis' : null;
 
   const [username, setUsername] = useState(
     user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? null
@@ -423,7 +428,7 @@ export default function AppLayout({ children }) {
         <div className="flex items-stretch h-16">
           {MOBILE_NAV.map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
             const isActive = location.pathname === path ||
-              (path !== '/' && location.pathname.startsWith(path));
+              (path !== '/' && path !== mobileNavHomePath && location.pathname.startsWith(path + '/'));
             const activeColor = isLive ? 'var(--on-shell-danger)' : 'var(--on-shell-accent)';
             const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
             const alreadyOnPaddockMobile = key === 'f1-calendar' && /^\/f1\/[^/]+/.test(location.pathname);

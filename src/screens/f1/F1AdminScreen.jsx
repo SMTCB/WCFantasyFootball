@@ -6,7 +6,7 @@ import { DRIVERS, TEAMS } from '../../lib/f1/f1-data';
 import { fetchRaceSession, fetchSessionResult } from '../../lib/f1/openf1';
 
 export default function F1AdminScreen() {
-  useParams();
+  const { paddockId } = useParams();
   const { user } = useAuth();
 
   const [isAdmin, setIsAdmin] = useState(false);
@@ -29,9 +29,9 @@ export default function F1AdminScreen() {
   const [fetchingOpenF1, setFetchingOpenF1] = useState(false);
 
   useEffect(() => {
-    if (!user?.id) return;
-    supabase.from('users').select('is_admin').eq('id', user.id).maybeSingle()
-      .then(({ data }) => setIsAdmin(data?.is_admin ?? false));
+    if (!user?.id || !paddockId) return;
+    supabase.rpc('is_competition_admin', { p_competition_type: 'paddock', p_competition_id: paddockId })
+      .then(({ data }) => setIsAdmin(data ?? false));
     supabase.from('f1_races').select('*').eq('season', 2026).order('round_number')
       .then(({ data }) => {
         setRaces(data ?? []);
@@ -40,7 +40,7 @@ export default function F1AdminScreen() {
       });
     supabase.from('f1_year_results').select('*').eq('season', 2026).maybeSingle()
       .then(({ data }) => { setYearResults(data); if (data) setYearFields(data); });
-  }, [user?.id]);
+  }, [user?.id, paddockId]);
 
   useEffect(() => {
     if (!selectedId) return;

@@ -12,12 +12,15 @@ export default function F1StandingsScreen() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('total'); // total | race | year
+  const [yearResults, setYearResults] = useState(null);
 
   const paddock = myPaddocks.find(p => p.paddock_id === paddockId);
 
   useEffect(() => {
     supabase.rpc('get_paddock_leaderboard', { p_paddock_id: paddockId })
       .then(({ data }) => { setRows(data ?? []); setLoading(false); });
+    supabase.from('f1_year_results').select('is_final').eq('season', 2026).maybeSingle()
+      .then(({ data }) => setYearResults(data));
   }, [paddockId]);
 
   const sorted = [...rows].sort((a, b) => {
@@ -39,6 +42,12 @@ export default function F1StandingsScreen() {
       {paddock?.archived && (
         <div style={{ padding: '8px 16px', background: 'var(--shell-fill)', borderBottom: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)' }}>
           ARCHIVED — this paddock is inactive.
+        </div>
+      )}
+
+      {!yearResults?.is_final && (
+        <div style={{ padding: '8px 16px', background: 'rgba(217,119,6,0.1)', borderBottom: '1px solid rgba(217,119,6,0.25)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--gold)' }}>
+          ⚠ SEASON PTS ARE PRELIMINARY — not final until season results are confirmed
         </div>
       )}
 
