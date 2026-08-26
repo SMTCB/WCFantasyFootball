@@ -18,6 +18,71 @@ const FORMATS = [
   { value: 'draft',       label: 'Draft' },
 ];
 
+const SPORT_INFO = {
+  football: {
+    overview: 'Build a squad of real Premier League / World Cup players from the tournament you pick below. Your squad scores points on their real match performances each gameweek.',
+    modes: [
+      { label: 'Classic', text: 'No exclusivity — every manager can own the same player. Race for the highest season-long points total.' },
+      { label: 'Draft',   text: 'Each real player can belong to only one manager in the league. Managers hold a live draft to claim exclusive rights before the window opens.' },
+    ],
+    extra: 'Head-to-Head adds weekly win/draw/loss matchups on top of whichever format you pick.',
+  },
+  tennis: {
+    overview: 'Pick a box of real ATP/WTA players for a tournament. Your box scores points on how far each player goes in the draw.',
+    modes: [],
+    extra: null,
+  },
+  f1: {
+    overview: 'Pick drivers and constructors for a season of race weekends (a "Paddock"). You score points on real qualifying and race results.',
+    modes: [],
+    extra: null,
+  },
+};
+
+function SportInfoPopover({ sport }) {
+  const [open, setOpen] = useState(false);
+  const info = SPORT_INFO[sport];
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex' }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-label={`About ${sport}`}
+        style={{
+          width: 16, height: 16, borderRadius: '50%', border: '1px solid var(--mute)',
+          background: 'transparent', color: 'var(--mute)', fontSize: 'var(--fs-micro)', lineHeight: '14px',
+          cursor: 'pointer', padding: 0, fontFamily: 'Georgia, serif', fontStyle: 'italic',
+        }}
+      >i</button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 1010 }} />
+          <div style={{
+            position: 'absolute', top: 20, left: 0, zIndex: 1011, width: 260,
+            background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8,
+            padding: 12, boxShadow: '0 12px 28px -8px rgba(0,0,0,0.5)',
+          }}>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4, marginBottom: info.modes.length ? 8 : 0 }}>
+              {info.overview}
+            </div>
+            {info.modes.map(m => (
+              <div key={m.label} style={{ marginTop: 8 }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--accent)', marginBottom: 2 }}>{m.label.toUpperCase()}</div>
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.4 }}>{m.text}</div>
+              </div>
+            ))}
+            {info.extra && (
+              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.4, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--rule)' }}>
+                {info.extra}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </span>
+  );
+}
+
 // Avoids importing useAuth or useClubhouseContext (both imported by AppLayout — TDZ guard).
 // circleId, clubhouseName, onCreated, onClose come in as props from AppLayout.
 export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated, onClose }) {
@@ -184,7 +249,10 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         {clubhouseName ? `Adds to ${clubhouseName} — every member gets access` : 'Every member of this Clubhouse gets access'}
       </div>
 
-      <div style={LABEL_STYLE}>Sport</div>
+      <div style={{ ...LABEL_STYLE, display: 'flex', alignItems: 'center', gap: 6 }}>
+        Sport
+        <SportInfoPopover sport={sport} />
+      </div>
       <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
         {SPORTS.map(({ sport: s, label, icon }) => (
           <button key={s} onClick={() => setSport(s)} style={SPORT_TILE(s === sport)}>
