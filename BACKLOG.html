@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>197</strong><span>closed</span></div>
+      <div class="total-pill"><strong>198</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (119)</span>
+    <span class="chip" data-filter-kind="done">Shipped (120)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">197</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">198</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">119</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">120</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,41 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">119</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">120</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ phase a ui polish pass — shared rank badge, notification bell, header/scroll fixes + test_qa_manager live-verification infra (2026-08-27) — pr #854 
+
+**context**: a cross-sport ui-polish pass (phase a of a larger multi-part request the user sequenced as &quot;ui polish first, then testing/revision&quot;) addressing 8 chrome/ux inconsistencies across football, f1, and the clubhouse shell: an uncollapsible league activity feed, three divergent rank/podium treatments, a &quot;very mono-color&quot; football league screen, f1&#x27;s next-race row using only a left-accent border instead of a full highlight, misaligned clubhouse/league headers, two duplicated notification-bell implementations, a scroll-position bug on clubhouse switch, and a duplicated &quot;+ invite&quot; button at league level. ahead of merging, also built a reusable `test_qa_manager` passwordless qa account (created via the supabase admin api + a server-side magic-link exchange — no password ever set, verified against auth rules) and joined it into two real pilot circles (&quot;mundial do eder&quot; football league, &quot;cascais 16 f1&quot; paddock) plus a newly-created `test_wimbledon_box` tennis competition inside `ch_test_tennis`, then used that session in the browser pane to live-verify all 8 tasks against real, authenticated production data — a step up from the code-inspection-only verification some recent clubhouse-scoped entries had to settle for.
+
+- **per-entry activity feed collapse/expand** — [leaguedetailview.jsx](src/components/league/leaguedetailview.jsx)&#x27;s league activity feed piled up one full card per gameweek with no way to collapse it, unusable across a 34-gw season. added per-entry `expandedids` state (default collapsed) with a `+`/`−` toggle on both the desktop headline row and a new mobile equivalent (mobile previously never rendered bullets at all), applied uniformly across every `entry_type`. confirmed live: clicking a headline flips the glyph and reveals its bullet content.
+- **shared `competitionrankbadge` component** — replaced " style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Phase A UI Polish Pass — shared rank badge, notification bell, header/scroll fixes + TEST_QA_Manager live-verification infra</h3>
+        <p class="card-summary">Context : a cross-sport UI-polish pass (Phase A of a larger multi-part request the user sequenced as "UI polish first, then testing/revision") addressing 8 chrome/UX…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-27</span><span class="foot-refs">PR #854</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Phase A UI Polish Pass — shared rank badge, notification bell, header/scroll fixes + TEST_QA_Manager live-verification infra</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : a cross-sport UI-polish pass (Phase A of a larger multi-part request the user sequenced as "UI polish first, then testing/revision") addressing 8 chrome/UX…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #854</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-27</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: a cross-sport UI-polish pass (Phase A of a larger multi-part request the user sequenced as "UI polish first, then testing/revision") addressing 8 chrome/UX inconsistencies across football, F1, and the Clubhouse shell: an uncollapsible League Activity feed, three divergent rank/podium treatments, a "very mono-color" football League screen, F1's next-race row using only a left-accent border instead of a full highlight, misaligned Clubhouse/League headers, two duplicated notification-bell implementations, a scroll-position bug on Clubhouse switch, and a duplicated "+ INVITE" button at League level. Ahead of merging, also built a reusable <code>TEST_QA_Manager</code> passwordless QA account (created via the Supabase Admin API + a server-side magic-link exchange — no password ever set, verified against auth rules) and joined it into two real pilot circles ("Mundial do Eder" football league, "Cascais 16 F1" paddock) plus a newly-created <code>TEST_Wimbledon_Box</code> tennis competition inside <code>CH_TEST_TENNIS</code>, then used that session in the Browser pane to live-verify all 8 tasks against real, authenticated production data — a step up from the code-inspection-only verification some recent Clubhouse-scoped entries had to settle for.</p>
+<ul>
+<li><strong>Per-entry Activity feed collapse/expand</strong> — <a href="src/components/league/LeagueDetailView.jsx" target="_blank" rel="noopener">LeagueDetailView.jsx</a>'s League Activity feed piled up one full card per Gameweek with no way to collapse it, unusable across a 34-GW season. Added per-entry <code>expandedIds</code> state (default collapsed) with a <code>+</code>/<code>−</code> toggle on both the desktop headline row and a new mobile equivalent (mobile previously never rendered bullets at all), applied uniformly across every <code>entry_type</code>. Confirmed live: clicking a headline flips the glyph and reveals its bullet content.</li>
+<li><strong>Shared <code>CompetitionRankBadge</code> component</strong> — replaced 3 inconsistent rank treatments (football's colored numeral boxes, F1's bare medal emoji, <code>CompetitionResultsHeader</code>'s bare emoji) with one new <code>src/components/CompetitionRankBadge.jsx</code>: ranks 1–3 always get fixed gold/silver/bronze coloring, ranks 4+ use the passed-in sport accent color, collapsing the old <code>useMedals</code> boolean prop entirely. Swapped into <a href="src/components/league/LeagueDetailView.jsx" target="_blank" rel="noopener">LeagueDetailView.jsx</a>'s podium, <a href="src/screens/f1/F1HomeScreen.jsx" target="_blank" rel="noopener">F1HomeScreen.jsx</a>'s "Top of the Paddock" list, and <code>CompetitionResultsHeader.jsx</code>'s mobile/desktop rank column. Confirmed via source inspection at all 3 call sites plus a live tennis-leaderboard load (post-<code>useMedals</code>-removal) with no crashes.</li>
+<li><strong>Mono-color polish on the football League screen</strong> — <a href="src/components/league/LeagueDetailView.jsx" target="_blank" rel="noopener">LeagueDetailView.jsx</a>: standings header row now uses a <code>2px solid var(--accent)</code> bottom border instead of the flat <code>--rule</code> gray, the current user's standings row gets an <code>--accent-bg</code> highlight, and the GW/lead-score spotlight card's divider was tinted to <code>--accent</code>, echoing F1's existing next-race tint. Confirmed live via computed-style inspection (<code>rgb(26, 111, 168)</code> accent border, accent-tinted current-user row) against the real "Mundial do Eder" league.</li>
+<li><strong>F1 next-race row: full border, not left-accent</strong> — <a href="src/screens/f1/F1HomeScreen.jsx" target="_blank" rel="noopener">F1HomeScreen.jsx</a> replaced the old <code>1px</code> full border + <code>3px</code> left-accent-only override with a single uniform <code>2px solid var(--f1)</code> border on the upcoming race's calendar row. Confirmed via source inspection (no <code>borderLeft</code> override remains).</li>
+<li><strong>Clubhouse/League header alignment</strong> — aligned the right-side action-cluster gap (12px) and element ordering (<code>[metadata] → [invite/tour control] → [NotificationBell]</code>) between <code>ClubhouseScreen.jsx</code> and the shared <code>HubTopbar</code> used by <code>LeagueScreen.jsx</code>, without merging the two header components (their left-side eyebrow styles differ enough that forcing a shared component would be unnecessary churn). Confirmed visually consistent live between both screens.</li>
+<li><strong>Shared <code>NotificationBell</code> component</strong> — consolidated the two previously-divergent bell UIs into one new <code>src/components/NotificationBell.jsx</code> (lifted from <code>ClubhouseScreen.jsx</code>'s more polished existing implementation — CSS-drawn tray icon, mobile full-screen panel / desktop dropdown), generalized via a <code>renderRow</code> prop so each call site keeps its own row-rendering logic for its differently-shaped data (<code>clubhouse_notifications</code> vs. <code>useNotifications.js</code>'s league shape) instead of forcing a fake shared schema. <code>ClubhouseScreen.jsx</code> now imports it directly; <code>LeagueScreen.jsx</code>'s desktop and mobile bells were migrated off the old <code>NotificationPanel.jsx</code>, which was then deleted (confirmed via grep it had no other importers). Confirmed live: League-level bell opens, shows the correct empty state, no console errors.</li>
+<li><strong>Clubhouse-switch scroll-reset fix</strong> — <a href="src/components/AppLayout.jsx" target="_blank" rel="noopener">AppLayout.jsx</a>'s persistent <code>#main-content</code> scroll container never unmounted across route changes, so switching Clubhouses via the sidebar dropdown left the new screen scrolled to the previous screen's position. Added a ref + <code>useEffect</code> resetting <code>scrollTop</code> to 0 on every <code>location.pathname</code> change. Confirmed live: scrolled to a capped <code>scrollTop</code> of 116 in the F1 paddock, switched to the "Mundial do Eder" league via the Clubhouse switcher, confirmed <code>scrollTop</code> reset to 0 on the new screen.</li>
+<li><strong>Removed duplicate "+ INVITE" button from League level</strong> — <a href="src/screens/LeagueScreen.jsx" target="_blank" rel="noopener">LeagueScreen.jsx</a> dropped both the desktop and mobile "+ INVITE" header buttons (Clubhouse-level invite, in <code>ClubhouseScreen.jsx</code>, already covers this); retargeted the onboarding tour step that pointed at the now-removed <code>data-tour="league-invite"</code> element so the tour doesn't break. Confirmed live: button absent from both League header layouts, "Replay league tour" control still present and functional.</li>
+</ul>
+<p>Verified: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ regression), CI 84/84 E2E green, and — unlike several recent Clubhouse-scoped entries that could only be verified by code inspection for lack of a Clubhouse-member test account — a full live-browser pass of all 8 tasks against real, authenticated production data via the new <code>TEST_QA_Manager</code> account, joined into two real circles plus the newly-created <code>TEST_Wimbledon_Box</code> tennis competition (which also rendered end-to-end with no crashes: calendar, roster confirmation, and the post-<code>useMedals</code>-removal leaderboard chain all loaded cleanly with the expected empty "No scores yet" state). PR #854 squash-merged to <code>main</code> (commit <code>5446a4b</code>); no <code>supabase/functions/</code> files touched, so no Edge Function deploy was needed.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 picks roster + clubhouse activity nav fixes (2026-08-27) — pr #852 
 
 **context**: a third round of pilot feedback (5 items, 5 screenshots) — 2 f1-specific, 3 generic clubhouse-level issues. the user reported some f1 predictions not appearing on certain races, a redundant winner display, unexplained value in having a clubhouse-level activity feed alongside the league-level equivalent, a confusing navigation target when clicking a clubhouse activity entry, and a suspected cache/leak issue where activity from one clubhouse briefly appeared under a different one.
