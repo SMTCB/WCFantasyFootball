@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { useToast } from '../hooks/useToast';
 import { useAuctions } from '../hooks/useAuctions';
@@ -114,6 +115,7 @@ export default function LeagueScreen() {
   const { show: showToast } = useToast();
   const navigate = useNavigate();
   const { leagueId } = useParams();
+  const { activeCircleId } = useClubhouseContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
     showLeagueTour, completeLeagueTour, replayLeagueTour,
@@ -410,23 +412,41 @@ export default function LeagueScreen() {
         return;
       }
 
+      // Leagues are Clubhouse-scoped containers — restrict "My Leagues" to the
+      // active Clubhouse instead of every league the user belongs to across all
+      // of their Clubhouses.
+      let scoped = data;
+      if (activeCircleId) {
+        const { data: circleLeagues } = await supabase
+          .from('circle_leagues')
+          .select('league_id')
+          .eq('circle_id', activeCircleId);
+        const allowedIds = new Set((circleLeagues ?? []).map(r => r.league_id));
+        scoped = data.filter(r => allowedIds.has(r.league_id));
+      }
+
+      if (scoped.length === 0) {
+        setLeagues([]);
+        return;
+      }
+
       const { data: memberRows } = await supabase
         .from('league_members')
         .select('league_id')
-        .in('league_id', data.map(r => r.league_id));
+        .in('league_id', scoped.map(r => r.league_id));
       const memberCounts = (memberRows ?? []).reduce((acc, m) => {
         acc[m.league_id] = (acc[m.league_id] || 0) + 1;
         return acc;
       }, {});
 
-      setLeagues((data.map(r => ({ ...r, member_count: memberCounts[r.league_id] })) || [])
+      setLeagues((scoped.map(r => ({ ...r, member_count: memberCounts[r.league_id] })) || [])
         .sort((a, b) => (a.leagues?.name ?? '').localeCompare(b.leagues?.name ?? '')));
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, activeCircleId]);
 
   useEffect(() => {
     if (user?.id) {

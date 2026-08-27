@@ -248,13 +248,14 @@ function FeedEntry({ entry, onEnter }) {
 
   const ago = timeAgo(entry.created_at);
   const clickable = onEnter && entry.league_id;
+  const enter = () => onEnter({ id: entry.league_id });
 
   return (
     <div
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}
-      onClick={clickable ? () => onEnter(entry.league_id) : undefined}
-      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEnter(entry.league_id); } : undefined}
+      onClick={clickable ? enter : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') enter(); } : undefined}
       style={{ padding: '12px 0', borderBottom: '1px solid var(--rule)', cursor: clickable ? 'pointer' : 'default' }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
