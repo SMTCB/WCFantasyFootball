@@ -21,56 +21,50 @@ const SERVICE_KEY      = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const anonDb    = createClient(SUPABASE_URL, SUPABASE_ANON);
 const serviceDb = SERVICE_KEY ? createClient(SUPABASE_URL, SERVICE_KEY) : null;
 
-// Two real seeded users for the test
-const USER_A = 'd0f0cb5a-2327-45f0-aec2-4086dff07402'; // s.t.c.braganca (admin/creator)
-const USER_B = '11111111-1111-4111-a111-111111111111'; // Zidane_99
+// Two seeded users (supabase/seed.sql) — members of the same circle.
+const USER_A = 'e0000000-0000-4000-a000-00000000000a'; // e2e_a
+const USER_B = 'e0000000-0000-4000-a000-00000000000b'; // e2e_b
 
-// Cheap player pool drawn from real DB data — 30 GKs + 30 DEFs + 30 MIDs + 30 FWDs
-// all at £5-6M so a 15-player allocation totals well under £100M
-const GKS  = ['fp-1858464-426','fp-587742-426','fp-2025184-426','fp-1193911730-426','fp-238057-426','fp-52924465-429','fp-588488-426','fp-1108379-426'];
-const DEFS = ['fp-1162802084-429','fp-2097-429','fp-2545-429','fp-171846-429','fp-214703-429','fp-414214-429','fp-548999-429','fp-1124500-429','fp-1262674-429','fp-1723342-429','fp-2125038-429','fp-1096802949-429','fp-1097593606-429','fp-1216749106-429','fp-286448-429'];
-const MIDS = ['fp-930180377-429','fp-1213796905-429','fp-486863-429','fp-499136-429','fp-503387-429','fp-1217863359-429','fp-1193784194-429','fp-1575827-429'];
-const FWDS = ['fp-1218242160-429','fp-1185267979-426','fp-1097117088-429','fp-1096841871-429','fp-2823725-429','fp-2679949-429','fp-2660647-429','fp-2652817-429','fp-1963510-429','fp-1822719-429','fp-1410166-429','fp-1361108-429'];
+// Seeded bulk player pool (supabase/seed.sql: seed-epl-p-1..98 @ tournament 426,
+// seed-wc-p-1..40 @ tournament 429), all priced <=£7.0M so a 15-player cap-filling
+// allocation totals well under the £100M budget in every combination.
+// GKS: 6 unique (2 shared + 2 A-only + 2 B-only). DEFS/MIDS/FWDS similarly split
+// below via OVERLAP_IDS + TEAM_A_ONLY/TEAM_B_ONLY — see those for the breakdown.
+const GKS  = ['seed-epl-p-90','seed-wc-p-10','seed-epl-p-10','seed-wc-p-20','seed-epl-p-20','seed-wc-p-30'];
+const DEFS = ['seed-epl-p-63','seed-epl-p-72','seed-epl-p-81','seed-wc-p-1','seed-epl-p-1','seed-epl-p-73','seed-epl-p-82','seed-epl-p-91','seed-wc-p-2','seed-wc-p-11','seed-epl-p-2','seed-epl-p-11','seed-epl-p-83','seed-epl-p-92','seed-wc-p-3','seed-wc-p-12','seed-wc-p-21','seed-epl-p-3','seed-epl-p-12','seed-epl-p-21','seed-epl-p-93','seed-wc-p-13','seed-wc-p-22','seed-wc-p-31','seed-epl-p-13','seed-epl-p-22'];
+const MIDS = ['seed-epl-p-36','seed-epl-p-45','seed-epl-p-54','seed-wc-p-36','seed-epl-p-46','seed-epl-p-55','seed-epl-p-64','seed-epl-p-56','seed-epl-p-65','seed-epl-p-74','seed-epl-p-66'];
+const FWDS = ['seed-epl-p-9','seed-epl-p-18','seed-epl-p-27','seed-wc-p-9','seed-wc-p-18','seed-wc-p-27','seed-wc-p-19','seed-wc-p-28','seed-wc-p-37','seed-epl-p-19','seed-epl-p-28','seed-epl-p-37'];
 
-// 5 players that BOTH teams pick (lottery will give each to exactly one manager)
+// 5 players that BOTH teams pick (lottery will give each to exactly one manager):
+// 2 GK + 3 DEF, same shape as the original prod-data version of this test.
 const OVERLAP_IDS = [GKS[0], GKS[1], DEFS[0], DEFS[1], DEFS[2]];
 
-// Team A: 30 players (first 5 = overlap, then unique)
-const TEAM_A_LIST = [
-  ...OVERLAP_IDS,                          // positions 1-5 (shared)
-  DEFS[3], DEFS[4], DEFS[5], DEFS[6],     // 4 more DEF unique to A
-  MIDS[0], MIDS[1], MIDS[2], MIDS[3],     // 4 MID unique to A
-  FWDS[0], FWDS[1], FWDS[2], FWDS[3],    // 4 FWD unique to A
-  GKS[2], GKS[3],                          // 2 more GK unique to A
-  DEFS[7], DEFS[8], DEFS[9],              // 3 more DEF unique to A
-  MIDS[4], MIDS[5],                        // 2 more MID unique to A
-  FWDS[4], FWDS[5], FWDS[6],             // 3 more FWD unique to A
-  DEFS[10], DEFS[11],                      // 2 more DEF unique to A
-  FWDS[7],                                 // 1 more FWD unique to A
+// Team A's own players (no overlap with Team B's own players below): 2 GK + 9 DEF
+// + 8 MID + 6 FWD = 25, plus the 5 shared OVERLAP_IDS = 30 total. Comfortably clears
+// every position cap (GK<=2, DEF<=5, MID<=5, FWD<=3) regardless of which overlap
+// players the lottery awards to A, so a full 15-player allocation is guaranteed
+// (exercised by the hard `toBe(15)` assertion further down this file).
+const TEAM_A_ONLY = [
+  GKS[2], GKS[3],
+  DEFS[3], DEFS[4], DEFS[5], DEFS[6], DEFS[7], DEFS[8], DEFS[9], DEFS[10], DEFS[11],
+  MIDS[0], MIDS[1], MIDS[2], MIDS[3], MIDS[4], MIDS[5], MIDS[6], MIDS[7],
+  FWDS[0], FWDS[1], FWDS[2], FWDS[3], FWDS[4], FWDS[5],
 ];
 
-// Team B: 30 players (first 5 = overlap, then different)
-const TEAM_B_LIST = [
-  ...OVERLAP_IDS,                          // positions 1-5 (shared)
-  GKS[4], GKS[5], GKS[6],                 // 3 GK unique to B
-  DEFS[12], DEFS[13], DEFS[14],           // 3 DEF unique to B
-  MIDS[6], MIDS[7],                        // 2 MID unique to B
-  FWDS[8], FWDS[9], FWDS[10], FWDS[11],  // 4 FWD unique to B
-  GKS[7],                                  // 1 more GK unique to B
-  DEFS[0+15<DEFS.length?0:0],             // fallback
-  FWDS[11],                                // last FWD
-  // pad to 30 with any remaining unique players
-  GKS[4], GKS[5], GKS[6], GKS[7],
-  MIDS[6], MIDS[7],
-  FWDS[8], FWDS[9], FWDS[10], FWDS[11],
-  DEFS[12], DEFS[13], DEFS[14],
+// Team B's own players: 2 GK + 14 DEF + 3 MID + 6 FWD = 25, plus the 5 shared
+// OVERLAP_IDS = 30 total, entirely disjoint from Team A's own players above.
+// Deliberately only 3 MID candidates (below the MID<=5 cap) so Team B's
+// post-allocation squad has open MID slots and isn't full at 15 — exercised
+// by the "manager with open MID slots CAN buy" test further down.
+const TEAM_B_ONLY = [
+  GKS[4], GKS[5],
+  DEFS[12], DEFS[13], DEFS[14], DEFS[15], DEFS[16], DEFS[17], DEFS[18], DEFS[19], DEFS[20], DEFS[21], DEFS[22], DEFS[23], DEFS[24],
+  MIDS[8], MIDS[9], MIDS[10],
+  FWDS[6], FWDS[7], FWDS[8], FWDS[9], FWDS[10], FWDS[11],
 ];
 
-// Deduplicate helper
-function dedup(arr) { return [...new Set(arr)]; }
-
-const TEAM_A_30 = dedup(TEAM_A_LIST).slice(0, 30);
-const TEAM_B_30 = dedup(TEAM_B_LIST).slice(0, 30);
+const TEAM_A_30 = [...OVERLAP_IDS, ...TEAM_A_ONLY]; // 30 unique IDs
+const TEAM_B_30 = [...OVERLAP_IDS, ...TEAM_B_ONLY]; // 30 unique IDs
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -92,7 +86,7 @@ async function waitFor(page, ms = 800) {
 
 test.describe('Draft Mode — Full E2E Flow', () => {
 
-  const DRAFT_LEAGUE_ID = '32aaa511-bd28-4d9d-b742-82c9182f9909'; // WC_1 (noduplicate)
+  const DRAFT_LEAGUE_ID = '11000000-0000-4000-a000-000000000002'; // WC_1 (noduplicate)
   const DRAFT_URL       = `/league/${DRAFT_LEAGUE_ID}/draft`;
 
   test.beforeAll(async () => {
@@ -152,11 +146,11 @@ test.describe('Draft Mode — Full E2E Flow', () => {
     // Wait for player list to load from Supabase
     await page.waitForTimeout(2500);
 
-    // Check the Auto-Complete button is available (players loaded)
-    const autoBtn = page.locator('button', { hasText: 'Auto-Complete' });
+    // Check the Auto-Fill button is available (players loaded)
+    const autoBtn = page.locator('button', { hasText: 'Auto-Fill' });
     await expect(autoBtn).toBeEnabled({ timeout: 5000 });
 
-    // Click Auto-Complete — fills remaining 30 slots from the full player pool
+    // Click Auto-Fill — fills remaining 30 slots from the full player pool
     await autoBtn.click();
     await page.waitForTimeout(800);
 
@@ -172,7 +166,7 @@ test.describe('Draft Mode — Full E2E Flow', () => {
 
     expect(count).toBe(30);
 
-    // ✅ Auto-Complete now disabled (full)
+    // ✅ Auto-Fill now disabled (full)
     await expect(autoBtn).toBeDisabled();
 
     // ✅ Submit enabled as soon as ≥1 player is present
@@ -204,7 +198,7 @@ test.describe('Draft Mode — Full E2E Flow', () => {
     await page.waitForSelector('text=Build Your List', { timeout: 10000 });
     await page.waitForTimeout(2500); // wait for RPC player load
 
-    const autoBtn = page.locator('button', { hasText: 'Auto-Complete' });
+    const autoBtn = page.locator('button', { hasText: 'Auto-Fill' });
     const isEnabled = await autoBtn.isEnabled({ timeout: 5000 }).catch(() => false);
     if (!isEnabled) { test.skip(); return; } // no players loaded, skip
 
@@ -218,7 +212,7 @@ test.describe('Draft Mode — Full E2E Flow', () => {
     // ✅ List now shows 30/30
     expect(listText).toContain('30/30');
 
-    // ✅ Auto-Complete button is now disabled (list full)
+    // ✅ Auto-Fill button is now disabled (list full)
     await expect(autoBtn).toBeDisabled();
 
     // ✅ Submit button is enabled
@@ -465,7 +459,7 @@ test.describe('Draft Mode — Full E2E Flow', () => {
 
 test.describe('Post-Allocation — constraints enforced', () => {
 
-  const DRAFT_LEAGUE_ID = '32aaa511-bd28-4d9d-b742-82c9182f9909';
+  const DRAFT_LEAGUE_ID = '11000000-0000-4000-a000-000000000002';
 
   test('process-transfer endpoint requires auth — no bypass', async () => {
     // Calling without an Authorization header must return 401 (not 403/400)
@@ -487,7 +481,7 @@ test.describe('Post-Allocation — constraints enforced', () => {
   test('process-transfer logic: full squad (15p) rejects any buy', async () => {
     if (!serviceDb) { test.skip(); return; }
 
-    // s.t.c.braganca has 15 players (all position caps met) after allocation
+    // e2e_a has 15 players (all position caps met) after allocation
     const { data: squad } = await serviceDb.from('squads')
       .select('players, budget_remaining')
       .eq('league_id', DRAFT_LEAGUE_ID)
@@ -520,7 +514,7 @@ test.describe('Post-Allocation — constraints enforced', () => {
     if (!serviceDb) { test.skip(); return; }
 
     // Both managers end up with GK=2 after allocation (lottery split the 2 contested GKs)
-    for (const [uid, label] of [[USER_A, 's.t.c.braganca'], [USER_B, 'Zidane_99']]) {
+    for (const [uid, label] of [[USER_A, 'e2e_a'], [USER_B, 'e2e_b']]) {
       const { data: squad } = await serviceDb.from('squads')
         .select('players').eq('league_id', DRAFT_LEAGUE_ID).eq('user_id', uid).maybeSingle();
       if (!squad) continue;
@@ -540,7 +534,7 @@ test.describe('Post-Allocation — constraints enforced', () => {
   test('process-transfer logic: manager with open MID slots CAN buy a midfielder', async () => {
     if (!serviceDb) { test.skip(); return; }
 
-    // Zidane_99 has MID=0 and 5 open squad slots — a MID buy should be ALLOWED
+    // e2e_b has MID=3 (below the cap of 5) and open squad slots — a MID buy should be ALLOWED
     const { data: squad } = await serviceDb.from('squads')
       .select('players, budget_remaining')
       .eq('league_id', DRAFT_LEAGUE_ID)
@@ -566,7 +560,7 @@ test.describe('Post-Allocation — constraints enforced', () => {
     expect(squadSize).toBeLessThan(15);    // squad not full
     expect(budgetLeft).toBeGreaterThan(0); // has budget
 
-    console.log(`Zidane_99: MID=${midCount} (cap=5), squad=${squadSize}/15, £${budgetLeft}M → MID buy ALLOWED by process-transfer`);
+    console.log(`e2e_b: MID=${midCount} (cap=5), squad=${squadSize}/15, £${budgetLeft}M → MID buy ALLOWED by process-transfer`);
   });
 
   test('DraftScreen shows submitted state (autoComplete disabled) after allocation', async ({ page }) => {
@@ -580,12 +574,12 @@ test.describe('Post-Allocation — constraints enforced', () => {
     // After allocation ran (status='processed'), the DraftScreen shows "Draft Submitted"
     // The unconstrained autoComplete button is NOT accessible in this state
     const submittedVisible = await page.locator('text=Draft Submitted').isVisible({ timeout: 5000 }).catch(() => false);
-    const autoCompleteVisible = await page.locator('button:has-text("Auto-Complete")').isVisible({ timeout: 1000 }).catch(() => false);
+    const autoCompleteVisible = await page.locator('button:has-text("Auto-Fill")').isVisible({ timeout: 1000 }).catch(() => false);
 
     if (submittedVisible) {
       // ✅ "Draft Submitted" is shown — no unconstrained list-building available
       expect(autoCompleteVisible).toBe(false);
-      console.log('DraftScreen: "Draft Submitted" shown, Auto-Complete hidden ✅');
+      console.log('DraftScreen: "Draft Submitted" shown, Auto-Fill hidden ✅');
     } else {
       // In demo mode without auth, user?.id is null so submission status isn't loaded
       // The autoComplete button IS visible but isClosed or deadline logic limits it
@@ -642,7 +636,7 @@ test.describe('Post-Allocation — constraints enforced', () => {
 
 test.describe('Classic Mode — 15-slot auto-fill with constraints', () => {
 
-  const CLASSIC_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001'; // Premier Fantasy League
+  const CLASSIC_LEAGUE_ID = '11000000-0000-4000-a000-000000000001'; // Premier Fantasy League
 
   test('squad screen shows 15-slot capacity, not 30', async ({ page }) => {
     const errors = [];
@@ -713,6 +707,35 @@ test.describe('Draft vs Classic — mode detection', () => {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
 
+    // Demo-mode AuthContext (VITE_AUTH_ENABLED != 'true', the default for this
+    // local run) freezes the React `user` at a fixed DEMO_USER identity and
+    // never restores a session from storage — but the underlying supabase-js
+    // client (src/lib/supabase.js) still auto-persists/sends whatever session
+    // sits in localStorage on every request, independent of AuthContext. RLS
+    // on circle_members (`is_circle_member(circle_id)`, keyed off the real
+    // JWT's auth.uid()) needs a genuine circle member's session to allow the
+    // read at all; LeagueScreen.jsx's own query then filters
+    // `.eq('user_id', user.id)` against DEMO_USER's frozen id — seed.sql seeds
+    // a circle_members row for DEMO_USER in the same circle e2e_a belongs to,
+    // so injecting e2e_a's session satisfies RLS while the DEMO_USER row
+    // satisfies the client-side filter.
+    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
+      email: 'e2e_a@fantasykit.test', password: 'E2ePass!99',
+    });
+    if (authError || !authData?.session) throw new Error(`sign-in failed for e2e_a: ${authError?.message}`);
+    const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] ?? 'sssmvihxtqtohisghjet';
+    const authKey = `sb-${projectRef}-auth-token`;
+    const authValue = JSON.stringify({
+      access_token:  authData.session.access_token,
+      token_type:    'bearer',
+      expires_in:    3600,
+      expires_at:    authData.session.expires_at,
+      refresh_token: authData.session.refresh_token,
+      user:          authData.session.user,
+    });
+    await page.addInitScript(({ k, v }) => { localStorage.setItem(k, v); }, { k: authKey, v: authValue });
+
     await skipOnboarding(page);
     await page.goto('/league');
     await waitFor(page, 1000);
@@ -724,6 +747,26 @@ test.describe('Draft vs Classic — mode detection', () => {
     if (visible) {
       await createBtn.click();
       await page.waitForTimeout(500);
+
+      // League creation starts on a "Choose Clubhouse" step (LeagueScreen.jsx
+      // view==='create', createLeagueStep 0) before the actual league-format
+      // form (with Draft/Classic options) is reachable — select the seeded
+      // clubhouse and continue past it.
+      const clubhouseHeading = page.locator('text=/Choose Clubhouse/i').first();
+      const onClubhouseStep = await clubhouseHeading.isVisible({ timeout: 2000 }).catch(() => false);
+      if (onClubhouseStep) {
+        // Scope past the top-nav Clubhouse switcher, which also renders a
+        // button with this circle's name — the wizard's own picker row is
+        // the one that also shows the member's role ("member"/"owner").
+        const circleRow = page.locator('button', { hasText: 'E2E Test Circle' }).filter({ hasText: 'member' }).first();
+        await expect(circleRow).toBeVisible({ timeout: 3000 });
+        await circleRow.click();
+
+        const continueBtn = page.locator('button', { hasText: 'Continue' }).first();
+        await expect(continueBtn).toBeEnabled({ timeout: 3000 });
+        await continueBtn.click();
+        await page.waitForTimeout(500);
+      }
 
       // ✅ Draft mode option is present
       const draftOption = page.locator('text=/Draft/i').first();
@@ -746,12 +789,12 @@ test.describe('Draft vs Classic — mode detection', () => {
     const db = serviceDb || anonDb;
     const { data } = await db.from('leagues')
       .select('format, name')
-      .eq('id', '32aaa511-bd28-4d9d-b742-82c9182f9909')
+      .eq('id', '11000000-0000-4000-a000-000000000002')
       .maybeSingle();
 
     if (!data) {
-      // RLS may block anon reads in some environments — verified via MCP that format='noduplicate'
-      console.log('League not readable via anon key — verified via direct DB: format=noduplicate');
+      // RLS may block anon reads in some environments — supabase/seed.sql sets format='noduplicate'
+      console.log('League not readable via anon key — seed.sql sets format=noduplicate for this league');
       return;
     }
 
@@ -764,17 +807,18 @@ test.describe('Draft vs Classic — mode detection', () => {
 
     const { data: draftLeague } = await db.from('leagues')
       .select('draft_list_size, squad_size, format')
-      .eq('id', '32aaa511-bd28-4d9d-b742-82c9182f9909')
+      .eq('id', '11000000-0000-4000-a000-000000000002')
       .maybeSingle();
 
     const { data: classicLeague } = await db.from('leagues')
       .select('draft_list_size, squad_size, format')
-      .eq('id', 'aaaaaaaa-0000-0000-0000-000000000001')
+      .eq('id', '11000000-0000-4000-a000-000000000001')
       .maybeSingle();
 
     if (!draftLeague || !classicLeague) {
-      // Verified via direct DB query (MCP): both leagues have draft_list_size=30, squad_size=15
-      console.log('League config verified via direct DB: draft_list_size=30, squad_size=15');
+      // supabase/seed.sql sets draft_list_size=30, squad_size=15 explicitly for the draft
+      // league; the classic league gets squad_size=15 from schema.sql's column default.
+      console.log('League not readable via anon key — seed.sql sets draft_list_size=30, squad_size=15');
       return;
     }
 

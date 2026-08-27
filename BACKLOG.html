@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>199</strong><span>closed</span></div>
+      <div class="total-pill"><strong>200</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (121)</span>
+    <span class="chip" data-filter-kind="done">Shipped (122)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">199</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">200</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">121</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">122</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,48 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">121</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">122</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tier 3 foundation — seed script, spec retargeting, local orchestration (2026-08-27) 
+
+**context**: the previous entry&#x27;s close-out left tier 3 (local full-stack e2e) at groundwork-only — `supabase/config.toml` wired for a full local stack, but no seed data and no specs actually retargeted. the user scoped this session&#x27;s follow-up as **&quot;foundation only&quot;**: get all 8 gated specs (everything under `e2e/` except `platform.spec.js`, which has its own separate ci-required demo-mode run path) passing against a local stack, with no ci wiring and no new coverage areas — those stay tracked as open follow-up, not attempted here.
+
+**shipped**:
+- **`supabase/seed.sql`** — new committed synthetic dataset: 2 deterministic `auth.users`/`auth.identities` accounts (`e2e_a@fantasykit.test`/`e2e_b@fantasykit.test`, `e2epass!99`) matching what `autofill-draft-classic.spec.js` already hardcoded, avoiding the need to write the missing `e2e-setup` edge function the prior entry flagged; 1 circle with both as members; synthetic epl (~120) and wc (~40) player pools sized for real position-cap/budget headroom; one finished epl fixture with a hand-worked deterministic scoring scenario (goal, clean sheet, card — expected fantasy-point totals documented inline and asserted in the rewritten `scoring-pipeline.spec.js`); a classic epl league and a draft/`noduplicate` wc league with membership rows for both seeded users; a `matchday_deadlines` row for the scenario round.
+- **`scripts/e2e-local.mjs`** (new `npm run test:e2e:local`) — bootstraps the local stack by loading `supabase/schema.sql` directly (not migration replay — a from-scratch replay hits a real, uncaptured prod schema mismatch at migration 09, and the append-only migration rule means that can&#x27;t just be patched) then `seed.sql` on top, reads the local stack&#x27;s url/anon key via `supabase status -o json`, and execs playwright across all 8 gated specs.
+- **3 previously hard-blocked specs rewritten** onto the seeded data: `autofill-draft-clas" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Tier 3 Foundation — seed script, spec retargeting, local orchestration</h3>
+        <p class="card-summary">Context : the previous entry's close-out left Tier 3 (local full-stack E2E) at groundwork-only — supabase/config.toml wired for a full local stack, but no seed data and…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-27</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Tier 3 Foundation — seed script, spec retargeting, local orchestration</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : the previous entry's close-out left Tier 3 (local full-stack E2E) at groundwork-only — supabase/config.toml wired for a full local stack, but no seed data and…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-27</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: the previous entry's close-out left Tier 3 (local full-stack E2E) at groundwork-only — <code>supabase/config.toml</code> wired for a full local stack, but no seed data and no specs actually retargeted. The user scoped this session's follow-up as <strong>"Foundation only"</strong>: get all 8 gated specs (everything under <code>e2e/</code> except <code>platform.spec.js</code>, which has its own separate CI-required demo-mode run path) passing against a local stack, with no CI wiring and no new coverage areas — those stay tracked as open follow-up, not attempted here.</p>
+<p><strong>Shipped</strong>:</p>
+<ul>
+<li><strong><code>supabase/seed.sql</code></strong> — new committed synthetic dataset: 2 deterministic <code>auth.users</code>/<code>auth.identities</code> accounts (<code>e2e_a@fantasykit.test</code>/<code>e2e_b@fantasykit.test</code>, <code>E2ePass!99</code>) matching what <code>autofill-draft-classic.spec.js</code> already hardcoded, avoiding the need to write the missing <code>e2e-setup</code> Edge Function the prior entry flagged; 1 circle with both as members; synthetic EPL (~120) and WC (~40) player pools sized for real position-cap/budget headroom; one finished EPL fixture with a hand-worked deterministic scoring scenario (goal, clean sheet, card — expected fantasy-point totals documented inline and asserted in the rewritten <code>scoring-pipeline.spec.js</code>); a classic EPL league and a draft/<code>noduplicate</code> WC league with membership rows for both seeded users; a <code>matchday_deadlines</code> row for the scenario round.</li>
+<li><strong><code>scripts/e2e-local.mjs</code></strong> (new <code>npm run test:e2e:local</code>) — bootstraps the local stack by loading <code>supabase/schema.sql</code> directly (not migration replay — a from-scratch replay hits a real, uncaptured prod schema mismatch at migration 09, and the append-only migration rule means that can't just be patched) then <code>seed.sql</code> on top, reads the local stack's URL/anon key via <code>supabase status -o json</code>, and execs Playwright across all 8 gated specs.</li>
+<li><strong>3 previously hard-blocked specs rewritten</strong> onto the seeded data: <code>autofill-draft-classic.spec.js</code>, <code>draft-allocation-e2e.spec.js</code> (hardcoded prod UUIDs → seeded ones), <code>scoring-pipeline.spec.js</code> (hardcoded real-match assertions → the seeded scenario's worked values).</li>
+<li><strong><code>[db.migrations]</code>/<code>[db.seed]</code> left disabled in <code>supabase/config.toml</code></strong> — <code>e2e-local.mjs</code> is the one thing that loads schema/seed data now, not the CLI's own hooks.</li>
+</ul>
+<p><strong>Bugs found and fixed during verification</strong> (not scoped work, but blocking/silent-failure findings surfaced by actually running this for the first time):</p>
+<ol>
+<li><strong>Silent prod-targeting bug</strong>: <code>playwright.config.js</code>'s <code>webServer</code> runs <code>npm run build &amp;&amp; npm run preview</code>; without an explicit override, Vite's build step falls back to <code>.env.local</code>'s <code>VITE_SUPABASE_URL</code>/<code>VITE_SUPABASE_ANON_KEY</code>, which point at <strong>live production</strong> — meaning every UI-driven spec run locally, before this fix, was silently exercising prod rather than the local stack regardless of what <code>SUPABASE_URL</code>/<code>SUPABASE_ANON_KEY</code> were set to for the Node/Playwright side. A read-only check against prod afterward confirmed no writes actually landed (RLS/FK/JWT-signature mismatches blocked every attempt) — no data was corrupted, but the tier would have been silently non-functional as a safety net. Fixed by having <code>e2e-local.mjs</code> explicitly set both <code>VITE_</code>-prefixed vars from the local stack's own creds before spawning Playwright.</li>
+<li><strong>Demo-mode + RLS identity mismatch</strong> (UI-driven specs only): <code>AuthContext.jsx</code> in demo mode (<code>VITE_AUTH_ENABLED</code> unset, the default locally) freezes React's <code>user</code> at a fixed zero-UUID <code>DEMO_USER</code> and never restores a session from storage, but <code>src/lib/supabase.js</code>'s client still auto-sends whatever session sits in <code>localStorage</code> on every actual request, independent of <code>AuthContext</code>. RLS policies keyed off <code>auth.uid()</code> (e.g. <code>is_circle_member()</code>) see that real injected session; the app's own client-side <code>.eq('user_id', user.id)</code> filters see the frozen <code>DEMO_USER</code> id instead. A demo-mode UI spec touching per-user RLS-gated data needs <strong>both</strong> a seeded row for <code>DEMO_USER</code>'s id *and* an injected real session for a genuine member of the same resource — documented in <code>docs/testing/TESTING_STRATEGY.md</code>'s Tier 3 section for future specs, worked example in <code>draft-allocation-e2e.spec.js</code>'s "league creation wizard shows Draft as an option" test.</li>
+<li><strong>Local <code>edge_runtime</code> resource contention under full concurrency</strong>: <code>autofill-draft-classic.spec.js</code> test 1.3 makes 7+ sequential Edge Function round-trips (one per player bought) against the local stack's single <code>edge_runtime</code> container; running all 8 specs across both Playwright projects (desktop-chrome + mobile-chrome) concurrently pushed that past the file's 20s default timeout even though each call was correct. Fixed with a per-test <code>test.setTimeout(45000)</code>, not a weakened assertion — same fix pattern flagged for any future spec doing several sequential Edge Function calls in one test.</li>
+</ol>
+<p><strong>Verified</strong>: <code>npm run test:e2e:local</code> — 225 passed, 31 skipped (service-role-gated scenarios + a couple of pre-existing graceful <code>test.skip()</code> fallbacks), 0 failed. <code>npm run lint</code> — 0 errors (668 pre-existing warnings, unrelated). <code>npm run build</code> — clean, no Rolldown TDZ regression. <code>docs/testing/TESTING_STRATEGY.md</code> updated throughout to match landed state.</p>
+<p><strong>Explicitly still open</strong> (per the user's "Foundation only" scope, tracked as separate follow-up): CI wiring for this tier (<code>npm run test:e2e:local</code> is local-only, no GitHub Actions job invokes it yet), and Tier 3 build-order step 4 — new coverage for F1 (zero coverage of any kind today), tennis (same), Realtime league chat, <code>resolve_bet</code> write-in UI flow, coins/P2P beyond the RPC layer, draft lottery/wishlist-draft timing, cron-driven scoring orchestration, <code>trophy_ledger</code> emission, notification delivery. No migration, live DB write, or Edge Function deploy was performed or needed this session — every local-stack write went through direct <code>pg</code> connections or the standard reseed mechanism, never the linked production project.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ testing strategy — 4-tier plan decided and closed (2026-08-27) — pr #856 + pr #857 
 
 **context**: after this session&#x27;s live-verification pass (see the `test_qa_manager` work in the &quot;phase a ui polish pass&quot; entry below), the user asked whether we had a durable process for platform-level testing beyond scratch scripts, then explicitly asked for a full testing strategy: *&quot;can you propose one considering all our parts? ... what i always feel is that we&#x27;re a bit &#x27;short&#x27; on the tests, we never cover everything, some parts are always untested.&quot;* follow-up: *&quot;also consider ... the e2e tests we have on git. lets ensure we are covering everything but no need for an overkill ... i leave up to you to completely decide on the approach and strategy.&quot;*

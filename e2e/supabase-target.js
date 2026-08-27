@@ -4,10 +4,13 @@
 // bets) and used to each hardcode the live pilot project's URL/anon key as a
 // fallback whenever SUPABASE_URL/SUPABASE_ANON_KEY weren't set. That's how a
 // bare `npx playwright test` run created 4 orphan "E2E EPL Classic" leagues in
-// prod on 2026-07-25 (see BACKLOG.md B-12). There is currently no local Docker
-// target wired up for these specs, so until that lands the only safe behavior
-// is to fail loudly at import time and require the operator to name their
-// target explicitly, every run.
+// prod on 2026-07-25 (see BACKLOG.md B-12). A local Docker target now exists —
+// `npm run test:e2e:local` (scripts/e2e-local.mjs) boots `supabase start`,
+// bootstraps schema.sql + seed.sql, and sets these env vars to point at it —
+// but that script is the one deliberate way to opt in. This guard still fails
+// loudly at import time for any other invocation, so a bare `npx playwright
+// test` still can't silently hit prod; the operator must always name their
+// target explicitly.
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -21,7 +24,8 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     '— that caused a real incident (orphan leagues created in prod, 2026-07-25).\n\n' +
     'Set both before running, e.g.:\n' +
     '  SUPABASE_URL=... SUPABASE_ANON_KEY=... npx playwright test e2e/<spec>.spec.js\n\n' +
-    'There is currently no local Docker target wired up for these specs (BACKLOG.md B-12).\n' +
+    'For a local Docker target, use `npm run test:e2e:local` instead — it boots\n' +
+    '`supabase start`, bootstraps schema.sql + seed.sql, and sets these env vars for you.\n' +
     'If you intend to target the live pilot DB, do so explicitly and deliberately —\n' +
     'never via a hardcoded fallback.\n'
   );
