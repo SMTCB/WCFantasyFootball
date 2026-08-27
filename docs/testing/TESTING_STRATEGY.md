@@ -35,12 +35,11 @@ Each tier is scoped so it never re-proves what an earlier tier already covers:
 
 Real `pg` client against a real (but empty-then-seeded) Postgres — not mocked. In CI this is a native GitHub Actions `services: postgres` container; locally, `docker compose up -d db`. Schema comes from `supabase/schema.sql` (a verified snapshot of prod, not a from-scratch migration replay — see Tier 2 below for why that distinction matters), loaded via `tests/unit/bootstrap.sql` then `tests/unit/seed.sql`.
 
-**Current coverage**: `auction.test.js`, `coins.test.js`, `lineup.test.js`, `transfer.test.js`, `bet.test.js`, `scoring-logic.test.js` — all football/EPL, all RPC-level or pure-JS logic.
+**Current coverage**: `auction.test.js`, `coins.test.js`, `lineup.test.js`, `transfer.test.js`, `bet.test.js`, `scoring-logic.test.js` — all football/EPL, all RPC-level or pure-JS logic — plus `admin.test.js` (added 2026-08-27), covering the `competition_admins` family (`set_competition_admin`/`remove_competition_admin`/`is_competition_admin`) that gates admin-only actions across all three sports (see [COMPETITION_MODEL.md](../architecture/COMPETITION_MODEL.md)): success, idempotency, and all 5 rejection paths (`UNAUTHENTICATED`, `NOT_OWNER`, `INVALID_TYPE`, `NOT_LINKED_TO_CIRCLE`, `TARGET_NOT_CIRCLE_MEMBER`). Required two new fixture rows in `tests/unit/seed.sql` (`circle_members`, `circle_leagues`) that the original seed never populated.
 
-**Confirmed gap, to close here (not in a heavier tier, since this is pure logic)**:
+**Confirmed gap, still open (not in a heavier tier, since this is pure logic)**:
 - F1 scoring logic (`score-f1-race`'s extracted pure-calculation path) — zero coverage today.
 - Tennis scoring logic (`score-tennis-tournament`) — zero coverage today.
-- Admin RPCs gated by `competition_admins` — zero coverage today.
 
 **What belongs here**: anything expressible as "given this DB state, call this RPC/function, assert this result" with no Auth session, no HTTP layer, no Realtime, no browser involved.
 
@@ -62,7 +61,10 @@ Loads `supabase/schema.sql` — a `pg_dump` snapshot of prod's *actual* live sch
 
 **Target**: `npx supabase start` — the Supabase CLI's full local Docker stack (Postgres + GoTrue Auth + PostgREST + Realtime + Storage + Edge Runtime + Studio). This is distinct from the hand-rolled `docker-compose.yml` in this repo, which only ever provided bare Postgres + a single-function Edge runner — it was never a substitute for Auth/RLS/Realtime, and was never meant to be.
 
-**Why this tier didn't exist until now**: `supabase/config.toml` currently only declares `[functions.*]` entrypoints — no `[db]`/`[api]`/`[auth]`/`[studio]`/`[realtime]` sections — so `supabase start` has never been fully wired up for this project. That is the single missing piece blocking every feature that needs a real authenticated, RLS-scoped, multi-user session from being tested anywhere but production.
+**Status (2026-08-27)**: step 1 of the build order below has landed — `supabase/config.toml` now declares full `[api]`/`[db]`/`[db.migrations]`/`[realtime]`/`[studio]`/`[auth]`/`[auth.email]`/`[edge_runtime]` sections (matching prod's confirmed Postgres 17.6, `db.migrations` replaying the real `supabase/migrations/*.sql` history, `auth.email.enable_confirmations = false` so a local `signUp()` returns an immediately-usable session), so `npx supabase start` now boots a fully wired local stack. `[db.seed]` is deliberately left `enabled = false` — no seed script exists yet (step 2, still open). **Steps 2–4 (seed script, spec retargeting, new coverage) remain not-yet-built** — tracked in BACKLOG.md — after two findings below turned out to make them larger than originally scoped:
+
+- **The `e2e-setup` Edge Function this tier's spec-retargeting depends on has never existed in this repo.** Of the 8 currently-manual specs, only `autofill-draft-classic.spec.js` performs real Supabase Auth (`signInWithPassword`), and it depends on a service-role `e2e-setup` function to provision two pre-confirmed test accounts. `git log --all -- "supabase/functions/e2e-setup*"` returns nothing — this function was never committed. That spec cannot currently succeed against any target, local or prod. Retargeting it needs either writing that function or replacing its account-provisioning approach — not just an env-var swap.
+- **The other 7 manual specs' "real" writes are narrower than they look.** They run in demo mode (`VITE_AUTH_ENABLED=false`, the zero-UUID `DEMO_USER`, no real Auth session) against production. `schema.sql`'s RLS policies carve out an explicit anon-role exception for exactly 4 tables (`matchday_recaps`, `projection_snapshots`, `squads`, `top_scorer_predictions` — search `'00000000-0000-0000-0000-000000000000'` in `schema.sql` to confirm), each with a clause like `(auth.role() = 'anon' AND user_id = '00000000-...')` alongside the normal `auth.uid() = user_id` clause. Outside those 4 tables (e.g. `leagues`, `circles`), demo-mode writes against prod don't work at all. This is deliberate, pre-existing infrastructure — not a bug — but it means most of these specs aren't validating what a skim of their code would suggest, and "retarget to local" isn't a trivial default-swap for them either.
 
 **What moves here**:
 - The 8 Playwright specs currently gated behind `e2e/supabase-target.js`'s "explicit target required, no default, live-prod-capable" guard (added after incident B-12, 2026-07-25) — `classic`/`draft`-mode specs, `scoring-pipeline.spec.js`, `draft-allocation-e2e.spec.js`, `multi-league-and-bets.spec.js`, `features.spec.js`, `autofill-draft-classic.spec.js`. These **move**, not copy, from "manual-only against live prod" to "run against the local stack by default." The B-12 guard itself stays exactly as-is — it's still correct that these specs must never silently default to prod; the fix is giving them a safe default target to use instead.
@@ -82,7 +84,7 @@ Loads `supabase/schema.sql` — a `pg_dump` snapshot of prod's *actual* live sch
 
 **Never runs in CI.** Always targets production explicitly — same B-12-guard principle as Tier 3's specs: no silent default, target named every time.
 
-**Formalization (open item)**: this session's manual verification pass used an ad hoc `TEST_QA_Manager` account and scratch scripts that live only in a session scratchpad and vanish afterward. That should become a committed, repo-tracked script (`TEST_`-prefixed per the Pilot Safeguards in [CLAUDE.md](../../CLAUDE.md)) that any session can re-run identically as a pre-launch gate, instead of being reinvented each time.
+**Formalized (2026-08-27)**: [`scripts/TEST_pilot_gate.js`](../../scripts/TEST_pilot_gate.js) replaces the ad hoc `TEST_QA_Manager` scratch checks (PR #854) with a committed, repeatable, 100%-read-only script — no query in it is anything but a `SELECT`, so it needs no migration/write approval to run. `node scripts/TEST_pilot_gate.js` runs 6 checks against production via `npx supabase db query --linked`: cron jobs with 3+ consecutive failures (FAIL-level — this is the only check that can fail the gate), cron jobs registered inactive, fixtures stuck `scheduled` well past kickoff (sync staleness), players missing a price, edge-function errors in the last 24h, and a same-day real-league count for pilot-data hygiene (informational only). Exit code 0 unless a FAIL-level check trips. First real run (2026-08-27) returned `GATE: PASS` — 1 PASS, 4 WARN, 1 INFO; the WARN findings (22 inactive cron jobs, 21 stale fixtures, 499 unpriced players, edge-function errors) line up with the site's deliberate post-cutover `MAINTENANCE_MODE=true` pause (see [CLAUDE.md](../../CLAUDE.md)) rather than indicating new defects — re-run this once the maintenance wall comes down, since a WARN that's expected today may mean something different then.
 
 ---
 
@@ -98,9 +100,9 @@ Loads `supabase/schema.sql` — a `pg_dump` snapshot of prod's *actual* live sch
 | `unit-tests` | 1 | every PR | Ephemeral Postgres, `tests/unit/*.test.js` |
 | `schema-rehearsal` | 2 | every PR touching `supabase/migrations/**` | Skips (fast no-op) on PRs that don't touch migrations |
 | `e2e` | — | every PR | `platform.spec.js` only — demo mode (`VITE_AUTH_ENABLED=false`), no real Supabase target, not part of the tier system above since it makes no DB calls |
-| *(planned)* Tier 3 job | 3 | see Build order above | Not yet wired into CI — lands once the local stack + retargeted specs are proven stable |
+| *(planned)* Tier 3 job | 3 | see Build order above | Not yet wired into CI — `config.toml` groundwork (build-order step 1) landed 2026-08-27, but the seed script (step 2) and spec retargeting (step 3) haven't, so there's nothing yet for a CI job to run |
 
-**Local-only, not in CI**: `scripts/rehearse-schema.sh` (Tier 2, interactive), the 8 currently-manual specs (Tier 3, until retargeted), Tier 4 verification.
+**Local-only, not in CI**: `scripts/rehearse-schema.sh` (Tier 2, interactive), the 8 currently-manual specs (Tier 3, until retargeted), Tier 4 verification (`scripts/TEST_pilot_gate.js`, deliberately prod-only — never CI, per the tier's own scope).
 
 ---
 
@@ -124,6 +126,9 @@ npx playwright test e2e/platform.spec.js
 
 # Tier 4 — live-platform verification (explicit target required, never a default)
 SUPABASE_URL=... SUPABASE_ANON_KEY=... npx playwright test e2e/<spec>.spec.js
+
+# Tier 4 — pre-launch pilot gate (read-only, targets prod explicitly, no env needed)
+node scripts/TEST_pilot_gate.js
 ```
 
 ---

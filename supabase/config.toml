@@ -1,5 +1,90 @@
 project_id = "sssmvihxtqtohisghjet"
 
+# ── Tier 3 (Local Full-Stack E2E) — TESTING_STRATEGY.md ────────────────────────
+# Sections below configure `npx supabase start`, the full local Docker stack
+# (Postgres + GoTrue Auth + PostgREST + Realtime + Storage + Edge Runtime + Studio).
+# This is distinct from docker-compose.yml's bare `postgres:15-alpine` (Tier 1
+# unit tests only) and its single-function `functions` runner — those two paths
+# are never meant to run simultaneously with this one; note the port 54321
+# overlap between docker-compose's `functions` service (host 54321→container
+# 9000) and this stack's [api] port below is intentional and harmless since
+# they're mutually exclusive dev paths, not a bug.
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+# Must match prod's Postgres major version — confirmed via
+# `npx supabase db query --linked "SHOW server_version;"` = 17.6.
+major_version = 17
+
+[db.migrations]
+# Applies every file in supabase/migrations/ in order on first `start` /
+# `db reset` — the real migration history, not a schema.sql snapshot (that
+# shortcut is specific to the CI schema-rehearsal job's per-PR speed need).
+enabled = true
+
+[db.seed]
+# Off until the Tier-3 synthetic multi-sport seed script (TESTING_STRATEGY.md
+# Tier 3 "Build order" step 2 — tracked as a BACKLOG follow-up, not yet
+# written) exists at supabase/seed.sql. Flip to true once it lands.
+enabled = false
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[local_smtp]
+# Local email testing inbox — signups/password-reset emails are caught here,
+# not sent. Not required for Tier-3 specs since auth.email.enable_confirmations
+# is false below (real GoTrue sessions issued immediately on signUp).
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+# Covers both `npm run dev` (5173) and the Playwright webServer preview (5174).
+site_url = "http://localhost:5173"
+additional_redirect_urls = [
+  "http://localhost:5173", "http://127.0.0.1:5173",
+  "http://localhost:5174", "http://127.0.0.1:5174",
+]
+jwt_expiry = 3600
+enable_signup = true
+minimum_password_length = 6
+
+[auth.email]
+enable_signup = true
+# No confirmation step locally — Tier-3 specs need a usable session
+# immediately after signUp(), with no inbox-polling step in the loop.
+enable_confirmations = false
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+inspector_port = 8083
+deno_version = 2
+
+[analytics]
+# Disabled: the Logflare/BigQuery analytics container isn't needed for E2E
+# runs and adds real Docker startup weight for no test value here.
+enabled = false
+
 [functions.auto-open-transfer-window]
 entrypoint = "./functions/auto-open-transfer-window/index.js"
 
