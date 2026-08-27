@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-08-26. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-08-27. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>196</strong><span>closed</span></div>
+      <div class="total-pill"><strong>197</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (118)</span>
+    <span class="chip" data-filter-kind="done">Shipped (119)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">196</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">197</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">118</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">119</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">118</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">119</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 picks roster + clubhouse activity nav fixes (2026-08-27) — pr #852 
+
+**context**: a third round of pilot feedback (5 items, 5 screenshots) — 2 f1-specific, 3 generic clubhouse-level issues. the user reported some f1 predictions not appearing on certain races, a redundant winner display, unexplained value in having a clubhouse-level activity feed alongside the league-level equivalent, a confusing navigation target when clicking a clubhouse activity entry, and a suspected cache/leak issue where activity from one clubhouse briefly appeared under a different one.
+
+- **missing predictions on some races** — root-caused to [f1-data.js](src/lib/f1/f1-data.js)&#x27;s `drivers`/`teams` constants being a stale 2024-vintage roster: a react `&lt;select value={x}&gt;` renders with no visible selection whenever `x` doesn&#x27;t exactly string-match any `&lt;option&gt;`, even though the underlying stored pick is intact — so any pick referencing a driver/team not in the stale list (antonelli, hadjar, bortoleto, lindblad, or the new cadillac team) rendered blank, alongside several accent/formatting mismatches (`sergio perez`→`sergio pérez`, `nico hulkenberg`→`nico hülkenberg`, `carlos sainz`→`carlos sainz jr.`, `alexander albon`→`alex albon`, `red bull racing`→`red bull`). cross-referenced live db data (`f1_bets_race`/`f1_races` distinct driver/team values) to build the correct 22-driver/11-team 2026 list. this is at least the fourth instance of the same &quot;stale reference/seed data&quot; bug class found this multi-session task.
+- **redundant winner badge** — [f1homescreen.jsx](src/screens/f1/f1homescreen.jsx) showed a small 🏆 winner badge in the race&#x27;s collapsed header row unconditionally for any finished race, duplicating the full podium already shown in the race result box once expanded. now suppressed once `isexpanded` is true.
+- **confusing screen on clubhouse activity click** — [clubhousescreen.jsx](src/screens/clubhousescreen.jsx)&#x27;s `feedentry.onenter` was calling `onenter(entry.league_id)` (a raw uu" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">F1 picks roster + Clubhouse activity nav fixes</h3>
+        <p class="card-summary">Context : a third round of pilot feedback (5 items, 5 screenshots) — 2 F1-specific, 3 generic Clubhouse-level issues. The user reported some F1 predictions not appearing…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-27</span><span class="foot-refs">PR #852</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">F1 picks roster + Clubhouse activity nav fixes</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : a third round of pilot feedback (5 items, 5 screenshots) — 2 F1-specific, 3 generic Clubhouse-level issues. The user reported some F1 predictions not appearing…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #852</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-27</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: a third round of pilot feedback (5 items, 5 screenshots) — 2 F1-specific, 3 generic Clubhouse-level issues. The user reported some F1 predictions not appearing on certain races, a redundant winner display, unexplained value in having a Clubhouse-level Activity feed alongside the league-level equivalent, a confusing navigation target when clicking a Clubhouse activity entry, and a suspected cache/leak issue where activity from one Clubhouse briefly appeared under a different one.</p>
+<ul>
+<li><strong>Missing predictions on some races</strong> — root-caused to <a href="src/lib/f1/f1-data.js" target="_blank" rel="noopener">f1-data.js</a>'s <code>DRIVERS</code>/<code>TEAMS</code> constants being a stale 2024-vintage roster: a React <code>&lt;select value={x}&gt;</code> renders with no visible selection whenever <code>x</code> doesn't exactly string-match any <code>&lt;option&gt;</code>, even though the underlying stored pick is intact — so any pick referencing a driver/team not in the stale list (Antonelli, Hadjar, Bortoleto, Lindblad, or the new Cadillac team) rendered blank, alongside several accent/formatting mismatches (<code>Sergio Perez</code>→<code>Sergio Pérez</code>, <code>Nico Hulkenberg</code>→<code>Nico Hülkenberg</code>, <code>Carlos Sainz</code>→<code>Carlos Sainz Jr.</code>, <code>Alexander Albon</code>→<code>Alex Albon</code>, <code>Red Bull Racing</code>→<code>Red Bull</code>). Cross-referenced live DB data (<code>f1_bets_race</code>/<code>f1_races</code> distinct driver/team values) to build the correct 22-driver/11-team 2026 list. This is at least the fourth instance of the same "stale reference/seed data" bug class found this multi-session task.</li>
+<li><strong>Redundant winner badge</strong> — <a href="src/screens/f1/F1HomeScreen.jsx" target="_blank" rel="noopener">F1HomeScreen.jsx</a> showed a small 🏆 winner badge in the race's collapsed header row unconditionally for any finished race, duplicating the full podium already shown in the RACE RESULT box once expanded. Now suppressed once <code>isExpanded</code> is true.</li>
+<li><strong>Confusing screen on Clubhouse activity click</strong> — <a href="src/screens/ClubhouseScreen.jsx" target="_blank" rel="noopener">ClubhouseScreen.jsx</a>'s <code>FeedEntry.onEnter</code> was calling <code>onEnter(entry.league_id)</code> (a raw UUID string) where the wired handler <code>enterLeague(league)</code> expects an object with an <code>.id</code> property — evaluating to <code>navigate('/league/undefined')</code>, which still matches <code>LeagueScreen</code>'s detail-hub route and renders a broken-looking screen with no real league behind it. Fixed to call <code>onEnter({ id: entry.league_id })</code>.</li>
+<li><strong>Global "My Leagues" list ignoring Clubhouse scoping</strong> — same click's second-order complaint: <code>LeagueScreen.jsx</code>'s LEAGUES list queried <code>league_members</code> by <code>user_id</code> only, showing every league the user belongs to across every Clubhouse, not just the active one. Now filters through <code>circle_leagues</code> for the active Clubhouse (<code>useClubhouseContext()</code>), falling back to the unfiltered list only when there's no active Clubhouse. Checked for the Rolldown TDZ import-depth crash pattern before adding the import (no descendant of <code>LeagueScreen</code> also imports <code>useClubhouseContext</code>) — confirmed build clean.</li>
+<li><strong>Stale activity leaking across Clubhouses</strong> — root-caused to <a href="src/hooks/useClubhouse.js" target="_blank" rel="noopener">useClubhouse.js</a>'s <code>fetchCircleData(circleId)</code>: it only reset its five state slices (<code>competitions</code>, <code>feed</code>, <code>members</code>, <code>metaStandings</code>, <code>notifications</code>) on the <code>!circleId</code> branch, never when switching between two different real Clubhouses, and had no cancellation/race guard around its <code>Promise.all</code> — unlike the correctly-implemented sibling <code>useClubhouseFrontpage.js</code>. Fixed: state now resets unconditionally at the start of every call, and a <code>latestCircleIdRef</code> guard discards any response that resolves after a newer switch has already started.</li>
+<li><strong>Clubhouse-level Activity feed "duplication"</strong> — not a bug: <code>ClubhouseScreen</code>'s Activity panel is scoped to everyone's activity across every league linked to that Clubhouse (via <code>circle_leagues</code>), while Recap's "My Digest" is the logged-in user's own activity across all their Clubhouses (via RLS only, no Clubhouse scoping) — genuinely different value once a Clubhouse has 2+ linked competitions, but they look identical for a single-league Clubhouse like Cascais 16 F1, which is what prompted the report. Put to the user as a 3-way choice (keep as-is / hide for single-league Clubhouses / remove entirely) — user chose <strong>keep as-is</strong>, no code change.</li>
+</ul>
+<p>Verified: <code>npm run lint</code> (0 errors, pre-existing style warnings only), <code>npm run build</code> (clean, no Rolldown TDZ crash), CI 84/84 E2E green. F1 roster and winner-badge fixes confirmed live in browser against real data. The three Clubhouse-scoped fixes were verified by code inspection + build only — this session's demo account has no Clubhouse membership, and creating/modifying real users' Clubhouse membership rows purely to enable a live click-through was judged out of scope without an explicit ask.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 paddock feedback round 2 — calendar merge, picks clarity, report parity, top bar/sidebar polish (2026-08-26) — pr #848 
 
 **context**: the &quot;cascais 16 f1&quot; paddock creator sent a second, 8-item feedback pass after pr #846 went live (6 screenshots attached). diagnosed and fixed the 6 items that were pure code changes on `claude/f1-picks-report-chat-fixes`, verified live against the real paddock (real production supabase data, not demo mode) before merging. the remaining 2 items are held for user input — see below.
