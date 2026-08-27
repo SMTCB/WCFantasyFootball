@@ -331,11 +331,11 @@ export default function F1HomeScreen() {
                         {race.is_saturday ? ' · SPRINT' : ''}
                       </div>
                     </div>
-                    {race.status === 'finished' && race.result_p1 ? (
+                    {race.status === 'finished' && race.result_p1 && !isExpanded ? (
                       <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>
                         🏆 {race.result_p1.split(' ').pop()}
                       </span>
-                    ) : (
+                    ) : race.status === 'finished' && race.result_p1 ? null : (
                       <RaceStatusBadge race={race} isNext={isNext} isPast={isPast} />
                     )}
                   </button>

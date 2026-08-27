@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -55,15 +55,22 @@ export function useClubhouse() {
 
   useEffect(() => { fetchMyCircles(); }, [fetchMyCircles]);
 
+  // Tracks the most recently requested circleId so a slower, stale request
+  // (e.g. from the previously active Clubhouse) can't overwrite state after
+  // the user has already switched to a different Clubhouse.
+  const latestCircleIdRef = useRef(null);
+
   const fetchCircleData = useCallback(async (circleId) => {
-    if (!circleId) {
-      setCompetitions({ football: [], f1: [], tennis: [] });
-      setFeed([]);
-      setMembers([]);
-      setMetaStandings([]);
-      setNotifications([]);
-      return;
-    }
+    latestCircleIdRef.current = circleId;
+    // Reset immediately — not just on the !circleId branch — so switching
+    // between two real Clubhouses can't leave the previous one's data on
+    // screen while the new one's request is still in flight.
+    setCompetitions({ football: [], f1: [], tennis: [] });
+    setFeed([]);
+    setMembers([]);
+    setMetaStandings([]);
+    setNotifications([]);
+    if (!circleId) return;
     const [compRes, feedRes, membersRes, notifRes, metaRes] = await Promise.all([
       supabase.rpc('get_clubhouse_competitions', { p_circle_id: circleId }),
       supabase.rpc('get_circle_feed', { p_circle_id: circleId, p_limit: 30 }),
@@ -79,6 +86,9 @@ export function useClubhouse() {
         .limit(50),
       supabase.rpc('get_circle_meta_standings', { p_circle_id: circleId }),
     ]);
+    // A newer fetchCircleData call has since started (user switched Clubhouses
+    // again while this one was still in flight) — discard this stale result.
+    if (latestCircleIdRef.current !== circleId) return;
     // get_clubhouse_competitions returns { error: 'NOT_MEMBER' } in-band (200 OK) when the
     // membership check fails server-side — that shape lacks football/f1/tennis keys and will
     // crash any consumer that reads competitions.<sport>.length without a fallback. Treat it
