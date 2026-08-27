@@ -8,6 +8,7 @@ import { getFlag } from '../../lib/f1/f1-data';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
+import CompetitionRankBadge from '../../components/CompetitionRankBadge';
 import F1RacePickForm from './F1RacePickForm';
 
 // Checkered-flag motif — pure CSS checkerboard, no image asset. Recurs sparingly
@@ -280,9 +281,7 @@ export default function F1HomeScreen() {
                   const isMe = user && m.user_id === user.id;
                   return (
                     <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isMe ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isMe ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, padding: '10px 12px' }}>
-                      <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: m.rank <= 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 20 }}>
-                        {m.rank <= 3 ? ['🥇','🥈','🥉'][m.rank - 1] : m.rank}
-                      </span>
+                      <CompetitionRankBadge rank={m.rank} accent="var(--f1)" size="sm" />
                       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)', fontWeight: isMe ? 700 : 400, flex: 1 }}>
                         {m.display_name}{isMe ? ' (You)' : ''}
                       </span>
@@ -316,7 +315,7 @@ export default function F1HomeScreen() {
                 <div key={race.id} id={`f1-race-row-${race.round_number}`}>
                   <button
                     onClick={() => setExpandedRound(isExpanded ? null : race.round_number)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isNext ? 'var(--f1)' : 'var(--rule)'}`, borderLeft: isNext ? '3px solid var(--f1)' : `1px solid var(--rule)`, borderBottom: isExpanded ? 'none' : undefined, borderRadius: isExpanded ? '6px 6px 0 0' : 6, cursor: 'pointer', opacity: isDimmed && !isExpanded ? 0.42 : 1, textAlign: 'left', width: '100%' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'var(--f1-bg)' : 'var(--card)', border: isNext ? '2px solid var(--f1)' : '1px solid var(--rule)', borderBottom: isExpanded ? 'none' : undefined, borderRadius: isExpanded ? '6px 6px 0 0' : 6, cursor: 'pointer', opacity: isDimmed && !isExpanded ? 0.42 : 1, textAlign: 'left', width: '100%' }}
                   >
                     <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', minWidth: 24, textAlign: 'right' }}>
                       R{race.round_number}

@@ -82,7 +82,6 @@ export default function TennisLeaderboardScreen() {
                 accent="var(--ten)"
                 activeColumnKey="total"
                 highlightUserId={null}
-                useMedals
                 renderName={(row) => (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', fontWeight: 500 }}>

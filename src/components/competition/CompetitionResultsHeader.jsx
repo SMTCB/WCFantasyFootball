@@ -1,6 +1,6 @@
 import { useIsMobile } from '../../hooks/useViewport';
+import CompetitionRankBadge from '../CompetitionRankBadge';
 
-const MEDAL = ['🥇', '🥈', '🥉'];
 const MONO  = 'JetBrains Mono, monospace';
 const DISP  = 'Archivo Black, sans-serif';
 
@@ -17,7 +17,6 @@ const DISP  = 'Archivo Black, sans-serif';
  *   accent          - CSS var for the active competition's sport color
  *   activeColumnKey - column key to highlight (header + value colored with accent)
  *   highlightUserId - user id to mark with highlight border + "YOU" badge
- *   useMedals       - show 🥇🥈🥉 for rows 0–2 instead of rank number
  *   rankWidth       - CSS width of the rank column (default '28px')
  *   nameLabel       - header label for the name column (default 'MANAGER')
  *   renderName      - (row, isMe) => ReactNode  — name cell content
@@ -37,7 +36,6 @@ export function CompetitionResultsHeader({
   accent = 'var(--accent)',
   activeColumnKey,
   highlightUserId,
-  useMedals = false,
   rankWidth = '28px',
   nameLabel = 'MANAGER',
   renderName,
@@ -111,7 +109,7 @@ export function CompetitionResultsHeader({
       <div style={{ padding: '0 12px' }}>
         {rows.map((row, i) => {
           const isMe = !!(highlightUserId && row.user_id === highlightUserId);
-          const rank = useMedals && i < 3 ? MEDAL[i] : (row.rank ?? i + 1);
+          const rank = row.rank ?? i + 1;
 
           const leadIsActive = leadCol?.key === activeColumnKey;
           const leadColor = leadCol
@@ -139,18 +137,7 @@ export function CompetitionResultsHeader({
               }}
             >
               {/* Rank chip */}
-              <span
-                style={{
-                  fontFamily: DISP,
-                  fontSize:   i < 3 && useMedals ? 18 : 13,
-                  color:      isMe ? accent : 'var(--mute)',
-                  minWidth:   22,
-                  textAlign:  'center',
-                  flexShrink: 0,
-                }}
-              >
-                {rank}
-              </span>
+              <CompetitionRankBadge rank={rank} accent={accent} size="sm" />
 
               {/* Name area + support chips */}
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -240,7 +227,7 @@ export function CompetitionResultsHeader({
         gridTemplateColumns: gridTemplate,
         columnGap: gapPx,
         padding: rowPadding,
-        borderBottom: '1px solid var(--rule)',
+        borderBottom: `2px solid ${accent}`,
         alignItems: 'center',
       }}>
         <div /> {/* rank */}
@@ -263,9 +250,7 @@ export function CompetitionResultsHeader({
       {/* Data rows */}
       {rows.map((row, i) => {
         const isMe = !!(highlightUserId && row.user_id === highlightUserId);
-        const rank = useMedals && i < 3
-          ? MEDAL[i]
-          : (row.rank ?? i + 1);
+        const rank = row.rank ?? i + 1;
 
         return (
           <div
@@ -281,15 +266,8 @@ export function CompetitionResultsHeader({
               background: isMe ? `color-mix(in srgb, ${accent} 6%, transparent)` : 'transparent',
             }}
           >
-            {/* Rank / medal */}
-            <span style={{
-              fontFamily: DISP,
-              fontSize: i < 3 && useMedals ? 18 : 14,
-              color: 'var(--mute)',
-              minWidth: 18,
-            }}>
-              {rank}
-            </span>
+            {/* Rank */}
+            <CompetitionRankBadge rank={rank} accent={accent} size="sm" />
 
             {/* Name cell */}
             <div style={{ minWidth: 0 }}>

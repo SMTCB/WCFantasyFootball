@@ -215,6 +215,14 @@ export default function AppLayout({ children }) {
   const { myCircles, competitions, activeCircleId, setActiveCircleId, refreshCompetitions } = useClubhouseContext();
   const { sport, competitionId } = useActiveCompetition();
   const [showNewCompFlow, setShowNewCompFlow] = useState(false);
+  const mainRef = useRef(null);
+
+  // #main-content persists across route changes and is the real scroll container
+  // (not window) — reset it on navigation so e.g. switching Clubhouses doesn't
+  // land the new screen scrolled to the previous screen's position.
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0);
+  }, [location.pathname]);
 
   // Mobile bottom bar is the active competition's screens; sidebar never changes
   const MOBILE_NAV = sport === 'f1' ? buildF1Nav(competitionId) : sport === 'tennis' ? TENNIS_NAV : FOOTBALL_NAV;
@@ -335,6 +343,7 @@ export default function AppLayout({ children }) {
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <div
         id="main-content"
+        ref={mainRef}
         tabIndex={-1}
         data-testid="main-content"
         className="flex-1 min-w-0 lg:ml-[220px] overflow-y-auto"

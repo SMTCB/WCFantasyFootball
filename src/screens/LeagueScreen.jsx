@@ -14,7 +14,7 @@ import H2HSheet from '../components/H2HSheet';
 import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 
-import NotificationPanel from '../components/NotificationPanel';
+import NotificationBell from '../components/NotificationBell';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useCommissioner }   from '../hooks/useCommissioner';
 import { useTradeProposals } from '../hooks/useTradeProposals';
@@ -39,6 +39,16 @@ import CommissionerPanel      from '../components/league/CommissionerPanel';
 import RecapView             from '../components/league/RecapView';
 import H2HView               from '../components/league/H2HView';
 
+function timeAgoLabel(iso) {
+  const seconds = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 const LEAGUE_TOUR_STEPS = [
   {
     target: 'league-standings',
@@ -49,11 +59,6 @@ const LEAGUE_TOUR_STEPS = [
     target: 'league-tabs',
     title:  'League Tabs',
     body:   'Switch between Standings, Recap, Bets, Trading, and Stats. Commissioners also see an Admin tab.',
-  },
-  {
-    target: 'league-invite',
-    title:  'Invite Your Mates',
-    body:   'Share your league\'s invite code to bring new managers in. Once they join, the draft order is set automatically.',
   },
 ];
 
@@ -1079,9 +1084,44 @@ export default function LeagueScreen() {
 
   if (leagueId) {
     const name       = activeLeague?.leagues?.name || activeLeague?.name || 'SYNCING...';
-    const joinCode   = activeLeague?.leagues?.join_code ?? activeLeague?.join_code ?? null;
     const h2hEnabled = activeLeague?.leagues?.h2h_enabled ?? false;
     const leagueMode = h2hEnabled ? 'draft_h2h' : (activeLeague?.leagues?.format === 'noduplicate' ? 'draft' : 'classic');
+
+    // Reproduces NotificationPanel's row content/click-handling for the shared NotificationBell shell.
+    const leagueRenderRow = (n, { onNavigated }) => (
+      <div
+        key={n.id}
+        onClick={() => {
+          if (!n.is_read) markNotificationAsRead(n.id);
+          const link = n.link ?? n.action_url ?? n.metadata?.link;
+          if (link) { navigate(link); onNavigated?.(); }
+        }}
+        style={{
+          display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 14px',
+          borderBottom: '1px solid var(--rule)',
+          background: !n.is_read ? 'var(--accent-bg)' : 'transparent',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{ paddingTop: 5, flexShrink: 0, width: 6 }}>
+          {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)' }} />}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--paper)', lineHeight: 1.3 }}>
+            {n.title}
+          </div>
+          {n.description && (
+            <div style={{ fontSize: 'var(--fs-micro)', marginTop: 2, lineHeight: 1.4, color: 'var(--mute)' }}>
+              {n.description}
+            </div>
+          )}
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', marginTop: 4, color: 'rgba(139,149,161,0.5)' }}>
+            {timeAgoLabel(n.created_at)}
+          </div>
+        </div>
+      </div>
+    );
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
@@ -1123,25 +1163,18 @@ export default function LeagueScreen() {
             leagueMode={leagueMode}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <NotificationPanel
-                  notifications={notifications}
-                  unreadCount={notificationCount}
-                  extraCount={activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0}
-                  onMarkAsRead={markNotificationAsRead}
-                  onClearAll={clearAllNotifications}
-                  onNavigate={(link) => link && navigate(link)}
-                />
-                <button
-                  onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
-                  data-tour="league-invite"
-                  disabled={!joinCode}
-                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
-                >+ INVITE</button>
                 <button
                   onClick={() => view === 'commissioner' ? replayCommissionerTour() : replayLeagueTour()}
                   title={view === 'commissioner' ? 'Replay admin tour' : 'Replay league tour'}
                   style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid var(--shell-rule-strong)', background: 'var(--shell-fill)', color: 'var(--on-shell-dim)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >?</button>
+                <NotificationBell
+                  notifications={notifications}
+                  unreadCount={notificationCount + (activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0)}
+                  onMarkAll={clearAllNotifications}
+                  isDesktop={true}
+                  renderRow={leagueRenderRow}
+                />
               </div>
             }
           />
@@ -1162,20 +1195,13 @@ export default function LeagueScreen() {
             leagueMode={leagueMode}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <NotificationPanel
+                <NotificationBell
                   notifications={notifications}
-                  unreadCount={notificationCount}
-                  extraCount={activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0}
-                  onMarkAsRead={markNotificationAsRead}
-                  onClearAll={clearAllNotifications}
-                  onNavigate={(link) => link && navigate(link)}
+                  unreadCount={notificationCount + (activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0)}
+                  onMarkAll={clearAllNotifications}
+                  isDesktop={false}
+                  renderRow={leagueRenderRow}
                 />
-                <button
-                  onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
-                  data-tour="league-invite"
-                  disabled={!joinCode}
-                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
-                >+ INVITE</button>
               </div>
             }
           />
