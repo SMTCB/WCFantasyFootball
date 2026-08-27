@@ -25,15 +25,25 @@ shadow_port = 54320
 major_version = 17
 
 [db.migrations]
-# Applies every file in supabase/migrations/ in order on first `start` /
-# `db reset` — the real migration history, not a schema.sql snapshot (that
-# shortcut is specific to the CI schema-rehearsal job's per-PR speed need).
-enabled = true
+# Disabled (2026-08-27, Tier 3 Foundation) — a real `supabase db reset` full
+# replay was attempted and hard-failed at migration 09/281 on a genuine,
+# pre-existing schema-drift bug (a prod fix applied directly, never captured
+# as a migration file — same root cause Tier 2's schema-rehearsal job already
+# documented and works around by loading supabase/schema.sql instead of
+# replaying migrations from scratch; see TESTING_STRATEGY.md's Tier 2
+# section). Unknown how many more such breaks exist further down the ~270
+# remaining migrations, and fixing them means editing already-applied
+# migration files, which CLAUDE.md's append-only rule exists to prevent.
+# Tier 3 now bootstraps the local stack's schema the same way Tier 2 does:
+# `scripts/e2e-local.mjs` loads schema.sql directly via psql/pg after
+# `supabase start`, then loads seed.sql — see that script, not this toggle.
+enabled = false
 
 [db.seed]
-# Off until the Tier-3 synthetic multi-sport seed script (TESTING_STRATEGY.md
-# Tier 3 "Build order" step 2 — tracked as a BACKLOG follow-up, not yet
-# written) exists at supabase/seed.sql. Flip to true once it lands.
+# Disabled — the CLI's automatic seed-after-migrations hook assumes
+# migrations built the schema first, which Tier 3 now bypasses (see
+# [db.migrations] above). supabase/seed.sql is applied manually by
+# scripts/e2e-local.mjs, after it loads schema.sql, not by this hook.
 enabled = false
 sql_paths = ["./seed.sql"]
 

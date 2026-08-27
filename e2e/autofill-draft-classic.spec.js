@@ -3,12 +3,14 @@
  * Full E2E: auto-fill across all screens, draft mode, and classic mode.
  *
  * Auth: two test accounts (e2e_a@fantasykit.test / e2e_b@fantasykit.test)
- * provisioned via the e2e-setup edge function (service role, email pre-confirmed).
- * Sessions are injected into browser localStorage — no login UI required.
+ * are pre-provisioned by supabase/seed.sql (raw auth.users/auth.identities
+ * inserts — see that file's header for the fixed-ID reference). Sessions
+ * are injected into browser localStorage — no login UI required.
  *
- * Data: uses real production Supabase database.
- * Draft tests use WC 2026 players (future fixtures, no transfer lock).
- * Classic tests use EPL players (tournament 426 — real Premier League data).
+ * Data: targets the local Tier 3 stack (npm run test:e2e:local), seeded by
+ * supabase/seed.sql — a synthetic, deterministic multi-sport dataset, not
+ * real production data. Draft tests use the seeded WC pool (tournament_id
+ * 429); classic tests use the seeded EPL pool (tournament_id 426).
  */
 
 import { test, expect } from '@playwright/test';
@@ -21,10 +23,12 @@ test.describe.configure({ retries: 0 });
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const E2E_SECRET        = 'forzakit-e2e-2026';
+// Seeded Circle both e2e_a/e2e_b are members of (supabase/seed.sql) —
+// create_league()'s 6-arg overload requires a circle_id (CIRCLE_REQUIRED).
+const CIRCLE_ID = 'c1000000-0000-4000-a000-000000000001';
 
-const EPL_TOURNAMENT  = '426'; // Premier League 2025-26
-const WC_TOURNAMENT   = '429'; // FIFA World Cup 2026
+const EPL_TOURNAMENT  = '426'; // seeded EPL pool
+const WC_TOURNAMENT   = '429'; // seeded WC pool
 const SQUAD_SIZE      = 15;
 const DRAFT_LIST_SIZE = 30;
 const BUDGET          = 100;
@@ -52,23 +56,6 @@ async function signIn(email, password) {
   const { data, error } = await client.auth.signInWithPassword({ email, password });
   if (error || !data?.session) throw new Error(`sign-in failed for ${email}: ${error?.message}`);
   return { client, session: data.session };
-}
-
-async function provisionTestUsers() {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/e2e-setup`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'x-e2e-secret': E2E_SECRET },
-    body: JSON.stringify({ users: [
-      { email: USER_A.email, password: USER_A.password },
-      { email: USER_B.email, password: USER_B.password },
-    ]}),
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`e2e-setup HTTP ${res.status}: ${JSON.stringify(body)}`);
-  // "already_registered" is not a failure — user exists from a previous run, which is fine.
-  const failures = (body.results ?? []).filter(r => r.error && !r.error.toLowerCase().includes('already'));
-  if (failures.length) throw new Error(`user provisioning failed: ${JSON.stringify(failures)}`);
-  console.log('✅ Test users provisioned:', body.results.map(r => r.email).join(', '));
 }
 
 /** Inject a Supabase session into a Playwright page before navigation. */
@@ -179,12 +166,12 @@ function checkPositionCaps(players) {
 
 test.beforeAll(async () => {
   // Guard: if sessions are already active (beforeAll called twice in same worker),
-  // skip re-provisioning — updating the password would invalidate existing JWTs.
+  // skip re-signing-in — that would issue new JWTs mid-test.
   if (sessionA && supaA) {
-    console.log('ℹ️ Sessions already active — skipping re-provision');
+    console.log('ℹ️ Sessions already active — skipping re-sign-in');
     return;
   }
-  await provisionTestUsers();
+  // Accounts are pre-provisioned by supabase/seed.sql — no setup call needed.
   const ra = await signIn(USER_A.email, USER_A.password);
   const rb = await signIn(USER_B.email, USER_B.password);
   sessionA = ra.session;  supaA = ra.client;
@@ -213,6 +200,7 @@ test.describe('EPL classic league — auto-fill on all screens', () => {
       p_format:        'classic',
       p_user_id:       sessionA.user.id,
       p_tournament_id: EPL_TOURNAMENT,
+      p_circle_id:     CIRCLE_ID,
     });
     expect(error, `create_league: ${error?.message}`).toBeNull();
     const parsed = typeof league === 'string' ? JSON.parse(league) : league;
@@ -246,6 +234,12 @@ test.describe('EPL classic league — auto-fill on all screens', () => {
   });
 
   test('1.3 API auto-fill: buy minimum formation with EPL players', async () => {
+    // apiFillSquad makes 7+ sequential Edge Function round-trips (one per
+    // player bought) against the local stack's single edge_runtime container.
+    // Under the full local suite's two-project concurrent load, that shared
+    // container can be busy enough to push cumulative latency past the file's
+    // 20s default — bump this test's own budget rather than weaken assertions.
+    test.setTimeout(45000);
     const { bought, budgetLeft, errors } = await apiFillSquad(
       sessionA.access_token, eplLeagueId, EPL_TOURNAMENT
     );
@@ -399,7 +393,15 @@ test.describe('EPL classic league — auto-fill on all screens', () => {
     console.log(`✅ Sold EPL player — £${before} → £${data.budget_remaining}`);
   });
 
-  test('1.7 No-duplicate: User B gets 409 for User A\'s players', async () => {
+  test('1.7 Classic mode allows shared ownership: User B can also buy User A\'s player', async () => {
+    // Classic leagues intentionally allow multiple managers to own the same
+    // player (see process-transfer/index.js: `if (leagueMode === 'classic')
+    // { /* no-op: multiple managers can own the same player */ }` — the
+    // PLAYER_TAKEN/409 no-repeat check only applies to draft/noduplicate
+    // leagues). This test used to assert a 409 here, which was never correct
+    // for a classic-format league — it now asserts the real, intended
+    // behavior instead.
+
     // Buy one player as User A first
     const { data: pool } = await supaA.from('players')
       .select('id, price').eq('tournament_id', EPL_TOURNAMENT).limit(20);
@@ -409,21 +411,21 @@ test.describe('EPL classic league — auto-fill on all screens', () => {
       const d = await buyPlayer(sessionA.access_token, eplLeagueId, p);
       if (d.ok) { ownedPlayer = p; break; }
     }
-    if (!ownedPlayer) { console.log('⚠ Could not buy any EPL player for no-duplicate test'); return; }
+    if (!ownedPlayer) { console.log('⚠ Could not buy any EPL player for shared-ownership test'); return; }
 
     // User B joins league
     await supaB.rpc('join_league_by_code', { p_code: eplJoinCode, p_user_id: sessionB.user.id });
 
-    // User B tries to buy same player → 409
+    // User B buys the same player → succeeds (classic = shared ownership)
     const res = await fetch(`${SUPABASE_URL}/functions/v1/process-transfer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionB.access_token}`, 'apikey': SUPABASE_ANON_KEY },
       body: JSON.stringify({ action: 'buy', player_id: ownedPlayer.id, player_price: ownedPlayer.price, league_id: eplLeagueId }),
     });
     const data = await res.json();
-    expect(res.status).toBe(409);
-    expect(data.code).toBe('PLAYER_TAKEN');
-    console.log(`✅ No-duplicate enforced: ${data.code}`);
+    expect(res.status, `Expected shared ownership to succeed: ${data.error}`).toBe(200);
+    expect(data.ok).toBe(true);
+    console.log(`✅ Shared ownership allowed in classic mode: User B also owns ${ownedPlayer.id}`);
   });
 });
 
@@ -437,15 +439,23 @@ test.describe('WC 2026 draft league — full flow', () => {
     const { data: league, error } = await supaA.rpc('create_league', {
       p_name: 'E2E WC Draft', p_format: 'noduplicate',
       p_user_id: sessionA.user.id, p_tournament_id: WC_TOURNAMENT,
+      p_circle_id: CIRCLE_ID,
     });
     expect(error, `create_league: ${error?.message}`).toBeNull();
     const parsed = typeof league === 'string' ? JSON.parse(league) : league;
     draftLeagueId = parsed.id;
     draftJoinCode = parsed.join_code;
 
-    // Set a draft deadline 1 hour out
+    // Set a draft deadline 1 hour out. Also pin draft_list_size to 30 — the
+    // schema column default is 45 (leagues.draft_list_size DEFAULT 45), but
+    // this scenario's seeded WC pool (supabase/seed.sql, tournament 429) only
+    // has 40 players, sized for a 30-pick wishlist. draft_list_size has no
+    // UI setter; it's a plain per-league override, same as draft_deadline.
     await supaA.from('leagues')
-      .update({ draft_deadline: new Date(Date.now() + 3_600_000).toISOString() })
+      .update({
+        draft_deadline: new Date(Date.now() + 3_600_000).toISOString(),
+        draft_list_size: DRAFT_LIST_SIZE,
+      })
       .eq('id', draftLeagueId);
 
     const { data: lRow } = await supaA.from('leagues')
@@ -469,7 +479,7 @@ test.describe('WC 2026 draft league — full flow', () => {
       league_id: draftLeagueId, user_id: sessionA.user.id,
       player_ids: picks.map(p => p.id),
       submitted_at: new Date().toISOString(), status: 'pending',
-    }, { onConflict: 'league_id,user_id' });
+    }, { onConflict: 'league_id,user_id,phase' }); // real unique constraint is 3-column (draft_submissions_league_id_user_id_phase_key); phase defaults to 'group'
 
     expect(error, `Draft submission: ${error?.message}`).toBeNull();
     console.log(`✅ User A submitted ${picks.length}-player draft list`);
@@ -499,7 +509,7 @@ test.describe('WC 2026 draft league — full flow', () => {
     const { error: subErr } = await supaB.from('draft_submissions').upsert({
       league_id: draftLeagueId, user_id: sessionB.user.id,
       player_ids: fullList, submitted_at: new Date().toISOString(), status: 'pending',
-    }, { onConflict: 'league_id,user_id' });
+    }, { onConflict: 'league_id,user_id,phase' }); // real unique constraint is 3-column (draft_submissions_league_id_user_id_phase_key); phase defaults to 'group'
     expect(subErr, `User B submission: ${subErr?.message}`).toBeNull();
 
     const overlapCount = fullList.filter(id => subA.player_ids.includes(id)).length;

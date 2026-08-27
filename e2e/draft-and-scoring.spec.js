@@ -7,6 +7,9 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-target.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Seeded draft league (WC, noduplicate format) from supabase/seed.sql
+const DRAFT_LEAGUE_ID = '11000000-0000-4000-a000-000000000002';
+
 let REAL_PLAYERS = [];
 
 test.beforeAll(async () => {
@@ -187,8 +190,7 @@ test.describe('Draft System - Player List', () => {
     page.on('pageerror', err => errors.push(err.message));
 
     await skipOnboarding(page);
-    const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
-    await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
+    await page.goto(`/league/${DRAFT_LEAGUE_ID}/draft`);
     await waitForContent(page);
     await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
 
@@ -217,16 +219,18 @@ test.describe('Draft System - Player List', () => {
     page.on('pageerror', err => errors.push(err.message));
 
     await skipOnboarding(page);
-    const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
-    await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
+    await page.goto(`/league/${DRAFT_LEAGUE_ID}/draft`);
     await page.waitForSelector('text=Build Your List', { timeout: 10000 });
     await page.waitForTimeout(1500); // let players load
 
     const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
     if (!isDraftScreen) { test.skip(); return; }
 
-    // Search for a specific, unique player name to get exactly 1 result
-    const TARGET = 'Alexander Isak';
+    // Search for a specific, unique player name to get exactly 1 result.
+    // Seeded WC pool (supabase/seed.sql, tournament_id 429) has 40 players
+    // named "Seed WC Player N" (N=1-40) — a two-digit N is a substring-unique
+    // search target since no player name embeds another as a suffix.
+    const TARGET = 'Seed WC Player 25';
     const searchInput = page.locator('input[placeholder*="Search"]');
     if (!await searchInput.isVisible({ timeout: 2000 }).catch(() => false)) { test.skip(); return; }
 

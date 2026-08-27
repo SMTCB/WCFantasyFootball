@@ -11,7 +11,29 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const anonSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const serviceSupabase = SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY) : null;
 
+// Seeded fixtures — supabase/seed.sql.
+const CIRCLE_ID = 'c1000000-0000-4000-a000-000000000001';
+const DRAFT_LEAGUE_ID = '11000000-0000-4000-a000-000000000002';
+
 let REAL_PLAYERS = [];
+
+// Draft-allocation scenario tests (below) create throwaway leagues + manager
+// users via the service-role client — tracked here so afterAll can clean
+// them up. draft_submissions/draft_allocations/gazette_entries all cascade
+// off leagues.id, but the manager rows in public.users don't and need their
+// own delete.
+const createdLeagueIds = [];
+const createdManagerUserIds = [];
+
+async function createManagerUsers(n) {
+  const ids = Array.from({ length: n }, () => globalThis.crypto.randomUUID());
+  const { error } = await serviceSupabase
+    .from('users')
+    .insert(ids.map((id, i) => ({ id, username: `e2e_draft_mgr_${Date.now()}_${i}` })));
+  if (error) throw error;
+  createdManagerUserIds.push(...ids);
+  return ids;
+}
 
 test.beforeAll(async () => {
   const { data: players } = await anonSupabase
@@ -20,6 +42,16 @@ test.beforeAll(async () => {
     .limit(100);
   REAL_PLAYERS = players || [];
   console.log(`Loaded ${REAL_PLAYERS.length} players for testing`);
+});
+
+test.afterAll(async () => {
+  if (!serviceSupabase) return;
+  if (createdLeagueIds.length > 0) {
+    await serviceSupabase.from('leagues').delete().in('id', createdLeagueIds);
+  }
+  if (createdManagerUserIds.length > 0) {
+    await serviceSupabase.from('users').delete().in('id', createdManagerUserIds);
+  }
 });
 
 // ── Test Helpers ──────────────────────────────────────────────────────────────
@@ -65,10 +97,9 @@ test.describe('Draft Mode - Complete Flow', () => {
 
     await skipOnboarding(page);
 
-    // Navigate directly to the known league's draft URL (demo mode doesn't render
+    // Navigate directly to the seeded draft league's URL (demo mode doesn't render
     // league list links, so searching the /league page would find nothing)
-    const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
-    await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
+    await page.goto(`/league/${DRAFT_LEAGUE_ID}/draft`);
     await waitForContent(page);
     // Give the async data load a little extra time
     await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
@@ -101,8 +132,7 @@ test.describe('Draft Mode - Complete Flow', () => {
 
     await skipOnboarding(page);
 
-    const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
-    await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
+    await page.goto(`/league/${DRAFT_LEAGUE_ID}/draft`);
     await waitForContent(page);
     await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
 
@@ -112,7 +142,7 @@ test.describe('Draft Mode - Complete Flow', () => {
       return;
     }
 
-    const draftLeagueId = KNOWN_LEAGUE_ID;
+    const draftLeagueId = DRAFT_LEAGUE_ID;
 
     // ✅ TEST: Verify draft_submissions table enforces no duplicates across managers
     const { data: submissions } = await anonSupabase
@@ -153,6 +183,7 @@ test.describe('Draft Mode - Complete Flow', () => {
         name: 'Draft Test League - All 30',
         format: 'noduplicate',
         max_members: 3,
+        circle_id: CIRCLE_ID,
         draft_deadline: new Date(Date.now() - 60000).toISOString(), // deadline in past
       }])
       .select()
@@ -162,14 +193,16 @@ test.describe('Draft Mode - Complete Flow', () => {
     expect(testLeague).toBeDefined();
 
     const leagueId = testLeague.id;
+    createdLeagueIds.push(leagueId);
 
     // Prepare test players
     const grouped = groupPlayersByPosition(REAL_PLAYERS);
     const selectedPlayers = selectDraftPlayers(grouped);
     expect(selectedPlayers.length).toBeGreaterThanOrEqual(30);
 
-    // Create 3 draft submissions (all with 30 players)
-    const managerIds = ['manager1', 'manager2', 'manager3'];
+    // Create 3 draft submissions (all with 30 players). user_id is a uuid FK
+    // to public.users — needs real rows, not fabricated strings like 'manager1'.
+    const managerIds = await createManagerUsers(3);
     const playerIds = selectedPlayers.slice(0, 30).map(p => p.id);
 
     const { error: submitError } = await serviceSupabase
@@ -236,20 +269,24 @@ test.describe('Draft Mode - Complete Flow', () => {
         name: 'Draft Test League - Partial',
         format: 'noduplicate',
         max_members: 3,
+        circle_id: CIRCLE_ID,
         draft_deadline: new Date(Date.now() - 60000).toISOString(),
       }])
       .select()
       .single();
 
     const leagueId = testLeague.id;
+    createdLeagueIds.push(leagueId);
     const grouped = groupPlayersByPosition(REAL_PLAYERS);
     const selectedPlayers = selectDraftPlayers(grouped);
 
-    // Three submissions with different sizes
+    // Three submissions with different sizes. user_id is a uuid FK to
+    // public.users — needs real rows, not fabricated strings like 'mgr_a'.
+    const [mgrA, mgrB, mgrC] = await createManagerUsers(3);
     const submissions = [
-      { user_id: 'mgr_a', count: 30 },
-      { user_id: 'mgr_b', count: 25 },
-      { user_id: 'mgr_c', count: 20 },
+      { user_id: mgrA, count: 30 },
+      { user_id: mgrB, count: 25 },
+      { user_id: mgrC, count: 20 },
     ];
 
     for (let i = 0; i < submissions.length; i++) {
@@ -305,21 +342,25 @@ test.describe('Draft Mode - Complete Flow', () => {
         name: 'Draft Test League - Sparse',
         format: 'noduplicate',
         max_members: 3,
+        circle_id: CIRCLE_ID,
         draft_deadline: new Date(Date.now() - 60000).toISOString(),
       }])
       .select()
       .single();
 
     const leagueId = testLeague.id;
+    createdLeagueIds.push(leagueId);
     const grouped = groupPlayersByPosition(REAL_PLAYERS);
     const selectedPlayers = selectDraftPlayers(grouped);
 
-    // Only manager 1 submits
+    // Only manager 1 submits. user_id is a uuid FK to public.users — needs a
+    // real row, not a fabricated string like 'mgr_only_one'.
+    const [mgrOnlyOne] = await createManagerUsers(1);
     await serviceSupabase
       .from('draft_submissions')
       .insert([{
         league_id: leagueId,
-        user_id: 'mgr_only_one',
+        user_id: mgrOnlyOne,
         player_ids: selectedPlayers.slice(0, 30).map(p => p.id),
         status: 'pending',
       }]);
@@ -338,7 +379,7 @@ test.describe('Draft Mode - Complete Flow', () => {
       .eq('league_id', leagueId);
 
     expect(allocations?.length).toBe(1);
-    expect(allocations?.[0]?.user_id).toBe('mgr_only_one');
+    expect(allocations?.[0]?.user_id).toBe(mgrOnlyOne);
   });
 
   test('Draft allocation respects position caps (GK:2, DEF:5, MID:5, FWD:3)', async () => {
