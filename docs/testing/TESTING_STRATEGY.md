@@ -1,314 +1,152 @@
 # Testing Strategy — Forza Fantasy League
 
-**Comprehensive approach to test automation, frameworks, and coverage for web + mobile.**
+**The authoritative, current testing approach across all layers — unit, schema, local full-stack, and live-platform.**
 
 ---
 
-## Overview
+## Why this doc was rewritten (2026-08-27)
 
-This project uses **Playwright for end-to-end testing** with a two-tier execution model:
+The previous version of this doc (dated 2026-06-01) had drifted from reality — it described a "planned, not yet implemented" unit-test tier that had actually existed since PR #694 (2026-07-01), referenced Playwright project names (`chromium`/`firefox`) and a port (5173) that no longer match `playwright.config.js` (`desktop-chrome`/`mobile-chrome`, port 5174), and did not mention Docker or `supabase start` at all. This version replaces it after a full audit of what actually runs where (CI job graph, `tests/unit/`, `e2e/*.spec.js`, `docker-compose.yml`, `supabase/config.toml`, `scripts/rehearse-schema.sh`).
 
-1. **CI-Enforced** — `platform.spec.js` (36 tests × 2 browsers, ~3 min) runs on every PR
-2. **Integration** — Mode-scoped specs run manually against live Supabase
-
-Unit tests are planned (Vitest) but not yet implemented.
+**Guiding principle:** every gap in coverage on this platform has one root cause — most features require a real authenticated user, real RLS, or real Realtime, and until now the only place that existed was production. That's not a testing-discipline failure so much as a missing tier. This doc defines that tier (Tier 3 below) alongside the three that already exist, and is explicit about what each tier does and does **not** cover, so nothing gets tested twice and nothing falls through the cracks between tiers.
 
 ---
 
-## Non-Negotiable Testing Principles
+## The Four Tiers
 
-These rules apply to every test session and every spec file.
+| Tier | What it tests | Where it runs | Trigger |
+|---|---|---|---|
+| **1 — Unit / RPC** | Pure SQL-function and calculation logic | Ephemeral Postgres (GitHub Actions service container or local Docker) | Every PR (CI-required) |
+| **2 — Schema Rehearsal** | Does a migration apply cleanly against prod's real schema? | Ephemeral Postgres, loaded from `supabase/schema.sql` | Every PR that touches `supabase/migrations/**` (CI-required); ad hoc locally before writing a migration |
+| **3 — Local Full-Stack E2E** | Auth, RLS, Realtime, multi-user flows, UI, Edge Function orchestration | `npx supabase start` (full local Supabase: Postgres + GoTrue + PostgREST + Realtime + Edge Runtime) | CI (see rollout plan below) + on demand locally |
+| **4 — Live-Platform Verification** | Things that cannot be faked locally: real Forza API data, real wall-clock cron, post-deploy sanity | Production Supabase, explicitly targeted | Manual, pre-launch / pre-pilot gate only — never CI |
 
-### 1. Always Use Real API Data
+Each tier is scoped so it never re-proves what an earlier tier already covers:
 
-Tests must use real players and real fixtures as served by the Forza Football API and already stored in the `players` and `fixtures` tables. Never hard-code made-up player names, club names, or fixture pairings in test flows.
-
-**Exception**: Player prices. The Forza API does not provide price data. When `price IS NULL` for players in the test tournament, seed random prices **before running any transfer or auction test** (see Price Check below). This is the only case where synthetic data is permitted.
-
-### 2. Player Price Hard Stop
-
-Before any test flow involving buy/sell/auction/budget: run the price coverage query in Appendix D. If any player prices are missing, seed them before proceeding. Tests that run against null-price players produce false confidence — budget enforcement is silently bypassed.
-
-### 3. Minimum 4 Participants Per Test League
-
-Every test league must have at least 4 active managers. This is required to test:
-- Standings with a meaningful table (not just 1 or 2 rows)
-- Chat @mentions of other managers
-- Auction competition (bidding between managers)
-- Trade proposals (must have a counterparty)
-- Draft allocation conflicts (multiple managers wanting the same player)
-
-### 4. All Mode × Format Combinations Must Be Covered
-
-The platform has two independent axes that produce four distinct game paths. Every test session must cover all four:
-
-| | League format (EPL-style, season-long) | Cup format (WC/UCL-style, knockout) |
-|---|---|---|
-| **Classic mode** | Classic × League | Classic × Cup |
-| **Draft mode** | Draft × League | Draft × Cup |
-
-Features that behave differently across paths:
-- **Market**: Classic allows shared player ownership; Draft enforces uniqueness (takenByOther blocks)
-- **Admin — Draft section**: hidden for Classic, shown for Draft
-- **Admin — Knockout Draft**: hidden for Classic and for Draft × League; visible for Draft × Cup
-- **Season stepper**: 2 stages (Classic) vs 4 stages (Draft)
-- **FrontPage secondary column**: "LEAGUE ACTIVITY" (Classic) vs "DRAFT REPORT" (Draft)
-- **Market — takenByOther indicator**: Classic shows no blocking; Draft blocks owned players
-- **Transfer window status**: DEADLINE-CONTROLLED for WC/tournament leagues
+- **Tier 3 does not re-test Tier 1's math.** If `transfer.test.js` already proves `execute_transfer_atomic`'s budget arithmetic at the RPC level, a Tier 3 spec exercising the transfer UI should assert the UI reflects the result correctly — not re-derive the arithmetic itself.
+- **Tier 2 only checks "does this migration apply."** It does not assert anything about application behavior — that's Tier 1 (for the RPCs the migration adds) and Tier 3 (for the UI/Auth paths that depend on it).
+- **Tier 4 is intentionally the smallest tier.** Anything that *can* be verified locally with real (seeded) data belongs in Tier 3 instead — Tier 4 exists only for real external-API freshness and real time-based cron behavior, and as a final pre-launch human sanity check.
 
 ---
 
-## Test Tiers & Execution Model
+## Tier 1 — Unit / RPC Tests
 
-### Tier 1: Platform Tests (CI-Enforced)
+**Location**: `tests/unit/*.test.js` · **Runner**: `node --test` (`npm run test:unit`) · **CI job**: `unit-tests`
 
-**File**: `e2e/tests/platform.spec.js`
-**Scope**: Critical user flows required for MVP
-**Browsers**: Chromium × Firefox (2 parallel runs)
-**Execution**: Automatic on every PR (`.github/workflows/ci.yml`)
-**Duration**: ~3 minutes
-**Must-Pass Requirement**: Blocks PR merge to main
+Real `pg` client against a real (but empty-then-seeded) Postgres — not mocked. In CI this is a native GitHub Actions `services: postgres` container; locally, `docker compose up -d db`. Schema comes from `supabase/schema.sql` (a verified snapshot of prod, not a from-scratch migration replay — see Tier 2 below for why that distinction matters), loaded via `tests/unit/bootstrap.sql` then `tests/unit/seed.sql`.
 
-**Flows Tested** (36 tests):
-- Login & session persistence
-- Onboarding wizard
-- Squad building & formation validation
-- Transfer market interaction
-- League creation & standing display
-- League chat
-- Live match updates & Joker chip selection
+**Current coverage**: `auction.test.js`, `coins.test.js`, `lineup.test.js`, `transfer.test.js`, `bet.test.js`, `scoring-logic.test.js` — all football/EPL, all RPC-level or pure-JS logic.
 
-### Tier 2: Integration Tests (Manual)
+**Confirmed gap, to close here (not in a heavier tier, since this is pure logic)**:
+- F1 scoring logic (`score-f1-race`'s extracted pure-calculation path) — zero coverage today.
+- Tennis scoring logic (`score-tennis-tournament`) — zero coverage today.
+- Admin RPCs gated by `competition_admins` — zero coverage today.
 
-**Spec files**: one per game path + shared flows
-**Scope**: Full feature coverage for each mode × format combination
-**Trigger**: Developer runs locally against live Supabase before releases
-**Duration**: 30–60 minutes for a full run across all four paths
-**Live Data Requirement**: Requires real players, fixtures, and Supabase state
-
-**Spec organisation** (aligned to game paths):
-
-| File | Scope |
-|---|---|
-| `platform.spec.js` | CI-enforced: auth, squad, market, league, live (36 tests) |
-| `classic-league.spec.js` | Classic × League format — full journey |
-| `classic-cup.spec.js` | Classic × Cup format — full journey |
-| `draft-league.spec.js` | Draft × League format — full journey |
-| `draft-cup.spec.js` | Draft × Cup format — full journey |
-| `scoring.spec.js` | Score calculation, points log, recalculation (all modes) |
-
-### Tier 3: Unit Tests (Planned, Not Yet Implemented)
-
-**Framework**: Vitest (lightweight, Vite-native)
-**Target**: React hooks (useAuth, useSquad, useTransfer), formatters, validators
-**Trigger**: Developer runs locally + CI check
+**What belongs here**: anything expressible as "given this DB state, call this RPC/function, assert this result" with no Auth session, no HTTP layer, no Realtime, no browser involved.
 
 ---
 
-## Playwright Configuration
+## Tier 2 — Schema Rehearsal
 
-**File**: `playwright.config.js`
+**Script**: `scripts/rehearse-schema.sh` · **CI job**: `schema-rehearsal` (new, gated on `supabase/migrations/**` changes)
 
-```javascript
-use: {
-  baseURL: 'http://localhost:5173',
-  trace: 'on-first-retry',
-  screenshot: 'only-on-failure',
-  video: 'retain-on-failure',
-},
-projects: [
-  { name: 'chromium' },
-  { name: 'firefox' },
-  // Safari omitted (flaky on CI, tested locally)
-],
-webServer: {
-  command: 'npm run dev',
-  port: 5173,
-  reuseExistingServer: process.env.CI !== 'true',
-},
-```
+Loads `supabase/schema.sql` — a `pg_dump` snapshot of prod's *actual* live schema — into a clean Postgres, then applies the migration file(s) under test on top. This deliberately does **not** replay `supabase/migrations/*.sql` from scratch: a full structural diff on 2026-08-01 found that a from-scratch replay does not reproduce prod (75 of ~271 migration files fail to apply cleanly, because at least one prod schema fix was applied directly and never captured as a committed migration file — full detail in [DOCKER_LOCAL_DEV.md](../deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow)). `schema.sql` is the trustworthy baseline; migration replay is not.
 
-**Artifacts**:
-- Trace files: `.playwright/trace.zip` (on failure)
-- Screenshots: `e2e-report/` (on failure)
-- Videos: `e2e-report/` (on failure)
-- HTML Report: `npx playwright show-report`
+**Two entry points, not duplicates of each other**:
+- **CI** (`schema-rehearsal` job in `ci.yml`): auto-detects which files under `supabase/migrations/` changed in the PR, applies each on top of `schema.sql` with `ON_ERROR_STOP=1`. Fails the PR if any changed migration doesn't apply cleanly. No human has to remember to run this.
+- **Local** (`bash scripts/rehearse-schema.sh [path/to/migration.sql]`): same underlying check, but against a full `npx supabase start` stack — meaning you can also *serve and exercise* the Edge Function(s) that depend on the new schema afterward, which CI can't do in this tier. Use this while you're still writing a migration, before it's even a PR.
+
+---
+
+## Tier 3 — Local Full-Stack E2E (the tier that closes the real gap)
+
+**Target**: `npx supabase start` — the Supabase CLI's full local Docker stack (Postgres + GoTrue Auth + PostgREST + Realtime + Storage + Edge Runtime + Studio). This is distinct from the hand-rolled `docker-compose.yml` in this repo, which only ever provided bare Postgres + a single-function Edge runner — it was never a substitute for Auth/RLS/Realtime, and was never meant to be.
+
+**Why this tier didn't exist until now**: `supabase/config.toml` currently only declares `[functions.*]` entrypoints — no `[db]`/`[api]`/`[auth]`/`[studio]`/`[realtime]` sections — so `supabase start` has never been fully wired up for this project. That is the single missing piece blocking every feature that needs a real authenticated, RLS-scoped, multi-user session from being tested anywhere but production.
+
+**What moves here**:
+- The 8 Playwright specs currently gated behind `e2e/supabase-target.js`'s "explicit target required, no default, live-prod-capable" guard (added after incident B-12, 2026-07-25) — `classic`/`draft`-mode specs, `scoring-pipeline.spec.js`, `draft-allocation-e2e.spec.js`, `multi-league-and-bets.spec.js`, `features.spec.js`, `autofill-draft-classic.spec.js`. These **move**, not copy, from "manual-only against live prod" to "run against the local stack by default." The B-12 guard itself stays exactly as-is — it's still correct that these specs must never silently default to prod; the fix is giving them a safe default target to use instead.
+- All new coverage for the confirmed zero-coverage feature areas: **F1** (zero coverage of any kind today — no unit tests, no e2e specs reference it), **tennis** (same), Realtime league chat, `resolve_bet` write-in UI flow (RPC-level already covered by Tier 1; the UI flow is not), coins/P2P beyond the RPC layer (`purchase-coins` function itself is untested), draft lottery/wishlist-draft timing (`run-wishlist-draft`/`WishlistDraftScreen` are referenced in zero test files today), cron-driven scoring orchestration (only the *extracted pure logic* of `calculate-scores`/`score-f1-race`/`score-tennis-tournament` is unit-tested — the functions themselves, as HTTP-invoked orchestration, are not), `trophy_ledger` emission, notification delivery.
+
+**Build order** (tracked in BACKLOG.md, landing as separate PRs):
+1. Expand `supabase/config.toml` with the sections needed for the full stack.
+2. Write one committed synthetic seed script covering all three sports (`TEST_`-prefixed users/circles/leagues — enough real structure to exercise Auth + RLS + multi-user flows without needing live Forza API data for setup).
+3. Retarget the 8 existing specs to the local stack by default; wire a CI job for this tier once proven stable locally.
+4. Add new specs for each confirmed gap above.
+
+---
+
+## Tier 4 — Live-Platform Verification
+
+**Scope, deliberately narrow**: real Forza Football API data freshness/shape, real wall-clock cron timing (the 5-minute lineup-lock cron, draft lottery scheduling), post-deploy sanity after a Vercel/Edge Function release, and a final human/product review before a pilot or season kicks off.
+
+**Never runs in CI.** Always targets production explicitly — same B-12-guard principle as Tier 3's specs: no silent default, target named every time.
+
+**Formalization (open item)**: this session's manual verification pass used an ad hoc `TEST_QA_Manager` account and scratch scripts that live only in a session scratchpad and vanish afterward. That should become a committed, repo-tracked script (`TEST_`-prefixed per the Pilot Safeguards in [CLAUDE.md](../../CLAUDE.md)) that any session can re-run identically as a pre-launch gate, instead of being reinvented each time.
+
+---
+
+## What Runs Where — CI Job Map
+
+**File**: `.github/workflows/ci.yml`
+
+| Job | Tier | Trigger | Notes |
+|---|---|---|---|
+| `security` | — | every PR | npm audit, circular-import (Rolldown TDZ) check, UTF-8 check, Edge Function drift check |
+| `lint` | — | every PR | ESLint |
+| `build` | — | every PR | Vite production build, uploads `dist/` |
+| `unit-tests` | 1 | every PR | Ephemeral Postgres, `tests/unit/*.test.js` |
+| `schema-rehearsal` | 2 | every PR touching `supabase/migrations/**` | Skips (fast no-op) on PRs that don't touch migrations |
+| `e2e` | — | every PR | `platform.spec.js` only — demo mode (`VITE_AUTH_ENABLED=false`), no real Supabase target, not part of the tier system above since it makes no DB calls |
+| *(planned)* Tier 3 job | 3 | see Build order above | Not yet wired into CI — lands once the local stack + retargeted specs are proven stable |
+
+**Local-only, not in CI**: `scripts/rehearse-schema.sh` (Tier 2, interactive), the 8 currently-manual specs (Tier 3, until retargeted), Tier 4 verification.
 
 ---
 
 ## Running Tests Locally
 
 ```bash
-# CI-enforced test
-npx playwright test e2e/tests/platform.spec.js
+# Tier 1 — unit/RPC tests
+docker compose up -d db
+npm run test:unit
 
-# Full integration suite (manual, all four paths)
-npx playwright test e2e/
+# Tier 2 — schema rehearsal (before writing/finishing a migration)
+npx supabase start
+bash scripts/rehearse-schema.sh supabase/migrations/XXX_new_migration.sql
 
-# Single path
-npx playwright test e2e/tests/draft-cup.spec.js
+# Tier 3 — local full-stack E2E (once config.toml/seed script land — see Build order)
+npx supabase start
+npx playwright test e2e/<spec>.spec.js
 
-# Debug specific test
-npx playwright test -g "Draft × Cup — Knockout allocation" --debug
+# Tier 3 (today, pre-migration) — CI-enforced smoke test only
+npx playwright test e2e/platform.spec.js
 
-# View report
-npx playwright show-report e2e-report/
+# Tier 4 — live-platform verification (explicit target required, never a default)
+SUPABASE_URL=... SUPABASE_ANON_KEY=... npx playwright test e2e/<spec>.spec.js
 ```
 
 ---
 
-## Test Data & Isolation
+## Non-Negotiable Testing Principles
 
-### API Data First
+Carried forward unchanged from the previous version of this doc — these apply regardless of tier:
 
-Every test that needs players or fixtures resolves them from the live `players` and `fixtures` tables. Do not use `src/data/*.json` fallbacks in integration tests — those are for offline demo mode only.
-
-### Player Price Fallback
-
-If players in the tournament under test have `price IS NULL`, seed prices before running transfer/auction flows:
-
-```sql
-UPDATE players
-SET price = ROUND((RANDOM() * 3 + 4)::NUMERIC, 1)  -- £4.0–£7.0
-WHERE tournament_id = '<id>' AND price IS NULL;
-```
-
-This is the only permitted use of synthetic data.
-
-### League Isolation
-
-Each test path operates on its own dedicated league (see Appendix A of the E2E playbook for IDs). Test accounts are added to all four leagues, but each spec only exercises its own league to avoid cross-contamination.
-
-### Reset Between Runs
-
-Before each test cycle, run the data reset scripts in the playbook Appendix B. This restores league members, open transfer windows, auction listings, and fresh bet instances.
-
----
-
-## CI/CD Integration
-
-**File**: `.github/workflows/ci.yml`
-
-Pipeline stages:
-1. **Lint** — ESLint (must pass)
-2. **Build** — Vite production build (must succeed)
-3. **E2E Test** — `platform.spec.js` only (36 tests × 2 browsers)
-
-**Local CI Simulation**:
-```bash
-npm run lint && npm run build && npx playwright test e2e/tests/platform.spec.js
-```
-
----
-
-## Coverage Goals & Status
-
-### Mode × Format Coverage Matrix
-
-| Feature | Classic × League | Classic × Cup | Draft × League | Draft × Cup |
-|---|---|---|---|---|
-| Auth & onboarding | ✅ | (same) | (same) | (same) |
-| Market — open buy/sell | ✅ target | ✅ target | ✅ target | ✅ target |
-| Market — Classic no-block | ✅ target | ✅ target | — | — |
-| Market — Draft taken-block | — | — | ✅ target | ✅ target |
-| Draft submission | — | — | ✅ target | ✅ target |
-| Draft allocation (admin) | — | — | ✅ target | ✅ target |
-| Knockout draft | — | — | — | ✅ target |
-| Auctions | ✅ target | ✅ target | ✅ target | ✅ target |
-| Trades | ✅ target | ✅ target | ✅ target | ✅ target |
-| Captain & chips | ✅ target | ✅ target | ✅ target | ✅ target |
-| Starting XI / bench swap | ✅ target | ✅ target | ✅ target | ✅ target |
-| Bets (place/create/resolve) | ✅ target | ✅ target | ✅ target | ✅ target |
-| League News post | ✅ target | ✅ target | ✅ target | ✅ target |
-| Chat & mentions | ✅ target | (same) | (same) | (same) |
-| Admin — season stepper | 2-stage | 2-stage | 4-stage | 4-stage |
-| Admin — transfer window | ✅ target | DEADLINE-CONTROLLED | ✅ target | DEADLINE-CONTROLLED |
-| Admin — knockout draft | hidden | hidden | hidden | ✅ target |
-| Score recalculation | ✅ target | ✅ target | ✅ target | ✅ target |
-| Standings & FrontPage | ACTIVITY col | ACTIVITY col | DRAFT REPORT col | DRAFT REPORT col |
-| Club cap relaxation | — | ✅ target | — | ✅ target |
-| Eliminated club restriction | — | ✅ target | — | ✅ target |
-| Player-repeat relaxation | — | — | — | ✅ target |
-
-### Implementation Status
-
-| Spec | Status |
-|---|---|
-| `platform.spec.js` | ✅ Green (CI) |
-| `classic-league.spec.js` | 📋 New — see Playbook PART B |
-| `classic-cup.spec.js` | 📋 New — see Playbook PART C |
-| `draft-league.spec.js` | 🟡 Partially covered (old playbook FLOW 1–14) — needs rewrite |
-| `draft-cup.spec.js` | 🟡 Partially covered (old playbook WC addendum) — needs rewrite |
-| `scoring.spec.js` | 🟡 In progress |
-
----
-
-## Known Limitations
-
-| Issue | Scope | Workaround |
-|---|---|---|
-| Safari flaky in CI | `platform.spec.js` | Run locally only |
-| Integration specs need live Supabase | All integration specs | Manual only; not CI |
-| Lineup lock cron (5-min interval) | Starting XI tests | Mark fixture as `live` in SQL directly to trigger lock |
-| process-transfer JWT requirement | Buy transfer | Use user's JWT from `localStorage` (not anon key) if direct fetch needed |
-| Player prices not from Forza API | Any budget test | Seed with random £4–£7 before running |
-| ~~No unit tests~~ | Hooks, utilities | ✅ Resolved 2026-07-27 — `tests/unit/` (Vitest, 13 cases: transfer/bet/coins/lineup/auction), PR #694 (2026-07-01) |
-
----
-
-## Best Practices for Writing Tests
-
-### Test User Behaviour, Not Implementation
-
-```javascript
-// ❌ Bad: Testing internal state
-expect(component.state.squadLoaded).toBe(true);
-
-// ✅ Good: Testing observable behaviour
-await expect(page.locator('[data-testid="squad-formation"]')).toBeVisible();
-```
-
-### Self-Contained Setup
-
-```javascript
-// ❌ Bad: Depends on previous test state
-test('user can transfer player', async ({ page }) => {
-  // assumes squad already built
-});
-
-// ✅ Good: Self-contained
-test('user can transfer player', async ({ page }) => {
-  await loginAs(page, 'e2e_test1@fantasykit.test', 'Test2026!!');
-  // now do the transfer
-});
-```
-
-### Use Page Objects for Complex Flows
-
-```javascript
-class LeagueHub {
-  constructor(page, leagueId) {
-    this.page = page;
-    this.leagueId = leagueId;
-  }
-  async navigateTo(tab = 'leaderboard') {
-    await this.page.goto(`/league/${this.leagueId}?tab=${tab}`);
-  }
-  async openAdminTab() { await this.navigateTo('admin'); }
-}
-```
+1. **Real data over synthetic, wherever a tier has access to it.** Tier 1/2 use minimal fixture data by necessity (no Auth layer to seed through). Tier 3's seed script should mirror real shapes (real formation rules, real scoring fields) even though the specific players/circles are synthetic and `TEST_`-prefixed. Tier 4 uses only real production data.
+2. **Player price exception**: the Forza API doesn't provide prices. Where `price IS NULL`, seed before any budget-dependent test — see the query in [E2E_TEST_PLAYBOOK.md](E2E_TEST_PLAYBOOK.md).
+3. **All test leagues/users must be `TEST_`-prefixed** (Pilot Safeguards, [CLAUDE.md](../../CLAUDE.md)) — applies to Tier 3 and Tier 4 alike.
+4. **Mode × format coverage**: Classic vs Draft, League vs Cup are two independent axes that change behavior (Market blocking, Admin panels, season stepper stages, FrontPage columns). Any new Tier 3 spec touching one of these areas should state which combination(s) it covers.
 
 ---
 
 ## Related Documents
 
-- [E2E_TEST_PLAYBOOK.md](E2E_TEST_PLAYBOOK.md) — Step-by-step test flows for all four game paths
-- [../brand/admin-tab/LOGIC.md](../brand/admin-tab/LOGIC.md) — Admin panel behaviour spec
+- [DOCKER_LOCAL_DEV.md](../deployment/DOCKER_LOCAL_DEV.md) — Docker/Supabase CLI setup paths, schema rehearsal detail
+- [E2E_TEST_PLAYBOOK.md](E2E_TEST_PLAYBOOK.md) — Step-by-step flows for the existing mode × format specs
 - [../architecture/DRAFT_SYSTEM_DESIGN.md](../architecture/DRAFT_SYSTEM_DESIGN.md) — Draft mechanics
-- [../architecture/TRANSFER_WINDOW_SYSTEM.md](../architecture/TRANSFER_WINDOW_SYSTEM.md) — Transfer rules
-- [../architecture/STARTING_XI_AND_BENCH.md](../architecture/STARTING_XI_AND_BENCH.md) — Lineup rules
-- [../../CLAUDE.md](../../CLAUDE.md) — Development guidelines (includes E2E section)
+- [../../BACKLOG.md](../../BACKLOG.md) — Tracked build-order items for Tier 3 rollout
+- [../../CLAUDE.md](../../CLAUDE.md) — Pilot Safeguards, migration/DB-write approval rules
 
 ---
 
-Last Updated: **2026-06-01**
+Last Updated: **2026-08-27**

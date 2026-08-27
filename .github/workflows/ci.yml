@@ -169,7 +169,96 @@ jobs:
         if: env.SKIP_UNIT_TESTS != 'true'
         run: npm run test:unit
 
-  # ── 5. Playwright E2E ──────────────────────────────────────────────────────
+  # ── 5. Schema rehearsal (TESTING STRATEGY Tier 2) ─────────────────────────
+  # Auto-runs the same check scripts/rehearse-schema.sh does locally, but only
+  # when a PR actually touches supabase/migrations/ — most PRs skip this job
+  # entirely (fast no-op) rather than paying ephemeral-Postgres startup cost.
+  # Loads supabase/schema.sql (a verified pg_dump snapshot of prod's real
+  # schema — NOT a from-scratch migration replay, which was found 2026-08-01
+  # to diverge from prod; see docs/deployment/DOCKER_LOCAL_DEV.md), then
+  # applies every migration file added/changed in this PR on top with
+  # ON_ERROR_STOP=1. A migration that fails here would also fail against real
+  # prod schema — catches that before merge instead of during the next
+  # migration session.
+  schema-rehearsal:
+    name: Schema Rehearsal
+    runs-on: ubuntu-latest
+    needs: [security, lint]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      REHEARSAL_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need base ref history to diff changed migration files
+
+      - name: Detect migration changes
+        id: changes
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$BASE" ]; then
+            echo "changed_files=" >> "$GITHUB_OUTPUT"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          FILES=$(git diff --name-only --diff-filter=ACM "$BASE" HEAD -- supabase/migrations/ | sort)
+          if [ -z "$FILES" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "changed_files<<EOF"
+              echo "$FILES"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Load schema.sql (skip if absent — mirrors unit-tests job)
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          if [ ! -f supabase/schema.sql ]; then
+            echo "⚠️  supabase/schema.sql not found — skipping rehearsal."
+            echo "SKIP_REHEARSAL=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          psql "$REHEARSAL_DATABASE_URL" < tests/unit/bootstrap.sql
+          # Expected error class here: managed-platform features schema.sql
+          # references but plain postgres:15-alpine doesn't have (pg_net,
+          # pg_cron, http, supabase_vault, supabase_realtime publication).
+          # Not treated as fatal — matches scripts/rehearse-schema.sh's own
+          # tolerance for this exact class of error.
+          psql "$REHEARSAL_DATABASE_URL" -v ON_ERROR_STOP=0 < supabase/schema.sql > schema-load.log 2>&1 || true
+          echo "schema.sql loaded (see schema-load.log for expected extension warnings)"
+
+      - name: Apply changed migration file(s) on top
+        if: steps.changes.outputs.has_changes == 'true' && env.SKIP_REHEARSAL != 'true'
+        run: |
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            echo "=== Applying $f ==="
+            psql "$REHEARSAL_DATABASE_URL" -v ON_ERROR_STOP=1 < "$f"
+          done <<'EOF'
+          ${{ steps.changes.outputs.changed_files }}
+          EOF
+
+      - name: No migration changes — skipped
+        if: steps.changes.outputs.has_changes != 'true'
+        run: echo "No files under supabase/migrations/ changed in this PR — schema rehearsal skipped."
+
+  # ── 6. Playwright E2E ──────────────────────────────────────────────────────
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
