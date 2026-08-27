@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>200</strong><span>closed</span></div>
+      <div class="total-pill"><strong>201</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (122)</span>
+    <span class="chip" data-filter-kind="done">Shipped (123)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">200</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">201</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">122</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">123</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,42 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">122</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">123</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ multi-sport test coverage — pass 1: f1, draft allocation, cup elimination, tennis (2026-08-27) 
+
+**context**: after tier 3 foundation shipped (see entry below), the user reviewed the overall test-coverage picture and named the real risk directly — football is well-tested, but f1, tennis, chat, coins, and draft mechanics are almost entirely untested — and asked for a plan to close that gap &quot;gradually,&quot; first pass now, more later. two explore passes mapped every candidate edge function against the two tier 1 patterns already established in this repo (pg-client tests against real sql rpcs, and pure-js extraction tested with plain `node:test`), splitting candidates into **zero-refactor** (logic already isolated, purely additive test-writing) and **needs-refactor-first** (logic inline in an async handler, needs extracting before it&#x27;s unit-testable).
+
+**shipped** (all four zero-refactor targets, plus tennis pulled forward from &quot;needs-refactor&quot; at the user&#x27;s explicit request):
+- **f1 bet-scoring**: `supabase/functions/score-f1-race/scoring-logic.ts` (new) — `scoring` constants + `scoreracebet(bet, race)` moved out verbatim (already 100% pure, no db calls — this is f1&#x27;s entire scoring mechanism, a prediction/pick&#x27;em game scored against a race result, not a fantasy roster). `index.ts` now imports it. `tests/unit/f1-scoring-logic.test.js` — 14 tests: exact-position picks, wrong-spot-but-podium, dnf hit/miss, team-most-points hit/miss, special-category match (case/whitespace-insensitive), all-correct bonus, empty bet.
+- **draft allocation**: `supabase/functions/_shared/snakedraft.ts` was already an extracted, explicitly-labeled pure module (`normaliseposition()`, `shuffleorder()`, `runsnakedraft()` — the shared allocation core behind both `run-wishlist-draft` and `run-draft-lottery`) with zero tests. `tests/unit/snakedraft.test.js` (new, no extraction needed) — 15 tests covering position-cap/budget/club-cap constraints and the snake turn order.
+- **cup elimination**: `tests/" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Multi-Sport Test Coverage — Pass 1: F1, Draft Allocation, Cup Elimination, Tennis</h3>
+        <p class="card-summary">Context : after Tier 3 Foundation shipped (see entry below), the user reviewed the overall test-coverage picture and named the real risk directly — football is…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-27</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Multi-Sport Test Coverage — Pass 1: F1, Draft Allocation, Cup Elimination, Tennis</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : after Tier 3 Foundation shipped (see entry below), the user reviewed the overall test-coverage picture and named the real risk directly — football is…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-27</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: after Tier 3 Foundation shipped (see entry below), the user reviewed the overall test-coverage picture and named the real risk directly — football is well-tested, but F1, tennis, chat, coins, and draft mechanics are almost entirely untested — and asked for a plan to close that gap "gradually," first pass now, more later. Two Explore passes mapped every candidate Edge Function against the two Tier 1 patterns already established in this repo (pg-client tests against real SQL RPCs, and pure-JS extraction tested with plain <code>node:test</code>), splitting candidates into <strong>zero-refactor</strong> (logic already isolated, purely additive test-writing) and <strong>needs-refactor-first</strong> (logic inline in an async handler, needs extracting before it's unit-testable).</p>
+<p><strong>Shipped</strong> (all four zero-refactor targets, plus tennis pulled forward from "needs-refactor" at the user's explicit request):</p>
+<ul>
+<li><strong>F1 bet-scoring</strong>: <code>supabase/functions/score-f1-race/scoring-logic.ts</code> (new) — <code>SCORING</code> constants + <code>scoreRaceBet(bet, race)</code> moved out verbatim (already 100% pure, no DB calls — this is F1's entire scoring mechanism, a prediction/pick'em game scored against a race result, not a fantasy roster). <code>index.ts</code> now imports it. <code>tests/unit/f1-scoring-logic.test.js</code> — 14 tests: exact-position picks, wrong-spot-but-podium, DNF hit/miss, team-most-points hit/miss, special-category match (case/whitespace-insensitive), all-correct bonus, empty bet.</li>
+<li><strong>Draft allocation</strong>: <code>supabase/functions/_shared/snakeDraft.ts</code> was already an extracted, explicitly-labeled pure module (<code>normalisePosition()</code>, <code>shuffleOrder()</code>, <code>runSnakeDraft()</code> — the shared allocation core behind both <code>run-wishlist-draft</code> and <code>run-draft-lottery</code>) with zero tests. <code>tests/unit/snakeDraft.test.js</code> (new, no extraction needed) — 15 tests covering position-cap/budget/club-cap constraints and the snake turn order.</li>
+<li><strong>Cup elimination</strong>: <code>tests/unit/cup-elimination.test.js</code> (new, pg-client pattern like <code>bet.test.js</code>) — 10 tests against <code>eliminate_cup_club</code> (migration 06) and <code>sync_cup_eliminations</code> (migration 221) across its real branches: future-fixture guard, incomplete-matchday guard, clear win/loss, penalty-shootout-resolved draw, unresolved draw with no shootout data, and self-healing a stale elimination.</li>
+<li><strong>Tennis tournament scoring</strong> (the one genuine refactor this pass): <code>supabase/functions/score-tennis-tournament/scoring-logic.ts</code> (new) — <code>TIER_PTS</code>/<code>DEEP_ROUNDS</code>/<code>EARLY_EXIT</code>, <code>rosterPlayerIds()</code>, and <code>scorePlayer()</code> moved out verbatim (already pure); the real per-roster scoring loop, previously inline inside the <code>Deno.serve</code> handler closing over handler-local variables, was genuinely lifted into a new named <code>scoreRoster(roster, playerMap, captainId)</code>. <code>index.ts</code>'s handler now just calls it — everything else (tournament/players/rosters/captains load, score upsert, gazette entry, trophy award, <code>admin_complete_tournament</code> RPC) is byte-for-byte unchanged. <code>tests/unit/tennis-scoring-logic.test.js</code> (new) — 23 tests: per-tier scoring, the <code>dark_horse_insurance</code> floor, captain-bonus doubling, and all three flat ace-card bonuses (<code>underdog_boost</code>, <code>safety_net</code>, <code>surface_specialist</code>) across hit/miss cases. Because this is a real code-shape change and not just relocation, it was additionally verified by a before/after manual trace against a seeded roster (17 pts under both the old inline logic and the new extracted function).</li>
+</ul>
+<p><strong>Verified</strong>: <code>npm run test:unit</code> — 129/129 passing across 37 suites (up from 106/33 before this pass). <code>npm run lint</code> — 0 errors (668 pre-existing unrelated warnings). <code>npm run build</code> — clean, no Rolldown TDZ regression from the two new sibling modules. <code>docs/testing/TESTING_STRATEGY.md</code> updated to reflect closed and remaining gaps.</p>
+<p><strong>Explicitly out of scope for this pass, tracked as follow-up</strong> (per the plan, nothing silently dropped): the relaxation formula (<code>calculate_relaxation_state</code>/<code>apply_relaxation_state</code>) — dropped from the whole plan per explicit user instruction, since the feature itself may be retired; ATP Finals scoring extraction (<code>score-atp-finals/index.ts:129-158</code>, no pure function exists yet) and <code>run-reverse-standings-draft</code>'s own duplicated allocation/tiebreak logic — both flagged as "Pass 2," needing the same refactor care tennis just got; Tier 3 e2e coverage for F1/tennis/chat/coins/draft-timing flows — tracked as a "Tier 3 multi-sport" follow-up once Tier 3 CI wiring lands.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tier 3 foundation — seed script, spec retargeting, local orchestration (2026-08-27) 
 
 **context**: the previous entry&#x27;s close-out left tier 3 (local full-stack e2e) at groundwork-only — `supabase/config.toml` wired for a full local stack, but no seed data and no specs actually retargeted. the user scoped this session&#x27;s follow-up as **&quot;foundation only&quot;**: get all 8 gated specs (everything under `e2e/` except `platform.spec.js`, which has its own separate ci-required demo-mode run path) passing against a local stack, with no ci wiring and no new coverage areas — those stay tracked as open follow-up, not attempted here.
