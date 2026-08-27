@@ -75,7 +75,6 @@ export default function F1StandingsScreen() {
           accent="var(--f1)"
           activeColumnKey={view}
           highlightUserId={user?.id}
-          useMedals
           nameLabel="DRIVER"
           renderName={(m, isMe) => (
             <div>

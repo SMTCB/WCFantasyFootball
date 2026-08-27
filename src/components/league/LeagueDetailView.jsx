@@ -3,6 +3,7 @@ import { MgrTag, HubSectionLabel, MobFormDots, MobSection } from './HubShared';
 import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 import { supabase } from '../../lib/supabase';
 import { CompetitionResultsHeader } from '../competition/CompetitionResultsHeader';
+import CompetitionRankBadge from '../CompetitionRankBadge';
 
 // Maps gazette entry_type (DB enum) to a filter category and display label.
 // Current enum values: draft_report, breaking_news, activity, auction_result, trade_result, p2p_challenge, p2p_result, wishlist_draft_report
@@ -68,7 +69,14 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
   const [activityCollapsed, setActivityCollapsed] = useState(false);
   const [entries, setEntries] = useState([]);
   const [h2hStandings, setH2hStandings] = useState([]); // { user_id, total_h2h_pts, h2h_rank }
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
   const channelRef = useRef(null);
+
+  const toggleExpanded = (id) => setExpandedIds(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
 
   // Fetch H2H standings when league is H2H-enabled
   useEffect(() => {
@@ -123,7 +131,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
       {/* ── DESKTOP: 4-col spotlight strip ────────────────────────────── */}
       <div className="hidden lg:grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
         {/* GW card */}
-        <div style={{ padding: '18px 22px', borderRight: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div style={{ padding: '18px 22px', borderRight: '1px solid var(--rule)', borderBottom: '2px solid var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE · SEASON</div>
             <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', marginTop: 4, letterSpacing: '-0.02em' }}>GW {currentGW}</div>
@@ -140,12 +148,9 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         {members.slice(0, 3).map((m, idx) => {
           const mName = (currentUser && m.user_id === currentUser.id) ? 'You' : (m.users?.username || 'Unknown');
           const hue = mgrHue(m.users?.username || '');
-          const medal = ['var(--gold)', '#C0C0C0', '#CD7F32'][idx];
           return (
             <div key={m.user_id} style={{ padding: '18px 22px', borderRight: idx < 2 ? '1px solid var(--rule)' : 'none', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <div style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${medal}18`, border: `1px solid ${medal}66`, fontFamily: DISPLAY, fontSize: 'var(--fs-title)', color: medal }}>
-                {idx + 1}
-              </div>
+              <CompetitionRankBadge rank={idx + 1} accent="var(--accent)" size="lg" />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <MgrTag mono={mgrMono(mName)} hue={hue} />
@@ -298,22 +303,48 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                           {timeAgo(e.published_at)}
                         </span>
                       </div>
-                      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35, marginBottom: e.bullets?.length ? 6 : 0 }}>
-                        {e.headline}
-                      </div>
-                      {parseBullets(e.bullets).length > 0 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          {parseBullets(e.bullets).map((b, i) => {
-                            const text = bulletText(b);
-                            if (!text) return null;
-                            return (
-                              <div key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
-                                {text}
+                      {(() => {
+                        const bullets = parseBullets(e.bullets);
+                        const isExpanded = expandedIds.has(e.id);
+                        return (
+                          <>
+                            {bullets.length > 0 ? (
+                              <button
+                                onClick={() => toggleExpanded(e.id)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                                  width: '100%', padding: 0, background: 'transparent', border: 'none', cursor: 'pointer',
+                                  textAlign: 'left', marginBottom: isExpanded ? 6 : 0,
+                                }}
+                              >
+                                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                                  {e.headline}
+                                </span>
+                                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
+                                  {isExpanded ? '−' : '+'}
+                                </span>
+                              </button>
+                            ) : (
+                              <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                                {e.headline}
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                            )}
+                            {isExpanded && bullets.length > 0 && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                {bullets.map((b, i) => {
+                                  const text = bulletText(b);
+                                  if (!text) return null;
+                                  return (
+                                    <div key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
+                                      {text}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   );
                 })}
@@ -425,6 +456,8 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           );
           return capBreakingNews(entries).slice(0, 8).map((e) => {
             const meta = ENTRY_META[e.entry_type] ?? { badge: e.entry_type.toUpperCase(), color: 'var(--mute)' };
+            const bullets = parseBullets(e.bullets);
+            const isExpanded = expandedIds.has(e.id);
             return (
               <div key={e.id} style={{ padding: '11px 18px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
@@ -433,9 +466,40 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                   </span>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{timeAgo(e.published_at)}</span>
                 </div>
-                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
-                  {e.headline}
-                </div>
+                {bullets.length > 0 ? (
+                  <button
+                    onClick={() => toggleExpanded(e.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                      width: '100%', padding: 0, background: 'transparent', border: 'none', cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                      {e.headline}
+                    </span>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
+                      {isExpanded ? '−' : '+'}
+                    </span>
+                  </button>
+                ) : (
+                  <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                    {e.headline}
+                  </div>
+                )}
+                {isExpanded && bullets.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 6 }}>
+                    {bullets.map((b, i) => {
+                      const text = bulletText(b);
+                      if (!text) return null;
+                      return (
+                        <div key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
+                          {text}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           });

@@ -66,7 +66,7 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
           </span>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'max(10px, 2vw)', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         {rightSlot}
         {isLive && (
           <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--danger)', letterSpacing: '.22em', whiteSpace: 'nowrap' }}>● LIVE</span>
