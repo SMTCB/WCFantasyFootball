@@ -82,6 +82,20 @@ VALUES
    'aaaaaaaa-0000-4000-a000-000000000099', 'draft', 'TEST-DRF-001', 'ffffffff-0000-4000-f000-000000000001')
 ON CONFLICT (id) DO NOTHING;
 
+-- ── Circle membership + circle↔league link (competition_admins RPC tests) ──────
+
+INSERT INTO circle_members (circle_id, user_id, role)
+VALUES
+  ('ffffffff-0000-4000-f000-000000000001', 'aaaaaaaa-0000-4000-a000-000000000099', 'owner'),
+  ('ffffffff-0000-4000-f000-000000000001', 'aaaaaaaa-0000-4000-a000-000000000001', 'member'),
+  ('ffffffff-0000-4000-f000-000000000001', 'aaaaaaaa-0000-4000-a000-000000000002', 'member')
+ON CONFLICT (circle_id, user_id) DO NOTHING;
+
+INSERT INTO circle_leagues (circle_id, league_id)
+VALUES
+  ('ffffffff-0000-4000-f000-000000000001', 'bbbbbbbb-0000-4000-b000-000000000001')
+ON CONFLICT (circle_id, league_id) DO NOTHING;
+
 -- ── League members ────────────────────────────────────────────────────────────
 
 INSERT INTO league_members (league_id, user_id, role, total_points)
