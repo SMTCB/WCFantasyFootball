@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>56</strong><span>open</span></div>
-      <div class="total-pill"><strong>198</strong><span>closed</span></div>
+      <div class="total-pill"><strong>199</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (120)</span>
+    <span class="chip" data-filter-kind="done">Shipped (121)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (26)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">56</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">198</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">199</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">120</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">121</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">26</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1179,8 +1179,49 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">120</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">121</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ testing strategy — 4-tier plan decided, foundation shipped (2026-08-27) — pr pending 
+
+**context**: after this session&#x27;s live-verification pass (see the `test_qa_manager` work in the &quot;phase a ui polish pass&quot; entry below), the user asked whether we had a durable process for platform-level testing beyond scratch scripts, then explicitly asked for a full testing strategy: *&quot;can you propose one considering all our parts? ... what i always feel is that we&#x27;re a bit &#x27;short&#x27; on the tests, we never cover everything, some parts are always untested.&quot;* follow-up: *&quot;also consider ... the e2e tests we have on git. lets ensure we are covering everything but no need for an overkill ... i leave up to you to completely decide on the approach and strategy.&quot;*
+
+**audit findings** (grep-verified against `tests/unit/`, `e2e/*.spec.js`, `.github/workflows/ci.yml`, `docker-compose.yml`, `supabase/config.toml`, `scripts/rehearse-schema.sh`):
+- ci already runs `unit-tests` (ephemeral-postgres rpc/logic tests) and `e2e` (`platform.spec.js` only, demo mode) on every pr. no duplication existed between ci and the manual docker paths — they test genuinely different things today.
+- the hand-rolled `docker-compose.yml` postgres service was never a substitute for auth/rls/realtime — it explicitly lacks them. the 8 non-`platform.spec.js` e2e specs (`classic`/`draft`-mode flows, scoring pipeline, draft allocation, multi-league/bets, autofill) have **no local target at all** — `e2e/supabase-target.js`&#x27;s b-12 guard requires an explicit `supabase_url`/`supabase_anon_key`, and the only realistic one today is live prod, so these specs are manual-only and rarely run.
+- `supabase/config.toml` only declares `[functions.*]` entrypoints — no `[db]`/`[api]`/`[auth]`/`[studio]` sections — so `npx supabase start` (the supabase cli&#x27;s full local docker stack: postgres + gotrue auth + postgrest + realtime + edge runtime) has never been wired up for this project, despite being free and being the actual fix for the au" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Testing Strategy — 4-tier plan decided, foundation shipped</h3>
+        <p class="card-summary">Context : after this session's live-verification pass (see the TEST_QA_Manager work in the "Phase A UI Polish Pass" entry below), the user asked whether we had a durable…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-27</span><span class="foot-refs">PR pending</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Testing Strategy — 4-tier plan decided, foundation shipped</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : after this session's live-verification pass (see the TEST_QA_Manager work in the "Phase A UI Polish Pass" entry below), the user asked whether we had a durable…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR pending</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-27</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: after this session's live-verification pass (see the <code>TEST_QA_Manager</code> work in the "Phase A UI Polish Pass" entry below), the user asked whether we had a durable process for platform-level testing beyond scratch scripts, then explicitly asked for a full testing strategy: *"Can you propose one considering all our parts? ... What I always feel is that we're a bit 'short' on the tests, we never cover everything, some parts are always untested."* Follow-up: *"Also consider ... the E2E tests we have on git. Lets ensure we are covering everything but no need for an overkill ... I leave up to you to completely decide on the approach and strategy."*</p>
+<p><strong>Audit findings</strong> (grep-verified against <code>tests/unit/</code>, <code>e2e/*.spec.js</code>, <code>.github/workflows/ci.yml</code>, <code>docker-compose.yml</code>, <code>supabase/config.toml</code>, <code>scripts/rehearse-schema.sh</code>):</p>
+<ul>
+<li>CI already runs <code>unit-tests</code> (ephemeral-Postgres RPC/logic tests) and <code>e2e</code> (<code>platform.spec.js</code> only, demo mode) on every PR. No duplication existed between CI and the manual Docker paths — they test genuinely different things today.</li>
+<li>The hand-rolled <code>docker-compose.yml</code> Postgres service was never a substitute for Auth/RLS/Realtime — it explicitly lacks them. The 8 non-<code>platform.spec.js</code> E2E specs (<code>classic</code>/<code>draft</code>-mode flows, scoring pipeline, draft allocation, multi-league/bets, autofill) have <strong>no local target at all</strong> — <code>e2e/supabase-target.js</code>'s B-12 guard requires an explicit <code>SUPABASE_URL</code>/<code>SUPABASE_ANON_KEY</code>, and the only realistic one today is live prod, so these specs are manual-only and rarely run.</li>
+<li><code>supabase/config.toml</code> only declares <code>[functions.*]</code> entrypoints — no <code>[db]</code>/<code>[api]</code>/<code>[auth]</code>/<code>[studio]</code> sections — so <code>npx supabase start</code> (the Supabase CLI's full local Docker stack: Postgres + GoTrue Auth + PostgREST + Realtime + Edge Runtime) has never been wired up for this project, despite being free and being the actual fix for the Auth/RLS gap.</li>
+<li><strong>F1 and tennis have zero automated coverage of any kind</strong> — no unit tests, no E2E specs reference either sport. Also zero coverage: Realtime league chat, admin RPCs (<code>competition_admins</code>), <code>resolve_bet</code> write-in UI flow (RPC level is covered, UI is not), coins/P2P beyond the RPC layer (<code>purchase-coins</code> untested), draft lottery/wishlist-draft timing (<code>run-wishlist-draft</code>/<code>WishlistDraftScreen</code> referenced in zero test files), cron-driven scoring orchestration (only the extracted pure-logic path of <code>calculate-scores</code>/<code>score-f1-race</code>/<code>score-tennis-tournament</code> is unit-tested, not the functions as HTTP-invoked orchestration), <code>trophy_ledger</code> emission, notification delivery.</li>
+</ul>
+<p><strong>Decision — 4 tiers, each scoped so nothing is tested twice</strong>:</p>
+<ol>
+<li><strong>Tier 1 (existing, CI-required)</strong> — <code>tests/unit/</code> RPC/logic tests. Extend with F1/tennis scoring-logic and admin-RPC tests (pure logic belongs here, not in a heavier tier).</li>
+<li><strong>Tier 2 (existing script, now also CI)</strong> — schema rehearsal against <code>supabase/schema.sql</code> (a verified prod snapshot — migration-replay-from-scratch was proven 2026-08-01 to diverge from prod). New <code>schema-rehearsal</code> CI job auto-runs only when a PR touches <code>supabase/migrations/**</code>, applying the changed file(s) on top with <code>ON_ERROR_STOP=1</code>. The interactive local script stays for pre-PR rehearsal + serving Edge Functions against the rehearsed schema, which CI can't do.</li>
+<li><strong>Tier 3 (new, not yet built)</strong> — local full-stack E2E via <code>npx supabase start</code>. Closes the actual gap: expand <code>supabase/config.toml</code>, write one committed synthetic multi-sport <code>TEST_</code>-prefixed seed script, retarget (move, not copy) the 8 currently-prod-only specs to this local stack by default, then add new coverage for every confirmed gap above. Explicitly scoped to not re-prove Tier 1's math — Tier 3 tests Auth/RLS/Realtime/UI/orchestration only.</li>
+<li><strong>Tier 4 (formalize, not yet built)</strong> — narrowed live-platform verification for what genuinely can't be faked locally (real Forza API freshness, real wall-clock cron, post-deploy sanity). Formalizes this session's ad hoc <code>TEST_QA_Manager</code> scratch scripts into a committed, <code>TEST_</code>-prefixed pre-launch gate script instead of one that's reinvented and discarded every session.</li>
+</ol>
+<p><strong>Shipped this session (foundation only)</strong>: rewrote <code>docs/testing/TESTING_STRATEGY.md</code> from a stale, self-contradictory 2026-06-01 doc into the authoritative 4-tier reference; added the <code>schema-rehearsal</code> CI job to <code>.github/workflows/ci.yml</code> (mirrors the existing <code>unit-tests</code> job's ephemeral-Postgres pattern, path-gated via <code>git diff</code> against the PR base so most PRs skip it as a fast no-op). Verified: YAML syntax valid, <code>npm run lint</code> clean (0 errors, pre-existing warnings only — no <code>src/</code> files touched).</p>
+<p><strong>Not done yet, queued as follow-up PRs</strong>: <code>supabase/config.toml</code> expansion for the full local stack, the committed multi-sport seed script, retargeting the 8 manual E2E specs, and new test coverage for F1/tennis/chat/admin/coins/draft-timing/cron-orchestration/trophies. No migration, live DB write, or Edge Function deploy was needed or performed this session.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ phase a ui polish pass — shared rank badge, notification bell, header/scroll fixes + test_qa_manager live-verification infra (2026-08-27) — pr #854 
 
 **context**: a cross-sport ui-polish pass (phase a of a larger multi-part request the user sequenced as &quot;ui polish first, then testing/revision&quot;) addressing 8 chrome/ux inconsistencies across football, f1, and the clubhouse shell: an uncollapsible league activity feed, three divergent rank/podium treatments, a &quot;very mono-color&quot; football league screen, f1&#x27;s next-race row using only a left-accent border instead of a full highlight, misaligned clubhouse/league headers, two duplicated notification-bell implementations, a scroll-position bug on clubhouse switch, and a duplicated &quot;+ invite&quot; button at league level. ahead of merging, also built a reusable `test_qa_manager` passwordless qa account (created via the supabase admin api + a server-side magic-link exchange — no password ever set, verified against auth rules) and joined it into two real pilot circles (&quot;mundial do eder&quot; football league, &quot;cascais 16 f1&quot; paddock) plus a newly-created `test_wimbledon_box` tennis competition inside `ch_test_tennis`, then used that session in the browser pane to live-verify all 8 tasks against real, authenticated production data — a step up from the code-inspection-only verification some recent clubhouse-scoped entries had to settle for.
