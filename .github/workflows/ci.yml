@@ -358,6 +358,16 @@ jobs:
       - name: Install Playwright Chrome browser
         run: npx playwright install --with-deps chrome
 
+      # supabase/functions/.env is gitignored (never committed — see that
+      # file's own header comment) since it's a local/test-only flag, not a
+      # secret: MOCK_PAYMENTS=true activates purchase-coins' Stripe-free mock
+      # path for e2e/wallet-screen.spec.js, and the function itself refuses
+      # to start if MOCK_PAYMENTS=true is ever combined with a real
+      # STRIPE_SECRET_KEY. `npx supabase start`'s Edge Runtime loads this
+      # path automatically, so it must exist before that command runs below.
+      - name: Provision local Edge Function env (MOCK_PAYMENTS)
+        run: echo "MOCK_PAYMENTS=true" > supabase/functions/.env
+
       - name: Run Tier 3 local full-stack E2E
         run: npm run test:e2e:local
 

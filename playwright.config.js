@@ -45,6 +45,8 @@ export default defineConfig({
         '**/trophy-cabinet-screen.spec.js',
         '**/settings-screen.spec.js',
         '**/auth-screen.spec.js',
+        '**/bet-lifecycle.spec.js',
+        '**/p2p-challenge-lifecycle.spec.js',
       ]
     : [],
   fullyParallel: false,
