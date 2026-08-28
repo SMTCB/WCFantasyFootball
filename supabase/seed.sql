@@ -645,6 +645,7 @@ END $$;
 DO $$
 DECLARE
   user_a_id uuid := 'e0000000-0000-4000-a000-00000000000a';
+  user_b_id uuid := 'e0000000-0000-4000-a000-00000000000b';
 BEGIN
   INSERT INTO coin_wallets (id, user_id, balance, escrow)
   VALUES ('d0000000-0000-4000-a000-000000000003', user_a_id, 500, 0)
@@ -657,8 +658,25 @@ BEGIN
   )
   ON CONFLICT (id) DO NOTHING;
 
-  RAISE NOTICE 'Seeded coin_wallets + welcome-bonus coin_transactions row for Wallet screen smoke';
+  -- USER_B also needs a wallet: accept_p2p_challenge/confirm_freeform_result
+  -- debit/credit the opponent's own wallet directly (debit_coins_to_escrow
+  -- raises WALLET_NOT_FOUND if the row doesn't exist), so any P2P-challenge
+  -- E2E spec where USER_B is the opponent needs this row too, not just USER_A.
+  INSERT INTO coin_wallets (id, user_id, balance, escrow)
+  VALUES ('d0000000-0000-4000-a000-000000000005', user_b_id, 500, 0)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  RAISE NOTICE 'Seeded coin_wallets (+welcome-bonus tx for USER_A) for Wallet + P2P-challenge E2E specs';
 END $$;
+
+-- ── 12c. Coin pack (mock-payment E2E) ───────────────────────────────────────
+-- schema.sql's coin_packs table def carries no data rows (it's a pg_dump of
+-- structure only for this reference table) — purchase-coins' MOCK_PAYMENTS
+-- path still does a real `SELECT ... FROM coin_packs WHERE id = pack_id AND
+-- is_active = true`, so the local stack needs at least one row to buy.
+INSERT INTO coin_packs (id, name, coins, price_pence, is_active)
+VALUES ('c0000000-0000-4000-a000-000000000001', 'Starter', 500, 199, true)
+ON CONFLICT (id) DO NOTHING;
 
 -- ── 12. Trophy ledger row (Trophy Cabinet screen smoke) ────────────────────
 -- TrophyCabinetScreen.jsx queries trophy_ledger WHERE user_id = user.id (the

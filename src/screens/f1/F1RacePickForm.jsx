@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { DRIVERS, TEAMS, SPECIAL_OPTIONS } from '../../lib/f1/f1-data';
@@ -57,6 +57,13 @@ export default function F1RacePickForm({ race, paddock }) {
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState('');
 
+  // Set by any onChange below; guards the fetch effect against overwriting
+  // picks the user has already started entering (see the .then() comment).
+  const editedRef = useRef(false);
+  function edited(setter) {
+    return v => { editedRef.current = true; setter(v); };
+  }
+
   useEffect(() => {
     const now = new Date();
     const lockTime = race?.race_at ? new Date(race.race_at) - 5 * 60000 : null;
@@ -70,7 +77,12 @@ export default function F1RacePickForm({ race, paddock }) {
         .select('*').eq('user_id', uid).eq('season', 2026).eq('round_number', race.round_number)
         .maybeSingle()
         .then(({ data }) => {
-          if (cancelled) return;
+          // Don't stomp picks the user already started entering — this fetch
+          // can resolve after the user has begun interacting with the form
+          // (slow network, or heavy local load), and unconditionally applying
+          // it here would silently wipe their in-progress selections back to
+          // whatever's (or isn't) saved.
+          if (cancelled || editedRef.current) return;
           setExisting(data);
           if (data) {
             setP1(data.p1); setP2(data.p2); setP3(data.p3);
@@ -157,17 +169,17 @@ export default function F1RacePickForm({ race, paddock }) {
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 12 }}>🏆 PODIUM PREDICTIONS</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ borderLeft: '3px solid var(--f1)', paddingLeft: 10, marginLeft: -13 }}>
-                <DriverSelect label="P1 — Race Winner" value={p1} onChange={setP1} exclude={[p2, p3].filter(Boolean)} disabled={isLocked} />
+                <DriverSelect label="P1 — Race Winner" value={p1} onChange={edited(setP1)} exclude={[p2, p3].filter(Boolean)} disabled={isLocked} />
               </div>
-              <DriverSelect label="P2 — Second Place" value={p2} onChange={setP2} exclude={[p1, p3].filter(Boolean)} disabled={isLocked} />
-              <DriverSelect label="P3 — Third Place" value={p3} onChange={setP3} exclude={[p1, p2].filter(Boolean)} disabled={isLocked} />
+              <DriverSelect label="P2 — Second Place" value={p2} onChange={edited(setP2)} exclude={[p1, p3].filter(Boolean)} disabled={isLocked} />
+              <DriverSelect label="P3 — Third Place" value={p3} onChange={edited(setP3)} exclude={[p1, p2].filter(Boolean)} disabled={isLocked} />
             </div>
           </div>
 
           {/* DNF */}
           <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 12 }}>💥 DNF DRIVER <span style={{ color: 'var(--mute)', fontWeight: 400 }}>(optional)</span></div>
-            <DriverSelect label="Driver who retires" value={dnf} onChange={setDnf} disabled={isLocked} />
+            <DriverSelect label="Driver who retires" value={dnf} onChange={edited(setDnf)} disabled={isLocked} />
           </div>
 
           {/* Team */}
@@ -175,7 +187,7 @@ export default function F1RacePickForm({ race, paddock }) {
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 12 }}>🏎 TEAM — MOST POINTS</div>
             <select
               value={team ?? ''}
-              onChange={e => setTeam(e.target.value || null)}
+              onChange={e => { editedRef.current = true; setTeam(e.target.value || null); }}
               disabled={isLocked}
               style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: team ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
             >
@@ -195,7 +207,7 @@ export default function F1RacePickForm({ race, paddock }) {
                     <button
                       key={opt}
                       type="button"
-                      onClick={() => !isLocked && setSpecial(special === opt ? null : opt)}
+                      onClick={() => { if (isLocked) return; editedRef.current = true; setSpecial(special === opt ? null : opt); }}
                       style={{ padding: '10px 8px', border: `1px solid ${special === opt ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, background: special === opt ? 'var(--f1-bg)' : 'transparent', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: special === opt ? 'var(--f1)' : 'var(--paper)', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
                     >
                       {opt}
@@ -203,11 +215,11 @@ export default function F1RacePickForm({ race, paddock }) {
                   ))}
                 </div>
               ) : race.special_category_type === 'driver' ? (
-                <DriverSelect label="Your pick" value={special} onChange={setSpecial} disabled={isLocked} />
+                <DriverSelect label="Your pick" value={special} onChange={edited(setSpecial)} disabled={isLocked} />
               ) : race.special_category_type === 'team' ? (
                 <select
                   value={special ?? ''}
-                  onChange={e => setSpecial(e.target.value || null)}
+                  onChange={e => { editedRef.current = true; setSpecial(e.target.value || null); }}
                   disabled={isLocked}
                   style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: special ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
                 >
