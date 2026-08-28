@@ -8324,7 +8324,7 @@ CREATE TABLE IF NOT EXISTS "public"."clubhouse_notifications" (
     "payload" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "read_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "clubhouse_notifications_source_type_check" CHECK (("source_type" = ANY (ARRAY['league'::"text", 'paddock'::"text", 'box'::"text", 'clubhouse'::"text"])))
+    CONSTRAINT "clubhouse_notifications_source_type_check" CHECK (("source_type" = ANY (ARRAY['league'::"text", 'paddock'::"text", 'box'::"text", 'clubhouse'::"text", 'p2p_challenge'::"text"])))
 );
 
 
