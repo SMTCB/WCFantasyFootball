@@ -56,6 +56,25 @@ async function runSqlFile(client, path, label) {
   log(`${label} loaded OK.`);
 }
 
+// Migrations written after supabase/schema.sql's prod snapshot was taken but
+// not yet folded into it (i.e. not yet applied to production). schema.sql is
+// NOT replaced by a full migration replay here (see file header — 75/~271
+// migration files don't replay cleanly against it), so this is a narrow,
+// explicit allowlist rather than "apply everything newer than N" — add a
+// migration's filename here only once it's been hand-verified to apply
+// cleanly on top of schema.sql, mirroring Tier 2's rehearse-schema.sh
+// "schema.sql + migration(s) under test" pattern. Remove an entry once the
+// prod snapshot is regenerated and already includes it.
+const PENDING_MIGRATIONS = [
+  '260_fix_paddock_playerbox_members_rls_recursion.sql', // 42P17 recursion fix — not yet in prod, needed by F1/tennis paddock/player-box join specs
+];
+
+async function applyPendingMigrations(client) {
+  for (const filename of PENDING_MIGRATIONS) {
+    await runSqlFile(client, join(REPO_ROOT, 'supabase', 'migrations', filename), `supabase/migrations/${filename} (pending, not yet in schema.sql)`);
+  }
+}
+
 async function bootstrapDb() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
@@ -68,6 +87,7 @@ async function bootstrapDb() {
     // otherwise leaks into seed.sql on this same connection and breaks
     // unqualified calls like gen_salt()/crypt() (pgcrypto lives in `extensions`).
     await client.query('SET search_path = public, extensions;');
+    await applyPendingMigrations(client);
     await runSqlFile(client, join(REPO_ROOT, 'supabase', 'seed.sql'), 'supabase/seed.sql');
   } finally {
     await client.end();
@@ -87,7 +107,7 @@ function getStackCreds() {
   const out = execSync('npx supabase status -o json', { cwd: REPO_ROOT, encoding: 'utf8' });
   const jsonStart = out.indexOf('{');
   const status = JSON.parse(out.slice(jsonStart));
-  return { url: status.API_URL, anonKey: status.ANON_KEY };
+  return { url: status.API_URL, anonKey: status.ANON_KEY, serviceRoleKey: status.SERVICE_ROLE_KEY };
 }
 
 function gatedSpecFiles() {
@@ -99,7 +119,7 @@ function gatedSpecFiles() {
     .map((f) => `e2e/${f}`);
 }
 
-function runPlaywright({ url, anonKey }) {
+function runPlaywright({ url, anonKey, serviceRoleKey }) {
   const specs = gatedSpecFiles();
   log(`Running Playwright against the local stack (${specs.length} specs)…`);
   const res = spawnSync(
@@ -113,6 +133,24 @@ function runPlaywright({ url, anonKey }) {
         ...process.env,
         SUPABASE_URL: url,
         SUPABASE_ANON_KEY: anonKey,
+        // Local stack's service-role key — the F1/tennis specs use it (when
+        // present) to reset rows that RLS/table policy restrict to
+        // admin/service-role writes (e.g. trophy_ledger has no
+        // client-writable policy at all) so cross-project (desktop-chrome →
+        // mobile-chrome) reruns of the same admin-scoring/roster specs
+        // against this one shared local DB stay idempotent. Deliberately
+        // NOT named SUPABASE_SERVICE_ROLE_KEY: draft-mode-complete.spec.js
+        // and draft-allocation-e2e.spec.js gate real (pre-existing, broken —
+        // see e2e/draft-mode-complete.spec.js's serviceSupabase comment)
+        // run-draft-lottery-invoking test bodies behind that exact name via
+        // `if (!serviceSupabase) test.skip()`. Setting it here un-skipped
+        // those bodies and surfaced two unrelated latent bugs (wrong
+        // onConflict target on draft_submissions; run-draft-lottery invoked
+        // with a service-role JWT where it requires a real commissioner
+        // user JWT) — out of scope for this pass, logged in BACKLOG.md
+        // instead of fixed. Safe to set unconditionally: this is the
+        // ephemeral local stack's own key, never production's.
+        E2E_LOCAL_SERVICE_ROLE_KEY: serviceRoleKey,
         // Must override any VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY already
         // present (e.g. from .env.local, which points at production) —
         // playwright.config.js's webServer spawns `npm run build`, and Vite

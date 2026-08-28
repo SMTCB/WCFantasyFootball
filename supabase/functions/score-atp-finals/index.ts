@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { requireServiceRole } from '../_shared/auth.ts';
+import { requireServiceRoleOrAdmin } from '../_shared/auth.ts';
 import { logError } from '../_shared/log.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,7 +47,12 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  const authErr = await requireServiceRole(req);
+  // Same dual-mode gate as score-tennis-tournament — global users.is_admin
+  // flag, since ATP Finals is shared platform data (migration 243).
+  const authErr = await requireServiceRoleOrAdmin(req, async (userClient, userId) => {
+    const { data } = await userClient.from('users').select('is_admin').eq('id', userId).maybeSingle();
+    return data?.is_admin === true;
+  });
   if (authErr) return authErr;
 
   try {

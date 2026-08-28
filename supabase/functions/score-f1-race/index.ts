@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { requireServiceRole } from '../_shared/auth.ts';
+import { requireServiceRoleOrAdmin } from '../_shared/auth.ts';
 import { logError } from '../_shared/log.ts';
 import { scoreRaceBet } from './scoring-logic.js';
 
@@ -75,7 +75,26 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  const authErr = await requireServiceRole(req);
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    body = {};
+  }
+  const { race_id, paddock_id } = body;
+
+  // Direct browser calls (F1AdminScreen's "SCORE RACE" button) carry the
+  // admin's own session JWT and a paddock_id — authorized per-paddock via
+  // is_competition_admin, same predicate F1AdminScreen already gates the
+  // button on client-side. Cron/service-role calls skip this entirely.
+  const authErr = await requireServiceRoleOrAdmin(req, async (userClient) => {
+    if (!paddock_id) return false;
+    const { data } = await userClient.rpc('is_competition_admin', {
+      p_competition_type: 'paddock',
+      p_competition_id: paddock_id,
+    });
+    return data === true;
+  });
   if (authErr) return authErr;
 
   try {
@@ -84,7 +103,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
     );
 
-    const { race_id } = await req.json();
     if (!race_id) throw new Error('race_id required');
 
     // Load race

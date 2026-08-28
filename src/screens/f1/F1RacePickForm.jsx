@@ -27,6 +27,19 @@ function DriverSelect({ label, value, onChange, exclude = [], disabled }) {
 // Inline pick form for a single race — expands beneath its row in the season calendar.
 // Scoped to one already-known race (no race list fetch, no round-selector strip; the
 // calendar row above this already shows round/date/GP name/circuit).
+// Resolves the id that will actually authenticate the request (supabase-js reads
+// whatever real session is in storage independent of demo-mode auth state), not
+// useAuth()'s possibly-frozen DEMO_USER — otherwise a write's user_id column can
+// silently disagree with the JWT's auth.uid(), tripping the owner-only RLS policy.
+async function resolveUserId(fallbackId) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.user?.id ?? fallbackId;
+  } catch {
+    return fallbackId;
+  }
+}
+
 export default function F1RacePickForm({ race, paddock }) {
   const { user } = useAuth();
 
@@ -50,19 +63,25 @@ export default function F1RacePickForm({ race, paddock }) {
     setIsLocked(race?.is_manual_unlock ? false : (lockTime ? now >= lockTime : false));
 
     if (!user?.id || !race) return;
-    supabase.from('f1_bets_race')
-      .select('*').eq('user_id', user.id).eq('season', 2026).eq('round_number', race.round_number)
-      .maybeSingle()
-      .then(({ data }) => {
-        setExisting(data);
-        if (data) {
-          setP1(data.p1); setP2(data.p2); setP3(data.p3);
-          setDnf(data.dnf_driver); setTeam(data.team_most_points);
-          setSpecial(data.special_category_answer);
-        } else {
-          setP1(null); setP2(null); setP3(null); setDnf(null); setTeam(null); setSpecial(null);
-        }
-      });
+    let cancelled = false;
+    resolveUserId(user.id).then(uid => {
+      if (cancelled) return;
+      supabase.from('f1_bets_race')
+        .select('*').eq('user_id', uid).eq('season', 2026).eq('round_number', race.round_number)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (cancelled) return;
+          setExisting(data);
+          if (data) {
+            setP1(data.p1); setP2(data.p2); setP3(data.p3);
+            setDnf(data.dnf_driver); setTeam(data.team_most_points);
+            setSpecial(data.special_category_answer);
+          } else {
+            setP1(null); setP2(null); setP3(null); setDnf(null); setTeam(null); setSpecial(null);
+          }
+        });
+    });
+    return () => { cancelled = true; };
   }, [race, user?.id]);
 
   async function handleSubmit(e) {
@@ -71,8 +90,9 @@ export default function F1RacePickForm({ race, paddock }) {
     if (new Set([p1, p2, p3]).size < 3) { setErr('P1, P2, and P3 must be different drivers.'); return; }
     setSaving(true); setErr('');
     try {
+      const uid = await resolveUserId(user.id);
       const payload = {
-        user_id: user.id, season: 2026, round_number: race.round_number,
+        user_id: uid, season: 2026, round_number: race.round_number,
         p1, p2, p3, dnf_driver: dnf, team_most_points: team,
         special_category_answer: special, updated_at: new Date().toISOString(),
       };

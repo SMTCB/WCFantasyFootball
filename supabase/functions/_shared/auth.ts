@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 // Shared auth guard for edge functions that should only be called by cron jobs
 // or internal admin tooling — not by anonymous users.
 //
@@ -67,4 +69,58 @@ export async function requireServiceRole(req: Request): Promise<Response | null>
     status: 401,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// Dual-mode guard for admin-triggered scoring functions that also need to be
+// callable directly from the browser (score-f1-race, score-tennis-tournament,
+// score-atp-finals): accepts everything requireServiceRole() already accepts
+// (cron / admin curl), OR a request carrying a real user JWT whose identity —
+// verified via that JWT, never a client-supplied id — passes `checkAdmin`.
+// Mirrors run-draft-lottery's DD-C4 fix (BACKLOG.md, PR #270, migration 108),
+// generalized into a shared helper so each admin-scoring function doesn't
+// reinvent it. Without this, the admin screens' own "SCORE RACE" / "Trigger
+// Scoring" buttons — which invoke these functions with the browser's own
+// session — always 401, because requireServiceRole() has no path for a
+// normal authenticated user, service-role only.
+//
+// Usage:
+//   import { requireServiceRoleOrAdmin } from '../_shared/auth.ts';
+//   const authErr = await requireServiceRoleOrAdmin(req, async (userClient, userId) => {
+//     const { data } = await userClient.rpc('is_competition_admin', { ... });
+//     return data === true;
+//   });
+//   if (authErr) return authErr;
+export async function requireServiceRoleOrAdmin(
+  req: Request,
+  checkAdmin: (userClient: any, userId: string) => Promise<boolean>,
+): Promise<Response | null> {
+  const svcErr = await requireServiceRole(req);
+  if (!svcErr) return null;
+
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!token) return svcErr;
+
+  const userClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: authHeader } } },
+  );
+
+  const { data: { user }, error } = await userClient.auth.getUser(token);
+  if (error || !user) return svcErr;
+
+  let ok = false;
+  try {
+    ok = await checkAdmin(userClient, user.id);
+  } catch { /* checkAdmin threw — treat as not authorized */ }
+
+  if (!ok) {
+    return new Response(JSON.stringify({ error: 'Forbidden — not an admin for this resource' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return null;
 }
