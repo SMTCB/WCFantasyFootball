@@ -26,20 +26,25 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-target.js';
 test.describe.configure({ retries: 0 });
 
 // Service-role client — needed to reset roster/QF-captain/tournament-status
-// state before SUITEs 2, 3 and 5 so they stay idempotent across the
-// desktop-chrome → mobile-chrome project sequence (fullyParallel:false means
-// both run against the SAME local DB). Without these resets:
-//  - SUITE 2 sees USER_A's roster already submitted by desktop-chrome, so
-//    every target <option> renders disabled ("picked") and selectOption fails.
-//  - SUITE 3 sees TOURN_QF_OPEN already moved to 'completed' by desktop-chrome's
-//    SUITE 5 pass, so the QF-captain block no longer renders at all.
-//  - SUITE 5 sees the tournament already completed/scored, so "Mark Complete"
-//    is gone and the scoring assertions read stale values.
+// state before SUITEs 2, 3 and 5 so they stay idempotent across reruns.
 // tennis_rosters/tennis_qf_captains/tennis_tournament_scores/tennis_tournaments
 // all have SELECT-only RLS policies (writes go through SECURITY DEFINER RPCs
 // or service role only), so an admin-authenticated client can't do these
 // resets on its own. Gracefully no-ops if unset (e.g. spec run directly
 // outside `npm run test:e2e:local`).
+//
+// Project-isolation note: SUITEs 2, 3 and 5 each reset-then-mutate a row
+// shared by USER_A's single identity (same email/password across projects).
+// fullyParallel:false does NOT stop desktop-chrome and mobile-chrome from
+// running the same spec file concurrently in separate workers (confirmed
+// empirically — same hazard class as e2e/wallet-screen.spec.js's balance
+// race). A false assumption here that the projects run sequentially
+// (desktop-chrome → mobile-chrome) previously caused a real, if rare,
+// flake: one project's service-role reset step could delete/overwrite the
+// other project's just-written row before it queried it back, producing
+// "Received: undefined" for the loser of the race. All three tests below
+// are therefore restricted to `desktop-chrome` only, mirroring wallet-
+// screen.spec.js's fix for the same class of bug.
 const SERVICE_ROLE_KEY = process.env.E2E_LOCAL_SERVICE_ROLE_KEY;
 const serviceSupabase = SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY) : null;
 
@@ -145,7 +150,9 @@ test.describe('Tennis screens — smoke', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 test.describe('Tennis roster submission', () => {
-  test('2.1 submit a 7-slot roster via TennisTournamentScreen', async ({ page }) => {
+  test('2.1 submit a 7-slot roster via TennisTournamentScreen', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chrome', 'resets/mutates shared USER_A roster row — see project-isolation note above');
+
     if (serviceSupabase) {
       await serviceSupabase.from('tennis_rosters').delete().eq('user_id', USER_A_ID).eq('tournament_id', TOURN_ROSTER_OPEN);
     } else {
@@ -206,7 +213,9 @@ test.describe('Tennis roster submission', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 test.describe('Tennis QF captain selection', () => {
-  test('3.1 pick QF T1 Player as captain via TennisTournamentScreen', async ({ page }) => {
+  test('3.1 pick QF T1 Player as captain via TennisTournamentScreen', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chrome', 'resets/mutates shared tournament + captain rows — see project-isolation note above');
+
     if (serviceSupabase) {
       // Undo SUITE 5's earlier completion (from a prior project's pass) and
       // any previously-set captain, so the qf_captain_open block renders
@@ -288,7 +297,8 @@ test.describe('Tennis player box join by invite code', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 test.describe('Tennis admin — complete tournament and score', () => {
-  test('5.1 mark complete and invoke score-tennis-tournament', async ({ page }) => {
+  test('5.1 mark complete and invoke score-tennis-tournament', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chrome', 'resets/mutates shared tournament status + scores — see project-isolation note above');
     test.setTimeout(45000);
 
     if (serviceSupabase) {

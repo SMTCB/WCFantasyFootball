@@ -19,6 +19,13 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-target.js';
 
 test.describe.configure({ retries: 0 });
 
+// Service-role client — used only by test 1.2 to revert USER_A's wallet
+// after a mock purchase (see that test for why). Gracefully no-ops if unset
+// (e.g. spec run directly outside `npm run test:e2e:local`), same pattern as
+// e2e/f1-screens.spec.js's serviceSupabase.
+const SERVICE_ROLE_KEY = process.env.E2E_LOCAL_SERVICE_ROLE_KEY;
+const serviceSupabase = SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY) : null;
+
 const USER_A = { email: 'e2e_a@fantasykit.test', password: 'E2ePass!99' };
 
 async function signIn(email, password) {
@@ -86,5 +93,83 @@ test.describe('Wallet screen', () => {
     expect(text).not.toMatch(/No transactions yet/i);
     expect(text).toMatch(/welcome bonus/i);
     console.log('✅ Wallet: balance + welcome-bonus transaction rendered for USER_A');
+  });
+
+  // Stripe-free coin purchase — the pilot runs with no Stripe account, so the
+  // only way any tester acquires more coins beyond the one-time welcome bonus
+  // is purchase-coins' MOCK_PAYMENTS=true path (supabase/functions/purchase-
+  // coins/index.ts). Requires supabase/functions/.env to set MOCK_PAYMENTS=true
+  // for the local Edge Runtime (gitignored — see that file's header comment)
+  // and the seeded coin_packs row from supabase/seed.sql §12c. Calls the
+  // endpoint directly rather than through WalletScreen's own "BUY COINS" UI
+  // (COIN-2 in BACKLOG.md: that UI currently advertises real GBP prices and
+  // is slated for a pilot-mode rework) — this proves the endpoint's mock
+  // contract and coin-crediting side effect, not the UI's fetch wiring.
+  //
+  // Project-isolation note: this test mutates USER_A's real coin_wallets
+  // balance, which test 1.1 above asserts as a hardcoded literal (/500/).
+  // fullyParallel:false does NOT stop desktop-chrome and mobile-chrome from
+  // running concurrently in separate workers (confirmed empirically — both
+  // instances of this test firing at once raced the same wallet row and
+  // produced a corrupted +1000 delta instead of two independent +500s).
+  // Restricting to a single project avoids racing itself; reverting the
+  // balance via service role afterward (mirrors e2e/f1-screens.spec.js's
+  // idempotency-reset pattern) keeps test 1.1 correct regardless of project
+  // run order. See e2e/p2p-challenge-lifecycle.spec.js's own balance-
+  // isolation note for the same class of hazard.
+  test('1.2 mock-payment purchase-coins credits coins with no Stripe configured', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chrome', 'mutates USER_A\'s wallet — runs once only, see comment above');
+
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    await client.auth.setSession(sessionA);
+
+    const { data: pack, error: packErr } = await client
+      .from('coin_packs')
+      .select('id, name, coins')
+      .eq('is_active', true)
+      .order('coins', { ascending: true })
+      .limit(1)
+      .single();
+    expect(packErr, `coin_packs read failed: ${packErr?.message}`).toBeNull();
+    expect(pack?.id).toBeTruthy();
+
+    const { data: before, error: beforeErr } = await client.rpc('get_my_wallet');
+    expect(beforeErr, `baseline get_my_wallet failed: ${beforeErr?.message}`).toBeNull();
+    const balanceBefore = before?.balance ?? before?.[0]?.balance;
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/purchase-coins/create-payment-intent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${sessionA.access_token}`,
+        'apikey':        SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ pack_id: pack.id }),
+    });
+    const body = await res.json();
+
+    expect(res.ok, `purchase-coins returned ${res.status}: ${JSON.stringify(body)}`).toBe(true);
+    expect(body.mock).toBe(true);
+    expect(body.coins_credited).toBe(pack.coins);
+    expect(body.reference_id).toMatch(/^mock_/);
+
+    const { data: after, error: afterErr } = await client.rpc('get_my_wallet');
+    expect(afterErr, `post-purchase get_my_wallet failed: ${afterErr?.message}`).toBeNull();
+    const balanceAfter = after?.balance ?? after?.[0]?.balance;
+    expect(Number(balanceAfter)).toBe(Number(balanceBefore) + pack.coins);
+
+    // Revert — leave USER_A's wallet exactly as test 1.1 expects to find it,
+    // regardless of project run order (see project-isolation note above).
+    if (serviceSupabase) {
+      const { error: revertErr } = await serviceSupabase
+        .from('coin_wallets')
+        .update({ balance: balanceBefore })
+        .eq('user_id', sessionA.user.id);
+      expect(revertErr, `wallet revert failed: ${revertErr?.message}`).toBeNull();
+    } else {
+      console.log('⚠ E2E_LOCAL_SERVICE_ROLE_KEY not set — skipping wallet revert; USER_A balance left elevated');
+    }
+
+    console.log(`✅ Wallet: mock purchase credited ${pack.coins} coins (${balanceBefore} → ${balanceAfter}), reverted, no Stripe involved`);
   });
 });

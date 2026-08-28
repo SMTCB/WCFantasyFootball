@@ -115,6 +115,21 @@ const COMMISSIONER_TOUR_STEPS = [
   },
 ];
 
+// Resolves the id that will actually authenticate the request (supabase-js
+// reads whatever real session is in storage independent of demo-mode auth
+// state), not useAuth()'s possibly-frozen DEMO_USER — otherwise a league's
+// own-squad lookup can silently query the wrong user_id and never find the
+// caller's squad. Same divergence, same fix, as F1RacePickForm.jsx's
+// resolveUserId()/TennisAdminScreen.jsx's established pattern.
+async function resolveUserId(fallbackId) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.user?.id ?? fallbackId;
+  } catch {
+    return fallbackId;
+  }
+}
+
 export default function LeagueScreen() {
   const { user } = useAuth();
   const { show: showToast } = useToast();
@@ -529,6 +544,7 @@ export default function LeagueScreen() {
     try {
       setMembersLoading(true);
       setView(v => v === 'list' ? 'detail' : v);
+      const uid = await resolveUserId(user?.id);
       const { data: lData } = await supabase.from('leagues').select('*').eq('id', id).single();
       if (!lData) {
         // League doesn't exist or RLS denied — redirect to list view.
@@ -544,7 +560,7 @@ export default function LeagueScreen() {
         .from('draft_allocations')
         .select('unresolved_slots, allocated_players')
         .eq('league_id', id)
-        .eq('user_id', user?.id)
+        .eq('user_id', uid)
         .maybeSingle();
       setDraftAllocated(!!(alloc?.allocated_players));
 
@@ -565,7 +581,7 @@ export default function LeagueScreen() {
           .from('draft_submissions')
           .select('id')
           .eq('league_id', id)
-          .eq('user_id', user?.id)
+          .eq('user_id', uid)
           .eq('phase', currentPhase)
           .limit(1);
         // Only show the "submit now" banner when the deadline is still in the future.
@@ -588,7 +604,7 @@ export default function LeagueScreen() {
         .from('squads')
         .select('id, budget_remaining, players')
         .eq('league_id', id)
-        .eq('user_id', user?.id)
+        .eq('user_id', uid)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -623,7 +639,7 @@ export default function LeagueScreen() {
         .select('player_id, user_id')
         .eq('league_id', id);
       setLeagueListings(listings ?? []);
-      setMyListings(new Set((listings ?? []).filter(l => l.user_id === user?.id).map(l => l.player_id)));
+      setMyListings(new Set((listings ?? []).filter(l => l.user_id === uid).map(l => l.player_id)));
 
       setMembers(mData || []);
     } finally {
