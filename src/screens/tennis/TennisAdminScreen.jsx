@@ -32,8 +32,17 @@ export default function TennisAdminScreen() {
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('users').select('is_admin').eq('id', user.id).maybeSingle()
-      .then(({ data }) => setIsAdmin(data?.is_admin ?? false));
+    // Resolve the id that will actually authenticate downstream RPC/Edge
+    // Function calls (supabase-js reads whatever real session is in storage
+    // independent of demo-mode auth state), not useAuth()'s possibly-frozen
+    // DEMO_USER — otherwise this admin gate can disagree with the identity
+    // score-tennis-tournament/score-atp-finals will see, per F1RacePickForm's
+    // established fix for the same divergence.
+    supabase.auth.getSession().then(({ data }) => {
+      const uid = data?.session?.user?.id ?? user.id;
+      supabase.from('users').select('is_admin').eq('id', uid).maybeSingle()
+        .then(({ data: row }) => setIsAdmin(row?.is_admin ?? false));
+    });
   }, [user?.id]);
 
   const t = tournaments.find(x => (x.tournament_id ?? x.id) === selected);

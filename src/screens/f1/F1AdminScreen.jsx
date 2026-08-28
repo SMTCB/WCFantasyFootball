@@ -96,7 +96,7 @@ export default function F1AdminScreen() {
     if (!race) return;
     setBusy(true); setMsg('Scoring race…');
     try {
-      const { data, error } = await supabase.functions.invoke('score-f1-race', { body: { race_id: race.id } });
+      const { data, error } = await supabase.functions.invoke('score-f1-race', { body: { race_id: race.id, paddock_id: paddockId } });
       if (error) throw error;
       setMsg(`Scored: ${data?.scored ?? 0} bets · winner: ${data?.winner ?? 'n/a'} (${data?.winner_pts ?? 0} pts)`);
       setRaces(rs => rs.map(r => r.id === race.id ? { ...r, is_scored: true } : r));

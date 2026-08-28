@@ -21,6 +21,14 @@
 --                      seed-epl-b-def-1 (yellow card) — see step 6 below for full roster.
 --   SCENARIO_SQUAD    a0000000-0000-4000-a000-000000000001  (user_a, CLASSIC_LEAGUE, matchday 426-r1,
 --                                                            Club A's 11 players — see step 6b)
+--   PADDOCK           f1000000-0000-4000-a000-000000000001  (invite_code F1SEED01, user_a owner,
+--                                                            f1_races round 1 upcoming/2 unscored/3 scored)
+--   BOX               b0000000-0000-4000-a000-000000000001  (invite_code TNSEED01, user_a owner)
+--   TOURN_ROSTER_OPEN b0a00000-0000-4000-a000-000000000001  (status roster_open, 11 tier-tagged players)
+--   TOURN_QF_OPEN     b0a00000-0000-4000-a000-000000000002  (status qf_captain_open, user_a roster
+--                                                            already submitted, 7 fixed-ID players)
+--   TOURN_COMPLETED   b0a00000-0000-4000-a000-000000000003  (status completed, both users scored)
+--   TOURN_ATP_FINALS  b0a00000-0000-4000-a000-000000000004  (status roster_open, 8 players, 12 group matches)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── 1. Auth accounts ────────────────────────────────────────────────────────
@@ -354,3 +362,233 @@ BEGIN
 
   RAISE NOTICE 'Seeded 1 squad (11 players) + 1 fantasy_points row (total=%) for matchday 426-r1', v_squad_total;
 END $$;
+
+-- ── 7. Sports catalogue ─────────────────────────────────────────────────────
+-- score-f1-race and score-tennis-tournament look these up by exact `name`
+-- ('Formula 1', 'Tennis') to scope event_win trophies per paddock/player_box;
+-- create_paddock/create_player_box also 404 without a matching row. Not
+-- baked into schema.sql (DDL-only pg_dump) — must be seeded explicitly.
+INSERT INTO sports (id, slug, name, game_model, provider, active) VALUES
+  ('50000000-0000-4000-a000-000000000001', 'football', 'Football',   'fantasy_squad', 'forza',       true),
+  ('50000000-0000-4000-a000-000000000002', 'f1',       'Formula 1',  'prediction',    'openf1',      true),
+  ('50000000-0000-4000-a000-000000000003', 'tennis',   'Tennis',     'bracket',       'thesportsdb', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- ── 8. F1: paddock, season, 3 races, bets, scores, year results ────────────
+-- Round 1 (upcoming, unlocked): race-pick submission spec — no pre-seeded
+--   bet, upserted fresh by the spec via F1RacePickForm.
+-- Round 2 (finished, unscored): admin scoring spec — one pre-seeded bet for
+--   user_a only (so score-f1-race has something to score and the resulting
+--   event_win trophy has a clear, non-tied winner regardless of whether the
+--   paddock-join spec has run yet in another worker).
+-- Round 3 (finished, scored): standings/report/leaderboard smoke — bets +
+--   scores for both users, season=2026 (get_paddock_leaderboard hardcodes
+--   `s.season = 2026`, confirmed via migration 192_f1_rpcs_and_seed.sql).
+DO $$
+DECLARE
+  paddock_id uuid := 'f1000000-0000-4000-a000-000000000001';
+  circle_id uuid := 'c1000000-0000-4000-a000-000000000001';
+  sport_f1_id uuid := '50000000-0000-4000-a000-000000000002';
+  user_a_id uuid := 'e0000000-0000-4000-a000-00000000000a';
+  user_b_id uuid := 'e0000000-0000-4000-a000-00000000000b';
+BEGIN
+  INSERT INTO paddocks (id, name, season, invite_code, created_by, sport_id, circle_id)
+  VALUES (paddock_id, 'E2E Test Paddock', 2026, 'F1SEED01', user_a_id, sport_f1_id, circle_id)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO paddock_members (paddock_id, user_id, role) VALUES
+    (paddock_id, user_a_id, 'owner')
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO circle_paddocks (circle_id, paddock_id)
+  VALUES (circle_id, paddock_id)
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO f1_seasons (season, starts_at, ends_at)
+  VALUES (2026, '2026-03-01T00:00:00Z', '2026-12-15T00:00:00Z')
+  ON CONFLICT (season) DO NOTHING;
+
+  INSERT INTO f1_races (season, round_number, gp_name, circuit, race_date, qualifying_at, race_at, status) VALUES
+    (2026, 1, 'Seed Grand Prix 1', 'Seed Circuit A', CURRENT_DATE + 7, now() + interval '6 days', now() + interval '7 days', 'scheduled')
+  ON CONFLICT (season, round_number) DO NOTHING;
+
+  INSERT INTO f1_races (season, round_number, gp_name, circuit, race_date, qualifying_at, race_at, status) VALUES
+    (2026, 2, 'Seed Grand Prix 2', 'Seed Circuit B', CURRENT_DATE - 3, now() - interval '4 days', now() - interval '3 days', 'finished')
+  ON CONFLICT (season, round_number) DO NOTHING;
+
+  INSERT INTO f1_races (
+    season, round_number, gp_name, circuit, race_date, qualifying_at, race_at, status,
+    result_p1, result_p2, result_p3, result_team_most_points, is_scored
+  ) VALUES (
+    2026, 3, 'Seed Grand Prix 3', 'Seed Circuit C', CURRENT_DATE - 14, now() - interval '15 days', now() - interval '14 days', 'finished',
+    'Lando Norris', 'Oscar Piastri', 'Charles Leclerc', 'McLaren', true
+  )
+  ON CONFLICT (season, round_number) DO NOTHING;
+
+  -- Round 2's bet uses real DRIVERS/TEAMS values (src/lib/f1/f1-data.js) —
+  -- score-f1-race does exact string comparison against f1_races.result_p1/etc,
+  -- and F1AdminScreen's result-entry <select> only offers those same values.
+  -- The Tier 3 admin-scoring spec enters this exact p1/p2/p3/team combo as the
+  -- race result, so this bet scores a guaranteed non-zero total (used to
+  -- assert both f1_scores and the resulting event_win trophy).
+  INSERT INTO f1_bets_race (user_id, season, round_number, p1, p2, p3, team_most_points, is_locked) VALUES
+    (user_a_id, 2026, 2, 'Max Verstappen', 'Charles Leclerc', 'Lewis Hamilton', 'Red Bull', true)
+  ON CONFLICT (user_id, season, round_number) DO NOTHING;
+
+  INSERT INTO f1_bets_race (user_id, season, round_number, p1, p2, p3, is_locked) VALUES
+    (user_a_id, 2026, 3, 'Lando Norris', 'Oscar Piastri', 'Charles Leclerc', true),
+    (user_b_id, 2026, 3, 'Oscar Piastri', 'Lando Norris', 'Charles Leclerc', true)
+  ON CONFLICT (user_id, season, round_number) DO NOTHING;
+
+  INSERT INTO f1_scores (user_id, season, round_number, score_type, total_points) VALUES
+    (user_a_id, 2026, 3, 'race', 25),
+    (user_b_id, 2026, 3, 'race', 14)
+  ON CONFLICT (user_id, season, round_number, score_type) DO NOTHING;
+
+  INSERT INTO f1_year_results (season, is_bets_locked)
+  VALUES (2026, false)
+  ON CONFLICT (season) DO NOTHING;
+
+  RAISE NOTICE 'Seeded 1 paddock + f1_seasons + 3 f1_races (upcoming/unscored/scored) + bets/scores + year_results';
+END $$;
+
+-- ── 9. Tennis: player_box, season, 4 tournaments, players, rosters, scores ─
+-- roster_open: 11 tier-tagged players (margin over the 7 slots) for the
+--   roster-submission spec, submitted live via submit_tennis_roster.
+-- qf_captain_open: exactly 7 fixed-ID players (one per roster slot) plus a
+--   pre-seeded tennis_rosters row for user_a (raw insert — "already
+--   submitted" fixture) — eliminated left at its default false so
+--   get_tennis_tournament_for_user's `surviving_players` is non-empty
+--   (confirmed via migration 199_tennis_t1_rpcs.sql).
+-- completed: no players needed — tennis_tournament_scores has no player FK,
+--   so both users' final scores are hand-worked directly for leaderboard/
+--   profile smoke.
+-- atp_finals (roster_open): 8 players (tier 1, elite-only) + 12 group-stage
+--   tennis_atp_finals_matches rows (round robin, 2 groups of 4) — smoke only,
+--   per the plan's explicit scope decision (no knockout phase this pass).
+DO $$
+DECLARE
+  box_id uuid := 'b0000000-0000-4000-a000-000000000001';
+  circle_id uuid := 'c1000000-0000-4000-a000-000000000001';
+  user_a_id uuid := 'e0000000-0000-4000-a000-00000000000a';
+  user_b_id uuid := 'e0000000-0000-4000-a000-00000000000b';
+  tourn_roster_open uuid := 'b0a00000-0000-4000-a000-000000000001';
+  tourn_qf_open uuid := 'b0a00000-0000-4000-a000-000000000002';
+  tourn_completed uuid := 'b0a00000-0000-4000-a000-000000000003';
+  tourn_atp_finals uuid := 'b0a00000-0000-4000-a000-000000000004';
+  qf_t1 uuid := 'b0a10000-0000-4000-a000-000000000001';
+  qf_t2a uuid := 'b0a10000-0000-4000-a000-000000000002';
+  qf_t2b uuid := 'b0a10000-0000-4000-a000-000000000003';
+  qf_t3a uuid := 'b0a10000-0000-4000-a000-000000000004';
+  qf_t3b uuid := 'b0a10000-0000-4000-a000-000000000005';
+  qf_t4a uuid := 'b0a10000-0000-4000-a000-000000000006';
+  qf_t4b uuid := 'b0a10000-0000-4000-a000-000000000007';
+  atp_p1 uuid := 'b0a20000-0000-4000-a000-000000000001';
+  atp_p2 uuid := 'b0a20000-0000-4000-a000-000000000002';
+  atp_p3 uuid := 'b0a20000-0000-4000-a000-000000000003';
+  atp_p4 uuid := 'b0a20000-0000-4000-a000-000000000004';
+  atp_p5 uuid := 'b0a20000-0000-4000-a000-000000000005';
+  atp_p6 uuid := 'b0a20000-0000-4000-a000-000000000006';
+  atp_p7 uuid := 'b0a20000-0000-4000-a000-000000000007';
+  atp_p8 uuid := 'b0a20000-0000-4000-a000-000000000008';
+BEGIN
+  INSERT INTO player_boxes (id, name, invite_code, created_by, season_year, circle_id)
+  VALUES (box_id, 'E2E Test Player Box', 'TNSEED01', user_a_id, 2026, circle_id)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO player_box_members (player_box_id, user_id) VALUES
+    (box_id, user_a_id)
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO circle_player_boxes (circle_id, player_box_id)
+  VALUES (circle_id, box_id)
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO tennis_seasons (year, ace_cards_per_user)
+  VALUES (2026, 4)
+  ON CONFLICT (year) DO NOTHING;
+
+  INSERT INTO tennis_ace_cards (user_id, season_year, card_type) VALUES
+    (user_a_id, 2026, 'underdog_boost'),
+    (user_a_id, 2026, 'safety_net'),
+    (user_a_id, 2026, 'surface_specialist'),
+    (user_a_id, 2026, 'dark_horse_insurance'),
+    (user_b_id, 2026, 'underdog_boost'),
+    (user_b_id, 2026, 'safety_net'),
+    (user_b_id, 2026, 'surface_specialist'),
+    (user_b_id, 2026, 'dark_horse_insurance')
+  ON CONFLICT (user_id, season_year, card_type) DO NOTHING;
+
+  -- roster_open
+  INSERT INTO tennis_tournaments (id, season_year, name, tournament_type, surface, start_date, end_date, status, sort_order)
+  VALUES (tourn_roster_open, 2026, 'Seed Open (Roster Open)', 'masters_1000', 'hard', CURRENT_DATE + 10, CURRENT_DATE + 24, 'roster_open', 1)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO tennis_tournament_players (tournament_id, player_name, tier) VALUES
+    (tourn_roster_open, 'Roster T1 Alpha', 1), (tourn_roster_open, 'Roster T1 Beta', 1),
+    (tourn_roster_open, 'Roster T2 Alpha', 2), (tourn_roster_open, 'Roster T2 Beta', 2), (tourn_roster_open, 'Roster T2 Gamma', 2),
+    (tourn_roster_open, 'Roster T3 Alpha', 3), (tourn_roster_open, 'Roster T3 Beta', 3), (tourn_roster_open, 'Roster T3 Gamma', 3),
+    (tourn_roster_open, 'Roster T4 Alpha', 4), (tourn_roster_open, 'Roster T4 Beta', 4), (tourn_roster_open, 'Roster T4 Gamma', 4)
+  ON CONFLICT (tournament_id, player_name) DO NOTHING;
+
+  -- qf_captain_open
+  INSERT INTO tennis_tournaments (id, season_year, name, tournament_type, surface, start_date, end_date, status, sort_order)
+  VALUES (tourn_qf_open, 2026, 'Seed Slam (QF Captain Open)', 'grand_slam', 'clay', CURRENT_DATE - 10, CURRENT_DATE + 4, 'qf_captain_open', 2)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO tennis_tournament_players (id, tournament_id, player_name, tier, round_reached, rounds_won) VALUES
+    (qf_t1,  tourn_qf_open, 'QF T1 Player',  1, 'qf', 4),
+    (qf_t2a, tourn_qf_open, 'QF T2a Player', 2, 'qf', 4),
+    (qf_t2b, tourn_qf_open, 'QF T2b Player', 2, 'r16', 3),
+    (qf_t3a, tourn_qf_open, 'QF T3a Player', 3, 'qf', 4),
+    (qf_t3b, tourn_qf_open, 'QF T3b Player', 3, 'r32', 2),
+    (qf_t4a, tourn_qf_open, 'QF T4a Player', 4, 'r16', 3),
+    (qf_t4b, tourn_qf_open, 'QF T4b Player', 4, 'r64', 1)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO tennis_rosters (
+    user_id, tournament_id, tier1_player_id, tier2a_player_id, tier2b_player_id,
+    tier3a_player_id, tier3b_player_id, tier4a_player_id, tier4b_player_id, locked_at
+  ) VALUES (
+    user_a_id, tourn_qf_open, qf_t1, qf_t2a, qf_t2b, qf_t3a, qf_t3b, qf_t4a, qf_t4b, now() - interval '2 days'
+  )
+  ON CONFLICT (user_id, tournament_id) DO NOTHING;
+
+  -- completed
+  INSERT INTO tennis_tournaments (id, season_year, name, tournament_type, surface, start_date, end_date, status, sort_order)
+  VALUES (tourn_completed, 2026, 'Seed Masters (Completed)', 'masters_1000', 'grass', CURRENT_DATE - 30, CURRENT_DATE - 16, 'completed', 0)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO tennis_tournament_scores (user_id, tournament_id, base_points, total_points, scored_at) VALUES
+    (user_a_id, tourn_completed, 42, 42, now() - interval '15 days'),
+    (user_b_id, tourn_completed, 35, 35, now() - interval '15 days')
+  ON CONFLICT (user_id, tournament_id) DO NOTHING;
+
+  -- atp_finals (group stage only, smoke)
+  INSERT INTO tennis_tournaments (id, season_year, name, tournament_type, surface, start_date, end_date, status, sort_order)
+  VALUES (tourn_atp_finals, 2026, 'Seed ATP Finals', 'atp_finals', 'hard', CURRENT_DATE + 60, CURRENT_DATE + 67, 'roster_open', 3)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO tennis_tournament_players (id, tournament_id, player_name, tier) VALUES
+    (atp_p1, tourn_atp_finals, 'ATP Finalist 1', 1), (atp_p2, tourn_atp_finals, 'ATP Finalist 2', 1),
+    (atp_p3, tourn_atp_finals, 'ATP Finalist 3', 1), (atp_p4, tourn_atp_finals, 'ATP Finalist 4', 1),
+    (atp_p5, tourn_atp_finals, 'ATP Finalist 5', 1), (atp_p6, tourn_atp_finals, 'ATP Finalist 6', 1),
+    (atp_p7, tourn_atp_finals, 'ATP Finalist 7', 1), (atp_p8, tourn_atp_finals, 'ATP Finalist 8', 1)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO tennis_atp_finals_matches (season_year, match_number, match_type, player_a_id, player_b_id) VALUES
+    (2026, 1,  'group', atp_p1, atp_p2), (2026, 2,  'group', atp_p1, atp_p3), (2026, 3,  'group', atp_p1, atp_p4),
+    (2026, 4,  'group', atp_p2, atp_p3), (2026, 5,  'group', atp_p2, atp_p4), (2026, 6,  'group', atp_p3, atp_p4),
+    (2026, 7,  'group', atp_p5, atp_p6), (2026, 8,  'group', atp_p5, atp_p7), (2026, 9,  'group', atp_p5, atp_p8),
+    (2026, 10, 'group', atp_p6, atp_p7), (2026, 11, 'group', atp_p6, atp_p8), (2026, 12, 'group', atp_p7, atp_p8)
+  ON CONFLICT (season_year, match_number) DO NOTHING;
+
+  RAISE NOTICE 'Seeded 1 player_box + tennis_seasons + ace_cards + 4 tournaments (roster_open/qf_captain_open/completed/atp_finals)';
+END $$;
+
+-- ── 10. Admin gating ────────────────────────────────────────────────────────
+-- TennisAdminScreen checks users.is_admin directly. F1AdminScreen instead
+-- uses is_competition_admin('paddock', paddock_id) — user_a already passes
+-- that via paddocks.created_by (migration 243_competition_admin_model.sql),
+-- no extra seed needed for F1.
+UPDATE public.users SET is_admin = true WHERE id = 'e0000000-0000-4000-a000-00000000000a';

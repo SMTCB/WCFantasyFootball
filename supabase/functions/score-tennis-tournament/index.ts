@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { requireServiceRole } from '../_shared/auth.ts';
+import { requireServiceRoleOrAdmin } from '../_shared/auth.ts';
 import { logError } from '../_shared/log.ts';
 import {
   scoreRoster,
@@ -110,7 +110,16 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  const authErr = await requireServiceRole(req);
+  // Direct browser calls (TennisAdminScreen's "Trigger Scoring" button) carry
+  // the admin's own session JWT — tennis_tournaments is shared global data,
+  // not owned by any single Clubhouse (migration 243), so admin is gated on
+  // the global users.is_admin flag, mirroring TennisAdminScreen's existing
+  // client-side check, not a per-competition predicate. Cron/service-role
+  // calls skip this entirely.
+  const authErr = await requireServiceRoleOrAdmin(req, async (userClient, userId) => {
+    const { data } = await userClient.from('users').select('is_admin').eq('id', userId).maybeSingle();
+    return data?.is_admin === true;
+  });
   if (authErr) return authErr;
 
   try {
