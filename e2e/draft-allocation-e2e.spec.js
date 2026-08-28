@@ -16,7 +16,10 @@ import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY as SUPABASE_ANON } from './supabase-target.js';
 
-const SERVICE_KEY      = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Deliberately not named SUPABASE_SERVICE_ROLE_KEY — scripts/e2e-local.mjs
+// sets E2E_LOCAL_SERVICE_ROLE_KEY unconditionally (the ephemeral local
+// stack's own key, never production's). See that script's comment.
+const SERVICE_KEY      = process.env.E2E_LOCAL_SERVICE_ROLE_KEY;
 
 const anonDb    = createClient(SUPABASE_URL, SUPABASE_ANON);
 const serviceDb = SERVICE_KEY ? createClient(SUPABASE_URL, SERVICE_KEY) : null;
@@ -24,47 +27,75 @@ const serviceDb = SERVICE_KEY ? createClient(SUPABASE_URL, SERVICE_KEY) : null;
 // Two seeded users (supabase/seed.sql) — members of the same circle.
 const USER_A = 'e0000000-0000-4000-a000-00000000000a'; // e2e_a
 const USER_B = 'e0000000-0000-4000-a000-00000000000b'; // e2e_b
+const USER_A_EMAIL = 'e2e_a@fantasykit.test';
+const USER_A_PASSWORD = 'E2ePass!99';
 
-// Seeded bulk player pool (supabase/seed.sql: seed-epl-p-1..98 @ tournament 426,
-// seed-wc-p-1..40 @ tournament 429), all priced <=£7.0M so a 15-player cap-filling
-// allocation totals well under the £100M budget in every combination.
+// run-draft-lottery requires a real commissioner JWT for any call carrying
+// league_id (DD-C4, supabase/functions/run-draft-lottery/index.js) — there is
+// no service-role bypass for this path. USER_A is already seeded
+// (supabase/seed.sql) as the commissioner of DRAFT_LEAGUE_ID, so sign in as
+// USER_A directly rather than minting a throwaway commissioner.
+let commissionerClient = null;
+async function signInAsCommissioner() {
+  if (commissionerClient) return commissionerClient;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const { data, error } = await client.auth.signInWithPassword({
+    email: USER_A_EMAIL, password: USER_A_PASSWORD,
+  });
+  if (error || !data?.session) throw new Error(`USER_A sign-in failed: ${error?.message}`);
+  commissionerClient = client;
+  return client;
+}
+
+// Seeded WC bulk player pool ONLY (supabase/seed.sql: seed-wc-p-1..70 @
+// tournament 429) — DRAFT_LEAGUE_ID below is itself scoped to tournament_id
+// '429', and run-draft-lottery's allocation algorithm builds its player map
+// filtered `.eq('tournament_id', leagueRow.tournament_id)`. An earlier version
+// of this file mixed in seed-epl-p-* (tournament 426) ids, which were silently
+// invisible to the allocation algorithm for this league — that under-supplied
+// managers to ~9 real players instead of the intended 15 (BUG-DRAFT-SVC).
+// All priced <=£7.0M so a 15-player cap-filling allocation totals well under
+// the £100M budget in every combination.
 // GKS: 6 unique (2 shared + 2 A-only + 2 B-only). DEFS/MIDS/FWDS similarly split
 // below via OVERLAP_IDS + TEAM_A_ONLY/TEAM_B_ONLY — see those for the breakdown.
-const GKS  = ['seed-epl-p-90','seed-wc-p-10','seed-epl-p-10','seed-wc-p-20','seed-epl-p-20','seed-wc-p-30'];
-const DEFS = ['seed-epl-p-63','seed-epl-p-72','seed-epl-p-81','seed-wc-p-1','seed-epl-p-1','seed-epl-p-73','seed-epl-p-82','seed-epl-p-91','seed-wc-p-2','seed-wc-p-11','seed-epl-p-2','seed-epl-p-11','seed-epl-p-83','seed-epl-p-92','seed-wc-p-3','seed-wc-p-12','seed-wc-p-21','seed-epl-p-3','seed-epl-p-12','seed-epl-p-21','seed-epl-p-93','seed-wc-p-13','seed-wc-p-22','seed-wc-p-31','seed-epl-p-13','seed-epl-p-22'];
-const MIDS = ['seed-epl-p-36','seed-epl-p-45','seed-epl-p-54','seed-wc-p-36','seed-epl-p-46','seed-epl-p-55','seed-epl-p-64','seed-epl-p-56','seed-epl-p-65','seed-epl-p-74','seed-epl-p-66'];
-const FWDS = ['seed-epl-p-9','seed-epl-p-18','seed-epl-p-27','seed-wc-p-9','seed-wc-p-18','seed-wc-p-27','seed-wc-p-19','seed-wc-p-28','seed-wc-p-37','seed-epl-p-19','seed-epl-p-28','seed-epl-p-37'];
+const GKS  = ['seed-wc-p-10', 'seed-wc-p-20', 'seed-wc-p-30', 'seed-wc-p-40', 'seed-wc-p-50', 'seed-wc-p-60'];
+const DEFS = ['seed-wc-p-1', 'seed-wc-p-2', 'seed-wc-p-3', 'seed-wc-p-21', 'seed-wc-p-22', 'seed-wc-p-23', 'seed-wc-p-31', 'seed-wc-p-32', 'seed-wc-p-33', 'seed-wc-p-41', 'seed-wc-p-42', 'seed-wc-p-43', 'seed-wc-p-51', 'seed-wc-p-52', 'seed-wc-p-53'];
+const MIDS = ['seed-wc-p-24', 'seed-wc-p-25', 'seed-wc-p-26', 'seed-wc-p-34', 'seed-wc-p-35', 'seed-wc-p-36', 'seed-wc-p-44', 'seed-wc-p-45', 'seed-wc-p-46'];
+const FWDS = ['seed-wc-p-27', 'seed-wc-p-28', 'seed-wc-p-29', 'seed-wc-p-37', 'seed-wc-p-38', 'seed-wc-p-39', 'seed-wc-p-47', 'seed-wc-p-48', 'seed-wc-p-49', 'seed-wc-p-57', 'seed-wc-p-58', 'seed-wc-p-59'];
 
 // 5 players that BOTH teams pick (lottery will give each to exactly one manager):
 // 2 GK + 3 DEF, same shape as the original prod-data version of this test.
 const OVERLAP_IDS = [GKS[0], GKS[1], DEFS[0], DEFS[1], DEFS[2]];
 
-// Team A's own players (no overlap with Team B's own players below): 2 GK + 9 DEF
-// + 8 MID + 6 FWD = 25, plus the 5 shared OVERLAP_IDS = 30 total. Comfortably clears
-// every position cap (GK<=2, DEF<=5, MID<=5, FWD<=3) regardless of which overlap
-// players the lottery awards to A, so a full 15-player allocation is guaranteed
-// (exercised by the hard `toBe(15)` assertion further down this file).
+// Team A's own players (no overlap with Team B's own players below): 2 GK + 6 DEF
+// + 6 MID + 6 FWD = 20, plus the 5 shared OVERLAP_IDS = 25 total. Comfortably clears
+// every position cap (GK<=2, DEF<=5, MID<=5, FWD<=3) from OWN supply alone
+// regardless of which overlap players the lottery awards to A, so a full
+// 15-player allocation is guaranteed (exercised by the hard `toBe(15)`
+// assertion further down this file).
 const TEAM_A_ONLY = [
   GKS[2], GKS[3],
-  DEFS[3], DEFS[4], DEFS[5], DEFS[6], DEFS[7], DEFS[8], DEFS[9], DEFS[10], DEFS[11],
-  MIDS[0], MIDS[1], MIDS[2], MIDS[3], MIDS[4], MIDS[5], MIDS[6], MIDS[7],
+  DEFS[3], DEFS[4], DEFS[5], DEFS[6], DEFS[7], DEFS[8],
+  MIDS[0], MIDS[1], MIDS[2], MIDS[3], MIDS[4], MIDS[5],
   FWDS[0], FWDS[1], FWDS[2], FWDS[3], FWDS[4], FWDS[5],
 ];
 
-// Team B's own players: 2 GK + 14 DEF + 3 MID + 6 FWD = 25, plus the 5 shared
-// OVERLAP_IDS = 30 total, entirely disjoint from Team A's own players above.
+// Team B's own players: 2 GK + 6 DEF + 3 MID + 6 FWD = 17, plus the 5 shared
+// OVERLAP_IDS = 22 total, entirely disjoint from Team A's own players above.
 // Deliberately only 3 MID candidates (below the MID<=5 cap) so Team B's
 // post-allocation squad has open MID slots and isn't full at 15 — exercised
 // by the "manager with open MID slots CAN buy" test further down.
 const TEAM_B_ONLY = [
   GKS[4], GKS[5],
-  DEFS[12], DEFS[13], DEFS[14], DEFS[15], DEFS[16], DEFS[17], DEFS[18], DEFS[19], DEFS[20], DEFS[21], DEFS[22], DEFS[23], DEFS[24],
-  MIDS[8], MIDS[9], MIDS[10],
+  DEFS[9], DEFS[10], DEFS[11], DEFS[12], DEFS[13], DEFS[14],
+  MIDS[6], MIDS[7], MIDS[8],
   FWDS[6], FWDS[7], FWDS[8], FWDS[9], FWDS[10], FWDS[11],
 ];
 
-const TEAM_A_30 = [...OVERLAP_IDS, ...TEAM_A_ONLY]; // 30 unique IDs
-const TEAM_B_30 = [...OVERLAP_IDS, ...TEAM_B_ONLY]; // 30 unique IDs
+// Names kept as *_30 for minimal diff even though actual counts are 25/22 —
+// tests below assert against these arrays' own .length, never a literal 30.
+const TEAM_A_30 = [...OVERLAP_IDS, ...TEAM_A_ONLY]; // 25 unique IDs
+const TEAM_B_30 = [...OVERLAP_IDS, ...TEAM_B_ONLY]; // 22 unique IDs
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -234,10 +265,11 @@ test.describe('Draft Mode — Full E2E Flow', () => {
     const { error } = await serviceDb.from('draft_submissions').upsert({
       league_id:    DRAFT_LEAGUE_ID,
       user_id:      USER_A,
+      phase:        'group',
       player_ids:   TEAM_A_30,
       status:       'pending',
       submitted_at: new Date().toISOString(),
-    }, { onConflict: 'league_id,user_id' });
+    }, { onConflict: 'league_id,user_id,phase' });
 
     expect(error).toBeNull();
 
@@ -260,10 +292,11 @@ test.describe('Draft Mode — Full E2E Flow', () => {
     const { error } = await serviceDb.from('draft_submissions').upsert({
       league_id:    DRAFT_LEAGUE_ID,
       user_id:      USER_B,
+      phase:        'group',
       player_ids:   TEAM_B_30,
       status:       'pending',
       submitted_at: new Date().toISOString(),
-    }, { onConflict: 'league_id,user_id' });
+    }, { onConflict: 'league_id,user_id,phase' });
 
     expect(error).toBeNull();
 
@@ -314,9 +347,12 @@ test.describe('Draft Mode — Full E2E Flow', () => {
       // Even if success toast is missed, verify the DB state below
       console.log('Commissioner panel allocation triggered, UI success:', successMsg);
     } else {
-      // In demo mode admin tab might not be visible — trigger allocation directly
-      console.log('Admin tab not visible in demo mode — triggering allocation via Supabase directly');
-      const { data, error } = await serviceDb.functions.invoke('run-draft-lottery', {
+      // In demo mode admin tab might not be visible — trigger allocation directly,
+      // as USER_A (seeded commissioner of DRAFT_LEAGUE_ID) — no service-role
+      // bypass exists for this call (see signInAsCommissioner comment above).
+      console.log('Admin tab not visible in demo mode — triggering allocation as commissioner');
+      const authedClient = await signInAsCommissioner();
+      const { data, error } = await authedClient.functions.invoke('run-draft-lottery', {
         body: { league_id: DRAFT_LEAGUE_ID },
       });
       expect(error).toBeNull();
@@ -337,9 +373,11 @@ test.describe('Draft Mode — Full E2E Flow', () => {
       .eq('league_id', DRAFT_LEAGUE_ID)
       .in('user_id', [USER_A, USER_B]);
 
-    // If not yet allocated, run it now
+    // If not yet allocated, run it now — as the seeded commissioner (USER_A);
+    // no service-role bypass exists for this call.
     if (!existing?.length) {
-      await serviceDb.functions.invoke('run-draft-lottery', {
+      const authedClient = await signInAsCommissioner();
+      await authedClient.functions.invoke('run-draft-lottery', {
         body: { league_id: DRAFT_LEAGUE_ID },
       });
     }
@@ -434,13 +472,13 @@ test.describe('Draft Mode — Full E2E Flow', () => {
   });
 
   test.afterAll(async () => {
-    // Clean up test data
+    // Clean up test data. squads is left intact here — Suite 1b ("Post-
+    // Allocation — constraints enforced") depends on this suite's allocated
+    // squads still existing; it deletes them itself once it's done.
     if (serviceDb) {
       await serviceDb.from('draft_submissions').delete()
         .eq('league_id', DRAFT_LEAGUE_ID).in('user_id', [USER_A, USER_B]);
       await serviceDb.from('draft_allocations').delete()
-        .eq('league_id', DRAFT_LEAGUE_ID).in('user_id', [USER_A, USER_B]);
-      await serviceDb.from('squads').delete()
         .eq('league_id', DRAFT_LEAGUE_ID).in('user_id', [USER_A, USER_B]);
     }
   });
@@ -628,6 +666,15 @@ test.describe('Post-Allocation — constraints enforced', () => {
       //   SQUAD_MAX  = 15
       //   budget     = squad.budget_remaining (deducted per buy)
       console.log(`Squad ${squad.user_id.slice(0,8)}: GK=${counts.GK}/${2} DEF=${counts.DEF}/${5} MID=${counts.MID}/${5} FWD=${counts.FWD}/${3} size=${squad.players.length}/15 cost=£${totalCost}M ✅`);
+    }
+  });
+
+  test.afterAll(async () => {
+    // Squads allocated by Suite 1 and consumed by this suite are cleaned up
+    // here, once both suites are done with them.
+    if (serviceDb) {
+      await serviceDb.from('squads').delete()
+        .eq('league_id', DRAFT_LEAGUE_ID).in('user_id', [USER_A, USER_B]);
     }
   });
 });

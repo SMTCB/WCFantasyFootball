@@ -39,6 +39,13 @@ DECLARE
   user_a_email text := 'e2e_a@fantasykit.test';
   user_b_email text := 'e2e_b@fantasykit.test';
   user_password text := 'E2ePass!99';
+  -- The app's fixed DEMO_USER (src/context/AuthContext.jsx) — every
+  -- unauthenticated/demo-mode page load resolves to this identity, and
+  -- several tables (trophy_ledger, coin_wallets, p2p_challenges, ...) FK
+  -- user_id straight to auth.users, not public.users — so this id needs a
+  -- real (if never-logged-into) auth.users row too, not just public.users.
+  demo_user_id uuid := '00000000-0000-0000-0000-000000000000';
+  demo_email text := 'demo@forzakit.app';
 BEGIN
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password,
@@ -51,9 +58,15 @@ BEGIN
      now(), now(), '', '', '', ''),
     ('00000000-0000-0000-0000-000000000000', user_b_id, 'authenticated', 'authenticated', user_b_email,
      crypt(user_password, gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}',
+     now(), now(), '', '', '', ''),
+    ('00000000-0000-0000-0000-000000000000', demo_user_id, 'authenticated', 'authenticated', demo_email,
+     crypt(gen_random_uuid()::text, gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}',
      now(), now(), '', '', '', '')
   ON CONFLICT (id) DO NOTHING;
 
+  -- No auth.identities row for demo_user_id: it's never signed in via
+  -- signInWithPassword (only referenced as an FK target for demo-mode data),
+  -- unlike user_a/user_b which do sign in in some specs.
   INSERT INTO auth.identities (
     id, user_id, provider_id, identity_data, provider,
     last_sign_in_at, created_at, updated_at
@@ -71,10 +84,10 @@ BEGIN
   -- of depending on it; every FK below (circle_members, league_members, etc.)
   -- points at public.users, not auth.users.
   INSERT INTO public.users (id, username)
-  VALUES (user_a_id, 'e2e_a'), (user_b_id, 'e2e_b')
+  VALUES (user_a_id, 'e2e_a'), (user_b_id, 'e2e_b'), (demo_user_id, 'demo')
   ON CONFLICT (id) DO NOTHING;
 
-  RAISE NOTICE 'Seeded 2 auth accounts (e2e_a, e2e_b)';
+  RAISE NOTICE 'Seeded 3 auth accounts (e2e_a, e2e_b, demo)';
 END $$;
 
 -- ── 2. Circle + membership ──────────────────────────────────────────────────
@@ -89,16 +102,13 @@ DECLARE
   -- allocation-e2e.spec.js's UI flows (e.g. the league creation wizard) run
   -- as this identity, not e2e_a/e2e_b, so it needs its own Clubhouse
   -- membership or the wizard's Clubhouse-picker step blocks with "you don't
-  -- have a Clubhouse yet" (public.users has no auth.users FK, so this insert
-  -- is safe despite no matching auth account existing for the demo user).
+  -- have a Clubhouse yet". Its auth.users + public.users rows are seeded in
+  -- step 1 above (needed because trophy_ledger/coin_wallets/etc. FK straight
+  -- to auth.users, not public.users) — no re-insert needed here.
   demo_user_id uuid := '00000000-0000-0000-0000-000000000000';
 BEGIN
   INSERT INTO circles (id, name, invite_code, created_by, is_public)
   VALUES (circle_id, 'E2E Test Circle', 'e2eseed1', user_a_id, false)
-  ON CONFLICT (id) DO NOTHING;
-
-  INSERT INTO public.users (id, username)
-  VALUES (demo_user_id, 'demo')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO circle_members (circle_id, user_id, role) VALUES
@@ -183,7 +193,13 @@ DECLARE
   club text;
   price numeric(4,1);
 BEGIN
-  FOR n IN 1..40 LOOP
+  -- 70 (not 40): draft-allocation-e2e.spec.js's TEAM_A_ONLY/TEAM_B_ONLY pools need
+  -- ~35 unique WC-tournament players across GK/DEF/MID/FWD (all draft-league test
+  -- data must stay within tournament_id='429' — the noduplicate DRAFT_LEAGUE_ID's own
+  -- tournament — since run-draft-lottery filters its player lookup by tournament_id,
+  -- silently invisible-ing any submitted player from a different tournament). 40 was
+  -- too tight (only 4 GK); 70 gives 7 GK / 21 DEF / 21 MID / 21 FWD, comfortable margin.
+  FOR n IN 1..70 LOOP
     pos := CASE
       WHEN n % 10 = 0 THEN 'GK'
       WHEN n % 10 IN (1, 2, 3) THEN 'DEF'
@@ -197,7 +213,7 @@ BEGIN
     ON CONFLICT (id) DO NOTHING;
   END LOOP;
 
-  RAISE NOTICE 'Seeded 40 WC players (tournament_id=429)';
+  RAISE NOTICE 'Seeded 70 WC players (tournament_id=429)';
 END $$;
 
 -- ── 5. Leagues + membership ──────────────────────────────────────────────────
@@ -592,3 +608,84 @@ END $$;
 -- that via paddocks.created_by (migration 243_competition_admin_model.sql),
 -- no extra seed needed for F1.
 UPDATE public.users SET is_admin = true WHERE id = 'e0000000-0000-4000-a000-00000000000a';
+
+-- ── 11. P2P challenge: resolved gw_total bet (Challenge screen smoke) ──────
+-- ChallengeScreen's "Settled this season" section renders useChallenges()'s
+-- `history` bucket — the only bucket immune to demo-mode's split-identity
+-- quirk (a pure status filter, no client-side comparison against the frozen
+-- demo user.id). RLS (migration 236) is is_circle_member(circle_id), so any
+-- real circle member (user_a) can read this row regardless of which side of
+-- the bet they're on.
+DO $$
+DECLARE
+  challenge_id uuid := 'd0000000-0000-4000-a000-000000000001';
+  circle_id    uuid := 'c1000000-0000-4000-a000-000000000001';
+  league_id    uuid := '11000000-0000-4000-a000-000000000001';
+  user_a_id    uuid := 'e0000000-0000-4000-a000-00000000000a';
+  user_b_id    uuid := 'e0000000-0000-4000-a000-00000000000b';
+BEGIN
+  INSERT INTO p2p_challenges (
+    id, circle_id, league_id, challenger_id, opponent_id, bet_type,
+    matchday_id, stake_coins, status, winner_id, resolved_at
+  ) VALUES (
+    challenge_id, circle_id, league_id, user_a_id, user_b_id, 'gw_total',
+    '426-r1', 50, 'resolved', user_a_id, now() - interval '2 days'
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RAISE NOTICE 'Seeded 1 resolved p2p_challenges row for Challenge screen smoke';
+END $$;
+
+-- ── 12b. Coin wallet + welcome-bonus transaction (Wallet screen smoke) ─────
+-- trg_create_wallet_on_signup (migration 202) is a trigger on auth.users,
+-- which the --schema public pg_dump behind schema.sql does not capture (same
+-- class of gap as on_auth_user_created — see step 1's comment) — so it never
+-- fires for these raw auth.users inserts locally. Seed the wallet + a
+-- welcome-bonus transaction explicitly instead of relying on the trigger.
+DO $$
+DECLARE
+  user_a_id uuid := 'e0000000-0000-4000-a000-00000000000a';
+BEGIN
+  INSERT INTO coin_wallets (id, user_id, balance, escrow)
+  VALUES ('d0000000-0000-4000-a000-000000000003', user_a_id, 500, 0)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  INSERT INTO coin_transactions (id, user_id, type, amount, meta)
+  VALUES (
+    'd0000000-0000-4000-a000-000000000004', user_a_id, 'admin', 500,
+    '{"reason":"welcome_bonus"}'::jsonb
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RAISE NOTICE 'Seeded coin_wallets + welcome-bonus coin_transactions row for Wallet screen smoke';
+END $$;
+
+-- ── 12. Trophy ledger row (Trophy Cabinet screen smoke) ────────────────────
+-- TrophyCabinetScreen.jsx queries trophy_ledger WHERE user_id = user.id (the
+-- frozen demo UUID in demo-mode builds), so this row must be owned by the
+-- demo user, not user_a/user_b. RLS is circle-member-read (migration 189),
+-- and the demo user is already seeded as a member of CIRCLE (step 2 above)
+-- — so any real circle member (user_a) can read it once signed in.
+-- tournament_id/league_id are not FK-enforced as of migration 248
+-- (sport-polymorphic); league_name/sport_type are read off the denormalized
+-- meta jsonb (migration 246).
+DO $$
+DECLARE
+  demo_user_id  uuid := '00000000-0000-0000-0000-000000000000';
+  circle_id     uuid := 'c1000000-0000-4000-a000-000000000001';
+  league_id     uuid := '11000000-0000-4000-a000-000000000001';
+  sport_id      uuid := '50000000-0000-4000-a000-000000000001';
+  tournament_id uuid := '90000000-0000-4000-a000-000000000001';
+BEGIN
+  INSERT INTO trophy_ledger (
+    id, circle_id, league_id, user_id, sport_id, tournament_id,
+    trophy_type, tier, awarded_at, meta
+  ) VALUES (
+    'd0000000-0000-4000-a000-000000000002', circle_id, league_id, demo_user_id,
+    sport_id, tournament_id, 'round_win', 'gold', now() - interval '3 days',
+    jsonb_build_object('label', 'Round 1 Winner', 'league_name', 'E2E Classic League', 'sport_type', 'football')
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RAISE NOTICE 'Seeded 1 trophy_ledger row for Trophy Cabinet screen smoke';
+END $$;
