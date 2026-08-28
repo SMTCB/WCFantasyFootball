@@ -2,6 +2,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isCI = !!process.env.CI;
+// scripts/e2e-local.mjs (the Tier 3 local full-stack harness, run both locally
+// and by the `e2e-tier3` CI job) unconditionally sets this env var for its
+// Playwright child process. GitHub Actions sets CI=true for every job, so
+// isCI alone can't distinguish the demo-mode-only `e2e` job (no DB, needs the
+// exclusions below) from `e2e-tier3` (has a real local DB via `supabase
+// start`, needs exactly the specs the exclusions below would otherwise hide —
+// see docs/testing/TESTING_STRATEGY.md).
+const isLocalStack = !!process.env.E2E_LOCAL_SERVICE_ROLE_KEY;
 
 export default defineConfig({
   testDir: './e2e',
@@ -17,7 +25,7 @@ export default defineConfig({
   //
   // platform.spec.js is the only true UI/E2E spec — it runs against the demo
   // app with VITE_AUTH_ENABLED=false and makes no direct DB calls.
-  testIgnore: isCI
+  testIgnore: (isCI && !isLocalStack)
     ? [
         '**/scoring-pipeline.spec.js',
         '**/draft-allocation-e2e.spec.js',
