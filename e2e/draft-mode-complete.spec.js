@@ -6,7 +6,10 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-target.js';
 
 // ── Real Supabase Client ─────────────────────────────────────────────────────
 
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Deliberately not named SUPABASE_SERVICE_ROLE_KEY — scripts/e2e-local.mjs
+// sets E2E_LOCAL_SERVICE_ROLE_KEY unconditionally (the ephemeral local
+// stack's own key, never production's). See that script's comment.
+const SERVICE_ROLE_KEY = process.env.E2E_LOCAL_SERVICE_ROLE_KEY;
 
 const anonSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const serviceSupabase = SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY) : null;
@@ -24,6 +27,7 @@ let REAL_PLAYERS = [];
 // own delete.
 const createdLeagueIds = [];
 const createdManagerUserIds = [];
+const createdAuthUserIds = [];
 
 async function createManagerUsers(n) {
   const ids = Array.from({ length: n }, () => globalThis.crypto.randomUUID());
@@ -35,11 +39,57 @@ async function createManagerUsers(n) {
   return ids;
 }
 
+// run-draft-lottery requires a real commissioner JWT for any call carrying
+// league_id (DD-C4, supabase/functions/run-draft-lottery/index.js) — there is
+// no service-role bypass for this path (only the separate, now permanently
+// disabled cron path accepted service-role auth). So exercising the function
+// means minting a real auth user, granting it league_members role
+// 'commissioner' for the league under test, and invoking the function through
+// that user's own signed-in client — not the service-role client.
+async function createCommissioner(leagueId, label) {
+  const email = `e2e_draft_comm_${Date.now()}_${label}@fantasykit.test`;
+  const password = 'E2ePass!99';
+  const { data: created, error: createErr } = await serviceSupabase.auth.admin.createUser({
+    email, password, email_confirm: true,
+  });
+  if (createErr) throw createErr;
+  createdAuthUserIds.push(created.user.id);
+
+  // league_members.user_id FK targets public.users, not auth.users — the
+  // on_auth_user_created trigger that normally mirrors this row lives outside
+  // the `public` schema pg_dump behind schema.sql, so it never fires on this
+  // local stack. Mirror it explicitly before the league_members insert.
+  const { error: userErr } = await serviceSupabase
+    .from('users')
+    .insert({ id: created.user.id, username: `e2e_draft_comm_${label}` });
+  if (userErr) throw userErr;
+
+  const { error: memberErr } = await serviceSupabase
+    .from('league_members')
+    .insert({ league_id: leagueId, user_id: created.user.id, role: 'commissioner' });
+  if (memberErr) throw memberErr;
+
+  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data: signInData, error: signInErr } = await authClient.auth.signInWithPassword({ email, password });
+  if (signInErr || !signInData?.session) throw new Error(`commissioner sign-in failed for ${email}: ${signInErr?.message}`);
+  return authClient;
+}
+
 test.beforeAll(async () => {
+  // Scenarios 1-3 below create ad-hoc leagues without an explicit
+  // tournament_id, which defaults to '426' (EPL — see schema.sql). run-draft-
+  // lottery's allocation filters its player lookup by the league's
+  // tournament_id, so any non-'426' player is silently invisible to it —
+  // REAL_PLAYERS must stay EPL-only, or Scenario 2's larger draw (see below)
+  // would reintroduce the cross-tournament mismatch that BUG-DRAFT-SVC's
+  // sibling file (draft-allocation-e2e.spec.js) hit. Scenario 2 needs 75
+  // unique players spread across GK/DEF/MID/FWD (GK is the scarcest
+  // position, ~1 in 10) — the full ~120-player EPL pool comfortably covers it.
   const { data: players } = await anonSupabase
     .from('players')
     .select('id, name, position, price')
-    .limit(100);
+    .eq('tournament_id', '426')
+    .limit(150);
   REAL_PLAYERS = players || [];
   console.log(`Loaded ${REAL_PLAYERS.length} players for testing`);
 });
@@ -51,6 +101,9 @@ test.afterAll(async () => {
   }
   if (createdManagerUserIds.length > 0) {
     await serviceSupabase.from('users').delete().in('id', createdManagerUserIds);
+  }
+  for (const uid of createdAuthUserIds) {
+    await serviceSupabase.auth.admin.deleteUser(uid).catch(() => {});
   }
 });
 
@@ -125,41 +178,65 @@ test.describe('Draft Mode - Complete Flow', () => {
     expect(errors, `Draft screen threw JS errors: ${errors.join(', ')}`).toHaveLength(0);
   });
 
-  test('Draft submission prevents duplicate players across managers', async ({ page }) => {
-    // SCENARIO: Two managers submit draft lists
-    // Manager 1 picks players A, B, C (30 players)
-    // Manager 2 cannot pick the same players
+  test('Draft submissions from different managers MAY overlap (resolved at allocation, not submission)', async () => {
+    // draft_submissions has no constraint preventing the same player_id from
+    // appearing in two managers' lists (only UNIQUE(league_id, user_id, phase)
+    // — see schema.sql). Overlap between managers' preference lists is
+    // expected and legitimate: run-draft-lottery resolves who actually gets
+    // a contested player at allocation time, not at submission time. An
+    // earlier version of this test asserted the opposite (zero overlap as a
+    // "DB constraint") — a false invariant, actively violated by design in
+    // draft-allocation-e2e.spec.js's own OVERLAP_IDS fixture for this same
+    // league. This test instead verifies overlapping submissions are
+    // correctly persisted, not rejected.
 
-    await skipOnboarding(page);
-
-    await page.goto(`/league/${DRAFT_LEAGUE_ID}/draft`);
-    await waitForContent(page);
-    await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
-
-    const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
-    if (!isDraftScreen) {
+    if (!serviceSupabase) {
+      console.warn('⚠️ SKIPPING: E2E_LOCAL_SERVICE_ROLE_KEY not available in environment');
       test.skip();
       return;
     }
 
-    const draftLeagueId = DRAFT_LEAGUE_ID;
+    const { data: testLeague, error: createError } = await serviceSupabase
+      .from('leagues')
+      .insert([{
+        name: 'Draft Test League - Overlap',
+        format: 'noduplicate',
+        max_members: 2,
+        circle_id: CIRCLE_ID,
+        draft_deadline: new Date(Date.now() - 60000).toISOString(),
+      }])
+      .select()
+      .single();
 
-    // ✅ TEST: Verify draft_submissions table enforces no duplicates across managers
-    const { data: submissions } = await anonSupabase
+    expect(createError).toBeNull();
+    const leagueId = testLeague.id;
+    createdLeagueIds.push(leagueId);
+
+    const grouped = groupPlayersByPosition(REAL_PLAYERS);
+    const selectedPlayers = selectDraftPlayers(grouped);
+    expect(selectedPlayers.length).toBeGreaterThanOrEqual(5);
+
+    const sharedIds = selectedPlayers.slice(0, 3).map(p => p.id);
+    const [mgrA, mgrB] = await createManagerUsers(2);
+
+    const { error: submitError } = await serviceSupabase
+      .from('draft_submissions')
+      .insert([
+        { league_id: leagueId, user_id: mgrA, player_ids: sharedIds, status: 'pending' },
+        { league_id: leagueId, user_id: mgrB, player_ids: sharedIds, status: 'pending' },
+      ]);
+
+    // ✅ Overlapping submissions are accepted, not rejected
+    expect(submitError).toBeNull();
+
+    const { data: submissions } = await serviceSupabase
       .from('draft_submissions')
       .select('user_id, player_ids')
-      .eq('league_id', draftLeagueId);
+      .eq('league_id', leagueId);
 
-    if (submissions && submissions.length >= 2) {
-      // Check that submitted players don't overlap between managers
-      const allSubmittedPlayers = submissions.flatMap(s => s.player_ids || []);
-      const uniquePlayers = new Set(allSubmittedPlayers);
-
-      // Calculate overlap
-      const totalPlayerSlots = allSubmittedPlayers.length;
-      const overlappingSlots = totalPlayerSlots - uniquePlayers.size;
-
-      expect(overlappingSlots, 'No duplicate players should be possible across managers (DB constraint)').toBe(0);
+    expect(submissions?.length).toBe(2);
+    for (const s of submissions) {
+      expect(s.player_ids).toEqual(sharedIds);
     }
   });
 
@@ -170,7 +247,7 @@ test.describe('Draft Mode - Complete Flow', () => {
     // Verify each gets 15 allocated
 
     if (!serviceSupabase) {
-      console.warn('⚠️ SKIPPING: SERVICE_ROLE_KEY not available in environment');
+      console.warn('⚠️ SKIPPING: E2E_LOCAL_SERVICE_ROLE_KEY not available in environment');
       test.skip();
       return;
     }
@@ -216,8 +293,10 @@ test.describe('Draft Mode - Complete Flow', () => {
 
     expect(submitError).toBeNull();
 
-    // Manually trigger draft lottery
-    const { error: callError } = await serviceSupabase.functions.invoke('run-draft-lottery', {
+    // Manually trigger draft lottery — as a real commissioner, per the
+    // function's actual security contract (no service-role bypass exists).
+    const commissionerClient = await createCommissioner(leagueId, 'scenario1');
+    const { error: callError } = await commissionerClient.functions.invoke('run-draft-lottery', {
       body: { league_id: leagueId },
     });
 
@@ -240,8 +319,11 @@ test.describe('Draft Mode - Complete Flow', () => {
       expect(alloc.unresolved_slots).toBe(15 - alloc.allocated_players.length);
     }
 
-    // Verify gazette report created
-    const { data: gazette, error: gazetteError } = await anonSupabase
+    // Verify gazette report created. gazette_entries' only SELECT RLS policy
+    // is scoped `TO authenticated` with a league-membership check — anonSupabase
+    // (anon role) always gets 0 rows regardless of whether the row exists, so
+    // this read must go through the service-role client.
+    const { data: gazette, error: gazetteError } = await serviceSupabase
       .from('gazette_entries')
       .select('*')
       .eq('league_id', leagueId)
@@ -256,7 +338,7 @@ test.describe('Draft Mode - Complete Flow', () => {
     // Verify allocation respects submission lengths
 
     if (!serviceSupabase) {
-      console.warn('⚠️ SKIPPING: SERVICE_ROLE_KEY not available in environment');
+      console.warn('⚠️ SKIPPING: E2E_LOCAL_SERVICE_ROLE_KEY not available in environment');
       test.skip();
       return;
     }
@@ -278,7 +360,12 @@ test.describe('Draft Mode - Complete Flow', () => {
     const leagueId = testLeague.id;
     createdLeagueIds.push(leagueId);
     const grouped = groupPlayersByPosition(REAL_PLAYERS);
-    const selectedPlayers = selectDraftPlayers(grouped);
+    // Needs 30+25+20=75 unique players total — selectDraftPlayers' default
+    // caps (30 total) aren't enough. Request generously above what
+    // REAL_PLAYERS (first 100 rows) actually has per position; slice() just
+    // returns whatever's available, so over-asking is safe.
+    const selectedPlayers = selectDraftPlayers(grouped, { GK: 20, DEF: 35, MID: 35, FWD: 30 });
+    expect(selectedPlayers.length).toBeGreaterThanOrEqual(75);
 
     // Three submissions with different sizes. user_id is a uuid FK to
     // public.users — needs real rows, not fabricated strings like 'mgr_a'.
@@ -289,10 +376,15 @@ test.describe('Draft Mode - Complete Flow', () => {
       { user_id: mgrC, count: 20 },
     ];
 
+    // Cumulative offset (not a fixed per-manager stride) — each manager's
+    // slice starts where the previous one ended, so it only needs
+    // selectedPlayers.length >= sum(counts), not >= count * managers.length.
+    let cursor = 0;
     for (let i = 0; i < submissions.length; i++) {
       const playerIds = selectedPlayers
-        .slice(i * 35, i * 35 + submissions[i].count)
+        .slice(cursor, cursor + submissions[i].count)
         .map(p => p.id);
+      cursor += submissions[i].count;
 
       await serviceSupabase
         .from('draft_submissions')
@@ -304,8 +396,9 @@ test.describe('Draft Mode - Complete Flow', () => {
         }]);
     }
 
-    // Run lottery
-    await serviceSupabase.functions.invoke('run-draft-lottery', {
+    // Run lottery — as a real commissioner, per the function's actual security contract.
+    const commissionerClient2 = await createCommissioner(leagueId, 'scenario2');
+    await commissionerClient2.functions.invoke('run-draft-lottery', {
       body: { league_id: leagueId },
     });
 
@@ -329,7 +422,7 @@ test.describe('Draft Mode - Complete Flow', () => {
     // Verify cron only processes submitted managers
 
     if (!serviceSupabase) {
-      console.warn('⚠️ SKIPPING: SERVICE_ROLE_KEY not available in environment');
+      console.warn('⚠️ SKIPPING: E2E_LOCAL_SERVICE_ROLE_KEY not available in environment');
       test.skip();
       return;
     }
@@ -365,8 +458,9 @@ test.describe('Draft Mode - Complete Flow', () => {
         status: 'pending',
       }]);
 
-    // Run lottery
-    const { error: funcError } = await serviceSupabase.functions.invoke('run-draft-lottery', {
+    // Run lottery — as a real commissioner, per the function's actual security contract.
+    const commissionerClient3 = await createCommissioner(leagueId, 'scenario3');
+    const { error: funcError } = await commissionerClient3.functions.invoke('run-draft-lottery', {
       body: { league_id: leagueId },
     });
 

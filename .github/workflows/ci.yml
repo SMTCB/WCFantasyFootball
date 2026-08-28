@@ -321,3 +321,58 @@ jobs:
           name: playwright-screenshots
           path: test-results/
           retention-days: 7
+
+  # ── 7. Tier 3 Local Full-Stack E2E (informational — not yet required) ─────
+  # Runs npm run test:e2e:local (scripts/e2e-local.mjs): boots a local
+  # `supabase start` Postgres+Auth+Realtime stack, loads supabase/schema.sql +
+  # supabase/seed.sql directly (not a migration replay — see that script's
+  # header comment), then runs every e2e/*.spec.js except platform.spec.js
+  # (which the `e2e` job above already covers in demo mode) across both
+  # desktop-chrome and mobile-chrome. See docs/testing/TESTING_STRATEGY.md
+  # (Tier 3). Deliberately NOT added to branch protection's required checks
+  # yet — land it first as informational so real CI timing/stability can be
+  # observed for a few runs before it's made merge-blocking.
+  e2e-tier3:
+    name: Tier 3 Local Full-Stack E2E
+    runs-on: ubuntu-latest
+    needs: [security, lint]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Real Chrome channel — playwright.config.js's projects use
+      # channel: 'chrome', not the Chromium binary the `e2e` job above caches.
+      - name: Install Playwright Chrome browser
+        run: npx playwright install --with-deps chrome
+
+      - name: Run Tier 3 local full-stack E2E
+        run: npm run test:e2e:local
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-tier3
+          path: e2e-report/
+          retention-days: 14
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots-tier3
+          path: test-results/
+          retention-days: 7

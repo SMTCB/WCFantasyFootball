@@ -27,11 +27,16 @@ export default defineConfig({
         '**/multi-league-and-bets.spec.js',
         '**/scoring.spec.js',
         '**/autofill-draft-classic.spec.js',
-        // Tier 3 local full-stack specs (F1/tennis) — require the local
-        // `npx supabase start` stack from `npm run test:e2e:local`, not this
-        // CI job's no-DB demo mode. See docs/testing/TESTING_STRATEGY.md.
+        // Tier 3 local full-stack specs (F1/tennis, screen smoke) — require
+        // the local `npx supabase start` stack from `npm run test:e2e:local`,
+        // not this CI job's no-DB demo mode. See docs/testing/TESTING_STRATEGY.md.
         '**/f1-screens.spec.js',
         '**/tennis-screens.spec.js',
+        '**/wallet-screen.spec.js',
+        '**/challenge-screen.spec.js',
+        '**/trophy-cabinet-screen.spec.js',
+        '**/settings-screen.spec.js',
+        '**/auth-screen.spec.js',
       ]
     : [],
   fullyParallel: false,
