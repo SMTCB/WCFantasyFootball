@@ -45,7 +45,7 @@ export function CompetitionTopBar({ competitions, pathname, onAdd, hasClubhouse 
         display: 'flex', alignItems: 'stretch', gap: 6,
         borderBottom: '1px solid var(--rule)',
         background: 'var(--card)',
-        padding: '0 16px',
+        padding: '12px 16px 0',
         overflowX: 'auto', scrollbarWidth: 'none',
         minHeight: 40, flexShrink: 0,
       }}
