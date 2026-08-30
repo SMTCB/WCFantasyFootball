@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>57</strong><span>open</span></div>
-      <div class="total-pill"><strong>206</strong><span>closed</span></div>
+      <div class="total-pill"><strong>207</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (127)</span>
+    <span class="chip" data-filter-kind="done">Shipped (128)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">57</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">206</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">207</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">127</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">128</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1196,8 +1196,41 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">127</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">128</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tennis clubhouse 404 + default landing route (2026-08-30) — pr #870 
+
+**context**: user reported a 404 when trying to open &quot;the tennis test league&quot; from the app, plus asked to (1) ensure the mobile bottom bar is always available and (2) make the app open to the home page.
+
+**fix**: `clubhousescreen.jsx`&#x27;s `allcompetitions.onenter` tennis branch navigated to `/tennis/${item.id}`, which matches no registered route — corrected to `/tennis/tournament/${item.id}`, matching the registered `/tennis/tournament/:id` route. confirmed via codebase-wide grep this was the only incorrect call site (`homedashboardscreen.jsx`, `tennisprofileview.jsx`, `tennishomescreen.jsx`, `competitiontopbar.jsx`, `newcompetitionflow.jsx` all already used the correct path). this exact dead-link was flagged but deliberately deferred as out-of-scope in the pr #866 backlog entry — now fixed as a real follow-up.
+
+**default landing route**: `app.jsx`&#x27;s root path (`/`) now redirects to `/home` instead of `/clubhouse`, per explicit user request.
+
+**bottom bar — investigated, no fix needed**: live-verified in the browser (375×812) that the mobile bottom bar already renders unconditionally on every route inside `applayout`, including the 404 catch-all — it&#x27;s a sibling of the scrolling main-content div, `position: fixed`, no ancestor transform/overflow to break it. it&#x27;s only hidden by design (`lg:hidden`) at desktop widths ≥1024px, where the sidebar nav takes over.
+
+verified: `npm run lint` 0 errors, `npm run build` clean (no rolldown tdz regression), `npx playwright test e2e/platform.spec.js` 84/84 passing (test updated to expect `/home`), full ci green. no migration, db write, or edge function touched.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Tennis Clubhouse 404 + default landing route</h3>
+        <p class="card-summary">Context : user reported a 404 when trying to open "the tennis test league" from the app, plus asked to (1) ensure the mobile bottom bar is always available and (2) make…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-30</span><span class="foot-refs">PR #870</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Tennis Clubhouse 404 + default landing route</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : user reported a 404 when trying to open "the tennis test league" from the app, plus asked to (1) ensure the mobile bottom bar is always available and (2) make…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #870</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-30</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user reported a 404 when trying to open "the tennis test league" from the app, plus asked to (1) ensure the mobile bottom bar is always available and (2) make the app open to the Home page.</p>
+<p><strong>Fix</strong>: <code>ClubhouseScreen.jsx</code>'s <code>AllCompetitions.onEnter</code> tennis branch navigated to <code>/tennis/${item.id}</code>, which matches no registered route — corrected to <code>/tennis/tournament/${item.id}</code>, matching the registered <code>/tennis/tournament/:id</code> route. Confirmed via codebase-wide grep this was the only incorrect call site (<code>HomeDashboardScreen.jsx</code>, <code>TennisProfileView.jsx</code>, <code>TennisHomeScreen.jsx</code>, <code>CompetitionTopBar.jsx</code>, <code>NewCompetitionFlow.jsx</code> all already used the correct path). This exact dead-link was flagged but deliberately deferred as out-of-scope in the PR #866 BACKLOG entry — now fixed as a real follow-up.</p>
+<p><strong>Default landing route</strong>: <code>App.jsx</code>'s root path (<code>/</code>) now redirects to <code>/home</code> instead of <code>/clubhouse</code>, per explicit user request.</p>
+<p><strong>Bottom bar — investigated, no fix needed</strong>: live-verified in the browser (375×812) that the mobile bottom bar already renders unconditionally on every route inside <code>AppLayout</code>, including the 404 catch-all — it's a sibling of the scrolling main-content div, <code>position: fixed</code>, no ancestor transform/overflow to break it. It's only hidden by design (<code>lg:hidden</code>) at desktop widths ≥1024px, where the sidebar nav takes over.</p>
+<p>Verified: <code>npm run lint</code> 0 errors, <code>npm run build</code> clean (no Rolldown TDZ regression), <code>npx playwright test e2e/platform.spec.js</code> 84/84 passing (test updated to expect <code>/home</code>), full CI green. No migration, DB write, or Edge Function touched.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ mobile header/nav polish — header centering, gold-text contrast, clubhouse-oriented bottom bar (2026-08-30) — pr #868 
 
 **context**: user follow-up feedback on pr #866&#x27;s clubhouse/home work, from mobile screenshots — two bugs in the league header bar, plus a request to reassess the mobile bottom nav and the mobile home screen.
