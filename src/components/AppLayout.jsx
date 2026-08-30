@@ -221,14 +221,13 @@ export default function AppLayout({ children }) {
     location.pathname === '/' ||
     location.pathname === '/home' ||
     location.pathname === '/scores' ||
-    location.pathname === '/trophy' ||
-    location.pathname === '/challenges' ||
-    location.pathname === '/wallet' ||
     /^\/clubhouse(\/[^/]+)?$/.test(location.pathname);
 
-  // Inside a specific competition (football/F1/tennis) — "Back" always returns
-  // to the Clubhouse that competition belongs to, not browser history, so it's
-  // reliable no matter how the user navigated in (deep link, switcher, etc.).
+  // Screens that are "inside" a Clubhouse (a specific competition, or a
+  // clubhouse-scoped feature like Trophy Cabinet/Coin Wallet/Coin Challenges) —
+  // "Back" always returns to the Clubhouse itself, not browser history, so
+  // it's reliable no matter how the user navigated in (deep link, switcher,
+  // bottom nav, etc.).
   const isCompetitionScreen =
     location.pathname === '/squad' ||
     location.pathname === '/live' ||
@@ -239,7 +238,10 @@ export default function AppLayout({ children }) {
     location.pathname === '/f1' ||
     /^\/f1\/[^/]+$/.test(location.pathname) ||
     /^\/f1\/[^/]+\/(picks|standings|report|season)$/.test(location.pathname) ||
-    /^\/tennis(\/.*)?$/.test(location.pathname);
+    /^\/tennis(\/.*)?$/.test(location.pathname) ||
+    location.pathname === '/trophy' ||
+    location.pathname === '/challenges' ||
+    location.pathname === '/wallet';
 
   const showBackButton = !isMainRoute;
 
