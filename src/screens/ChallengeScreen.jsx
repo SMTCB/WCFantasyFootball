@@ -1,11 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useChallenges } from '../hooks/useChallenges';
+import { useGroupBets } from '../hooks/useGroupBets';
 import { useWallet } from '../hooks/useWallet';
 import { useIsMobile } from '../hooks/useViewport';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import PrimaryActionBar from '../components/shared/PrimaryActionBar';
+import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
@@ -509,6 +512,752 @@ function ArbitrationModal({ challenge, onClose, onSubmit }) {
       </div>
     </div>,
     document.body,
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Group Bets (multi-participant P2P bets)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function CheckDot({ selected }) {
+  return (
+    <span style={{
+      width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+      border: `1.5px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
+      background: selected ? 'var(--gold)' : 'transparent',
+      display: 'grid', placeItems: 'center', ...MONO, fontSize: 11, color: '#fff', lineHeight: 1,
+    }}>
+      {selected && '✓'}
+    </span>
+  );
+}
+
+function AnswerModeBadge({ mode }) {
+  const isMC = mode === 'multiple_choice';
+  return (
+    <span style={{
+      background: isMC ? 'var(--abg)' : 'var(--elev)', color: isMC ? 'var(--accent)' : 'var(--mute)',
+      ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase',
+      padding: '2px 7px', borderRadius: 100, flexShrink: 0,
+    }}>
+      {isMC ? 'Multi Choice' : 'Freeform'}
+    </span>
+  );
+}
+
+function TargetModeBadge({ mode }) {
+  const isWhole = mode === 'whole_clubhouse';
+  return (
+    <span style={{
+      background: 'var(--elev)', color: 'var(--mute)',
+      ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase',
+      padding: '2px 7px', borderRadius: 100, flexShrink: 0,
+    }}>
+      {isWhole ? 'Whole Clubhouse' : 'Selected'}
+    </span>
+  );
+}
+
+const GROUP_BET_ERROR_MAP = {
+  AUTH_REQUIRED:               'Please sign in again.',
+  NOT_CIRCLE_MEMBER:           'You are not a member of this Clubhouse',
+  INVALID_ANSWER_MODE:         'Invalid answer mode',
+  INVALID_TARGET_MODE:         'Invalid target mode',
+  INVALID_STAKE:                'Stake must be between 10 and 500 coins',
+  INVALID_QUESTION:            'Describe what you’re betting on',
+  INVALID_TIME_WINDOW:         'End time must be after the start time',
+  INVALID_OPTIONS:             'Multiple choice bets need 2–8 options',
+  OPTIONS_NOT_ALLOWED:         'Freeform bets can’t have options',
+  INVALID_TARGETS:             'Pick between 1 and 50 members',
+  TARGET_NOT_CIRCLE_MEMBER:    'One of the selected members has left this Clubhouse',
+  TARGETS_NOT_ALLOWED:         'Whole-Clubhouse bets can’t have targeted members',
+  DAILY_BET_LIMIT_EXCEEDED:    'Daily bet limit reached for this Clubhouse',
+  INSUFFICIENT_BALANCE:        'Insufficient coins',
+  DAILY_STAKE_LIMIT_EXCEEDED:  'Daily stake limit reached (1,000 coins / 24h)',
+  INVALID_AMOUNT:              'Invalid stake amount',
+  BET_NOT_FOUND:               'This bet no longer exists',
+  BET_NOT_OPEN:                'This bet is no longer open',
+  BET_WINDOW_CLOSED:           'The betting window has closed',
+  ALREADY_JOINED:              'You already joined this bet',
+  NOT_INVITED:                 'You were not invited to this bet',
+  NOT_A_PARTICIPANT:           'You are not a participant in this bet',
+  NOT_BET_CREATOR:             'Only the bet creator can do that',
+  BET_NOT_CLOSED:              'Betting must be closed first',
+  BET_NOT_DECLARED:            'No outcome has been declared yet',
+  OBJECTION_WINDOW_CLOSED:     'The 48-hour dispute window has closed',
+  BET_NOT_DISPUTED:            'This bet is not disputed',
+  NOT_CIRCLE_OWNER:            'Only the Clubhouse owner can arbitrate',
+  INVALID_OPTION:              'Invalid option selected',
+  ANSWER_REQUIRED:             'Enter an answer',
+  SINGLE_ANSWER_ONLY:          'This bet only allows a single answer',
+  INSUFFICIENT_ESCROW:         'Escrow shortfall — contact support',
+};
+
+function friendlyBetError(message) {
+  return GROUP_BET_ERROR_MAP[message] ?? message;
+}
+
+// ── Create Group Bet drawer ────────────────────────────────────────────────────
+function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, members }) {
+  const hasMembers = (members ?? []).length > 1;
+
+  const [question, setQuestion]           = useState('');
+  const [answerMode, setAnswerMode]       = useState('freeform_text');
+  const [allowMultiple, setAllowMultiple] = useState(false);
+  const [options, setOptions]             = useState(['', '']);
+  const [targetMode, setTargetMode]       = useState('whole_clubhouse');
+  const [targetIds, setTargetIds]         = useState([]);
+  const [stakeCoins, setStakeCoins]       = useState(100);
+  const [startsAt, setStartsAt]           = useState(() => {
+    const d = new Date(Date.now() + 5 * 60000);
+    d.setSeconds(0, 0);
+    return d.toISOString().slice(0, 16);
+  });
+  const [noEnd, setNoEnd]                 = useState(true);
+  const [endsAt, setEndsAt]               = useState('');
+  const [submitting, setSubmitting]       = useState(false);
+  const [error, setError]                 = useState(null);
+
+  const isMC = answerMode === 'multiple_choice';
+  const balance = wallet?.balance ?? 0;
+  const overBudget = stakeCoins > balance;
+
+  function updateOption(i, val) {
+    setOptions(opts => opts.map((o, idx) => idx === i ? val : o));
+  }
+  function addOption() {
+    setOptions(opts => opts.length < 8 ? [...opts, ''] : opts);
+  }
+  function removeOption(i) {
+    setOptions(opts => opts.length > 2 ? opts.filter((_, idx) => idx !== i) : opts);
+  }
+  function toggleTarget(userId) {
+    setTargetIds(ids => ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]);
+  }
+
+  async function handleSubmit() {
+    const trimmedQuestion = question.trim();
+    if (!trimmedQuestion) { setError('Describe what you’re betting on'); return; }
+    if (trimmedQuestion.length > 140) { setError('Question is too long'); return; }
+    const cleanOptions = options.map(o => o.trim()).filter(Boolean);
+    if (isMC && (cleanOptions.length < 2 || cleanOptions.length > 8)) {
+      setError('Multiple choice bets need 2–8 options'); return;
+    }
+    if (targetMode === 'selected_users' && (targetIds.length < 1 || targetIds.length > 50)) {
+      setError('Pick between 1 and 50 members'); return;
+    }
+    if (stakeCoins < 10 || stakeCoins > 500) { setError('Stake must be between 10 and 500 coins'); return; }
+    if (overBudget) { setError('Insufficient balance'); return; }
+    if (!startsAt) { setError('Pick a start time'); return; }
+    const startsIso = new Date(startsAt).toISOString();
+    const endsIso = noEnd || !endsAt ? null : new Date(endsAt).toISOString();
+    if (endsIso && endsIso <= startsIso) { setError('End time must be after the start time'); return; }
+
+    setSubmitting(true); setError(null);
+    try {
+      await onCreate({
+        circleId,
+        question: trimmedQuestion,
+        answerMode,
+        allowMultipleAnswers: isMC ? allowMultiple : false,
+        targetMode,
+        targetUserIds: targetMode === 'selected_users' ? targetIds : null,
+        options: isMC ? cleanOptions : null,
+        stakeCoins,
+        startsAt: startsIso,
+        endsAt: endsIso,
+      });
+      onClose();
+    } catch (e) {
+      setError(friendlyBetError(e.message));
+    }
+    setSubmitting(false);
+  }
+
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div style={{
+        width: '100%', maxWidth: 520, background: 'var(--card)',
+        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
+        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Group Bet</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>{circleName ?? 'Clubhouse'}</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
+          >×</button>
+        </div>
+
+        {!hasMembers ? (
+          <div style={{ padding: '30px 6px 12px', textAlign: 'center' }}>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--text)', marginBottom: 8 }}>Nobody to bet with yet</div>
+            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5 }}>Invite more managers to {circleName ?? 'this Clubhouse'} before starting a group bet.</div>
+          </div>
+        ) : (
+          <>
+            {/* Question */}
+            <label style={{ display: 'block', marginBottom: 14 }}>
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
+                What are you betting on? (<span style={{ color: question.length > 140 ? 'var(--neg)' : 'var(--mute)' }}>{140 - question.length}</span> chars)
+              </span>
+              <textarea
+                maxLength={140} value={question} onChange={e => setQuestion(e.target.value)}
+                placeholder="Who finishes top of the mini-league this GW?"
+                rows={2}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)', resize: 'none', fontFamily: 'inherit' }}
+              />
+            </label>
+
+            {/* Answer mode */}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Answer type</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => setAnswerMode('freeform_text')}
+                  style={{
+                    flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                    background: !isMC ? 'var(--abg)' : 'var(--elev)',
+                    border: `2px solid ${!isMC ? 'var(--accent)' : 'var(--rule)'}`,
+                  }}
+                >
+                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Type any answer</div>
+                </button>
+                <button
+                  onClick={() => setAnswerMode('multiple_choice')}
+                  style={{
+                    flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                    background: isMC ? 'var(--gbg)' : 'var(--elev)',
+                    border: `2px solid ${isMC ? 'var(--gold)' : 'var(--rule)'}`,
+                  }}
+                >
+                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>☑ Multi Choice</div>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Pick from a list</div>
+                </button>
+              </div>
+            </div>
+
+            {isMC && (
+              <div style={{ marginBottom: 14 }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Options (2–8)</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                  {options.map((opt, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <input
+                        value={opt} onChange={e => updateOption(i, e.target.value)}
+                        placeholder={`Option ${i + 1}`}
+                        style={{ flex: 1, boxSizing: 'border-box', padding: '9px 11px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)' }}
+                      />
+                      {options.length > 2 && (
+                        <button
+                          onClick={() => removeOption(i)}
+                          style={{ width: 30, height: 30, borderRadius: 6, border: '1px solid var(--rule)', background: 'transparent', cursor: 'pointer', color: 'var(--mute)', flexShrink: 0 }}
+                        >×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {options.length < 8 && (
+                  <button
+                    onClick={addOption}
+                    style={{ padding: '7px 12px', borderRadius: 6, border: '1px dashed var(--rule)', background: 'transparent', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}
+                  >+ Add option</button>
+                )}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, cursor: 'pointer' }}>
+                  <CheckDot selected={allowMultiple} />
+                  <span
+                    onClick={() => setAllowMultiple(v => !v)}
+                    style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}
+                  >Allow participants to pick multiple answers</span>
+                </label>
+              </div>
+            )}
+
+            {/* Target mode */}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Who can join</span>
+              <div style={{ display: 'flex', gap: 8, marginBottom: targetMode === 'selected_users' ? 10 : 0 }}>
+                <button
+                  onClick={() => setTargetMode('whole_clubhouse')}
+                  style={{
+                    flex: 1, padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
+                    background: targetMode === 'whole_clubhouse' ? 'var(--gbg)' : 'var(--elev)',
+                    border: `2px solid ${targetMode === 'whole_clubhouse' ? 'var(--gold)' : 'var(--rule)'}`,
+                    fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)',
+                  }}
+                >Whole Clubhouse</button>
+                <button
+                  onClick={() => setTargetMode('selected_users')}
+                  style={{
+                    flex: 1, padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
+                    background: targetMode === 'selected_users' ? 'var(--gbg)' : 'var(--elev)',
+                    border: `2px solid ${targetMode === 'selected_users' ? 'var(--gold)' : 'var(--rule)'}`,
+                    fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)',
+                  }}
+                >Select Members</button>
+              </div>
+              {targetMode === 'selected_users' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                  {(members ?? []).map((m, i) => (
+                    <PickerRow key={m.user_id} selected={targetIds.includes(m.user_id)} onClick={() => toggleTarget(m.user_id)}>
+                      <MemberAvatar username={m.username} index={i} />
+                      <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{m.username}</span>
+                      <CheckDot selected={targetIds.includes(m.user_id)} />
+                    </PickerRow>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Stake */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
+                Stake per person (balance: <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()} coins</span>)
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                {[50, 100, 250, 500].map(v => (
+                  <button key={v} onClick={() => setStakeCoins(v)} style={{
+                    flex: 1, padding: '8px 4px', borderRadius: 6, cursor: 'pointer',
+                    background: stakeCoins === v ? 'var(--gold)' : 'var(--elev)',
+                    border: `1px solid ${stakeCoins === v ? 'var(--gold)' : 'var(--rule)'}`,
+                    color: stakeCoins === v ? '#fff' : 'var(--text)',
+                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
+                  }}>{v}</button>
+                ))}
+              </div>
+              <input
+                type="number" min={10} max={500} value={stakeCoins}
+                onChange={e => setStakeCoins(Math.max(10, parseInt(e.target.value) || 0))}
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6,
+                  background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--rule)'}`,
+                  color: overBudget ? 'var(--neg)' : 'var(--text)', ...MONO, fontSize: 'var(--fs-body)',
+                }}
+              />
+            </div>
+
+            {/* Timing */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+              <label style={{ flex: 1, display: 'block' }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Starts</span>
+                <input
+                  type="datetime-local" value={startsAt} onChange={e => setStartsAt(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '9px 10px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...MONO, fontSize: 'var(--fs-micro)' }}
+                />
+              </label>
+              <label style={{ flex: 1, display: 'block' }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Ends</span>
+                <input
+                  type="datetime-local" value={endsAt} disabled={noEnd} onChange={e => setEndsAt(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '9px 10px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: noEnd ? 'var(--mute)' : 'var(--text)', ...MONO, fontSize: 'var(--fs-micro)', opacity: noEnd ? 0.5 : 1 }}
+                />
+              </label>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: -8, cursor: 'pointer' }}>
+              <CheckDot selected={noEnd} />
+              <span onClick={() => setNoEnd(v => !v)} style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}>No fixed end time</span>
+            </label>
+
+            {error && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+
+            <button
+              onClick={handleSubmit} disabled={submitting || overBudget}
+              style={{
+                width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || overBudget) ? 'not-allowed' : 'pointer',
+                background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : '#fff',
+                ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
+                opacity: submitting ? 0.7 : 1,
+              }}
+            >
+              {submitting ? 'Creating…' : '🎲 Create Group Bet'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// ── Submit answer drawer ───────────────────────────────────────────────────────
+function SubmitAnswerModal({ bet, onClose, onSubmit, fetchAnswers, userId }) {
+  const isMC = bet.answer_mode === 'multiple_choice';
+  const [answerText, setAnswerText]   = useState('');
+  const [optionIds, setOptionIds]     = useState([]);
+  const [submitting, setSubmitting]   = useState(false);
+  const [error, setError]             = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await fetchAnswers(bet.id);
+      if (cancelled || !data) return;
+      const mine = data.find(a => a.user_id === userId);
+      if (!mine) return;
+      if (mine.answer_text) setAnswerText(mine.answer_text);
+      if (mine.option_id) setOptionIds([mine.option_id]);
+    })();
+    return () => { cancelled = true; };
+  }, [bet.id, fetchAnswers, userId]);
+
+  function toggleOption(id) {
+    if (bet.allow_multiple_answers) {
+      setOptionIds(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
+    } else {
+      setOptionIds([id]);
+    }
+  }
+
+  async function handleSubmit() {
+    if (isMC && optionIds.length === 0) { setError('Pick an answer'); return; }
+    if (!isMC && !answerText.trim()) { setError('Enter an answer'); return; }
+    setSubmitting(true); setError(null);
+    try {
+      await onSubmit(bet.id, { answerText: isMC ? null : answerText.trim(), optionIds: isMC ? optionIds : null });
+      onClose();
+    } catch (e) {
+      setError(friendlyBetError(e.message));
+      setSubmitting(false);
+    }
+  }
+
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div style={{
+        width: '100%', maxWidth: 480, background: 'var(--card)',
+        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
+        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Your Answer</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1.3 }}>{bet.question}</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)', flexShrink: 0 }}
+          >×</button>
+        </div>
+
+        {isMC ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+            {(bet.options ?? []).map(opt => (
+              <PickerRow key={opt.id} selected={optionIds.includes(opt.id)} onClick={() => toggleOption(opt.id)}>
+                <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{opt.label}</span>
+                {bet.allow_multiple_answers ? <CheckDot selected={optionIds.includes(opt.id)} /> : <RadioDot selected={optionIds.includes(opt.id)} />}
+              </PickerRow>
+            ))}
+          </div>
+        ) : (
+          <textarea
+            value={answerText} onChange={e => setAnswerText(e.target.value)}
+            placeholder="Your answer…" rows={3}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)', resize: 'none', fontFamily: 'inherit', marginBottom: 14 }}
+          />
+        )}
+
+        {error && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+
+        <button
+          onClick={handleSubmit} disabled={submitting}
+          style={{
+            width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
+            background: 'var(--gold)', color: '#fff',
+            ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          {submitting ? 'Submitting…' : 'Submit Answer'}
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// ── Declare / Arbitrate outcome drawer (shared body, two entry points) ────────
+function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipants, fetchAnswers }) {
+  const isMC = bet.answer_mode === 'multiple_choice';
+  const isArbitrate = mode === 'arbitrate';
+  const [participants, setParticipants] = useState([]);
+  const [answersById, setAnswersById]   = useState({});
+  const [loadingDetail, setLoadingDetail] = useState(!isMC);
+  const [selectedOptionIds, setSelectedOptionIds] = useState([]);
+  const [selectedUserIds, setSelectedUserIds]     = useState([]);
+  const [submitting, setSubmitting]     = useState(false);
+  const [error, setError]               = useState(null);
+
+  useEffect(() => {
+    if (isMC) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: parts }, { data: answers }] = await Promise.all([
+        fetchParticipants(bet.id),
+        fetchAnswers(bet.id),
+      ]);
+      if (cancelled) return;
+      setParticipants(parts ?? []);
+      const map = {};
+      (answers ?? []).forEach(a => { map[a.user_id] = a.answer_text; });
+      setAnswersById(map);
+      setLoadingDetail(false);
+    })();
+    return () => { cancelled = true; };
+  }, [bet.id, isMC, fetchParticipants, fetchAnswers]);
+
+  function toggleOption(id) {
+    if (bet.allow_multiple_answers) {
+      setSelectedOptionIds(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
+    } else {
+      setSelectedOptionIds([id]);
+    }
+  }
+  function toggleUser(id) {
+    setSelectedUserIds(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
+  }
+
+  async function handleSubmit() {
+    if (isMC && selectedOptionIds.length === 0) { setError('Select the winning option(s)'); return; }
+    if (!isMC && selectedUserIds.length === 0) { setError('Select the winner(s)'); return; }
+    setSubmitting(true); setError(null);
+    try {
+      await onSubmit(bet.id, {
+        winningOptionIds: isMC ? selectedOptionIds : null,
+        winningUserIds: isMC ? null : selectedUserIds,
+      });
+      onClose();
+    } catch (e) {
+      setError(friendlyBetError(e.message));
+      setSubmitting(false);
+    }
+  }
+
+  const eyebrow = isArbitrate ? '⚖ Owner Arbitration' : 'Declare Outcome';
+  const eyebrowColor = isArbitrate ? 'var(--purple)' : 'var(--mute)';
+
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div style={{
+        width: '100%', maxWidth: 500, background: 'var(--card)',
+        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
+        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: eyebrowColor, marginBottom: 5 }}>{eyebrow}</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1.3 }}>{bet.question}</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)', flexShrink: 0 }}
+          >×</button>
+        </div>
+
+        <div style={{
+          background: isArbitrate ? 'rgba(140,73,201,.09)' : 'var(--gbg)',
+          border: `1px solid ${isArbitrate ? 'rgba(140,73,201,.32)' : 'rgba(184,114,14,.18)'}`,
+          borderRadius: 6, padding: '10px 12px', ...MONO, fontSize: 'var(--fs-micro)',
+          color: isArbitrate ? 'var(--purple)' : 'var(--gold)', lineHeight: 1.5, marginBottom: 14,
+        }}>
+          {isArbitrate
+            ? 'This pays out immediately and cannot be undone.'
+            : 'Participants have 48 hours to dispute this outcome.'}
+        </div>
+
+        {isMC ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+            {(bet.options ?? []).map(opt => (
+              <PickerRow key={opt.id} selected={selectedOptionIds.includes(opt.id)} onClick={() => toggleOption(opt.id)}>
+                <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{opt.label}</span>
+                {bet.allow_multiple_answers ? <CheckDot selected={selectedOptionIds.includes(opt.id)} /> : <RadioDot selected={selectedOptionIds.includes(opt.id)} />}
+              </PickerRow>
+            ))}
+          </div>
+        ) : loadingDetail ? (
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading participants…</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14, maxHeight: 260, overflowY: 'auto' }}>
+            {participants.map((p, i) => (
+              <PickerRow key={p.user_id} selected={selectedUserIds.includes(p.user_id)} onClick={() => toggleUser(p.user_id)}>
+                <MemberAvatar username={p.username} index={i} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{p.username ?? 'Member'}</div>
+                  {answersById[p.user_id] && (
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>&ldquo;{answersById[p.user_id]}&rdquo;</div>
+                  )}
+                </div>
+                <CheckDot selected={selectedUserIds.includes(p.user_id)} />
+              </PickerRow>
+            ))}
+          </div>
+        )}
+
+        {error && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+
+        <button
+          onClick={handleSubmit} disabled={submitting}
+          style={{
+            width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
+            background: isArbitrate ? 'var(--purple)' : 'var(--gold)', color: '#fff',
+            ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          {submitting ? 'Submitting…' : isArbitrate ? 'Arbitrate & Pay Out' : 'Declare Outcome'}
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function DeclareOutcomeModal(props) {
+  return <BetOutcomeModal {...props} mode="declare" />;
+}
+function ArbitrateOutcomeModal(props) {
+  return <BetOutcomeModal {...props} mode="arbitrate" />;
+}
+
+// ── Group Bet dashboard card ───────────────────────────────────────────────────
+function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, onClose, onCancel, onDeclare, onDispute, onArbitrate, loading }) {
+  const isCreator = bet.creator_id === userId;
+
+  return (
+    <div style={{
+      background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6,
+      padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 9,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+        <AnswerModeBadge mode={bet.answer_mode} />
+        <TargetModeBadge mode={bet.target_mode} />
+        <span style={{ marginLeft: 'auto', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+          {bet.participant_count ?? 0} joined
+        </span>
+      </div>
+
+      <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{bet.question}</div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <CoinAmt amount={bet.stake_coins} size="sm" />
+        {bet.ends_at && (
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+            {section === 'invited' || section === 'joined' ? timeUntil(bet.ends_at) : timeAgo(bet.ends_at)}
+          </span>
+        )}
+        {isCreator && <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>You created this</span>}
+      </div>
+
+      {section === 'invited' && (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => onJoin(bet.id)} disabled={loading}
+            style={{ flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent', border: '1.5px solid var(--gold)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600, color: 'var(--gold)', opacity: loading ? 0.6 : 1 }}
+          >Join</button>
+          <button
+            onClick={() => onDecline(bet.id)} disabled={loading}
+            style={{ flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent', border: '1px solid var(--rule)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 500, color: 'var(--text2)', opacity: loading ? 0.6 : 1 }}
+          >Decline</button>
+        </div>
+      )}
+
+      {section === 'joined' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => onAnswer(bet)} disabled={loading}
+            style={{ flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent', border: '1.5px solid var(--accent)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600, color: 'var(--accent)', opacity: loading ? 0.6 : 1 }}
+          >Answer</button>
+          {isCreator && (
+            <>
+              <button
+                onClick={() => onClose(bet.id)} disabled={loading}
+                style={{ flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent', border: '1px solid var(--rule)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 500, color: 'var(--text2)', opacity: loading ? 0.6 : 1 }}
+              >Close Betting</button>
+              <button
+                onClick={() => onCancel(bet)} disabled={loading}
+                style={{ flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent', border: '1px solid var(--neg)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 500, color: 'var(--neg)', opacity: loading ? 0.6 : 1 }}
+              >Cancel</button>
+            </>
+          )}
+        </div>
+      )}
+
+      {section === 'awaiting' && (
+        isCreator ? (
+          <button
+            onClick={() => onDeclare(bet)} disabled={loading}
+            style={{ padding: '9px 0', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1 }}
+          >Declare Outcome</button>
+        ) : (
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Waiting on the bet creator to declare an outcome.</div>
+        )
+      )}
+
+      {section === 'disputed' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexBasis: '100%' }}>
+            ⚖ Disputed — the Clubhouse owner will review and decide.
+          </div>
+          {!isOwner && (
+            <button
+              onClick={() => onDispute(bet)} disabled={loading}
+              style={{ flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--neg)', background: 'transparent', color: 'var(--neg)', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1 }}
+            >Dispute</button>
+          )}
+          {isOwner && (
+            <button
+              onClick={() => onArbitrate(bet)} disabled={loading}
+              style={{ flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--purple)', background: 'transparent', color: 'var(--purple)', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1 }}
+            >Arbitrate</button>
+          )}
+        </div>
+      )}
+
+      {section === 'history' && (
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+          {bet.status === 'cancelled' ? 'Cancelled — stakes returned' : 'Resolved'}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BetSection({ title, bets, emptyLabel, ...cardProps }) {
+  if (bets.length === 0) {
+    return (
+      <div>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>{title}</div>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
+          {emptyLabel}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>{title}</div>
+        <span style={{ background: 'var(--gbg)', color: 'var(--gold)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.06em', padding: '1px 8px', borderRadius: 100, fontWeight: 600 }}>{bets.length}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {bets.map(bet => <BetCard key={bet.id} bet={bet} {...cardProps} />)}
+      </div>
+    </div>
   );
 }
 
@@ -1201,12 +1950,32 @@ export default function ChallengeScreen() {
     declareResult, confirmResult, disputeResult, arbitrateResult,
   } = useChallenges(user?.id, activeCircleId);
 
-  const [outerTab, setOuterTab] = useState('challenges');
+  const betsEnabled = !!activeCircle?.p2p_betting_enabled;
+  const {
+    openInvited, myOpenJoined, closedAwaitingDeclare, closedAwaitingResolution,
+    disputed: disputedBets, history: betHistory, loading: betsLoading,
+    createBet, joinBet, declineBet, submitAnswer, closeBet, cancelBet,
+    declareOutcome, disputeOutcome, arbitrateOutcome, fetchParticipants, fetchAnswers,
+  } = useGroupBets(user?.id, activeCircleId);
+
+  const [searchParams] = useSearchParams();
+  const [outerTab, setOuterTab] = useState(() => {
+    const t = searchParams.get('tab');
+    return t === 'bets' || t === 'wallet' ? t : 'challenges';
+  });
   const [showCreate, setShowCreate] = useState(false);
   const [actionLoading, setAction]  = useState(false);
   const [toast, setToast]           = useState(null);
   const [declaringChallenge, setDeclaringChallenge]     = useState(null);
   const [arbitratingChallenge, setArbitratingChallenge] = useState(null);
+
+  const [showCreateBet, setShowCreateBet]         = useState(false);
+  const [betActionLoading, setBetActionLoading]   = useState(false);
+  const [answeringBet, setAnsweringBet]           = useState(null);
+  const [declaringBet, setDeclaringBet]           = useState(null);
+  const [arbitratingBet, setArbitratingBet]       = useState(null);
+  const [cancellingBet, setCancellingBet]         = useState(null);
+  const [disputingBet, setDisputingBet]           = useState(null);
 
   const isOwner = activeCircle?.role === 'owner';
   const myDisputed    = disputed.filter(c => c.challenger_id === user?.id || c.opponent_id === user?.id);
@@ -1263,6 +2032,58 @@ export default function ChallengeScreen() {
     showToast(winnerId ? 'Arbitrated — coins settled.' : 'Voided — both stakes returned.');
   }
 
+  async function handleJoinBet(betId) {
+    setBetActionLoading(true);
+    try { await joinBet(betId); showToast('Joined — coins staked!'); }
+    catch (e) { showToast(friendlyBetError(e.message), true); }
+    setBetActionLoading(false);
+  }
+
+  async function handleDeclineBet(betId) {
+    setBetActionLoading(true);
+    try { await declineBet(betId); showToast('Declined.'); }
+    catch (e) { showToast(friendlyBetError(e.message), true); }
+    setBetActionLoading(false);
+  }
+
+  async function handleCloseBet(betId) {
+    setBetActionLoading(true);
+    try { await closeBet(betId); showToast('Betting closed — ready to declare an outcome.'); }
+    catch (e) { showToast(friendlyBetError(e.message), true); }
+    setBetActionLoading(false);
+  }
+
+  async function handleCancelBetConfirmed() {
+    setBetActionLoading(true);
+    try { await cancelBet(cancellingBet.id); showToast('Bet cancelled — coins returned.'); }
+    catch (e) { showToast(friendlyBetError(e.message), true); }
+    setBetActionLoading(false);
+    setCancellingBet(null);
+  }
+
+  async function handleSubmitAnswer(betId, payload) {
+    await submitAnswer(betId, payload);
+    showToast('Answer submitted!');
+  }
+
+  async function handleDeclareBetSubmit(betId, payload) {
+    await declareOutcome(betId, payload);
+    showToast('Outcome declared — participants have 48 hours to dispute.');
+  }
+
+  async function handleDisputeBetConfirmed() {
+    setBetActionLoading(true);
+    try { await disputeOutcome(disputingBet.id); showToast('Disputed — the Clubhouse owner has been notified.'); }
+    catch (e) { showToast(friendlyBetError(e.message), true); }
+    setBetActionLoading(false);
+    setDisputingBet(null);
+  }
+
+  async function handleArbitrateBetSubmit(betId, payload) {
+    await arbitrateOutcome(betId, payload);
+    showToast('Arbitrated — coins settled.');
+  }
+
   const balance  = wallet?.balance  ?? 0;
   const escrow   = wallet?.escrow   ?? 0;
   const netWL = history.reduce((sum, c) => {
@@ -1273,6 +2094,7 @@ export default function ChallengeScreen() {
 
   const tabs = [
     { key: 'challenges', label: 'Challenges' },
+    ...(betsEnabled ? [{ key: 'bets', label: 'Group Bets' }] : []),
     { key: 'wallet',     label: 'Wallet'     },
   ];
 
@@ -1513,6 +2335,66 @@ export default function ChallengeScreen() {
         </div>
       )}
 
+      {/* Group Bets tab */}
+      {outerTab === 'bets' && betsEnabled && (
+        <div style={{
+          flex: 1,
+          overflowY: isMobile ? 'visible' : 'auto',
+          padding: isMobile ? '16px 16px 88px' : '20px 26px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: 20,
+        }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {betsLoading ? (
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading…</div>
+            ) : (
+              <>
+                <BetSection
+                  title="Awaiting You" bets={openInvited} section="invited"
+                  emptyLabel="No group bets waiting on you." userId={user?.id} isOwner={isOwner}
+                  onJoin={handleJoinBet} onDecline={handleDeclineBet} loading={betActionLoading}
+                />
+                <BetSection
+                  title="Your Open Bets" bets={myOpenJoined} section="joined"
+                  emptyLabel="You haven't joined any open group bets." userId={user?.id} isOwner={isOwner}
+                  onAnswer={setAnsweringBet} onClose={handleCloseBet} onCancel={setCancellingBet} loading={betActionLoading}
+                />
+                <BetSection
+                  title="Awaiting Outcome" bets={[...closedAwaitingDeclare, ...closedAwaitingResolution]} section="awaiting"
+                  emptyLabel="Nothing waiting on an outcome." userId={user?.id} isOwner={isOwner}
+                  onDeclare={setDeclaringBet} loading={betActionLoading}
+                />
+                <BetSection
+                  title="Disputed" bets={disputedBets} section="disputed"
+                  emptyLabel="No disputed bets." userId={user?.id} isOwner={isOwner}
+                  onDispute={setDisputingBet} onArbitrate={setArbitratingBet} loading={betActionLoading}
+                />
+                <BetSection
+                  title="History" bets={betHistory} section="history"
+                  emptyLabel="No settled group bets yet." userId={user?.id} isOwner={isOwner}
+                />
+              </>
+            )}
+          </div>
+
+          {!isMobile && (
+            <div style={{ width: 256, flexShrink: 0 }}>
+              <button
+                onClick={() => setShowCreateBet(true)}
+                style={{
+                  width: '100%', padding: '12px 24px', borderRadius: 6, border: 'none',
+                  background: 'var(--gold)', color: '#fff', cursor: 'pointer',
+                  ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
+                  fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
+                }}
+              >🎲 New Group Bet</button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Wallet tab */}
       {outerTab === 'wallet' && (
         <WalletTabContent wallet={wallet} walletLoading={walletLoading} />
@@ -1524,6 +2406,16 @@ export default function ChallengeScreen() {
           label="⚔ New Challenge"
           state="action"
           onPress={() => setShowCreate(true)}
+          accent="var(--gold)"
+        />
+      )}
+
+      {/* Mobile: PrimaryActionBar for 🎲 New Group Bet */}
+      {isMobile && outerTab === 'bets' && betsEnabled && (
+        <PrimaryActionBar
+          label="🎲 New Group Bet"
+          state="action"
+          onPress={() => setShowCreateBet(true)}
           accent="var(--gold)"
         />
       )}
@@ -1558,6 +2450,77 @@ export default function ChallengeScreen() {
           challenge={arbitratingChallenge}
           onClose={() => setArbitratingChallenge(null)}
           onSubmit={handleArbitrateSubmit}
+        />
+      )}
+
+      {/* Create group bet modal */}
+      {showCreateBet && (
+        <CreateGroupBetModal
+          onClose={() => setShowCreateBet(false)}
+          onCreate={createBet}
+          wallet={wallet}
+          circleId={activeCircleId}
+          circleName={activeCircle?.name}
+          members={members}
+        />
+      )}
+
+      {/* Submit answer modal */}
+      {answeringBet && (
+        <SubmitAnswerModal
+          bet={answeringBet}
+          userId={user?.id}
+          fetchAnswers={fetchAnswers}
+          onClose={() => setAnsweringBet(null)}
+          onSubmit={handleSubmitAnswer}
+        />
+      )}
+
+      {/* Declare bet outcome modal */}
+      {declaringBet && (
+        <DeclareOutcomeModal
+          bet={declaringBet}
+          fetchParticipants={fetchParticipants}
+          fetchAnswers={fetchAnswers}
+          onClose={() => setDeclaringBet(null)}
+          onSubmit={handleDeclareBetSubmit}
+        />
+      )}
+
+      {/* Owner arbitrate bet modal */}
+      {arbitratingBet && (
+        <ArbitrateOutcomeModal
+          bet={arbitratingBet}
+          fetchParticipants={fetchParticipants}
+          fetchAnswers={fetchAnswers}
+          onClose={() => setArbitratingBet(null)}
+          onSubmit={handleArbitrateBetSubmit}
+        />
+      )}
+
+      {/* Cancel bet confirmation */}
+      {cancellingBet && (
+        <ConfirmModal
+          title="Cancel this bet?"
+          body="All joined participants will be refunded their stake."
+          confirmLabel="Cancel Bet"
+          cancelLabel="Keep Bet"
+          danger
+          onConfirm={handleCancelBetConfirmed}
+          onCancel={() => setCancellingBet(null)}
+        />
+      )}
+
+      {/* Dispute bet confirmation */}
+      {disputingBet && (
+        <ConfirmModal
+          title="Dispute this outcome?"
+          body="The Clubhouse owner will review and make the final call."
+          confirmLabel="Dispute"
+          cancelLabel="Never mind"
+          danger
+          onConfirm={handleDisputeBetConfirmed}
+          onCancel={() => setDisputingBet(null)}
         />
       )}
     </div>
