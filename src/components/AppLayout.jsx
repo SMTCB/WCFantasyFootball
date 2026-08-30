@@ -391,18 +391,16 @@ export default function AppLayout({ children }) {
         {/* Competition top bar — flat list of competition tabs (sport-colored).
             Hidden on the cross-clubhouse Home dashboard, which has no single active
             competition to show — it only makes sense once inside a clubhouse.
-            The breathing-room gap is scoped to the same condition so it never
-            leaves a stray empty strip above a screen's own header (e.g. Home). */}
+            Its own top padding provides the breathing room above the tabs, so the
+            gap is filled with the bar's white background instead of a separate
+            div showing the dark shell color through as a seam. */}
         {location.pathname !== '/home' && (
-          <>
-            <div style={{ height: 12 }} />
-            <CompetitionTopBar
-              competitions={competitions}
-              pathname={location.pathname}
-              onAdd={() => setShowNewCompFlow(true)}
-              hasClubhouse={myCircles.length > 0}
-            />
-          </>
+          <CompetitionTopBar
+            competitions={competitions}
+            pathname={location.pathname}
+            onAdd={() => setShowNewCompFlow(true)}
+            hasClubhouse={myCircles.length > 0}
+          />
         )}
 
         {/* Competition screen nav — screens within the active sport/competition */}
