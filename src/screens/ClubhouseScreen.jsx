@@ -197,7 +197,7 @@ function AllCompetitions({ competitions, onEnter }) {
               <div style={{ padding: '13px 15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.25 }}>{item.name}</div>
+                    <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.25, minWidth: 0, overflowWrap: 'anywhere' }}>{item.name}</div>
                     {item.archived && <ArchivedBadge />}
                   </div>
                   <span style={{
@@ -677,7 +677,7 @@ export default function ClubhouseScreen() {
   } = useClubhouseContext();
 
   const { wallet } = useWallet(user?.id);
-  const { active: activeChallenges, incoming: incomingChallenges } = useChallenges(user?.id);
+  const { active: activeChallenges, incoming: incomingChallenges, outgoing: outgoingChallenges } = useChallenges(user?.id, activeCircleId);
   const frontpage = useClubhouseFrontpage(activeCircleId);
 
   const [tab, setTab] = useState(() => searchParams.get('tab') ?? 'home');
@@ -906,8 +906,12 @@ export default function ClubhouseScreen() {
                   />
                   <ShortcutCard
                     eyebrow="P2P Challenges"
-                    value={`${activeChallenges.length} active`}
-                    sublabel={incomingChallenges.length > 0 ? `${incomingChallenges.length} awaiting your move` : 'No pending requests'}
+                    value={`${activeChallenges.length + incomingChallenges.length + outgoingChallenges.length} open`}
+                    sublabel={
+                      incomingChallenges.length > 0 ? `${incomingChallenges.length} awaiting your move`
+                        : outgoingChallenges.length > 0 ? `${outgoingChallenges.length} awaiting response`
+                        : 'No pending requests'
+                    }
                     onClick={() => navigate('/challenges')}
                   />
                   <ShortcutCard

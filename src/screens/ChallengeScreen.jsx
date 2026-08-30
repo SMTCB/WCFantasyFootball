@@ -823,6 +823,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
   const [message, setMessage]       = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
+  const [showInfo, setShowInfo]     = useState(false);
 
   const isFreeform = betType === 'freeform';
   const { current, next, loading: gwLoading } = useGameweekOptions(isFreeform ? null : leagueId);
@@ -886,15 +887,38 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
       }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
-          <div>
-            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Challenge</div>
-            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>{isFreeform ? 'Send a Freeform Bet' : 'Send a GW Total Bet'}</div>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 0 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Challenge</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>{isFreeform ? 'Send a Freeform Bet' : 'Send a GW Total Bet'}</div>
+            </div>
+            <button
+              onClick={() => setShowInfo(v => !v)}
+              aria-label="How challenges work"
+              title="How challenges work"
+              style={{
+                width: 22, height: 22, borderRadius: '50%', flexShrink: 0, marginTop: 2,
+                border: `1.5px solid ${showInfo ? 'var(--gold)' : 'var(--rule)'}`,
+                background: showInfo ? 'var(--gbg)' : 'transparent', cursor: 'pointer',
+                display: 'grid', placeItems: 'center',
+                ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
+                color: showInfo ? 'var(--gold)' : 'var(--mute)',
+              }}
+            >i</button>
           </div>
           <button
             onClick={onClose}
             style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
           >×</button>
         </div>
+
+        {showInfo && (
+          <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 8, background: 'var(--elev)', border: '1px solid var(--rule)', fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.55 }}>
+            <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>Competitor</strong> — bet against another manager on who scores more points in a gameweek. Resolves automatically once the gameweek closes.</div>
+            <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>Freeform</strong> — bet on anything, settled by agreement. After the event, either side declares a winner (or a push); the other confirms. If you disagree, either side can dispute and the Clubhouse owner arbitrates.</div>
+            <div>Your stake moves to escrow when you send the challenge and is only released once the bet resolves. The winner gets both stakes minus a 5% rake.</div>
+          </div>
+        )}
 
         {blocked ? (
           <div style={{ padding: '30px 6px 12px', textAlign: 'center' }}>
