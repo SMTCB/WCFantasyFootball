@@ -861,7 +861,7 @@ export default function LeagueScreen() {
           <button
             type="button"
             onClick={() => {
-              if (myCircles.length === 0) { navigate('/clubhouse?tab=find'); return; }
+              if (myCircles.length === 0) { navigate('/home'); return; }
               setCreateLeagueStep(1);
             }}
             disabled={myCircles.length > 0 && !selectedCircleId}
@@ -1174,7 +1174,7 @@ export default function LeagueScreen() {
             memberCount={members.length}
             gw={currentGW}
             isLive={false}
-            onBack={() => navigate('/league')}
+            onBack={() => navigate('/clubhouse')}
             cupPhase={activeLeague?.leagues?.cup_phase}
             leagueMode={leagueMode}
             rightSlot={
@@ -1206,7 +1206,7 @@ export default function LeagueScreen() {
             leagueName={name}
             memberCount={members.length}
             gw={currentGW}
-            onBack={() => navigate('/league')}
+            onBack={() => navigate('/clubhouse')}
             cupPhase={activeLeague?.leagues?.cup_phase}
             leagueMode={leagueMode}
             rightSlot={

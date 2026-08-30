@@ -244,6 +244,7 @@ export default function AppLayout({ children }) {
 
   const isMainRoute =
     location.pathname === '/' ||
+    location.pathname === '/home' ||
     location.pathname === '/scores' ||
     location.pathname === '/squad' ||
     location.pathname === '/league' ||
@@ -276,13 +277,23 @@ export default function AppLayout({ children }) {
           <BrandMark theme="dark" compact />
         </div>
 
+        {/* Home dashboard — cross-clubhouse hub, above the switcher */}
+        <div style={{ padding: '8px 6px 0' }}>
+          <NavItem
+            label="Home"
+            path="/home"
+            active={location.pathname === '/home'}
+            dotColor="var(--accent)"
+          />
+        </div>
+
         {/* Clubhouse switcher — always visible, even with a single Clubhouse */}
         <NavSectionLabel>Your Clubhouses</NavSectionLabel>
         <ClubhouseSwitcher
           circles={myCircles}
           activeCircleId={activeCircleId}
           onSelect={(id) => { setActiveCircleId(id); navigate(`/clubhouse/${id}`); }}
-          onAdd={() => navigate('/clubhouse?tab=find')}
+          onAdd={() => navigate('/home')}
         />
 
         {/* Nav — clubhouse-centric, never morphs */}
@@ -373,9 +384,12 @@ export default function AppLayout({ children }) {
               </span>
             </button>
           ) : username ? (
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+            <Link
+              to="/home"
+              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase', textDecoration: 'none' }}
+            >
               {username}
-            </div>
+            </Link>
           ) : (
             <div />
           )}

@@ -87,7 +87,7 @@ export function CompetitionTopBar({ competitions, pathname, onAdd, hasClubhouse 
       {/* + Add competition — a competition must always belong to a Clubhouse, so
           without one this redirects to Clubhouse creation instead of opening the form */}
       <button
-        onClick={hasClubhouse ? onAdd : () => navigate('/clubhouse?tab=find')}
+        onClick={hasClubhouse ? onAdd : () => navigate('/home')}
         title={hasClubhouse ? 'Add competition' : 'Create a Clubhouse first'}
         style={{
           marginLeft: 'auto',

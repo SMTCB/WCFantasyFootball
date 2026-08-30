@@ -43,6 +43,7 @@ const WalletScreen          = lazy(() => import('./screens/WalletScreen'));
 const ChallengeScreen       = lazy(() => import('./screens/ChallengeScreen'));
 const NotFoundScreen        = lazy(() => import('./screens/NotFoundScreen'));
 const ClubhouseScreen       = lazy(() => import('./screens/ClubhouseScreen'));
+const HomeDashboardScreen   = lazy(() => import('./screens/HomeDashboardScreen'));
 // F1 module
 const PaddockLobbyScreen    = lazy(() => import('./screens/f1/PaddockLobbyScreen'));
 const F1HomeScreen          = lazy(() => import('./screens/f1/F1HomeScreen'));
@@ -159,6 +160,7 @@ function AppRoutes() {
                   <Route path="/tennis/admin"                 element={<ErrorBoundary screen="TennisAdmin"><TennisAdminScreen /></ErrorBoundary>} />
                   <Route path="/clubhouse"            element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
                   <Route path="/clubhouse/:circleId"  element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
+                  <Route path="/home"                 element={<ErrorBoundary screen="Home"><HomeDashboardScreen /></ErrorBoundary>} />
                   <Route path="/trophy"           element={<ErrorBoundary screen="TrophyCabinet"><TrophyCabinetScreen /></ErrorBoundary>} />
                   <Route path="/join"                       element={<JoinRoute />} />
                   <Route path="*"                           element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
