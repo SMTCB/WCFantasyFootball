@@ -138,3 +138,31 @@ export const NavIconClubhouse = ({ size = 24 }) => (
     <rect x="11" y="9.5" width="2" height="3" rx="1" fill={MUTE} opacity="0.3" />
   </svg>
 );
+
+// ── Clubhouse-level Navigation Icons (mobile bottom bar) ───────────────────────
+
+export const NavIconHome = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 11L12 4L20 11" stroke={CYAN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="6" y="11" width="12" height="9" rx="1" fill={PAPER} />
+    <rect x="10" y="15" width="4" height="5" rx="0.5" fill={MUTE} opacity="0.4" />
+  </svg>
+);
+
+export const NavIconTrophy = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 4H17V10C17 13 14.5 15 12 15C9.5 15 7 13 7 10V4Z" fill={CYAN} />
+    <path d="M7 5H4V7C4 9 5.5 10.5 7 10.5" stroke={MUTE} strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+    <path d="M17 5H20V7C20 9 18.5 10.5 17 10.5" stroke={MUTE} strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+    <rect x="11" y="15" width="2" height="3" fill={PAPER} />
+    <rect x="8" y="18" width="8" height="2" rx="1" fill={MUTE} opacity="0.4" />
+  </svg>
+);
+
+export const NavIconChallenges = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="8" fill={CYAN} opacity="0.85" />
+    <circle cx="12" cy="12" r="8" stroke={PAPER} strokeWidth="1" opacity="0.3" />
+    <path d="M9 12L11 14L15.5 9.5" stroke={PAPER} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);

@@ -11,40 +11,21 @@ import { CompetitionTopBar } from './CompetitionTopBar';
 import { CompetitionScreenNav } from './CompetitionScreenNav';
 import NewCompetitionFlow from './NewCompetitionFlow';
 import {
-  NavIconLive,
-  NavIconSquad,
-  NavIconLeagues,
-  NavIconMarket,
-  NavIconRecap,
+  NavIconHome,
   NavIconClubhouse,
-  NavIconF1Calendar,
-  NavIconF1Standings,
-  NavIconF1Report,
+  NavIconTrophy,
+  NavIconChallenges,
 } from './NavIcons';
 
-// ── Mobile bottom-bar nav items ───────────────────────────────────────────────
-const FOOTBALL_NAV = [
-  { key: 'live',      label: 'LIVE',      path: '/live',      Icon: NavIconLive,      isLive: true },
-  { key: 'squad',     label: 'SQUAD',     path: '/squad',     Icon: NavIconSquad   },
-  { key: 'league',    label: 'LEAGUE',    path: '/league',    Icon: NavIconLeagues },
-  { key: 'market',    label: 'MARKET',    path: '/market',    Icon: NavIconMarket  },
-  { key: 'clubhouse', label: 'CLUB',      path: '/clubhouse', Icon: NavIconClubhouse },
-];
-
-function buildF1Nav(paddockId) {
-  const base = paddockId ? `/f1/${paddockId}` : '/f1';
-  return [
-    { key: 'f1-calendar',  label: 'CAL',      path: base,                    Icon: NavIconF1Calendar  },
-    { key: 'f1-standings', label: 'STD',      path: `${base}/standings`,     Icon: NavIconF1Standings },
-    { key: 'f1-report',    label: 'REPORT',   path: `${base}/report`,        Icon: NavIconF1Report    },
-    { key: 'clubhouse',    label: 'CLUB',     path: '/clubhouse',            Icon: NavIconClubhouse   },
-  ];
-}
-
-const TENNIS_NAV = [
-  { key: 'ten-home',   label: 'HOME',  path: '/tennis',             Icon: NavIconRecap    },
-  { key: 'ten-lb',     label: 'TABLE', path: '/tennis/leaderboard', Icon: NavIconLeagues  },
-  { key: 'clubhouse',  label: 'CLUB',  path: '/clubhouse',          Icon: NavIconClubhouse },
+// ── Mobile bottom-bar nav — clubhouse-level, mirrors the desktop sidebar's
+// "This Clubhouse" section. Sport/competition screens (Live/Squad/Market/etc.)
+// live in CompetitionScreenNav at the top of the screen, on both mobile and
+// desktop, so the bottom bar no longer duplicates them per-sport.
+const CLUBHOUSE_NAV = [
+  { key: 'home',       label: 'HOME',   path: '/home',       Icon: NavIconHome },
+  { key: 'clubhouse',  label: 'CLUB',   path: '/clubhouse',  Icon: NavIconClubhouse },
+  { key: 'trophy',     label: 'TROPHY', path: '/trophy',     Icon: NavIconTrophy },
+  { key: 'challenges', label: 'COINS',  path: '/challenges', Icon: NavIconChallenges },
 ];
 
 // ── Desktop sidebar helpers ───────────────────────────────────────────────────
@@ -213,7 +194,7 @@ export default function AppLayout({ children }) {
   const { user } = useAuth();
   const { unreadCount } = useContext(ClubhouseNotifContext);
   const { myCircles, competitions, activeCircleId, setActiveCircleId, refreshCompetitions } = useClubhouseContext();
-  const { sport, competitionId } = useActiveCompetition();
+  const { competitionId } = useActiveCompetition();
   const [showNewCompFlow, setShowNewCompFlow] = useState(false);
   const mainRef = useRef(null);
 
@@ -223,14 +204,6 @@ export default function AppLayout({ children }) {
   useEffect(() => {
     mainRef.current?.scrollTo(0, 0);
   }, [location.pathname]);
-
-  // Mobile bottom bar is the active competition's screens; sidebar never changes
-  const MOBILE_NAV = sport === 'f1' ? buildF1Nav(competitionId) : sport === 'tennis' ? TENNIS_NAV : FOOTBALL_NAV;
-  // The group's own "home" tab path is a real prefix of every sibling sub-route path
-  // (e.g. f1-calendar's `/f1/<id>` is a prefix of `/f1/<id>/standings`) — exclude it from
-  // the startsWith prefix-match below so only one tab lights up at a time.
-  const mobileNavHomePath = sport === 'f1' ? (competitionId ? `/f1/${competitionId}` : '/f1')
-    : sport === 'tennis' ? '/tennis' : null;
 
   const [username, setUsername] = useState(
     user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? null
@@ -450,20 +423,14 @@ export default function AppLayout({ children }) {
         }}
       >
         <div className="flex items-stretch h-16">
-          {MOBILE_NAV.map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
-            const isActive = location.pathname === path ||
-              (path !== '/' && path !== mobileNavHomePath && location.pathname.startsWith(path + '/'));
-            const activeColor = isLive ? 'var(--on-shell-danger)' : 'var(--on-shell-accent)';
-            const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
-            const alreadyOnPaddockMobile = key === 'f1-calendar' && /^\/f1\/[^/]+/.test(location.pathname);
-            const navTo = (alreadyOnLeague || alreadyOnPaddockMobile)
-              ? location.pathname + location.search
-              : path;
+          {CLUBHOUSE_NAV.map(({ key, label, path, Icon }) => {
+            const isActive = location.pathname === path || location.pathname.startsWith(path + '/');
+            const activeColor = 'var(--on-shell-accent)';
 
             return (
               <Link
                 key={key}
-                to={navTo}
+                to={path}
                 className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-all"
                 style={{ color: isActive ? activeColor : 'var(--on-shell-dim)' }}
               >
@@ -475,7 +442,7 @@ export default function AppLayout({ children }) {
                   />
                 )}
 
-                <Icon size={20} />
+                {Icon && <Icon size={20} />}
 
                 <span style={{
                   fontFamily:    'JetBrains Mono, monospace',
@@ -486,14 +453,6 @@ export default function AppLayout({ children }) {
                 }}>
                   {label}
                 </span>
-
-                {/* Live pulse dot */}
-                {isLive && !isActive && (
-                  <div
-                    className="absolute top-2 right-[calc(50%-14px)] w-1.5 h-1.5 rounded-full animate-live-pulse"
-                    style={{ background: 'var(--danger)' }}
-                  />
-                )}
 
                 {/* Unread badge (Clubhouse) */}
                 {key === 'clubhouse' && unreadCount > 0 && (

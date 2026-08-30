@@ -36,7 +36,7 @@ export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }
 export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false, cupPhase, leagueMode }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap',
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap',
       padding: 'max(12px, 2vw) max(16px, 4vw)', borderBottom: '1px solid var(--shell-rule-strong)',
       background: 'var(--accent)', flexShrink: 0, gap: 12,
     }}>
@@ -54,12 +54,12 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
             {leagueName.toUpperCase()}
           </div>
           {cupPhase && cupPhase !== 'pre_cup' && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
               {cupPhase.replace(/_/g, ' ').toUpperCase()}
             </span>
           )}
           {leagueMode === 'draft_h2h' && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
           )}
           <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--on-shell-dim)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
             {memberCount}M · GW{gw}
@@ -275,12 +275,12 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
           {backable ? backTitle : leagueName.toUpperCase()}
         </span>
         {cupPhase && cupPhase !== 'pre_cup' && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
             {cupPhase.replace(/_/g, ' ').toUpperCase()}
           </span>
         )}
         {leagueMode === 'draft_h2h' && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
         )}
       </div>
     </div>
