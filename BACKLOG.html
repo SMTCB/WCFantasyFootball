@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>208</strong><span>closed</span></div>
+      <div class="total-pill"><strong>209</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (129)</span>
+    <span class="chip" data-filter-kind="done">Shipped (130)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">208</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">209</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">129</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">130</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1224,8 +1224,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">129</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">130</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ p2p group bets ui — phases 2-4 (2026-08-30) — pr #880 
+
+**context**: migration 262 (p2p group bets schema + rpcs — multi-participant coin bets within a clubhouse, distinct from the existing 1:1 `p2p_challenges`) shipped live in production via pr #879 with no frontend. user approved building the full ui in one pr, ship-only, no new migrations.
+
+**what shipped**: `src/hooks/usegroupbets.js` (fetch + realtime + derived status lists + rpc mutators, modeled on `usechallenges.js`), and a new &quot;group bets&quot; tab on `challengescreen.jsx` (`/challenges?tab=bets`, gated on `circles.p2p_betting_enabled`) covering create → join/decline → answer → close → declare → dispute → arbitrate, plus a history section. `clubhousescreen.jsx`&#x27;s notification bell now deep-links `p2p_bet` dispute alerts to the new tab. all new components live inside `challengescreen.jsx` (no new cross-depth imports — avoids the vite/rolldown tdz bug).
+
+**verification gap**: full ci green (lint/build/security/unit/e2e/tier-3/schema-rehearsal/ios/android/vercel), but no live interactive click-through — local dev&#x27;s demo-mode auth can&#x27;t hold a real supabase session, and claude does not sign in as a live user. `test_sb_1` (a `test_`-prefixed clubhouse) had `p2p_betting_enabled` turned on for manual qa, with explicit per-item approval. recommend a manual pass there to confirm wallet balances move correctly at each lifecycle step before wider rollout.
+
+see the &quot;last updated&quot; banner above for full technical detail.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">P2P Group Bets UI — Phases 2-4</h3>
+        <p class="card-summary">Context : migration 262 (P2P Group Bets schema + RPCs — multi-participant coin bets within a Clubhouse, distinct from the existing 1:1 p2p_challenges ) shipped live in…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-30</span><span class="foot-refs">PR #880</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">P2P Group Bets UI — Phases 2-4</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : migration 262 (P2P Group Bets schema + RPCs — multi-participant coin bets within a Clubhouse, distinct from the existing 1:1 p2p_challenges ) shipped live in…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #880</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-30</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: migration 262 (P2P Group Bets schema + RPCs — multi-participant coin bets within a Clubhouse, distinct from the existing 1:1 <code>p2p_challenges</code>) shipped live in production via PR #879 with no frontend. User approved building the full UI in one PR, ship-only, no new migrations.</p>
+<p><strong>What shipped</strong>: <code>src/hooks/useGroupBets.js</code> (fetch + realtime + derived status lists + RPC mutators, modeled on <code>useChallenges.js</code>), and a new "Group Bets" tab on <code>ChallengeScreen.jsx</code> (<code>/challenges?tab=bets</code>, gated on <code>circles.p2p_betting_enabled</code>) covering create → join/decline → answer → close → declare → dispute → arbitrate, plus a history section. <code>ClubhouseScreen.jsx</code>'s notification bell now deep-links <code>p2p_bet</code> dispute alerts to the new tab. All new components live inside <code>ChallengeScreen.jsx</code> (no new cross-depth imports — avoids the Vite/Rolldown TDZ bug).</p>
+<p><strong>Verification gap</strong>: full CI green (lint/build/security/unit/E2E/Tier-3/schema-rehearsal/iOS/Android/Vercel), but no live interactive click-through — local dev's demo-mode auth can't hold a real Supabase session, and Claude does not sign in as a live user. <code>TEST_SB_1</code> (a <code>TEST_</code>-prefixed clubhouse) had <code>p2p_betting_enabled</code> turned on for manual QA, with explicit per-item approval. Recommend a manual pass there to confirm wallet balances move correctly at each lifecycle step before wider rollout.</p>
+<p>See the "Last Updated" banner above for full technical detail.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ maintenance-wall doc correction + home-screen competitiontopbar fix (2026-08-30) 
 
 **context**: user posted a screenshot of the live production home screen and reported two things: (1) the maintenance wall had already been removed, so the standing &quot;site is walled&quot; documentation was stale, and (2) the &quot;🏠 clubhouse · test_wimbledon_box&quot; competition pill bar was incorrectly showing on the cross-clubhouse home dashboard — it should only appear inside a clubhouse.
