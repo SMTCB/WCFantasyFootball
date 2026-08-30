@@ -126,7 +126,7 @@ function AppRoutes() {
               <ErrorBoundary screen="AppShell" variant="shell">
               <AppLayout>
                 <Routes>
-                  <Route path="/"                 element={<Navigate to="/clubhouse" replace />} />
+                  <Route path="/"                 element={<Navigate to="/home" replace />} />
                   <Route path="/scores"           element={<Navigate to="/live" replace />} />
                   <Route path="/squad"            element={<ErrorBoundary screen="Squad"><SquadScreen /></ErrorBoundary>} />
                   <Route path="/league"           element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
