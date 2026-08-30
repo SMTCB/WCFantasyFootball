@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import {
   NavIconLive,
   NavIconSquad,
-  NavIconLeagues,
   NavIconMarket,
   NavIconRecap,
   NavIconF1Calendar,
@@ -14,7 +13,6 @@ import {
 const FOOTBALL_SCREENS = [
   { key: 'live',   label: 'LIVE',   path: '/live',   Icon: NavIconLive,      isLive: true },
   { key: 'squad',  label: 'SQUAD',  path: '/squad',  Icon: NavIconSquad              },
-  { key: 'league', label: 'LEAGUE', path: '/league', Icon: NavIconLeagues            },
   { key: 'market', label: 'MARKET', path: '/market', Icon: NavIconMarket             },
   { key: 'recap',  label: 'RECAP',  path: '/recap',  Icon: NavIconRecap              },
 ];

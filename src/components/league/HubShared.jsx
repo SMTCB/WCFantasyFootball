@@ -37,31 +37,31 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap',
-      padding: 'max(12px, 2vw) max(16px, 4vw)', borderBottom: '1px solid var(--rule)',
-      background: 'var(--ink)', flexShrink: 0, gap: 12,
+      padding: 'max(12px, 2vw) max(16px, 4vw)', borderBottom: '1px solid var(--shell-rule-strong)',
+      background: 'var(--accent)', flexShrink: 0, gap: 12,
     }}>
       <div style={{ minWidth: 0, flex: '1 1 auto' }}>
         <button
           onClick={onBack}
           style={{
             background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-            fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--mute)', letterSpacing: '.2em',
+            fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--on-shell-dim)', letterSpacing: '.2em',
           }}
         >← BACK</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'max(8px, 1.5vw)', marginTop: 6, minWidth: 0, flexWrap: 'wrap' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', flexShrink: 0 }} />
-          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 5vw, 28px)', letterSpacing: '-0.02em', color: 'var(--paper)', minWidth: 0 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--on-shell)', flexShrink: 0 }} />
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 5vw, 28px)', letterSpacing: '-0.02em', color: 'var(--on-shell)', minWidth: 0 }}>
             {leagueName.toUpperCase()}
           </div>
           {cupPhase && cupPhase !== 'pre_cup' && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
               {cupPhase.replace(/_/g, ' ').toUpperCase()}
             </span>
           )}
           {leagueMode === 'draft_h2h' && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
           )}
-          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--mute)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
+          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--on-shell-dim)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
             {memberCount}M · GW{gw}
           </span>
         </div>
@@ -69,7 +69,7 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         {rightSlot}
         {isLive && (
-          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--danger)', letterSpacing: '.22em', whiteSpace: 'nowrap' }}>● LIVE</span>
+          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFD9D9', letterSpacing: '.22em', whiteSpace: 'nowrap' }}>● LIVE</span>
         )}
       </div>
     </div>
@@ -255,32 +255,32 @@ export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase()
 // Mobile hub league header — replaces HubTopbar on mobile viewports.
 export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot, cupPhase, leagueMode }) {
   return (
-    <div style={{ padding: '10px max(18px, 4vw) 8px', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
+    <div style={{ padding: '10px max(18px, 4vw) 8px', borderBottom: '1px solid var(--shell-rule-strong)', background: 'var(--accent)', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {backable ? (
-          <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>← BACK</button>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>← BACK</button>
         ) : (
           <>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>COMPETITIVE</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>·</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{memberCount}M</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em', marginLeft: 'auto' }}>GW {gw}</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>COMPETITIVE</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)' }}>·</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>{memberCount}M</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em', marginLeft: 'auto' }}>GW {gw}</span>
           </>
         )}
         {rightSlot && <div style={{ marginLeft: 'auto' }}>{rightSlot}</div>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, rowGap: 4, marginTop: 6, flexWrap: 'wrap' }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--cyan)', flexShrink: 0 }} />
-        <span style={{ fontFamily: DISPLAY, fontSize: backable ? 18 : 22, letterSpacing: '-0.02em', color: 'var(--paper)', minWidth: 0, flex: '1 1 auto' }}>
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--on-shell)', flexShrink: 0 }} />
+        <span style={{ fontFamily: DISPLAY, fontSize: backable ? 18 : 22, letterSpacing: '-0.02em', color: 'var(--on-shell)', minWidth: 0, flex: '1 1 auto' }}>
           {backable ? backTitle : leagueName.toUpperCase()}
         </span>
         {cupPhase && cupPhase !== 'pre_cup' && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
             {cupPhase.replace(/_/g, ' ').toUpperCase()}
           </span>
         )}
         {leagueMode === 'draft_h2h' && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
         )}
       </div>
     </div>

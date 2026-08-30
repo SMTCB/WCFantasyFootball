@@ -644,94 +644,6 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
   );
 }
 
-// ── Find (search public clubhouses) ──────────────────────────────────────────
-function FindTab({ searchClubhouses, joinCircleByCode }) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [joining, setJoining] = useState(null);
-  const [err, setErr] = useState('');
-
-  async function handleSearch(e) {
-    e.preventDefault();
-    if (query.trim().length < 2) return;
-    setBusy(true); setErr('');
-    try { setResults(await searchClubhouses(query)); }
-    catch (e) { setErr(e.message === 'QUERY_TOO_SHORT' ? 'Enter at least 2 characters.' : e.message); }
-    finally { setBusy(false); }
-  }
-
-  async function handleJoin(code) {
-    setJoining(code); setErr('');
-    try { await joinCircleByCode(code); }
-    catch (e) {
-      setErr(e.message === 'ALREADY_MEMBER' ? 'You are already a member.' : e.message);
-    }
-    finally { setJoining(null); }
-  }
-
-  return (
-    <div>
-      <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        <input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search by name…"
-          style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
-        />
-        <button
-          type="submit"
-          disabled={busy || query.trim().length < 2}
-          style={{ padding: '10px 16px', background: busy || query.trim().length < 2 ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
-        >
-          {busy ? '…' : 'SEARCH'}
-        </button>
-      </form>
-
-      {err && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginBottom: 12 }}>{err}</div>}
-
-      {results !== null && results.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
-          No public Clubhouses found for "{query}".
-        </div>
-      )}
-
-      {results !== null && results.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {results.map(r => (
-            <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
-              <div>
-                <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{r.name}</div>
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', marginTop: 2 }}>
-                  {r.member_count} {r.member_count === 1 ? 'member' : 'members'}
-                </div>
-              </div>
-              {r.already_member ? (
-                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', fontWeight: 700, letterSpacing: '0.1em' }}>JOINED ✓</span>
-              ) : (
-                <button
-                  onClick={() => handleJoin(r.invite_code)}
-                  disabled={joining === r.invite_code}
-                  style={{ padding: '8px 14px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                >
-                  {joining === r.invite_code ? 'JOINING…' : 'JOIN'}
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {results === null && !busy && (
-        <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.8 }}>
-          Search for public Clubhouses by name.<br />
-          Private Clubhouses are invite-code only.
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function ClubhouseScreen() {
   const { circleId: routeCircleId } = useParams();
@@ -753,7 +665,6 @@ export default function ClubhouseScreen() {
     loading,
     createCircle,
     joinCircleByCode,
-    searchClubhouses,
     updateSettings,
     kickMember,
     linkLeague,
@@ -825,7 +736,6 @@ export default function ClubhouseScreen() {
     { key: 'frontrow',  label: 'THE FRONTROW'   },
     ...(!isDesktop ? [{ key: 'chat', label: 'CHAT' }] : []),
     { key: 'members',   label: 'MEMBERS'        },
-    { key: 'find',      label: 'FIND'           },
     ...(isOwner ? [{ key: 'settings', label: 'SETTINGS' }] : []),
   ];
 
@@ -1082,7 +992,7 @@ export default function ClubhouseScreen() {
           )}
 
           {/* Remaining tabs share the max-width reading container */}
-          {(tab === 'members' || tab === 'find' || (tab === 'settings' && isOwner)) && (
+          {(tab === 'members' || (tab === 'settings' && isOwner)) && (
             <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto' }}>
               {tab === 'members' && (
                 <MembersTab
@@ -1092,10 +1002,6 @@ export default function ClubhouseScreen() {
                   onKick={(userId) => kickMember(activeCircleId, userId)}
                   metaStandings={metaStandings}
                 />
-              )}
-
-              {tab === 'find' && (
-                <FindTab searchClubhouses={searchClubhouses} joinCircleByCode={joinCircleByCode} />
               )}
 
               {tab === 'settings' && isOwner && activeCircle && (
