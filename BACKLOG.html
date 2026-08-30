@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>57</strong><span>open</span></div>
-      <div class="total-pill"><strong>205</strong><span>closed</span></div>
+      <div class="total-pill"><strong>206</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (126)</span>
+    <span class="chip" data-filter-kind="done">Shipped (127)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">57</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">205</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">206</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">126</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">127</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1196,8 +1196,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">126</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">127</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ mobile header/nav polish — header centering, gold-text contrast, clubhouse-oriented bottom bar (2026-08-30) — pr #868 
+
+**context**: user follow-up feedback on pr #866&#x27;s clubhouse/home work, from mobile screenshots — two bugs in the league header bar, plus a request to reassess the mobile bottom nav and the mobile home screen.
+
+**fixes**: (1) `hubtopbar`/`hubleagueheader` (`src/components/league/hubshared.jsx`) was vertically flush-to-top instead of centered — `alignitems: &#x27;flex-start&#x27;` → `&#x27;center&#x27;`; (2) the bar&#x27;s cup-phase and draft·h2h badge text used `--gold` (tuned for light/paper surfaces) against the dark `--accent` bar, low contrast — swapped to `--on-shell-gold`, the existing wcag-aa gold token for dark shell surfaces. confirmed the bar&#x27;s blue is indeed the canonical brand accent (`--accent`/`--brand-accent: #1a6fa8`), answering the user&#x27;s &quot;is this our blue?&quot; question.
+
+**bottom nav redesign**: mobile bottom bar (`applayout.jsx`) changed from sport-scoped tabs (live/squad/market/etc., different per sport) to clubhouse-level tabs (home/club/trophy/coins) — sport-scoped screens already live in `competitionscreennav` at the top of every screen on both mobile and desktop, so the old bottom bar duplicated it. 3 new icons added to `navicons.jsx` (`naviconhome`/`navicontrophy`/`naviconchallenges`) matching the existing schematic icon style. `platform.spec.js`&#x27;s bottom-nav test updated to assert home/trophy instead of the removed market/squad tabs.
+
+**investigated, no code change needed**: the mobile home dashboard (`homedashboardscreen.jsx`, shipped in pr #866) already renders cleanly at 375px — live-verified in browser preview. the desktop-only `clubhouseswitcher` dropdown was confirmed to already never render on mobile (`hidden lg:flex`); recommended keeping it as-is since the new mobile home tab now covers the same &quot;switch clubhouse&quot; job.
+
+**not resolved — flagged open**: a reported &quot;loose&quot;/doesn&#x27;t-fill-the-window feel on iphone 17 pro specifically. `index.htm" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Mobile header/nav polish — header centering, gold-text contrast, clubhouse-oriented bottom bar</h3>
+        <p class="card-summary">Context : user follow-up feedback on PR #866's Clubhouse/Home work, from mobile screenshots — two bugs in the league header bar, plus a request to reassess the mobile…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-30</span><span class="foot-refs">PR #868</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Mobile header/nav polish — header centering, gold-text contrast, clubhouse-oriented bottom bar</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : user follow-up feedback on PR #866's Clubhouse/Home work, from mobile screenshots — two bugs in the league header bar, plus a request to reassess the mobile…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #868</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-30</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user follow-up feedback on PR #866's Clubhouse/Home work, from mobile screenshots — two bugs in the league header bar, plus a request to reassess the mobile bottom nav and the mobile Home screen.</p>
+<p><strong>Fixes</strong>: (1) <code>HubTopbar</code>/<code>HubLeagueHeader</code> (<code>src/components/league/HubShared.jsx</code>) was vertically flush-to-top instead of centered — <code>alignItems: 'flex-start'</code> → <code>'center'</code>; (2) the bar's cup-phase and DRAFT·H2H badge text used <code>--gold</code> (tuned for light/paper surfaces) against the dark <code>--accent</code> bar, low contrast — swapped to <code>--on-shell-gold</code>, the existing WCAG-AA gold token for dark shell surfaces. Confirmed the bar's blue is indeed the canonical brand accent (<code>--accent</code>/<code>--brand-accent: #1A6FA8</code>), answering the user's "is this our blue?" question.</p>
+<p><strong>Bottom nav redesign</strong>: mobile bottom bar (<code>AppLayout.jsx</code>) changed from sport-scoped tabs (Live/Squad/Market/etc., different per sport) to clubhouse-level tabs (Home/Club/Trophy/Coins) — sport-scoped screens already live in <code>CompetitionScreenNav</code> at the top of every screen on both mobile and desktop, so the old bottom bar duplicated it. 3 new icons added to <code>NavIcons.jsx</code> (<code>NavIconHome</code>/<code>NavIconTrophy</code>/<code>NavIconChallenges</code>) matching the existing schematic icon style. <code>platform.spec.js</code>'s bottom-nav test updated to assert Home/Trophy instead of the removed Market/Squad tabs.</p>
+<p><strong>Investigated, no code change needed</strong>: the mobile Home dashboard (<code>HomeDashboardScreen.jsx</code>, shipped in PR #866) already renders cleanly at 375px — live-verified in browser preview. The desktop-only <code>ClubhouseSwitcher</code> dropdown was confirmed to already never render on mobile (<code>hidden lg:flex</code>); recommended keeping it as-is since the new mobile Home tab now covers the same "switch clubhouse" job.</p>
+<p><strong>Not resolved — flagged open</strong>: a reported "loose"/doesn't-fill-the-window feel on iPhone 17 Pro specifically. <code>index.html</code>'s viewport meta (<code>viewport-fit=cover</code>) and <code>index.css</code>'s safe-area CSS were inspected and are already correct, so the root cause is not yet identified — needs a live-device screenshot or Capacitor/WKWebView-specific diagnosis.</p>
+<p>Verified: <code>npm run lint</code> 0 errors, <code>npm run build</code> clean (no Rolldown TDZ regression), <code>npx playwright test e2e/platform.spec.js</code> 84/84 passing, full CI green (lint/security/build/E2E/schema-rehearsal/unit/Tier-3/iOS/Android/Vercel). Live-browser verification (375×812) confirmed the new bottom bar + Home dashboard render correctly; the header fix was verified by code only, since the session's demo account has no populated leagues to render <code>HubTopbar</code>/<code>HubLeagueHeader</code> against. No migration, DB write, or Edge Function touched.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse ux bugs + cross-clubhouse home dashboard (2026-08-30) — pr #866 
 
 **context**: user-reported punch list of 5 bugs plus 2 new-feature requests around the clubhouse/competition ux post-cutover.
