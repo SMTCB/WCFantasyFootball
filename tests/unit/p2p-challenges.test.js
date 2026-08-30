@@ -640,14 +640,7 @@ describe('freeform result chain: declare / confirm / dispute / arbitrate', () =>
   });
 
   // ── dispute_freeform_result ─────────────────────────────────────────────
-  // KNOWN BUG (BUG-P2P-DISPUTE, BACKLOG.md): dispute_freeform_result inserts
-  // clubhouse_notifications.source_type='p2p_challenge', but the table's
-  // CHECK constraint only allows 'league'/'paddock'/'box'/'clubhouse' — every
-  // real call throws 23514. This and the 5 arbitrate tests below (all of
-  // which go through the disputedFreeform() helper, which calls
-  // dispute_freeform_result) are skipped until a migration fixing the
-  // constraint is approved and applied — see BUG-P2P-DISPUTE for the fix.
-  it('dispute: non-proposer moves the challenge to disputed and notifies circle owners', { skip: 'BUG-P2P-DISPUTE: dispute_freeform_result violates clubhouse_notifications_source_type_check — see BACKLOG.md' }, async () => {
+  it('dispute: non-proposer moves the challenge to disputed and notifies circle owners', async () => {
     const challengeId = await acceptedFreeform('Dispute test');
     await callRpc('declare_freeform_result', { p_challenge_id: challengeId, p_winner_id: USER_A }, { actingUserId: USER_A });
 
@@ -693,14 +686,14 @@ describe('freeform result chain: declare / confirm / dispute / arbitrate', () =>
     return challengeId;
   }
 
-  it('arbitrate: UNAUTHORIZED when called from the cron/service-role context (auth.uid() IS NULL)', { skip: 'BUG-P2P-DISPUTE: disputedFreeform() helper hits dispute_freeform_result — see BACKLOG.md' }, async () => {
+  it('arbitrate: UNAUTHORIZED when called from the cron/service-role context (auth.uid() IS NULL)', async () => {
     const challengeId = await disputedFreeform('Arbitrate unauthorized test');
     await expectThrows(() => callRpc('arbitrate_freeform_result',
       { p_challenge_id: challengeId, p_winner_id: USER_A }, { actingUserId: null }),
       'UNAUTHORIZED');
   });
 
-  it('arbitrate: NOT_CIRCLE_OWNER when a non-owner participant attempts to arbitrate', { skip: 'BUG-P2P-DISPUTE: disputedFreeform() helper hits dispute_freeform_result — see BACKLOG.md' }, async () => {
+  it('arbitrate: NOT_CIRCLE_OWNER when a non-owner participant attempts to arbitrate', async () => {
     const challengeId = await disputedFreeform('Arbitrate not owner test');
     await expectThrows(() => callRpc('arbitrate_freeform_result',
       { p_challenge_id: challengeId, p_winner_id: USER_A }, { actingUserId: USER_A }),
@@ -714,14 +707,14 @@ describe('freeform result chain: declare / confirm / dispute / arbitrate', () =>
       'INVALID_STATUS');
   });
 
-  it('arbitrate: INVALID_WINNER when the arbitrated winner is neither party', { skip: 'BUG-P2P-DISPUTE: disputedFreeform() helper hits dispute_freeform_result — see BACKLOG.md' }, async () => {
+  it('arbitrate: INVALID_WINNER when the arbitrated winner is neither party', async () => {
     const challengeId = await disputedFreeform('Arbitrate invalid winner test');
     await expectThrows(() => callRpc('arbitrate_freeform_result',
       { p_challenge_id: challengeId, p_winner_id: COMMISSIONER }, { actingUserId: COMMISSIONER }),
       'INVALID_WINNER');
   });
 
-  it('arbitrate: circle owner resolves a win with the same payout math as confirm', { skip: 'BUG-P2P-DISPUTE: disputedFreeform() helper hits dispute_freeform_result — see BACKLOG.md' }, async () => {
+  it('arbitrate: circle owner resolves a win with the same payout math as confirm', async () => {
     const stake = 20;
     const beforeA = await wallet(USER_A);
     const beforeB = await wallet(USER_B);
@@ -740,7 +733,7 @@ describe('freeform result chain: declare / confirm / dispute / arbitrate', () =>
     assert.equal(afterB.balance, beforeB.balance - stake);
   });
 
-  it('arbitrate: circle owner can void a disputed challenge (NULL winner), refunding both sides', { skip: 'BUG-P2P-DISPUTE: disputedFreeform() helper hits dispute_freeform_result — see BACKLOG.md' }, async () => {
+  it('arbitrate: circle owner can void a disputed challenge (NULL winner), refunding both sides', async () => {
     const stake = 20;
     const beforeA = await wallet(USER_A);
     const beforeB = await wallet(USER_B);
