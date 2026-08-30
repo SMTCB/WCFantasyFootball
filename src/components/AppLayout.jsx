@@ -215,24 +215,32 @@ export default function AppLayout({ children }) {
       .then(({ data }) => { if (data?.username) setUsername(data.username); });
   }, [user?.id, user?.user_metadata?.username]);
 
+  // Top-level, clubhouse-scoped hub screens — no "back" affordance, just the
+  // username link (there's nowhere more "back" than these within a Clubhouse).
   const isMainRoute =
     location.pathname === '/' ||
     location.pathname === '/home' ||
     location.pathname === '/scores' ||
-    location.pathname === '/squad' ||
-    location.pathname === '/league' ||
-    location.pathname === '/live' ||
-    location.pathname === '/market' ||
-    location.pathname === '/recap' ||
     location.pathname === '/trophy' ||
     location.pathname === '/challenges' ||
     location.pathname === '/wallet' ||
-    location.pathname === '/f1' ||
-    /^\/clubhouse(\/[^/]+)?$/.test(location.pathname) ||
+    /^\/clubhouse(\/[^/]+)?$/.test(location.pathname);
+
+  // Inside a specific competition (football/F1/tennis) — "Back" always returns
+  // to the Clubhouse that competition belongs to, not browser history, so it's
+  // reliable no matter how the user navigated in (deep link, switcher, etc.).
+  const isCompetitionScreen =
+    location.pathname === '/squad' ||
+    location.pathname === '/live' ||
+    location.pathname === '/market' ||
+    location.pathname === '/recap' ||
+    location.pathname === '/league' ||
     /^\/league\/[^/]+$/.test(location.pathname) ||
+    location.pathname === '/f1' ||
     /^\/f1\/[^/]+$/.test(location.pathname) ||
     /^\/f1\/[^/]+\/(picks|standings|report|season)$/.test(location.pathname) ||
     /^\/tennis(\/.*)?$/.test(location.pathname);
+
   const showBackButton = !isMainRoute;
 
   return (
@@ -344,7 +352,10 @@ export default function AppLayout({ children }) {
         >
           {showBackButton ? (
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (isCompetitionScreen) navigate(activeCircleId ? `/clubhouse/${activeCircleId}` : '/clubhouse');
+                else navigate(-1);
+              }}
               aria-label="Go back"
               className="flex items-center gap-2 px-2 py-1.5 transition-colors"
               style={{ color: 'var(--cyan)', cursor: 'pointer' }}
@@ -377,20 +388,21 @@ export default function AppLayout({ children }) {
           </Link>
         </div>
 
-        {/* Desktop-only breathing room above the competition top bar — it sits flush under the
-            mobile top bar's spot on small screens, but needs a gap from the viewport edge on desktop. */}
-        <div className="hidden lg:block" style={{ height: 12 }} />
-
         {/* Competition top bar — flat list of competition tabs (sport-colored).
             Hidden on the cross-clubhouse Home dashboard, which has no single active
-            competition to show — it only makes sense once inside a clubhouse. */}
+            competition to show — it only makes sense once inside a clubhouse.
+            The breathing-room gap is scoped to the same condition so it never
+            leaves a stray empty strip above a screen's own header (e.g. Home). */}
         {location.pathname !== '/home' && (
-          <CompetitionTopBar
-            competitions={competitions}
-            pathname={location.pathname}
-            onAdd={() => setShowNewCompFlow(true)}
-            hasClubhouse={myCircles.length > 0}
-          />
+          <>
+            <div style={{ height: 12 }} />
+            <CompetitionTopBar
+              competitions={competitions}
+              pathname={location.pathname}
+              onAdd={() => setShowNewCompFlow(true)}
+              hasClubhouse={myCircles.length > 0}
+            />
+          </>
         )}
 
         {/* Competition screen nav — screens within the active sport/competition */}
