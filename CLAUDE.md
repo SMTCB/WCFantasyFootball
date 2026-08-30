@@ -12,7 +12,7 @@
 
 1. **All work — pilot bug fixes and platform-redesign work alike — happens on `main`.** Branch from `main` → work → PR → merge → done. There is no second branch to route work to.
 2. **GitHub branch protection on `main` is enabled.** Direct `git push origin main` is blocked. All changes require a PR.
-3. **The site is currently walled behind maintenance mode** (`MAINTENANCE_MODE=true`, custom Edge Middleware in `middleware.js`) — deliberately paused post-cutover. **Do not touch `MAINTENANCE_MODE`, resume the paused Phase 3/4 cutover work, or apply migration 217 without the user explicitly asking in a current session.** This is a standing instruction, not a one-time pause. See [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) for the full runbook and current state.
+3. **The maintenance wall came down 2026-08-30** (`MAINTENANCE_MODE` removed/set false on Vercel, custom Edge Middleware in `middleware.js`) — the site is live and publicly reachable again. **Do not re-enable `MAINTENANCE_MODE` or touch that flag without the user explicitly asking in a current session** — the same standing-approval rule applies in both directions. See [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) for the full runbook and history.
 4. **If a session references old `v2`-branch workflow** (a stale doc, a memory, a habit from before 2026-07-24) — that guidance is obsolete. Flag it and proceed on `main`.
 
 **🛑 NO SQL / MIGRATIONS / EDGE FUNCTION DEPLOYS WITHOUT EXPLICIT APPROVAL — every session**
@@ -734,7 +734,7 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
    ```
 
 3. **Develop, commit, push, PR, merge** per [Git Workflow](#git-workflow--version-control) rules.
-   PR base: `main`. After merge, Vercel auto-deploys — **note the site is currently walled behind maintenance mode**, so a merge won't be publicly visible until the wall comes down (see the standing instruction above).
+   PR base: `main`. After merge, Vercel auto-deploys and is **immediately publicly visible** — the maintenance wall came down 2026-08-30 (see the standing instruction above).
 
 4. **Test before pushing:**
    ```bash

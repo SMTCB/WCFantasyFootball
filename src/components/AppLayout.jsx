@@ -381,13 +381,17 @@ export default function AppLayout({ children }) {
             mobile top bar's spot on small screens, but needs a gap from the viewport edge on desktop. */}
         <div className="hidden lg:block" style={{ height: 12 }} />
 
-        {/* Competition top bar — flat list of competition tabs (sport-colored) */}
-        <CompetitionTopBar
-          competitions={competitions}
-          pathname={location.pathname}
-          onAdd={() => setShowNewCompFlow(true)}
-          hasClubhouse={myCircles.length > 0}
-        />
+        {/* Competition top bar — flat list of competition tabs (sport-colored).
+            Hidden on the cross-clubhouse Home dashboard, which has no single active
+            competition to show — it only makes sense once inside a clubhouse. */}
+        {location.pathname !== '/home' && (
+          <CompetitionTopBar
+            competitions={competitions}
+            pathname={location.pathname}
+            onAdd={() => setShowNewCompFlow(true)}
+            hasClubhouse={myCircles.length > 0}
+          />
+        )}
 
         {/* Competition screen nav — screens within the active sport/competition */}
         <CompetitionScreenNav
