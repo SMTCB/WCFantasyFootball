@@ -198,7 +198,9 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         if (data?.error) throw new Error(data.error);
         const id = data?.player_box_id ?? data;
         onCreated();
-        if (id) navigate(`/tennis/tournament/${id}`);
+        // id here is a player_boxes.id (a container of tournaments), not a tennis_tournaments
+        // id — /tennis reads the active box from SportContext rather than taking an id in the URL.
+        if (id) navigate('/tennis');
       }
       close();
     } catch (e) {

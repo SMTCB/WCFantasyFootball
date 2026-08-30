@@ -280,7 +280,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle })
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function HomeDashboardScreen() {
   const { myCircles, setActiveCircleId, searchClubhouses, joinCircleByCode, createCircle, loading } = useClubhouseContext();
-  const { setActivePaddockId } = useSport();
+  const { setActivePaddockId, setActivePlayerBoxId } = useSport();
   const navigate = useNavigate();
 
   const [compsByCircle, setCompsByCircle] = useState({});
@@ -312,7 +312,10 @@ export default function HomeDashboardScreen() {
     setActiveCircleId(circle.id);
     if (sport === 'football') navigate(`/league/${item.id}`);
     else if (sport === 'f1') { setActivePaddockId(item.id); navigate(`/f1/${item.id}`); }
-    else navigate(`/tennis/tournament/${item.id}`);
+    // get_clubhouse_competitions returns player_boxes.id for tennis entries — a Player Box
+    // is a container of tournaments, not a single tournament, so it routes through /tennis
+    // (which reads the active box from SportContext), never directly to /tennis/tournament/:id.
+    else { setActivePlayerBoxId(item.id); navigate('/tennis'); }
   }
 
   const totalComps = Object.values(compsByCircle).reduce(

@@ -650,7 +650,7 @@ export default function ClubhouseScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { setActivePaddockId } = useSport();
+  const { setActivePaddockId, setActivePlayerBoxId } = useSport();
   const {
     myCircles,
     activeCircle,
@@ -718,6 +718,14 @@ export default function ClubhouseScreen() {
   function enterPaddock(paddock) {
     setActivePaddockId(paddock.id);
     navigate(`/f1/${paddock.id}`);
+  }
+
+  function enterPlayerBox(box) {
+    // get_clubhouse_competitions returns player_boxes.id for tennis entries — a Player Box
+    // is a container of tournaments, not a single tournament, so it routes through /tennis
+    // (which reads the active box from SportContext), never directly to /tennis/tournament/:id.
+    setActivePlayerBoxId(box.id);
+    navigate('/tennis');
   }
 
   const isOwner = activeCircle?.role === 'owner';
@@ -916,7 +924,7 @@ export default function ClubhouseScreen() {
                   onEnter={(item, sport) => {
                     if (sport === 'football') enterLeague(item);
                     else if (sport === 'f1') enterPaddock(item);
-                    else navigate(`/tennis/tournament/${item.id}`);
+                    else enterPlayerBox(item);
                   }}
                 />
 
