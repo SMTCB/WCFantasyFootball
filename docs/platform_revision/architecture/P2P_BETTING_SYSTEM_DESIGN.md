@@ -4,6 +4,8 @@
 
 Read [P2P_BETTING_TECHNICAL_ASSESSMENT.md](P2P_BETTING_TECHNICAL_ASSESSMENT.md) first — it explains which existing patterns each piece below is copied from.
 
+> **Extension (2026-08-30):** the 1:1 manager-vs-manager `p2p_challenges` system documented below now has a sibling — **P2P Group Bets**, multi-participant coin bets scoped to a Clubhouse (schema + RPCs in migration 262, PR #879; UI in PR #880). Group Bets reuses the same coin-ledger/escrow invariants (Design Principles 1-3 below apply identically) but is a parallel table set (`p2p_bets`, `p2p_bet_participants`, `p2p_bet_participant_answers`, `p2p_bet_options`) with its own RPC surface (`create_p2p_bet`, `join_p2p_bet`, `close_p2p_bet`, `declare_bet_outcome`, `dispute_bet_outcome`, `arbitrate_bet_outcome`, `get_clubhouse_bets`) — not an extension of the tables/RPCs below. UI lives in `src/hooks/useGroupBets.js` and the "Group Bets" tab on `ChallengeScreen.jsx` (`/challenges?tab=bets`), gated by `circles.p2p_betting_enabled`. This document has not been rewritten to cover Group Bets in full; treat it as reference for the 1:1 challenge system only until a dedicated design doc is written.
+
 ---
 
 ## Quick Navigation
