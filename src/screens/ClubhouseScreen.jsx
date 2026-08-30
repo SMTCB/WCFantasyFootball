@@ -758,7 +758,7 @@ export default function ClubhouseScreen() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           {/* Left: name + member avatars */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
+            <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.1, overflowWrap: 'anywhere' }}>
               {activeCircle ? activeCircle.name.toUpperCase() : 'CLUBHOUSE'}
             </h1>
             {activeCircle && (
