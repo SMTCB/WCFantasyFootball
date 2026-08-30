@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>57</strong><span>open</span></div>
-      <div class="total-pill"><strong>207</strong><span>closed</span></div>
+      <div class="total-pill"><strong>208</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (128)</span>
+    <span class="chip" data-filter-kind="done">Shipped (129)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">57</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">207</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">208</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">128</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">129</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1196,8 +1196,36 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">128</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">129</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ maintenance-wall doc correction + home-screen competitiontopbar fix (2026-08-30) 
+
+**context**: user posted a screenshot of the live production home screen and reported two things: (1) the maintenance wall had already been removed, so the standing &quot;site is walled&quot; documentation was stale, and (2) the &quot;🏠 clubhouse · test_wimbledon_box&quot; competition pill bar was incorrectly showing on the cross-clubhouse home dashboard — it should only appear inside a clubhouse.
+
+**doc correction**: `maintenance_mode` came down 2026-08-30, confirmed by the user&#x27;s screenshot (live app rendering, not the `503` page) and `vercel env ls production` showing a recent update to the var. updated `claude.md` (the single branch standing-instruction list and the session start checklist&#x27;s pr-workflow note), `docs/platform_revision/cutover_plan.md` (status banner + phase 4 step 1), and this file&#x27;s status banner + the platform revision section&#x27;s &quot;site reopen&quot; blockquote — all previously asserted the site was still walled. preserved the underlying safety rule in every case: re-enabling `maintenance_mode` still requires an explicit user ask in a current session, same as before. also flagged, not fixed: cron-job re-enable status is unconfirmed — `dd-p0-2` last recorded all pg_cron jobs frozen, and nothing in this session&#x27;s evidence shows that changed alongside the wall removal.
+
+**ui fix**: [applayout.jsx](src/components/applayout.jsx) rendered `competitiontopbar` unconditionally inside `#main-content` for every route, including `/home` (the cross-clubhouse `homedashboardscreen`), which has no single active competition to represent. gated it behind `location.pathname !== &#x27;/home&#x27;`. `competitionscreennav` (the sport-screen sub-nav underneath it) already self-gates on pathname — returns `null` unless the route is a football/f1/tennis screen — so it needed no change.
+
+verified live in the browser preview: `/home` no longer shows the competition pill bar; clubhouse/league/f1/tennis screens still show it a" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Maintenance-wall doc correction + Home-screen CompetitionTopBar fix</h3>
+        <p class="card-summary">Context : user posted a screenshot of the live production Home screen and reported two things: (1) the maintenance wall had already been removed, so the standing "site…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-30</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Maintenance-wall doc correction + Home-screen CompetitionTopBar fix</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : user posted a screenshot of the live production Home screen and reported two things: (1) the maintenance wall had already been removed, so the standing "site…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-30</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user posted a screenshot of the live production Home screen and reported two things: (1) the maintenance wall had already been removed, so the standing "site is walled" documentation was stale, and (2) the "🏠 Clubhouse · TEST_Wimbledon_Box" competition pill bar was incorrectly showing on the cross-clubhouse Home dashboard — it should only appear inside a clubhouse.</p>
+<p><strong>Doc correction</strong>: <code>MAINTENANCE_MODE</code> came down 2026-08-30, confirmed by the user's screenshot (live app rendering, not the <code>503</code> page) and <code>vercel env ls production</code> showing a recent update to the var. Updated <code>CLAUDE.md</code> (the SINGLE BRANCH standing-instruction list and the Session Start Checklist's PR-workflow note), <code>docs/platform_revision/CUTOVER_PLAN.md</code> (status banner + Phase 4 step 1), and this file's status banner + the Platform Revision section's "Site reopen" blockquote — all previously asserted the site was still walled. Preserved the underlying safety rule in every case: re-enabling <code>MAINTENANCE_MODE</code> still requires an explicit user ask in a current session, same as before. Also flagged, not fixed: cron-job re-enable status is unconfirmed — <code>DD-P0-2</code> last recorded all pg_cron jobs frozen, and nothing in this session's evidence shows that changed alongside the wall removal.</p>
+<p><strong>UI fix</strong>: <a href="src/components/AppLayout.jsx" target="_blank" rel="noopener">AppLayout.jsx</a> rendered <code>CompetitionTopBar</code> unconditionally inside <code>#main-content</code> for every route, including <code>/home</code> (the cross-clubhouse <code>HomeDashboardScreen</code>), which has no single active competition to represent. Gated it behind <code>location.pathname !== '/home'</code>. <code>CompetitionScreenNav</code> (the sport-screen sub-nav underneath it) already self-gates on pathname — returns <code>null</code> unless the route is a football/F1/tennis screen — so it needed no change.</p>
+<p>Verified live in the browser preview: <code>/home</code> no longer shows the competition pill bar; clubhouse/league/F1/tennis screens still show it as before. <code>npm run lint</code> 0 errors, <code>npm run build</code> clean, <code>npx playwright test e2e/platform.spec.js</code> green. No migration, DB write, or Edge Function touched.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tennis clubhouse 404 + default landing route (2026-08-30) — pr #870 
 
 **context**: user reported a 404 when trying to open &quot;the tennis test league&quot; from the app, plus asked to (1) ensure the mobile bottom bar is always available and (2) make the app open to the home page.
