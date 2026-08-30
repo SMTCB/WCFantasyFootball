@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>57</strong><span>open</span></div>
-      <div class="total-pill"><strong>204</strong><span>closed</span></div>
+      <div class="total-pill"><strong>205</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (125)</span>
+    <span class="chip" data-filter-kind="done">Shipped (126)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">57</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">204</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">205</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">125</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">126</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1196,8 +1196,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">125</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">126</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse ux bugs + cross-clubhouse home dashboard (2026-08-30) — pr #866 
+
+**context**: user-reported punch list of 5 bugs plus 2 new-feature requests around the clubhouse/competition ux post-cutover.
+
+**bug fixes**: (1) restored the &quot;create a clubhouse&quot; option in the clubhouse dropdown menu; (2) the football competition header bar (`hubtopbar`/`hubleagueheader` in `src/components/league/hubshared.jsx`) was flat dark `--ink` with no brand color — now uses `--accent` (brand blue) with matching `--on-shell`/`--on-shell-dim` text tokens; (3) restored the notification bell on the football competition screen and aligned its styling with the clubhouse-level bell; (4) the football competition back button sent to a dead league list — now returns to the clubhouse; (5) removed the redundant &quot;leagues&quot; tab from the football competition nav (`src/components/competitionscreennav.jsx`) now that all leagues live at clubhouse level, not competition level.
+
+**new feature — home dashboard**: added `src/screens/homedashboardscreen.jsx`, a new `/home` route listing every clubhouse the user belongs to and its competitions (football/f1/tennis), with one-click navigation into any clubhouse or competition. fetches per-circle competitions via `get_clubhouse_competitions` rpc (`promise.all` across all of the user&#x27;s circles, since the existing `useclubhouse` hook only scopes competitions to the single active circle). &quot;home&quot; now sits above the clubhouse switcher in the sidebar (`applayout.jsx`) and is reachable via the mobile top-bar username link. built per the user&#x27;s explicit ask to use the `/design` (frontend-design) skill — executed the app&#x27;s existing established aesthetic (dark navy shell, brand blue accent, jetbrains mono/archivo black/archivo) rather than introducing a new visual language.
+
+**moved, not duplicated**: &quot;find clubhouses&quot; (search/join-by-code/create) moved from the clubhouse-level find tab into the new home dashboard. removed the `find` tab and the ~137-line `findtab` com" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Clubhouse UX bugs + cross-clubhouse Home dashboard</h3>
+        <p class="card-summary">Context : user-reported punch list of 5 bugs plus 2 new-feature requests around the Clubhouse/competition UX post-cutover. Bug fixes : (1) restored the "Create a…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-30</span><span class="foot-refs">PR #866</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Clubhouse UX bugs + cross-clubhouse Home dashboard</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : user-reported punch list of 5 bugs plus 2 new-feature requests around the Clubhouse/competition UX post-cutover. Bug fixes : (1) restored the "Create a…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #866</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-30</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: user-reported punch list of 5 bugs plus 2 new-feature requests around the Clubhouse/competition UX post-cutover.</p>
+<p><strong>Bug fixes</strong>: (1) restored the "Create a clubhouse" option in the clubhouse dropdown menu; (2) the football competition header bar (<code>HubTopbar</code>/<code>HubLeagueHeader</code> in <code>src/components/league/HubShared.jsx</code>) was flat dark <code>--ink</code> with no brand color — now uses <code>--accent</code> (brand blue) with matching <code>--on-shell</code>/<code>--on-shell-dim</code> text tokens; (3) restored the notification bell on the football competition screen and aligned its styling with the clubhouse-level bell; (4) the football competition Back button sent to a dead league list — now returns to the clubhouse; (5) removed the redundant "Leagues" tab from the football competition nav (<code>src/components/CompetitionScreenNav.jsx</code>) now that all leagues live at clubhouse level, not competition level.</p>
+<p><strong>New feature — Home dashboard</strong>: added <code>src/screens/HomeDashboardScreen.jsx</code>, a new <code>/home</code> route listing every clubhouse the user belongs to and its competitions (football/F1/tennis), with one-click navigation into any clubhouse or competition. Fetches per-circle competitions via <code>get_clubhouse_competitions</code> RPC (<code>Promise.all</code> across all of the user's circles, since the existing <code>useClubhouse</code> hook only scopes competitions to the single active circle). "Home" now sits above the clubhouse switcher in the sidebar (<code>AppLayout.jsx</code>) and is reachable via the mobile top-bar username link. Built per the user's explicit ask to use the <code>/design</code> (frontend-design) skill — executed the app's existing established aesthetic (dark navy shell, brand blue accent, JetBrains Mono/Archivo Black/Archivo) rather than introducing a new visual language.</p>
+<p><strong>Moved, not duplicated</strong>: "Find clubhouses" (search/join-by-code/create) moved from the clubhouse-level Find tab into the new Home dashboard. Removed the <code>find</code> tab and the ~137-line <code>FindTab</code> component from <code>ClubhouseScreen.jsx</code>. All 3 prior call sites that linked to <code>/clubhouse?tab=find</code> (<code>AppLayout.jsx</code>'s sidebar add button, <code>LeagueScreen.jsx</code>'s empty-state redirect, <code>CompetitionTopBar.jsx</code>'s add-competition button) now point to <code>/home</code>. <code>ClubhouseLobby</code> (the zero-clubhouse empty state on <code>/clubhouse</code>) was left untouched — Home is an additional destination, not a replacement.</p>
+<p><strong>Follow-up flagged, not fixed (out of scope)</strong>: <code>ClubhouseScreen.jsx</code>'s <code>AllCompetitions</code> still navigates to tennis competitions via <code>/tennis/${item.id}</code>, which matches no registered route (correct path, used by the new Home dashboard and <code>CompetitionTopBar.jsx</code>, is <code>/tennis/tournament/${id}</code>) — a pre-existing dead link, worth a small follow-up PR.</p>
+<p>Verified: <code>npm run lint</code> 0 errors (677 pre-existing warnings, none new), <code>npm run build</code> clean (no Rolldown TDZ regression), <code>npx playwright test e2e/platform.spec.js</code> 84/84 passed, full CI green (lint/security/build/E2E/schema-rehearsal/unit/Tier-3-local-full-stack/iOS/Android/Vercel). No migration, DB write, or Edge Function touched this session.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ p2p challenge, direct-bet, and mock-payment test coverage (2026-08-28) 
 
 **context**: following up on the prior tier 3 ci-wiring session, the user asked what to prioritize next given the upcoming pilot launches with no stripe account — fake coins only. grepping migrations 204/205/224/234/235/237/238/239 and the relevant hooks/components confirmed three concrete, named zero-coverage gaps (not general &quot;could always test more&quot;): the p2p challenge lifecycle (the actual fake-coin-moves-between-two-users mechanism, which has already shipped two real prod bugs that a test would have caught), direct-bet creation/submission (`resolve_bet` was already well tested; creation and `submit_bet` were not), and the stripe-free `purchase-coins` mock-payment path. the user approved a 4-task plan; this entry covers its full landed state.
