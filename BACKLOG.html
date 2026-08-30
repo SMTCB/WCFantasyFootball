@@ -154,7 +154,7 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>57</strong><span>open</span></div>
+      <div class="total-pill"><strong>58</strong><span>open</span></div>
       <div class="total-pill"><strong>208</strong><span>closed</span></div>
     </div>
   </div>
@@ -169,7 +169,7 @@
     <span class="chip active" data-filter-priority="all">All priorities</span>
     <span class="chip" data-filter-priority="p0">P0 — BLOCKER (3)</span>
 <span class="chip" data-filter-priority="p1">P1 — HIGH (11)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (18)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (19)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (25)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
@@ -186,14 +186,14 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">57</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
       <button class="status-btn" data-status="closed">Closed <span class="status-count">208</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
       <div class="sidebar-item" data-jump-priority="p0"><span class="swatch" style="--tab-color:#7a1414"></span>P0 — BLOCKER<span class="sidebar-count">3</span></div>
 <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">11</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">18</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">19</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">25</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
@@ -455,7 +455,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">18</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">19</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="test-seed-1 `tests/unit/seed.sql` is a time bomb — a stale docker volume silently produces 7 false test failures found 2026-08-21, first thing that happened on returning from a 3-week pause: `npm run test:unit` reported **7 failures** (6 in `auction.test.js`, 1 in `bet.test.js`) with errors like `auction deadline passed` and `bet_still_open` never firing. **not a regression — a harness defect.** `seed.sql` seeds its time-sensitive fixtures relatively (`now() + interval &#x27;1 day&#x27;` for the auction listing, `+ 2 days` for the bet instance, `+ 7 days` for the matchday deadline) but every insert ends `on conflict (id) do nothing`. on a persistent local docker volume the rows keep whatever timestamp they were first seeded with, and **re-running the seed silently refreshes nothing** — so any developer returning after more than a day gets failures that look like real breakage in the money rpcs. confirmed empirically: local rows carried 2026-08-01 deadlines against a 2026-08-21 clock; re-stamping the three rows restored **56/56 green** with no code change. ci is unaffected (fresh db every run), which is exactly why this went unnoticed. **fix**: change the three time-sensitive inserts to `on conflict (id) do update set deadline_at = excluded.deadline_at` (or have `setup.js` re-stamp them unconditionally after seeding). cheap, and it removes a false-alarm trap that costs a confused half-hour every time. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
@@ -760,6 +760,34 @@
         <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="push-1 mobile push notifications (chat, bets, challenges) via installed pwa — no app store needed requested 2026-08-30 — user asked whether notifications are possible without a native app, just the existing &quot;add to home screen&quot; shortcut. **yes, and free** — web push is an open protocol with no paid service or app store fee; delivery through apple&#x27;s/google&#x27;s push relays is free, vapid keys are self-generated. see detail below. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Mobile push notifications (chat, bets, challenges) via installed PWA — no App Store needed</h3>
+        <p class="card-summary">Requested 2026-08-30 — user asked whether notifications are possible without a native app, just the existing "Add to Home Screen" shortcut. <strong>Yes, and free</strong> — Web Push is an open protocol with no paid service or App Store fee; delivery through Apple's/Google's push relays is free, VAPID keys are self-generated. See detail below.</p>
+        <div class="card-foot"><span class="foot-id">PUSH-1</span><span class="foot-effort">2–3 days (bets/challenges/league notifications); +0.5–1 day if chat is included, see gap noted below</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Mobile push notifications (chat, bets, challenges) via installed PWA — no App Store needed</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Mobile push notifications (chat, bets, challenges) via installed PWA — no App Store needed</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Requested 2026-08-30 — user asked whether notifications are possible without a native app, just the existing "Add to Home Screen" shortcut. <strong>Yes, and free</strong> — Web Push is an open protocol with no paid service or App Store fee; delivery through Apple's/Google's push relays is free, VAPID keys are self-generated. See detail below.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Platform support</strong>: Android has long supported Web Push for installed PWAs. iOS added it in 16.4 (2023), but *only* for a site added to the Home Screen — not for Safari tabs. <code>public/manifest.json</code> already has <code>display: "standalone"</code> + icons configured, so the app is already installable; only the push-specific pieces below are new. The real-world limiter is discoverability — iOS has no native "install" prompt like Android's <code>beforeinstallprompt</code>, so a user has to manually tap Share → Add to Home Screen before push can ever work for them; a UI nudge (detect non-standalone via <code>navigator.standalone</code> / <code>matchMedia('(display-mode: standalone)')</code>, show an "Add to Home Screen to get notifications" banner) is needed to drive that.</p>
+<p><strong>New pieces needed</strong>:</p>
+<ol>
+<li><strong>Service worker</strong> (<code>public/sw.js</code> or similar, registered from <code>main.jsx</code>) — none exists today. Listens for <code>push</code> events → <code>self.registration.showNotification()</code>; handles <code>notificationclick</code> to deep-link into the relevant screen (chat thread, bet, etc.).</li>
+<li><strong>VAPID keypair</strong> — one-time, self-generated (<code>web-push</code> npm package locally), stored as a Supabase secret. No third-party account.</li>
+<li><strong>New migration</strong> — <code>push_subscriptions</code> table (<code>user_id</code>, <code>endpoint</code>, <code>p256dh</code>, <code>auth</code>, <code>created_at</code>), RLS: a user can insert/delete their own rows only.</li>
+<li><strong>Client subscribe flow</strong> — a permission-request toggle (natural home: <code>SettingsScreen.jsx</code>) calling <code>Notification.requestPermission()</code> then <code>registration.pushManager.subscribe({ applicationServerKey: VAPID_PUBLIC_KEY })</code>, upserting the resulting subscription into <code>push_subscriptions</code>.</li>
+<li><strong>Send-side Edge Function</strong> (<code>send-push-notification</code>, new) — the good news: <code>clubhouse_notifications</code> (schema.sql, 4 existing <code>INSERT</code> sites — <code>dispute_freeform_result</code> and 3 others around lines 5665/5693/5720) already centralizes in-app notification fan-out for <code>p2p_challenge</code>/<code>league</code>/<code>paddock</code>/<code>box</code>/<code>clubhouse</code> source types (bets, challenges, arbitration, etc.). Wiring a Postgres trigger (or a Supabase Database Webhook) on <code>INSERT INTO clubhouse_notifications</code> → <code>send-push-notification</code> covers <strong>all of those for free</strong> — one integration point, no per-feature wiring.</li>
+<li><strong>Chat is the one real gap</strong>: <code>chat_messages</code> currently has *zero* integration with <code>clubhouse_notifications</code> — chat is pure Supabase Realtime (in-app only, nothing persisted for offline/background delivery). Getting chat pushes needs a new trigger on <code>chat_messages</code> insert that either writes a <code>clubhouse_notifications</code> row (reusing the pipeline above) or calls <code>send-push-notification</code> directly, with sensible scoping (e.g. only when the recipient isn't already an active Realtime subscriber, to avoid double-notifying an open chat window) — this is the +0.5–1 day beyond the base estimate.</li>
+</ol>
+<p><strong>Doesn't affect the native path</strong>: if the app ever ships to the App Store via the existing Capacitor iOS/Android projects, that would use native push (APNs/FCM) — a separate mechanism from Web Push, needing its own wiring later. This item is scoped purely to the current installed-PWA/no-App-Store case.</p>
+<hr></dd></div>
       </dl></template>
       </article></div>
     </section>
