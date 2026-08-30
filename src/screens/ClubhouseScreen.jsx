@@ -916,7 +916,7 @@ export default function ClubhouseScreen() {
                   onEnter={(item, sport) => {
                     if (sport === 'football') enterLeague(item);
                     else if (sport === 'f1') enterPaddock(item);
-                    else navigate(`/tennis/${item.id}`);
+                    else navigate(`/tennis/tournament/${item.id}`);
                   }}
                 />
 

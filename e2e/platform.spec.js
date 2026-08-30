@@ -452,7 +452,7 @@ test.describe('Layout consistency', () => {
     await waitForContent(page);
     // NotFoundScreen shows a "← Back to Home" button — no auto-redirect
     await page.getByRole('button', { name: /back to home/i }).click();
-    // / redirects to /clubhouse in v2; accept either
-    await expect(page).toHaveURL(/\/(clubhouse)?$/);
+    // / redirects to /home
+    await expect(page).toHaveURL(/\/(home)?$/);
   });
 });
