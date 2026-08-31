@@ -166,3 +166,16 @@ export const NavIconChallenges = ({ size = 24 }) => (
     <path d="M9 12L11 14L15.5 9.5" stroke={PAPER} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+
+export const NavIconMyBets = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="4" width="10" height="10" rx="2" fill={MUTE} opacity="0.25" />
+    <circle cx="7" cy="7" r="1.1" fill={PAPER} />
+    <circle cx="11" cy="11" r="1.1" fill={PAPER} />
+    <rect x="10" y="10" width="10" height="10" rx="2" fill={CYAN} />
+    <circle cx="13.5" cy="13.5" r="1.1" fill={PAPER} />
+    <circle cx="16.5" cy="16.5" r="1.1" fill={PAPER} />
+    <circle cx="13.5" cy="16.5" r="1.1" fill={PAPER} />
+    <circle cx="16.5" cy="13.5" r="1.1" fill={PAPER} />
+  </svg>
+);

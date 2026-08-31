@@ -15,6 +15,7 @@ import {
   NavIconClubhouse,
   NavIconTrophy,
   NavIconChallenges,
+  NavIconMyBets,
 } from './NavIcons';
 
 // ── Mobile bottom-bar nav — clubhouse-level, mirrors the desktop sidebar's
@@ -25,6 +26,7 @@ const CLUBHOUSE_NAV = [
   { key: 'home',       label: 'HOME',   path: '/home',       Icon: NavIconHome },
   { key: 'clubhouse',  label: 'CLUB',   path: '/clubhouse',  Icon: NavIconClubhouse },
   { key: 'trophy',     label: 'TROPHY', path: '/trophy',     Icon: NavIconTrophy },
+  { key: 'bets',       label: 'BETS',   path: '/my-bets',    Icon: NavIconMyBets },
   { key: 'challenges', label: 'COINS',  path: '/challenges', Icon: NavIconChallenges },
 ];
 
@@ -260,13 +262,19 @@ export default function AppLayout({ children }) {
           <BrandMark theme="dark" compact />
         </div>
 
-        {/* Home dashboard — cross-clubhouse hub, above the switcher */}
+        {/* Home dashboard + My Bets — cross-clubhouse hubs, above the switcher */}
         <div style={{ padding: '8px 6px 0' }}>
           <NavItem
             label="Home"
             path="/home"
             active={location.pathname === '/home'}
             dotColor="var(--accent)"
+          />
+          <NavItem
+            label="My Bets"
+            path="/my-bets"
+            active={location.pathname === '/my-bets'}
+            dotColor="var(--gold)"
           />
         </div>
 
