@@ -293,7 +293,10 @@ async function runLottery(leagueId, phase = 'group') {
 
   // 6d. For group-phase cup leagues, auto-seed cup clubs from the allocated squads.
   if (phase === 'group' && leagueRow?.format === 'cup') {
-    await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId });
+    const { error: seedErr } = await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId });
+    if (seedErr) {
+      await logError(FN, 'critical', 'seed_cup_clubs failed', { leagueId, error: seedErr.message });
+    }
   }
 
   // 6b. Fetch the canonical matchday_id for this league's tournament.

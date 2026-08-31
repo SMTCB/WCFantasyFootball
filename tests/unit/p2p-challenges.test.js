@@ -320,7 +320,7 @@ describe('create_p2p_challenge', () => {
       [COMMISSIONER]
     );
     await expectThrows(() => createFreeformChallenge(COMMISSIONER, USER_A, 'cap test?', 60),
-      'DAILY_STAKE_CAP_EXCEEDED');
+      'DAILY_STAKE_LIMIT_EXCEEDED');
   });
 });
 

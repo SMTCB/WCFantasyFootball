@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useChallenges } from '../hooks/useChallenges';
 import { useGroupBets } from '../hooks/useGroupBets';
 import { useAllBets } from '../hooks/useAllBets';
+import { useP2PStreak } from '../hooks/useP2PStreak';
 import { useWallet } from '../hooks/useWallet';
 import { useIsMobile } from '../hooks/useViewport';
 import { useClubhouseContext } from '../context/ClubhouseContext';
@@ -2104,8 +2105,22 @@ function NewBetModal({
   );
 }
 
+// ── Win-streak pill — hidden at 0-1, same visual language as H2HSheet's StreakBadge
+function StreakPill({ streak }) {
+  if (!streak || streak.type !== 'win' || streak.count < 2) return null;
+  return (
+    <span
+      style={{
+        ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '.08em',
+        textTransform: 'uppercase', color: 'var(--gold)', background: 'rgba(184,114,14,.14)',
+        border: '1px solid rgba(184,114,14,.4)', borderRadius: 4, padding: '3px 7px',
+      }}
+    >🔥 {streak.count}-win streak</span>
+  );
+}
+
 // ── Sidebar content (shared between desktop sidebar and mobile inline) ────────
-function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, isMobile }) {
+function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNewChallenge, isMobile }) {
   const won    = history.filter(c => c.winner_id === userId).length;
   const lost   = history.filter(c => c.status === 'resolved' && c.winner_id !== userId && c.winner_id != null).length;
   const voided = history.filter(c => c.status !== 'resolved').length;
@@ -2157,8 +2172,9 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
 
       {/* Season record */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Season record</div>
+          <StreakPill streak={streak} />
         </div>
         <div style={{ padding: '10px 14px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', paddingBottom: 10, marginBottom: 8, borderBottom: '1px solid var(--rule)' }}>
@@ -2207,6 +2223,7 @@ export default function ChallengeScreen() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { wallet, loading: walletLoading } = useWallet(user?.id);
+  const { streak } = useP2PStreak(user?.id);
   const { activeCircleId, activeCircle, members, competitions } = useClubhouseContext();
   const {
     incoming, outgoing, active, disputed, history, openChallenges, loading,
@@ -2513,7 +2530,7 @@ export default function ChallengeScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <SidebarContent
                 balance={balance} escrow={escrow} netWL={netWL}
-                history={history} userId={user?.id}
+                history={history} userId={user?.id} streak={streak}
                 onNewChallenge={() => setShowCreate(true)}
                 onGoToWallet={() => setOuterTab('wallet')}
                 isMobile={true}
@@ -2679,7 +2696,7 @@ export default function ChallengeScreen() {
             <div style={{ width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <SidebarContent
                 balance={balance} escrow={escrow} netWL={netWL}
-                history={history} userId={user?.id}
+                history={history} userId={user?.id} streak={streak}
                 onNewChallenge={() => setShowCreate(true)}
                 onGoToWallet={() => setOuterTab('wallet')}
                 isMobile={false}
