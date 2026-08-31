@@ -835,7 +835,7 @@ export default function ClubhouseScreen() {
               onMarkRead={markRead}
               onMarkAll={() => markAllRead(activeCircleId)}
               isDesktop={isDesktop}
-              onNavigate={(n) => navigate(n.source_type === 'p2p_bet' ? '/challenges?tab=bets' : n.source_type === 'p2p_challenge' ? '/challenges' : `/league/${n.source_id}`)}
+              onNavigate={(n) => navigate((n.source_type === 'p2p_bet' || n.source_type === 'p2p_challenge') ? '/challenges' : `/league/${n.source_id}`)}
             />
           </div>
         </div>
