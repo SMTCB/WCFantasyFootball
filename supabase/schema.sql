@@ -973,7 +973,7 @@ BEGIN
     END IF;
   END IF;
 
-  PERFORM finalize_bet_payout(p_bet_id);
+  PERFORM settle_bet_coins(p_bet_id);
 
   UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = p_bet_id;
 END;
@@ -1132,7 +1132,7 @@ BEGIN
     FOR UPDATE SKIP LOCKED
   LOOP
     UPDATE p2p_bet_participants SET is_winner = false, declared_correct = false WHERE bet_id = v_bet_id;
-    PERFORM finalize_bet_payout(v_bet_id);
+    PERFORM settle_bet_coins(v_bet_id);
     UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
   END LOOP;
 END;
@@ -3685,65 +3685,6 @@ COMMENT ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") IS 'GDPR rig
 
 
 
-CREATE OR REPLACE FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") RETURNS "void"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  v_pot          int;
-  v_winner_count int;
-  v_rake         int;
-  v_prize_pool   int;
-  v_share        int;
-  v_p            RECORD;
-BEGIN
-  SELECT COALESCE(SUM(stake_coins), 0) INTO v_pot
-  FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined';
-
-  SELECT COUNT(*) INTO v_winner_count
-  FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' AND is_winner = true;
-
-  IF v_winner_count = 0 THEN
-    -- Push / void: refund everyone their own stake, no rake taken.
-    FOR v_p IN SELECT user_id, stake_coins FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
-      PERFORM release_escrow(v_p.user_id, v_p.stake_coins, NULL,
-        jsonb_build_object('bet_id', p_bet_id, 'reason', 'push'), p_bet_id);
-    END LOOP;
-    RETURN;
-  END IF;
-
-  v_rake := FLOOR(v_pot * 0.05);
-  v_prize_pool := v_pot - v_rake;
-  v_share := FLOOR(v_prize_pool / v_winner_count);
-
-  FOR v_p IN SELECT user_id, stake_coins, is_winner FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
-    IF v_p.is_winner THEN
-      -- Settle directly to v_share rather than refund-then-top-up: when every
-      -- participant wins (no losers to fund the payout), v_share can land
-      -- BELOW the winner's own stake once the 5% rake is taken out. A plain
-      -- release_escrow(stake) would refund the full stake and let the rake
-      -- go uncollected in that case, so move escrow->balance for the net
-      -- share directly instead.
-      UPDATE coin_wallets SET balance = balance + v_share, escrow = escrow - v_p.stake_coins
-      WHERE user_id = v_p.user_id AND escrow >= v_p.stake_coins;
-      IF NOT FOUND THEN
-        RAISE EXCEPTION 'INSUFFICIENT_ESCROW';
-      END IF;
-      INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
-      VALUES (v_p.user_id, 'win', v_share - v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
-    ELSE
-      UPDATE coin_wallets SET escrow = escrow - v_p.stake_coins WHERE user_id = v_p.user_id;
-      INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
-      VALUES (v_p.user_id, 'loss', -v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
-    END IF;
-  END LOOP;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."finalize_declared_bets"() RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -3761,7 +3702,7 @@ BEGIN
     FOR UPDATE SKIP LOCKED
   LOOP
     UPDATE p2p_bet_participants SET is_winner = declared_correct WHERE bet_id = v_bet_id;
-    PERFORM finalize_bet_payout(v_bet_id);
+    PERFORM settle_bet_coins(v_bet_id);
     UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
   END LOOP;
 END;
@@ -7719,6 +7660,65 @@ $$;
 
 
 ALTER FUNCTION "public"."set_tennis_qf_captain"("p_tournament_id" "uuid", "p_captain_player_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_pot          int;
+  v_winner_count int;
+  v_rake         int;
+  v_prize_pool   int;
+  v_share        int;
+  v_p            RECORD;
+BEGIN
+  SELECT COALESCE(SUM(stake_coins), 0) INTO v_pot
+  FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined';
+
+  SELECT COUNT(*) INTO v_winner_count
+  FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' AND is_winner = true;
+
+  IF v_winner_count = 0 THEN
+    -- Push / void: refund everyone their own stake, no rake taken.
+    FOR v_p IN SELECT user_id, stake_coins FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
+      PERFORM release_escrow(v_p.user_id, v_p.stake_coins, NULL,
+        jsonb_build_object('bet_id', p_bet_id, 'reason', 'push'), p_bet_id);
+    END LOOP;
+    RETURN;
+  END IF;
+
+  v_rake := FLOOR(v_pot * 0.05);
+  v_prize_pool := v_pot - v_rake;
+  v_share := FLOOR(v_prize_pool / v_winner_count);
+
+  FOR v_p IN SELECT user_id, stake_coins, is_winner FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
+    IF v_p.is_winner THEN
+      -- Settle directly to v_share rather than refund-then-top-up: when every
+      -- participant wins (no losers to fund the payout), v_share can land
+      -- BELOW the winner's own stake once the 5% rake is taken out. A plain
+      -- release_escrow(stake) would refund the full stake and let the rake
+      -- go uncollected in that case, so move escrow->balance for the net
+      -- share directly instead.
+      UPDATE coin_wallets SET balance = balance + v_share, escrow = escrow - v_p.stake_coins
+      WHERE user_id = v_p.user_id AND escrow >= v_p.stake_coins;
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'INSUFFICIENT_ESCROW';
+      END IF;
+      INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
+      VALUES (v_p.user_id, 'win', v_share - v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
+    ELSE
+      UPDATE coin_wallets SET escrow = escrow - v_p.stake_coins WHERE user_id = v_p.user_id;
+      INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
+      VALUES (v_p.user_id, 'loss', -v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
+    END IF;
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."snapshot_squads_for_matchday"("p_matchday_id" "text", "p_reason" "text" DEFAULT 'fixture_live'::"text") RETURNS integer
@@ -14139,11 +14139,6 @@ GRANT ALL ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") TO "servic
 
 
 
-REVOKE ALL ON FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."finalize_declared_bets"() TO "anon";
 GRANT ALL ON FUNCTION "public"."finalize_declared_bets"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."finalize_declared_bets"() TO "service_role";
@@ -14698,6 +14693,11 @@ GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" 
 GRANT ALL ON FUNCTION "public"."set_tennis_qf_captain"("p_tournament_id" "uuid", "p_captain_player_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."set_tennis_qf_captain"("p_tournament_id" "uuid", "p_captain_player_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_tennis_qf_captain"("p_tournament_id" "uuid", "p_captain_player_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") TO "service_role";
 
 
 

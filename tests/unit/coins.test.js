@@ -76,7 +76,7 @@ describe('coin RPCs', () => {
     try {
       await callRpc('debit_coins_to_escrow', {
         p_user_id: USER_B,  // USER_B has 200 coins
-        p_amount:  9999,
+        p_amount:  250,     // over balance but under the 1000/24h daily-stake cap
       });
     } catch (err) {
       threw = true;
