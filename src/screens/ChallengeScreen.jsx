@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useChallenges } from '../hooks/useChallenges';
 import { useGroupBets } from '../hooks/useGroupBets';
+import { useAllBets } from '../hooks/useAllBets';
 import { useWallet } from '../hooks/useWallet';
 import { useIsMobile } from '../hooks/useViewport';
 import { useClubhouseContext } from '../context/ClubhouseContext';
@@ -598,14 +599,14 @@ function friendlyBetError(message) {
 }
 
 // ── Create Group Bet drawer ────────────────────────────────────────────────────
-function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, members }) {
+function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, members, onBack, initialTargetMode }) {
   const hasMembers = (members ?? []).length > 1;
 
   const [question, setQuestion]           = useState('');
   const [answerMode, setAnswerMode]       = useState('freeform_text');
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [options, setOptions]             = useState(['', '']);
-  const [targetMode, setTargetMode]       = useState('whole_clubhouse');
+  const [targetMode, setTargetMode]       = useState(initialTargetMode ?? 'whole_clubhouse');
   const [targetIds, setTargetIds]         = useState([]);
   const [stakeCoins, setStakeCoins]       = useState(100);
   const [startsAt, setStartsAt]           = useState(() => {
@@ -636,6 +637,7 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
     setOptions(opts => opts.length > 2 ? opts.filter((_, idx) => idx !== i) : opts);
   }
   function toggleTarget(userId) {
+    if (targetMode === 'one_person') { setTargetIds([userId]); return; }
     setTargetIds(ids => ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]);
   }
 
@@ -646,6 +648,9 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
     const cleanOptions = options.map(o => o.trim()).filter(Boolean);
     if (isMC && (cleanOptions.length < 2 || cleanOptions.length > 8)) {
       setError('Multiple choice bets need 2–8 options'); return;
+    }
+    if (targetMode === 'one_person' && targetIds.length < 1) {
+      setError('Pick who you’re betting'); return;
     }
     if (targetMode === 'selected_users' && (targetIds.length < 1 || targetIds.length > 50)) {
       setError('Pick between 1 and 50 members'); return;
@@ -664,8 +669,8 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
         question: trimmedQuestion,
         answerMode,
         allowMultipleAnswers: isMC ? allowMultiple : false,
-        targetMode,
-        targetUserIds: targetMode === 'selected_users' ? targetIds : null,
+        targetMode: targetMode === 'one_person' ? 'selected_users' : targetMode,
+        targetUserIds: (targetMode === 'selected_users' || targetMode === 'one_person') ? targetIds : null,
         options: isMC ? cleanOptions : null,
         stakeCoins,
         startsAt: startsIso,
@@ -694,10 +699,19 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
             <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Group Bet</div>
             <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>{circleName ?? 'Clubhouse'}</div>
           </div>
-          <button
-            onClick={onClose}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
-          >×</button>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {onBack && (
+              <button
+                onClick={onBack}
+                aria-label="Back"
+                style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
+              >‹</button>
+            )}
+            <button
+              onClick={onClose}
+              style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
+            >×</button>
+          </div>
         </div>
 
         {!hasMembers ? (
@@ -788,33 +802,42 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
             {/* Target mode */}
             <div style={{ marginBottom: 14 }}>
               <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Who can join</span>
-              <div style={{ display: 'flex', gap: 8, marginBottom: targetMode === 'selected_users' ? 10 : 0 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: targetMode !== 'whole_clubhouse' ? 10 : 0 }}>
                 <button
-                  onClick={() => setTargetMode('whole_clubhouse')}
+                  onClick={() => { setTargetMode('one_person'); setTargetIds(ids => ids.slice(0, 1)); }}
                   style={{
-                    flex: 1, padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
-                    background: targetMode === 'whole_clubhouse' ? 'var(--gbg)' : 'var(--elev)',
-                    border: `2px solid ${targetMode === 'whole_clubhouse' ? 'var(--gold)' : 'var(--rule)'}`,
-                    fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)',
+                    flex: 1, padding: '9px 8px', borderRadius: 8, cursor: 'pointer',
+                    background: targetMode === 'one_person' ? 'var(--gbg)' : 'var(--elev)',
+                    border: `2px solid ${targetMode === 'one_person' ? 'var(--gold)' : 'var(--rule)'}`,
+                    fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--text)',
                   }}
-                >Whole Clubhouse</button>
+                >One Person</button>
                 <button
                   onClick={() => setTargetMode('selected_users')}
                   style={{
-                    flex: 1, padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
+                    flex: 1, padding: '9px 8px', borderRadius: 8, cursor: 'pointer',
                     background: targetMode === 'selected_users' ? 'var(--gbg)' : 'var(--elev)',
                     border: `2px solid ${targetMode === 'selected_users' ? 'var(--gold)' : 'var(--rule)'}`,
-                    fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)',
+                    fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--text)',
                   }}
                 >Select Members</button>
+                <button
+                  onClick={() => setTargetMode('whole_clubhouse')}
+                  style={{
+                    flex: 1, padding: '9px 8px', borderRadius: 8, cursor: 'pointer',
+                    background: targetMode === 'whole_clubhouse' ? 'var(--gbg)' : 'var(--elev)',
+                    border: `2px solid ${targetMode === 'whole_clubhouse' ? 'var(--gold)' : 'var(--rule)'}`,
+                    fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--text)',
+                  }}
+                >Whole Clubhouse</button>
               </div>
-              {targetMode === 'selected_users' && (
+              {(targetMode === 'selected_users' || targetMode === 'one_person') && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {(members ?? []).map((m, i) => (
                     <PickerRow key={m.user_id} selected={targetIds.includes(m.user_id)} onClick={() => toggleTarget(m.user_id)}>
                       <MemberAvatar username={m.username} index={i} />
                       <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{m.username}</span>
-                      <CheckDot selected={targetIds.includes(m.user_id)} />
+                      {targetMode === 'one_person' ? <RadioDot selected={targetIds.includes(m.user_id)} /> : <CheckDot selected={targetIds.includes(m.user_id)} />}
                     </PickerRow>
                   ))}
                 </div>
@@ -1566,13 +1589,13 @@ function useGameweekOptions(leagueId) {
 }
 
 // ── Create challenge drawer (slide-in via createPortal) ───────────────────────
-function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName, currentUserId, members, footballLeagues }) {
+function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName, currentUserId, members, footballLeagues, forcedBetType, onBack }) {
   const opponents = (members ?? []).filter(m => m.user_id !== currentUserId);
   const hasOpponents    = opponents.length > 0;
   const hasCompetitions = (footballLeagues ?? []).length > 0;
   const blocked = !circleId || !hasOpponents;
 
-  const [betType, setBetType]       = useState(hasCompetitions ? 'gw_total' : 'freeform');
+  const [betType, setBetType]       = useState(forcedBetType ?? (hasCompetitions ? 'gw_total' : 'freeform'));
   const [opponentId, setOpponentId] = useState(null);
   const [leagueId, setLeagueId]     = useState(null);
   const [gw, setGw]                 = useState(null); // 'current' | 'next'
@@ -1664,10 +1687,19 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
               }}
             >i</button>
           </div>
-          <button
-            onClick={onClose}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
-          >×</button>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {onBack && (
+              <button
+                onClick={onBack}
+                aria-label="Back"
+                style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
+              >‹</button>
+            )}
+            <button
+              onClick={onClose}
+              style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
+            >×</button>
+          </div>
         </div>
 
         {showInfo && (
@@ -1698,8 +1730,10 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
           <>
             {/* Bet-type picker — only shown when this Clubhouse has a linked football
                 competition; otherwise Football GW isn't a real option, so skip the
-                picker entirely rather than showing a disabled/dead choice. */}
-            {hasCompetitions && (
+                picker entirely rather than showing a disabled/dead choice. Also hidden
+                when forcedBetType is set — the unified New Bet flow already chose the
+                type in its own first step. */}
+            {!forcedBetType && hasCompetitions && (
               <div style={{ marginBottom: 14 }}>
                 <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Bet Type</span>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -1850,6 +1884,103 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
   );
 }
 
+// ── Unified "New Bet" entry point ──────────────────────────────────────────────
+// Picks a bet kind (Football GW / Freeform), then delegates to the existing,
+// battle-tested create modals rather than a new form — CreateChallengeModal for
+// Football GW (only path with auto-resolve), CreateGroupBetModal for Freeform
+// (any target shape, including a single person via the new "One Person" mode).
+function BetKindPicker({ onPick, onClose, hasCompetitions }) {
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div style={{
+        width: '100%', maxWidth: 520, background: 'var(--card)',
+        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
+        padding: '22px 24px 24px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Bet</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>What kind of bet?</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body-lg)', color: 'var(--text2)' }}
+          >×</button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {hasCompetitions && (
+            <button
+              onClick={() => onPick('football')}
+              style={{ textAlign: 'left', padding: '14px 16px', borderRadius: 10, cursor: 'pointer', background: 'var(--elev)', border: '2px solid var(--rule)' }}
+            >
+              <div style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>⚽ Football GW</div>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Auto-resolved gameweek total — one person, head-to-head</div>
+            </button>
+          )}
+          <button
+            onClick={() => onPick('freeform')}
+            style={{ textAlign: 'left', padding: '14px 16px', borderRadius: 10, cursor: 'pointer', background: 'var(--elev)', border: '2px solid var(--rule)' }}
+          >
+            <div style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>💬 Freeform</div>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Bet on anything — one person, a few, or the whole Clubhouse</div>
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function NewBetModal({
+  onClose, onCreateChallenge, onCreateBet, wallet, circleId, circleName,
+  currentUserId, members, footballLeagues, betsEnabled,
+}) {
+  const hasCompetitions = (footballLeagues ?? []).length > 0;
+  const [betKind, setBetKind] = useState(() => (hasCompetitions ? null : 'freeform'));
+  const backToPicker = hasCompetitions ? () => setBetKind(null) : undefined;
+
+  if (betKind === null) {
+    return <BetKindPicker onPick={setBetKind} onClose={onClose} hasCompetitions={hasCompetitions} />;
+  }
+
+  if (betKind === 'football') {
+    return (
+      <CreateChallengeModal
+        onClose={onClose} onCreate={onCreateChallenge} onBack={backToPicker}
+        wallet={wallet} circleId={circleId} circleName={circleName}
+        currentUserId={currentUserId} members={members} footballLeagues={footballLeagues}
+        forcedBetType="gw_total"
+      />
+    );
+  }
+
+  // Freeform routes through Group Bets (p2p_bets) so a 1:1 freeform bet lands on the
+  // same joinable/extensible schema as group bets — unless this Clubhouse has Group
+  // Bets switched off, in which case create_p2p_bet has no server-side check for that
+  // flag, so the fallback to the legacy 1:1-only challenge path has to happen here.
+  if (!betsEnabled) {
+    return (
+      <CreateChallengeModal
+        onClose={onClose} onCreate={onCreateChallenge} onBack={backToPicker}
+        wallet={wallet} circleId={circleId} circleName={circleName}
+        currentUserId={currentUserId} members={members} footballLeagues={footballLeagues}
+        forcedBetType="freeform"
+      />
+    );
+  }
+
+  return (
+    <CreateGroupBetModal
+      onClose={onClose} onCreate={onCreateBet} onBack={backToPicker}
+      wallet={wallet} circleId={circleId} circleName={circleName} members={members}
+    />
+  );
+}
+
 // ── Sidebar content (shared between desktop sidebar and mobile inline) ────────
 function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, isMobile }) {
   const won    = history.filter(c => c.winner_id === userId).length;
@@ -1859,7 +1990,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
 
   return (
     <>
-      {/* New challenge CTA — desktop only; mobile uses PrimaryActionBar */}
+      {/* New bet CTA — desktop only; mobile uses PrimaryActionBar */}
       {!isMobile && (
         <button
           onClick={onNewChallenge}
@@ -1870,7 +2001,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
             fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
           }}
-        >⚔ New Challenge</button>
+        >🎲 New Bet</button>
       )}
 
       {/* Wallet mini-card */}
@@ -1937,9 +2068,9 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
       {/* How it works info */}
       <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6 }}>
         <div style={{ padding: '13px 14px' }}>
-          <div style={{ ...HEAD, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em', marginBottom: 6 }}>How Challenges work</div>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em', marginBottom: 6 }}>How bets work</div>
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--text2)', lineHeight: 1.55 }}>
-            Challenge any Clubhouse member to a Football GW bet (auto-resolved GW total — only available when this Clubhouse has a linked football competition) or a Freeform bet settled by agreement. Both stake coins — winner takes 95%, 5% rake burned.
+            Bet one person, a few, or the whole Clubhouse. Football GW (auto-resolved GW total — only when this Clubhouse has a linked football competition) is head-to-head only; Freeform bets are settled by agreement. Everyone stakes coins — winner(s) split the pool, 5% rake burned.
           </div>
           <div style={{ marginTop: 9, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.04em' }}>Stakes held in escrow until result</div>
         </div>
@@ -1971,7 +2102,7 @@ export default function ChallengeScreen() {
   const [searchParams] = useSearchParams();
   const [outerTab, setOuterTab] = useState(() => {
     const t = searchParams.get('tab');
-    return t === 'bets' || t === 'wallet' ? t : 'challenges';
+    return t === 'wallet' ? t : 'bets';
   });
   const [showCreate, setShowCreate] = useState(false);
   const [actionLoading, setAction]  = useState(false);
@@ -1979,7 +2110,6 @@ export default function ChallengeScreen() {
   const [declaringChallenge, setDeclaringChallenge]     = useState(null);
   const [arbitratingChallenge, setArbitratingChallenge] = useState(null);
 
-  const [showCreateBet, setShowCreateBet]         = useState(false);
   const [betActionLoading, setBetActionLoading]   = useState(false);
   const [answeringBet, setAnsweringBet]           = useState(null);
   const [declaringBet, setDeclaringBet]           = useState(null);
@@ -1988,9 +2118,14 @@ export default function ChallengeScreen() {
   const [disputingBet, setDisputingBet]           = useState(null);
 
   const isOwner = activeCircle?.role === 'owner';
-  const myDisputed    = disputed.filter(c => c.challenger_id === user?.id || c.opponent_id === user?.id);
-  const ownerDisputed = isOwner ? disputed.filter(c => c.challenger_id !== user?.id && c.opponent_id !== user?.id) : [];
-  const liveChallenges = [...active, ...myDisputed];
+
+  const allBets = useAllBets(
+    { incoming, outgoing, active, disputed, history, loading },
+    betsEnabled
+      ? { openInvited, myOpenJoined, closedAwaitingDeclare, closedAwaitingResolution, disputed: disputedBets, history: betHistory, loading: betsLoading }
+      : undefined,
+    { isOwner, userId: user?.id },
+  );
 
   const showToast = useCallback((msg, isError = false) => {
     setToast({ msg, isError });
@@ -2103,9 +2238,8 @@ export default function ChallengeScreen() {
   }, 0);
 
   const tabs = [
-    { key: 'challenges', label: 'Challenges' },
-    ...(betsEnabled ? [{ key: 'bets', label: 'Group Bets' }] : []),
-    { key: 'wallet',     label: 'Wallet'     },
+    { key: 'bets',   label: 'Bets' },
+    { key: 'wallet', label: 'Wallet' },
   ];
 
   // Mobile: page scrolls in document flow; Desktop: fixed-height flex column
@@ -2185,8 +2319,8 @@ export default function ChallengeScreen() {
         </div>
       </div>
 
-      {/* Challenges tab */}
-      {outerTab === 'challenges' && (
+      {/* Bets tab — 1:1 challenges and group bets merged into one flow */}
+      {outerTab === 'bets' && (
         <div style={{
           flex: 1,
           overflowY: isMobile ? 'visible' : 'auto',
@@ -2196,7 +2330,7 @@ export default function ChallengeScreen() {
           gap: 20,
         }}>
 
-          {/* Mobile: sidebar content folded above challenges */}
+          {/* Mobile: sidebar content folded above the list */}
           {isMobile && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <SidebarContent
@@ -2212,28 +2346,30 @@ export default function ChallengeScreen() {
           {/* Main column */}
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-            {/* Incoming section */}
+            {/* Incoming section — challenges awaiting a response + bets you're invited to */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Incoming</div>
-                {incoming.length > 0 && (
+                {allBets.incoming.length > 0 && (
                   <span style={{
                     background: 'var(--gbg)', color: 'var(--gold)',
                     ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.06em', padding: '1px 8px',
                     borderRadius: 100, fontWeight: 600,
-                  }}>{incoming.length}</span>
+                  }}>{allBets.incoming.length}</span>
                 )}
               </div>
-              {loading ? (
+              {(loading || (betsEnabled && betsLoading)) ? (
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading…</div>
-              ) : incoming.length === 0 ? (
+              ) : allBets.incoming.length === 0 ? (
                 <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '20px 16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
-                  No pending challenges from other managers.
+                  Nothing waiting on you.
                 </div>
               ) : (
                 <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 6, padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {incoming.map(c => (
-                    <IncomingCard key={c.id} challenge={c} userId={user?.id} onAccept={handleAccept} onDecline={handleDecline} loading={actionLoading} />
+                  {allBets.incoming.map(item => item.kind === 'challenge' ? (
+                    <IncomingCard key={`c-${item.id}`} challenge={item} userId={user?.id} onAccept={handleAccept} onDecline={handleDecline} loading={actionLoading} />
+                  ) : (
+                    <BetCard key={`b-${item.id}`} bet={item} userId={user?.id} section="invited" isOwner={isOwner} onJoin={handleJoinBet} onDecline={handleDeclineBet} loading={betActionLoading} />
                   ))}
                 </div>
               )}
@@ -2247,13 +2383,13 @@ export default function ChallengeScreen() {
             }}>
               <div>
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Sent · awaiting</div>
-                {outgoing.length === 0 ? (
+                {allBets.sent.length === 0 ? (
                   <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
                     No sent challenges.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {outgoing.map(c => <OutgoingCard key={c.id} challenge={c} userId={user?.id} onCancel={handleCancel} loading={actionLoading} />)}
+                    {allBets.sent.map(c => <OutgoingCard key={c.id} challenge={c} userId={user?.id} onCancel={handleCancel} loading={actionLoading} />)}
                   </div>
                 )}
               </div>
@@ -2269,17 +2405,23 @@ export default function ChallengeScreen() {
                   </span>
                   <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Active</span>
                 </div>
-                {liveChallenges.length === 0 ? (
+                {allBets.live.length === 0 ? (
                   <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
-                    No live challenges.
+                    Nothing live right now.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {liveChallenges.map(c => (
+                    {allBets.live.map(item => item.kind === 'challenge' ? (
                       <LiveCard
-                        key={c.id} challenge={c} userId={user?.id}
+                        key={`c-${item.id}`} challenge={item} userId={user?.id}
                         onDeclare={setDeclaringChallenge} onConfirm={handleConfirm} onDispute={handleDispute}
                         loading={actionLoading}
+                      />
+                    ) : (
+                      <BetCard
+                        key={`b-${item.id}`} bet={item} userId={user?.id} section="joined" isOwner={isOwner}
+                        onAnswer={setAnsweringBet} onClose={handleCloseBet} onCancel={setCancellingBet}
+                        loading={betActionLoading}
                       />
                     ))}
                   </div>
@@ -2287,8 +2429,8 @@ export default function ChallengeScreen() {
               </div>
             </div>
 
-            {/* Owner arbitration — disputed freeform bets between other members */}
-            {isOwner && ownerDisputed.length > 0 && (
+            {/* Owner arbitration — disputed freeform 1:1 challenges between other members */}
+            {isOwner && allBets.ownerArbitration.length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--purple)' }}>⚖ Arbitration needed</div>
@@ -2296,10 +2438,10 @@ export default function ChallengeScreen() {
                     background: 'rgba(140,73,201,.12)', color: 'var(--purple)',
                     ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.06em', padding: '1px 8px',
                     borderRadius: 100, fontWeight: 600,
-                  }}>{ownerDisputed.length}</span>
+                  }}>{allBets.ownerArbitration.length}</span>
                 </div>
                 <div style={{ background: 'rgba(140,73,201,.06)', border: '1px solid rgba(140,73,201,.24)', borderRadius: 6, padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {ownerDisputed.map(c => (
+                  {allBets.ownerArbitration.map(c => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{c.question}</div>
@@ -2319,12 +2461,34 @@ export default function ChallengeScreen() {
               </div>
             )}
 
+            {/* Group bets awaiting an outcome — no 1:1 equivalent (challenges resolve via Live) */}
+            {betsEnabled && (
+              <BetSection
+                title="Awaiting Outcome" bets={allBets.awaitingOutcome} section="awaiting"
+                emptyLabel="Nothing waiting on an outcome." userId={user?.id} isOwner={isOwner}
+                onDeclare={setDeclaringBet} onDispute={setDisputingBet} loading={betActionLoading}
+              />
+            )}
+
+            {/* Disputed group bets — disputed 1:1 challenges surface via Owner arbitration above */}
+            {betsEnabled && allBets.disputedBets.length > 0 && (
+              <BetSection
+                title="Disputed" bets={allBets.disputedBets} section="disputed"
+                emptyLabel="No disputed bets." userId={user?.id} isOwner={isOwner}
+                onDispute={setDisputingBet} onArbitrate={setArbitratingBet} loading={betActionLoading}
+              />
+            )}
+
             {/* Settled history */}
-            {history.length > 0 && (
+            {allBets.history.length > 0 && (
               <div>
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Settled this season</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  {history.map(c => <HistoryItem key={c.id} challenge={c} userId={user?.id} />)}
+                  {allBets.history.map(item => item.kind === 'challenge' ? (
+                    <HistoryItem key={`c-${item.id}`} challenge={item} userId={user?.id} />
+                  ) : (
+                    <BetCard key={`b-${item.id}`} bet={item} userId={user?.id} section="history" isOwner={isOwner} />
+                  ))}
                 </div>
               </div>
             )}
@@ -2345,102 +2509,34 @@ export default function ChallengeScreen() {
         </div>
       )}
 
-      {/* Group Bets tab */}
-      {outerTab === 'bets' && betsEnabled && (
-        <div style={{
-          flex: 1,
-          overflowY: isMobile ? 'visible' : 'auto',
-          padding: isMobile ? '16px 16px 88px' : '20px 26px',
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: 20,
-        }}>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {betsLoading ? (
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading…</div>
-            ) : (
-              <>
-                <BetSection
-                  title="Awaiting You" bets={openInvited} section="invited"
-                  emptyLabel="No group bets waiting on you." userId={user?.id} isOwner={isOwner}
-                  onJoin={handleJoinBet} onDecline={handleDeclineBet} loading={betActionLoading}
-                />
-                <BetSection
-                  title="Your Open Bets" bets={myOpenJoined} section="joined"
-                  emptyLabel="You haven't joined any open group bets." userId={user?.id} isOwner={isOwner}
-                  onAnswer={setAnsweringBet} onClose={handleCloseBet} onCancel={setCancellingBet} loading={betActionLoading}
-                />
-                <BetSection
-                  title="Awaiting Outcome" bets={[...closedAwaitingDeclare, ...closedAwaitingResolution]} section="awaiting"
-                  emptyLabel="Nothing waiting on an outcome." userId={user?.id} isOwner={isOwner}
-                  onDeclare={setDeclaringBet} onDispute={setDisputingBet} loading={betActionLoading}
-                />
-                <BetSection
-                  title="Disputed" bets={disputedBets} section="disputed"
-                  emptyLabel="No disputed bets." userId={user?.id} isOwner={isOwner}
-                  onDispute={setDisputingBet} onArbitrate={setArbitratingBet} loading={betActionLoading}
-                />
-                <BetSection
-                  title="History" bets={betHistory} section="history"
-                  emptyLabel="No settled group bets yet." userId={user?.id} isOwner={isOwner}
-                />
-              </>
-            )}
-          </div>
-
-          {!isMobile && (
-            <div style={{ width: 256, flexShrink: 0 }}>
-              <button
-                onClick={() => setShowCreateBet(true)}
-                style={{
-                  width: '100%', padding: '12px 24px', borderRadius: 6, border: 'none',
-                  background: 'var(--gold)', color: '#fff', cursor: 'pointer',
-                  ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
-                  fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
-                }}
-              >🎲 New Group Bet</button>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Wallet tab */}
       {outerTab === 'wallet' && (
         <WalletTabContent wallet={wallet} walletLoading={walletLoading} />
       )}
 
-      {/* Mobile: PrimaryActionBar for ⚔ New Challenge */}
-      {isMobile && outerTab === 'challenges' && (
+      {/* Mobile: PrimaryActionBar for 🎲 New Bet */}
+      {isMobile && outerTab === 'bets' && (
         <PrimaryActionBar
-          label="⚔ New Challenge"
+          label="🎲 New Bet"
           state="action"
           onPress={() => setShowCreate(true)}
           accent="var(--gold)"
         />
       )}
 
-      {/* Mobile: PrimaryActionBar for 🎲 New Group Bet */}
-      {isMobile && outerTab === 'bets' && betsEnabled && (
-        <PrimaryActionBar
-          label="🎲 New Group Bet"
-          state="action"
-          onPress={() => setShowCreateBet(true)}
-          accent="var(--gold)"
-        />
-      )}
-
-      {/* Create challenge modal */}
+      {/* New bet modal — picks a kind, then delegates to the matching create modal */}
       {showCreate && (
-        <CreateChallengeModal
+        <NewBetModal
           onClose={() => setShowCreate(false)}
-          onCreate={createChallenge}
+          onCreateChallenge={createChallenge}
+          onCreateBet={createBet}
           wallet={wallet}
           circleId={activeCircleId}
           circleName={activeCircle?.name}
           currentUserId={user?.id}
           members={members}
           footballLeagues={competitions.football}
+          betsEnabled={betsEnabled}
         />
       )}
 
@@ -2460,18 +2556,6 @@ export default function ChallengeScreen() {
           challenge={arbitratingChallenge}
           onClose={() => setArbitratingChallenge(null)}
           onSubmit={handleArbitrateSubmit}
-        />
-      )}
-
-      {/* Create group bet modal */}
-      {showCreateBet && (
-        <CreateGroupBetModal
-          onClose={() => setShowCreateBet(false)}
-          onCreate={createBet}
-          wallet={wallet}
-          circleId={activeCircleId}
-          circleName={activeCircle?.name}
-          members={members}
         />
       )}
 
