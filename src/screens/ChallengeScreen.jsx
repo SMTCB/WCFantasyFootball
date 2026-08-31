@@ -613,8 +613,12 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
     d.setSeconds(0, 0);
     return d.toISOString().slice(0, 16);
   });
-  const [noEnd, setNoEnd]                 = useState(true);
-  const [endsAt, setEndsAt]               = useState('');
+  const [noEnd, setNoEnd]                 = useState(false);
+  const [endsAt, setEndsAt]               = useState(() => {
+    const d = new Date(Date.now() + 24 * 60 * 60000);
+    d.setSeconds(0, 0);
+    return d.toISOString().slice(0, 16);
+  });
   const [submitting, setSubmitting]       = useState(false);
   const [error, setError]                 = useState(null);
 
@@ -805,7 +809,7 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
                 >Select Members</button>
               </div>
               {targetMode === 'selected_users' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {(members ?? []).map((m, i) => (
                     <PickerRow key={m.user_id} selected={targetIds.includes(m.user_id)} onClick={() => toggleTarget(m.user_id)}>
                       <MemberAvatar username={m.username} index={i} />
@@ -1198,7 +1202,19 @@ function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, o
       )}
 
       {section === 'awaiting' && (
-        isCreator ? (
+        bet.declared_at ? (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexBasis: '100%' }}>
+              Outcome declared — objection window open {bet.objection_deadline ? `until ${new Date(bet.objection_deadline).toLocaleString()}` : ''}.
+            </div>
+            {!isCreator && (
+              <button
+                onClick={() => onDispute(bet)} disabled={loading}
+                style={{ flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--neg)', background: 'transparent', color: 'var(--neg)', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1 }}
+              >Dispute</button>
+            )}
+          </div>
+        ) : isCreator ? (
           <button
             onClick={() => onDeclare(bet)} disabled={loading}
             style={{ padding: '9px 0', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1 }}
@@ -1491,10 +1507,12 @@ function RadioDot({ selected }) {
 function PickerRow({ selected, onClick, children }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       style={{
         display: 'flex', alignItems: 'center', gap: 10, width: '100%',
         padding: '9px 11px', borderRadius: 6, cursor: 'pointer', textAlign: 'left',
+        minHeight: 44, boxSizing: 'border-box', touchAction: 'manipulation',
         background: selected ? 'var(--gbg)' : 'var(--elev)',
         border: `1px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
       }}
@@ -2363,7 +2381,7 @@ export default function ChallengeScreen() {
                 <BetSection
                   title="Awaiting Outcome" bets={[...closedAwaitingDeclare, ...closedAwaitingResolution]} section="awaiting"
                   emptyLabel="Nothing waiting on an outcome." userId={user?.id} isOwner={isOwner}
-                  onDeclare={setDeclaringBet} loading={betActionLoading}
+                  onDeclare={setDeclaringBet} onDispute={setDisputingBet} loading={betActionLoading}
                 />
                 <BetSection
                   title="Disputed" bets={disputedBets} section="disputed"
