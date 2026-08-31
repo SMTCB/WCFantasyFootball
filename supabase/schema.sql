@@ -1457,6 +1457,46 @@ $$;
 ALTER FUNCTION "public"."claim_draft_player"("p_league_id" "uuid", "p_player_id" "text", "p_phase" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_ch      p2p_challenges;
+BEGIN
+  IF v_user_id IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
+
+  SELECT * INTO v_ch FROM p2p_challenges WHERE id = p_challenge_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'CHALLENGE_NOT_FOUND'; END IF;
+  IF v_ch.opponent_id IS NOT NULL THEN RAISE EXCEPTION 'ALREADY_CLAIMED'; END IF;
+  IF v_ch.status <> 'pending' THEN RAISE EXCEPTION 'CHALLENGE_NOT_PENDING'; END IF;
+  IF v_ch.expires_at < now() THEN RAISE EXCEPTION 'CHALLENGE_EXPIRED'; END IF;
+  IF v_ch.challenger_id = v_user_id THEN RAISE EXCEPTION 'CANNOT_CLAIM_OWN_CHALLENGE'; END IF;
+
+  IF NOT is_circle_member(v_ch.circle_id) THEN
+    RAISE EXCEPTION 'NOT_CIRCLE_MEMBER';
+  END IF;
+
+  IF v_ch.bet_type = 'gw_total' AND NOT EXISTS (
+    SELECT 1 FROM league_members
+    WHERE league_id = v_ch.league_id AND user_id = v_user_id
+  ) THEN
+    RAISE EXCEPTION 'NOT_LEAGUE_MEMBER';
+  END IF;
+
+  UPDATE p2p_challenges
+  SET opponent_id = v_user_id, updated_at = now()
+  WHERE id = p_challenge_id;
+
+  RETURN jsonb_build_object('status', 'claimed');
+END;
+$$;
+
+
+ALTER FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -1842,11 +1882,12 @@ BEGIN
     RAISE EXCEPTION 'BET_TYPE_NOT_SUPPORTED';
   END IF;
 
-  -- Both parties must be members of the circle (shared by both bet types)
+  -- Both parties must be members of the circle (shared by both bet types).
+  -- An open challenge (p_opponent_id IS NULL) has no opponent yet — skip.
   IF NOT is_circle_member(p_circle_id) THEN
     RAISE EXCEPTION 'NOT_CIRCLE_MEMBER';
   END IF;
-  IF NOT EXISTS (
+  IF p_opponent_id IS NOT NULL AND NOT EXISTS (
     SELECT 1 FROM circle_members
     WHERE circle_id = p_circle_id AND user_id = p_opponent_id
   ) THEN
@@ -1892,14 +1933,15 @@ BEGIN
       RAISE EXCEPTION 'DAILY_LIMIT_REACHED (limit=%)', v_daily_limit;
     END IF;
 
-    -- Both parties must also be members of the specific league this bet is on
+    -- Both parties must also be members of the specific league this bet is on.
+    -- Open challenges check this for the claimant at claim time instead.
     IF NOT EXISTS (
       SELECT 1 FROM league_members
       WHERE league_id = p_league_id AND user_id = v_challenger_id
     ) THEN
       RAISE EXCEPTION 'NOT_LEAGUE_MEMBER';
     END IF;
-    IF NOT EXISTS (
+    IF p_opponent_id IS NOT NULL AND NOT EXISTS (
       SELECT 1 FROM league_members
       WHERE league_id = p_league_id AND user_id = p_opponent_id
     ) THEN
@@ -4201,6 +4243,51 @@ $$;
 
 
 ALTER FUNCTION "public"."get_my_wallet"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_result  jsonb;
+BEGIN
+  IF v_user_id IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
+  IF NOT is_circle_member(p_circle_id) THEN RAISE EXCEPTION 'NOT_CIRCLE_MEMBER'; END IF;
+
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'id',                  c.id,
+      'circle_id',           c.circle_id,
+      'league_id',           c.league_id,
+      'challenger_id',       c.challenger_id,
+      'challenger_username', cu.username,
+      'bet_type',            c.bet_type,
+      'matchday_id',         c.matchday_id,
+      'question',            c.question,
+      'stake_coins',         c.stake_coins,
+      'message',             c.message,
+      'expires_at',          c.expires_at,
+      'created_at',          c.created_at
+    )
+    ORDER BY c.created_at DESC
+  )
+  INTO v_result
+  FROM p2p_challenges c
+  LEFT JOIN users cu ON cu.id = c.challenger_id
+  WHERE c.circle_id = p_circle_id
+    AND c.status = 'pending'
+    AND c.opponent_id IS NULL
+    AND c.expires_at > now()
+    AND c.challenger_id <> v_user_id;
+
+  RETURN COALESCE(v_result, '[]'::jsonb);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_owner_linkable_leagues"("p_circle_id" "uuid") RETURNS json
@@ -8983,7 +9070,7 @@ CREATE TABLE IF NOT EXISTS "public"."p2p_challenges" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "league_id" "uuid",
     "challenger_id" "uuid" NOT NULL,
-    "opponent_id" "uuid" NOT NULL,
+    "opponent_id" "uuid",
     "bet_type" "text" DEFAULT 'gw_total'::"text" NOT NULL,
     "matchday_id" "text",
     "stake_coins" integer NOT NULL,
@@ -9005,7 +9092,7 @@ CREATE TABLE IF NOT EXISTS "public"."p2p_challenges" (
     "proposed_by" "uuid",
     "proposed_at" timestamp with time zone,
     "dispute_deadline" timestamp with time zone,
-    CONSTRAINT "no_self_challenge" CHECK (("challenger_id" <> "opponent_id")),
+    CONSTRAINT "no_self_challenge" CHECK ((("opponent_id" IS NULL) OR ("challenger_id" <> "opponent_id"))),
     CONSTRAINT "p2p_challenges_bet_type_check" CHECK (("bet_type" = ANY (ARRAY['gw_total'::"text", 'freeform'::"text"]))),
     CONSTRAINT "p2p_challenges_message_check" CHECK (("char_length"("message") <= 140)),
     CONSTRAINT "p2p_challenges_question_check" CHECK (("char_length"("question") <= 140)),
@@ -12915,6 +13002,12 @@ GRANT ALL ON FUNCTION "public"."claim_draft_player"("p_league_id" "uuid", "p_pla
 
 
 
+REVOKE ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
+
+
+
 GRANT ALL ON FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") TO "service_role";
@@ -13201,6 +13294,12 @@ GRANT ALL ON FUNCTION "public"."get_my_player_boxes"("p_season_year" integer) TO
 GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") TO "authenticated";
 
 
 

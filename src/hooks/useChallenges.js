@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 
 export function useChallenges(userId, circleId = null) {
   const [challenges, setChallenges] = useState([]);
+  const [openChallenges, setOpenChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,21 +18,33 @@ export function useChallenges(userId, circleId = null) {
     setLoading(false);
   }, [userId, circleId]);
 
-  useEffect(() => { fetchChallenges(); }, [fetchChallenges]);
+  const fetchOpenChallenges = useCallback(async () => {
+    if (!userId || !circleId) { setOpenChallenges([]); return; }
+    const { data, error: err } = await supabase.rpc('get_open_challenges', {
+      p_circle_id: circleId,
+    });
+    if (err) setError(err.message);
+    else setOpenChallenges(Array.isArray(data) ? data : []);
+  }, [userId, circleId]);
 
-  // Realtime: re-fetch when any challenge the user is part of changes
+  useEffect(() => { fetchChallenges(); }, [fetchChallenges]);
+  useEffect(() => { fetchOpenChallenges(); }, [fetchOpenChallenges]);
+
+  // Realtime: re-fetch when any challenge the user is part of (or any open,
+  // unclaimed challenge in this circle) changes
   useEffect(() => {
     if (!userId) return;
+    const refetchAll = () => { fetchChallenges(); fetchOpenChallenges(); };
     const channel = supabase
       .channel(`p2p_challenges:${userId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'p2p_challenges',
-      }, fetchChallenges)
+      }, refetchAll)
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [userId, fetchChallenges]);
+  }, [userId, fetchChallenges, fetchOpenChallenges]);
 
   const incoming = challenges.filter(
     c => c.opponent_id === userId && c.status === 'pending',
@@ -59,6 +72,12 @@ export function useChallenges(userId, circleId = null) {
     if (err) throw new Error(err.message);
     await fetchChallenges();
     return data;
+  }
+
+  async function claimChallenge(challengeId) {
+    const { error: err } = await supabase.rpc('claim_p2p_challenge', { p_challenge_id: challengeId });
+    if (err) throw new Error(err.message);
+    await Promise.all([fetchChallenges(), fetchOpenChallenges()]);
   }
 
   async function acceptChallenge(challengeId) {
@@ -113,6 +132,7 @@ export function useChallenges(userId, circleId = null) {
 
   return {
     challenges,
+    openChallenges,
     incoming,
     outgoing,
     active,
@@ -125,6 +145,7 @@ export function useChallenges(userId, circleId = null) {
     acceptChallenge,
     declineChallenge,
     cancelChallenge,
+    claimChallenge,
     declareResult,
     confirmResult,
     disputeResult,
