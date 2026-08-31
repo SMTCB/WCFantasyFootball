@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-08-30. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-08-31. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>209</strong><span>closed</span></div>
+      <div class="total-pill"><strong>210</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (130)</span>
+    <span class="chip" data-filter-kind="done">Shipped (131)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">209</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">210</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">130</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">131</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1224,8 +1224,36 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">130</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">131</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ unified bets flow — coin challenges + group bets merged into one tab (2026-08-31) — pr #887 
+
+**context**: pr 1 of the approved 8-item p2p social/chat plan (plan file: `synchronous-stirring-pretzel.md`). the user&#x27;s own complaint drove this — they&#x27;d been using the always-visible 1:1 &quot;new challenge&quot; flow (single-opponent by design) and asked &quot;can&#x27;t we have the bets all in the same place... this is confusing,&quot; not realizing the separate group bets tab already supported multi-select/whole-clubhouse joining. investigation also answered a second question in the same plan (&quot;what&#x27;s the effort of a &#x27;join this bet&#x27; option&quot;) — for group bets it&#x27;s already ≈0 effort, since `join_p2p_bet`&#x27;s `whole_clubhouse` path already only checks circle membership; the real gap was that it lived on an easy-to-miss separate tab.
+
+**what shipped**: new `src/hooks/useallbets.js` (client-side merge of `usechallenges`/`usegroupbets` into kind-tagged status buckets, no new rpc); `challengescreen.jsx` tab bar collapsed `challenges | group bets | wallet` → `bets | wallet`; one &quot;new bet&quot; entry point (`newbetmodal`/`betkindpicker`) routing football gw → `p2p_challenge` (only schema with auto-resolve) and freeform (any target shape) → `p2p_bet`, with a `betsenabled=false` fallback to the legacy challenge modal; `creategroupbetmodal` gained a &quot;one person&quot; target option; `clubhousescreen.jsx` notification routing simplified to one destination.
+
+**verification gap**: same class as prior p2p sessions — full ci green, manual smoke test in demo mode confirmed the ui and the fallback-routing logic live, but no real two-account join test (no live supabase session available locally, and claude does not sign in as a live user). recommend a manual pass on the live pilot post-deploy.
+
+**next in this plan** (see full detail in the plan file / &quot;last updated&quot; banner above): pr 1.5 &quot;open challenges&quot; and pr 3 (win-streak badge) and pr 4 (chat quick-bet + live bet feed) each need a migration and their own fresh per-item" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Unified Bets Flow — Coin Challenges + Group Bets merged into one tab</h3>
+        <p class="card-summary">Context : PR 1 of the approved 8-item P2P social/chat plan (plan file: synchronous-stirring-pretzel.md ). The user's own complaint drove this — they'd been using the…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-31</span><span class="foot-refs">PR #887</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Unified Bets Flow — Coin Challenges + Group Bets merged into one tab</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : PR 1 of the approved 8-item P2P social/chat plan (plan file: synchronous-stirring-pretzel.md ). The user's own complaint drove this — they'd been using the…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #887</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-31</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: PR 1 of the approved 8-item P2P social/chat plan (plan file: <code>synchronous-stirring-pretzel.md</code>). The user's own complaint drove this — they'd been using the always-visible 1:1 "New Challenge" flow (single-opponent by design) and asked "can't we have the bets all in the same place... this is confusing," not realizing the separate Group Bets tab already supported multi-select/whole-clubhouse joining. Investigation also answered a second question in the same plan ("what's the effort of a 'join this bet' option") — for Group Bets it's already ≈0 effort, since <code>join_p2p_bet</code>'s <code>whole_clubhouse</code> path already only checks circle membership; the real gap was that it lived on an easy-to-miss separate tab.</p>
+<p><strong>What shipped</strong>: new <code>src/hooks/useAllBets.js</code> (client-side merge of <code>useChallenges</code>/<code>useGroupBets</code> into kind-tagged status buckets, no new RPC); <code>ChallengeScreen.jsx</code> tab bar collapsed <code>Challenges | Group Bets | Wallet</code> → <code>Bets | Wallet</code>; one "New Bet" entry point (<code>NewBetModal</code>/<code>BetKindPicker</code>) routing Football GW → <code>p2p_challenge</code> (only schema with auto-resolve) and Freeform (any target shape) → <code>p2p_bet</code>, with a <code>betsEnabled=false</code> fallback to the legacy challenge modal; <code>CreateGroupBetModal</code> gained a "One Person" target option; <code>ClubhouseScreen.jsx</code> notification routing simplified to one destination.</p>
+<p><strong>Verification gap</strong>: same class as prior P2P sessions — full CI green, manual smoke test in demo mode confirmed the UI and the fallback-routing logic live, but no real two-account join test (no live Supabase session available locally, and Claude does not sign in as a live user). Recommend a manual pass on the live pilot post-deploy.</p>
+<p><strong>Next in this plan</strong> (see full detail in the plan file / "Last Updated" banner above): PR 1.5 "Open Challenges" and PR 3 (win-streak badge) and PR 4 (chat quick-bet + live bet feed) each need a migration and their own fresh per-item approval before any SQL is written — none sought yet. PR 2 (bet templates, smart default targeting, one-tap rematch) needs no migration and is next up.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ p2p group bets ui — phases 2-4 (2026-08-30) — pr #880 
 
 **context**: migration 262 (p2p group bets schema + rpcs — multi-participant coin bets within a clubhouse, distinct from the existing 1:1 `p2p_challenges`) shipped live in production via pr #879 with no frontend. user approved building the full ui in one pr, ship-only, no new migrations.
