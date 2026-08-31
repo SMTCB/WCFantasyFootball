@@ -2375,32 +2375,6 @@ $$;
 ALTER FUNCTION "public"."create_player_box"("p_name" "text", "p_season_year" integer, "p_circle_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text" DEFAULT 'admin'::"text", "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_currency" character DEFAULT 'FRC'::"bpchar", "p_reference_id" "text" DEFAULT NULL::"text") RETURNS "void"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-BEGIN
-  IF p_amount <= 0 THEN RAISE EXCEPTION 'AMOUNT_MUST_BE_POSITIVE'; END IF;
-  IF p_type NOT IN ('purchase','win','refund','admin') THEN
-    RAISE EXCEPTION 'INVALID_CREDIT_TYPE';
-  END IF;
-
-  INSERT INTO coin_wallets (user_id, balance)
-  VALUES (p_user_id, p_amount)
-  ON CONFLICT (user_id) DO UPDATE
-    SET balance    = coin_wallets.balance + p_amount,
-        updated_at = now();
-
-  INSERT INTO coin_transactions
-    (user_id, type, amount, challenge_id, meta, currency, reference_id)
-  VALUES
-    (p_user_id, p_type, p_amount, p_challenge_id, p_meta, p_currency, p_reference_id);
-END;
-$$;
-
-
-ALTER FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text" DEFAULT 'admin'::"text", "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_currency" character DEFAULT 'FRC'::"bpchar", "p_reference_id" "text" DEFAULT NULL::"text", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -2425,48 +2399,6 @@ $$;
 
 
 ALTER FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb") RETURNS "void"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-DECLARE
-  v_balance     int;
-  v_daily_staked int;
-BEGIN
-  IF p_amount <= 0 THEN RAISE EXCEPTION 'AMOUNT_MUST_BE_POSITIVE'; END IF;
-
-  -- Lock row to prevent concurrent double-spend
-  SELECT balance INTO v_balance
-  FROM coin_wallets WHERE user_id = p_user_id FOR UPDATE;
-
-  IF NOT FOUND     THEN RAISE EXCEPTION 'WALLET_NOT_FOUND'; END IF;
-  IF v_balance < p_amount THEN RAISE EXCEPTION 'INSUFFICIENT_BALANCE'; END IF;
-
-  -- Daily spend cap: 1,000 coins per 24-hour rolling window
-  SELECT COALESCE(SUM(amount), 0) INTO v_daily_staked
-  FROM coin_transactions
-  WHERE user_id = p_user_id
-    AND type = 'stake'
-    AND created_at > now() - interval '24 hours';
-
-  IF v_daily_staked + p_amount > 1000 THEN
-    RAISE EXCEPTION 'DAILY_STAKE_CAP_EXCEEDED';
-  END IF;
-
-  UPDATE coin_wallets
-  SET balance    = balance - p_amount,
-      escrow     = escrow  + p_amount,
-      updated_at = now()
-  WHERE user_id = p_user_id;
-
-  INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
-  VALUES (p_user_id, 'stake', p_amount, p_challenge_id, p_meta);
-END;
-$$;
-
-
-ALTER FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
@@ -14139,19 +14071,9 @@ GRANT ALL ON FUNCTION "public"."create_player_box"("p_name" "text", "p_season_ye
 
 
 
-REVOKE ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "service_role";
-
-
-
-REVOKE ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "service_role";
 
 
 
