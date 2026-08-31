@@ -528,7 +528,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
       {sectionLabel('Visibility & Features')}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {toggle('Public Clubhouse', 'Anyone can find and join via search.', isPublic, togglePublic)}
-        {toggle('P2P Betting', 'Enable peer-to-peer bets across this Clubhouse.', p2pEnabled, toggleP2p)}
+        {toggle('Group Bets', 'On by default. Turn off to restrict betting to 1:1 challenges only.', p2pEnabled, toggleP2p)}
       </div>
 
       {sectionLabel('Linked Leagues')}
