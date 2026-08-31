@@ -599,16 +599,34 @@ function friendlyBetError(message) {
 }
 
 // ── Create Group Bet drawer ────────────────────────────────────────────────────
-function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, members, onBack, initialTargetMode }) {
+// One-tap bet templates — pre-fill question + stake, leave target picking to the
+// user. No backend list; a per-Clubhouse editable set is a future upgrade, not v1.
+const BET_TEMPLATES = [
+  { label: 'Who scores more this GW?', question: 'Who scores more fantasy points this gameweek?', stakeCoins: 100 },
+  { label: 'Loser buys the round', question: 'Loser buys the next round', stakeCoins: 50 },
+  { label: 'Bench boost gamble', question: 'Whoever has the higher bench score this GW', stakeCoins: 100 },
+];
+
+function CreateGroupBetModal({
+  onClose, onCreate, wallet, circleId, circleName, members, onBack, currentUserId,
+  initialTargetMode, initialQuestion, initialAnswerMode, initialStakeCoins, initialTargetIds,
+}) {
   const hasMembers = (members ?? []).length > 1;
 
-  const [question, setQuestion]           = useState('');
-  const [answerMode, setAnswerMode]       = useState('freeform_text');
+  const [question, setQuestion]           = useState(initialQuestion ?? '');
+  const [answerMode, setAnswerMode]       = useState(initialAnswerMode ?? 'freeform_text');
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [options, setOptions]             = useState(['', '']);
-  const [targetMode, setTargetMode]       = useState(initialTargetMode ?? 'whole_clubhouse');
-  const [targetIds, setTargetIds]         = useState([]);
-  const [stakeCoins, setStakeCoins]       = useState(100);
+  const [targetMode, setTargetMode]       = useState(() => {
+    if (initialTargetMode) return initialTargetMode;
+    try {
+      const saved = localStorage.getItem(`bet_target_pref:${circleId}:${currentUserId}`);
+      if (saved === 'one_person' || saved === 'selected_users' || saved === 'whole_clubhouse') return saved;
+    } catch { /* localStorage unavailable — fall through to default */ }
+    return 'whole_clubhouse';
+  });
+  const [targetIds, setTargetIds]         = useState(initialTargetIds ?? []);
+  const [stakeCoins, setStakeCoins]       = useState(initialStakeCoins ?? 100);
   const [startsAt, setStartsAt]           = useState(() => {
     const d = new Date(Date.now() + 5 * 60000);
     d.setSeconds(0, 0);
@@ -676,6 +694,7 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
         startsAt: startsIso,
         endsAt: endsIso,
       });
+      try { localStorage.setItem(`bet_target_pref:${circleId}:${currentUserId}`, targetMode); } catch { /* non-fatal */ }
       onClose();
     } catch (e) {
       setError(friendlyBetError(e.message));
@@ -721,6 +740,18 @@ function CreateGroupBetModal({ onClose, onCreate, wallet, circleId, circleName, 
           </div>
         ) : (
           <>
+            {/* Templates — one-tap chips pre-filling question + stake */}
+            {!initialQuestion && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                {BET_TEMPLATES.map(t => (
+                  <Chip
+                    key={t.label} selected={question === t.question}
+                    onClick={() => { setQuestion(t.question); setStakeCoins(t.stakeCoins); }}
+                  >{t.label}</Chip>
+                ))}
+              </div>
+            )}
+
             {/* Question */}
             <label style={{ display: 'block', marginBottom: 14 }}>
               <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
@@ -1162,7 +1193,7 @@ function ArbitrateOutcomeModal(props) {
 }
 
 // ── Group Bet dashboard card ───────────────────────────────────────────────────
-function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, onClose, onCancel, onDeclare, onDispute, onArbitrate, loading }) {
+function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, onClose, onCancel, onDeclare, onDispute, onArbitrate, onRematch, loading }) {
   const isCreator = bet.creator_id === userId;
 
   return (
@@ -1268,8 +1299,16 @@ function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, o
       )}
 
       {section === 'history' && (
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-          {bet.status === 'cancelled' ? 'Cancelled — stakes returned' : 'Resolved'}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+            {bet.status === 'cancelled' ? 'Cancelled — stakes returned' : 'Resolved'}
+          </div>
+          {onRematch && (
+            <button
+              onClick={() => onRematch(bet)} disabled={loading}
+              style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 6, border: '1px solid var(--rule)', background: 'transparent', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, color: 'var(--text2)', opacity: loading ? 0.6 : 1 }}
+            >↻ Rematch</button>
+          )}
         </div>
       )}
     </div>
@@ -1301,7 +1340,7 @@ function BetSection({ title, bets, emptyLabel, ...cardProps }) {
 }
 
 // ── Settled / history item ────────────────────────────────────────────────────
-function HistoryItem({ challenge, userId }) {
+function HistoryItem({ challenge, userId, onRematch }) {
   const won     = challenge.winner_id === userId;
   const draw    = challenge.winner_id == null && challenge.status === 'resolved';
   const voided  = ['cancelled', 'expired', 'declined'].includes(challenge.status);
@@ -1343,6 +1382,14 @@ function HistoryItem({ challenge, userId }) {
         </div>
         {won && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>after rake</div>}
       </div>
+      {onRematch && (
+        <button
+          onClick={() => onRematch(challenge)}
+          aria-label="Rematch"
+          title="Rematch"
+          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 6, border: '1px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', ...MONO, fontSize: 'var(--fs-body)', color: 'var(--text2)' }}
+        >↻</button>
+      )}
     </div>
   );
 }
@@ -1589,18 +1636,21 @@ function useGameweekOptions(leagueId) {
 }
 
 // ── Create challenge drawer (slide-in via createPortal) ───────────────────────
-function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName, currentUserId, members, footballLeagues, forcedBetType, onBack }) {
+function CreateChallengeModal({
+  onClose, onCreate, wallet, circleId, circleName, currentUserId, members, footballLeagues, forcedBetType, onBack,
+  initialOpponentId, initialStakeCoins, initialQuestion,
+}) {
   const opponents = (members ?? []).filter(m => m.user_id !== currentUserId);
   const hasOpponents    = opponents.length > 0;
   const hasCompetitions = (footballLeagues ?? []).length > 0;
   const blocked = !circleId || !hasOpponents;
 
   const [betType, setBetType]       = useState(forcedBetType ?? (hasCompetitions ? 'gw_total' : 'freeform'));
-  const [opponentId, setOpponentId] = useState(null);
+  const [opponentId, setOpponentId] = useState(initialOpponentId ?? null);
   const [leagueId, setLeagueId]     = useState(null);
   const [gw, setGw]                 = useState(null); // 'current' | 'next'
-  const [question, setQuestion]     = useState('');
-  const [stakeCoins, setStakeCoins] = useState(100);
+  const [question, setQuestion]     = useState(initialQuestion ?? '');
+  const [stakeCoins, setStakeCoins] = useState(initialStakeCoins ?? 100);
   const [message, setMessage]       = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
@@ -1977,6 +2027,7 @@ function NewBetModal({
     <CreateGroupBetModal
       onClose={onClose} onCreate={onCreateBet} onBack={backToPicker}
       wallet={wallet} circleId={circleId} circleName={circleName} members={members}
+      currentUserId={currentUserId}
     />
   );
 }
@@ -2117,6 +2168,10 @@ export default function ChallengeScreen() {
   const [cancellingBet, setCancellingBet]         = useState(null);
   const [disputingBet, setDisputingBet]           = useState(null);
 
+  const [rematchChallengeSeed, setRematchChallengeSeed] = useState(null);
+  const [rematchBetSeed, setRematchBetSeed]             = useState(null);
+  const [rematchBusy, setRematchBusy]                   = useState(false);
+
   const isOwner = activeCircle?.role === 'owner';
 
   const allBets = useAllBets(
@@ -2227,6 +2282,40 @@ export default function ChallengeScreen() {
   async function handleArbitrateBetSubmit(betId, payload) {
     await arbitrateOutcome(betId, payload);
     showToast('Arbitrated — coins settled.');
+  }
+
+  function handleRematchChallenge(challenge) {
+    const opponentId = challenge.challenger_id === user?.id ? challenge.opponent_id : challenge.challenger_id;
+    setRematchChallengeSeed({
+      betType: challenge.bet_type,
+      opponentId,
+      stakeCoins: challenge.stake_coins,
+      question: challenge.bet_type === 'freeform' ? challenge.question : '',
+    });
+  }
+
+  // Group bets don't carry their target list in the list RPCs — for `selected_users`
+  // bets, fetch it on demand from the join table only when Rematch is tapped.
+  async function handleRematchBet(bet) {
+    if (bet.target_mode === 'selected_users') {
+      setRematchBusy(true);
+      try {
+        const { data, error } = await supabase.from('p2p_bet_targets').select('user_id').eq('bet_id', bet.id);
+        if (error) throw error;
+        setRematchBetSeed({
+          question: bet.question, answerMode: bet.answer_mode, stakeCoins: bet.stake_coins,
+          targetMode: bet.target_mode, targetIds: (data ?? []).map(r => r.user_id),
+        });
+      } catch {
+        showToast('Could not load bet details for rematch', true);
+      }
+      setRematchBusy(false);
+      return;
+    }
+    setRematchBetSeed({
+      question: bet.question, answerMode: bet.answer_mode, stakeCoins: bet.stake_coins,
+      targetMode: bet.target_mode, targetIds: [],
+    });
   }
 
   const balance  = wallet?.balance  ?? 0;
@@ -2485,9 +2574,9 @@ export default function ChallengeScreen() {
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Settled this season</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                   {allBets.history.map(item => item.kind === 'challenge' ? (
-                    <HistoryItem key={`c-${item.id}`} challenge={item} userId={user?.id} />
+                    <HistoryItem key={`c-${item.id}`} challenge={item} userId={user?.id} onRematch={handleRematchChallenge} />
                   ) : (
-                    <BetCard key={`b-${item.id}`} bet={item} userId={user?.id} section="history" isOwner={isOwner} />
+                    <BetCard key={`b-${item.id}`} bet={item} userId={user?.id} section="history" isOwner={isOwner} onRematch={handleRematchBet} loading={rematchBusy} />
                   ))}
                 </div>
               </div>
@@ -2537,6 +2626,33 @@ export default function ChallengeScreen() {
           members={members}
           footballLeagues={competitions.football}
           betsEnabled={betsEnabled}
+        />
+      )}
+
+      {/* Rematch — reopens the same create modal pre-filled, bypassing the kind picker */}
+      {rematchChallengeSeed && (
+        <CreateChallengeModal
+          onClose={() => setRematchChallengeSeed(null)}
+          onCreate={createChallenge}
+          wallet={wallet} circleId={activeCircleId} circleName={activeCircle?.name}
+          currentUserId={user?.id} members={members} footballLeagues={competitions.football}
+          forcedBetType={rematchChallengeSeed.betType}
+          initialOpponentId={rematchChallengeSeed.opponentId}
+          initialStakeCoins={rematchChallengeSeed.stakeCoins}
+          initialQuestion={rematchChallengeSeed.question}
+        />
+      )}
+      {rematchBetSeed && (
+        <CreateGroupBetModal
+          onClose={() => setRematchBetSeed(null)}
+          onCreate={createBet}
+          wallet={wallet} circleId={activeCircleId} circleName={activeCircle?.name}
+          members={members} currentUserId={user?.id}
+          initialQuestion={rematchBetSeed.question}
+          initialAnswerMode={rematchBetSeed.answerMode}
+          initialStakeCoins={rematchBetSeed.stakeCoins}
+          initialTargetMode={rematchBetSeed.targetMode}
+          initialTargetIds={rematchBetSeed.targetIds}
         />
       )}
 
