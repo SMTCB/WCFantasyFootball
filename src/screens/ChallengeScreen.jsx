@@ -1337,7 +1337,6 @@ const TX_META = {
 };
 
 function WalletTabContent({ wallet, walletLoading }) {
-  const [buyStatus, setBuyStatus] = useState(null);
   const [econStats, setEconStats] = useState(null);
 
   useEffect(() => {
@@ -1373,23 +1372,15 @@ function WalletTabContent({ wallet, walletLoading }) {
                   </div>
                 )}
                 <button
-                  disabled={buyStatus === 'loading'}
-                  onClick={async () => {
-                    setBuyStatus('loading');
-                    try {
-                      const { error } = await supabase.functions.invoke('purchase-coins/create-payment-intent', { body: { pack_coins: 500 } });
-                      setBuyStatus(error?.message?.includes('STRIPE_NOT_CONFIGURED') ? 'coming_soon' : 'coming_soon');
-                    } catch { setBuyStatus('coming_soon'); }
-                    setTimeout(() => setBuyStatus(null), 3000);
-                  }}
+                  disabled
                   style={{
                     width: '100%', padding: '8px 0', borderRadius: 6,
                     border: '1.5px solid var(--rule)', background: 'transparent',
                     ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
-                    color: 'var(--text2)', cursor: 'pointer',
+                    color: 'var(--mute)', cursor: 'not-allowed', opacity: 0.5,
                   }}
                 >
-                  {buyStatus === 'coming_soon' ? 'Payments coming soon' : buyStatus === 'loading' ? 'Connecting…' : 'Buy Coins →'}
+                  Buy Coins — Coming Soon
                 </button>
               </>
             )}
@@ -1401,12 +1392,12 @@ function WalletTabContent({ wallet, walletLoading }) {
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
             <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Buy Coins</div>
           </div>
-          <div style={{ padding: '16px 16px', display: 'flex', gap: 10 }}>
+          <div style={{ padding: '16px 16px', display: 'flex', gap: 10, opacity: 0.5 }}>
             {[{ coins: 500, price: '£1.99' }, { coins: 1500, price: '£4.99' }, { coins: 5000, price: '£12.99' }].map(({ coins, price }) => (
               <div key={coins} style={{
                 flex: 1, padding: '12px 8px', borderRadius: 6,
                 border: '1px solid var(--rule)', background: 'var(--elev)',
-                textAlign: 'center', cursor: 'pointer',
+                textAlign: 'center', cursor: 'not-allowed',
               }}>
                 <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', letterSpacing: '-0.02em', color: 'var(--gold)' }}>{coins.toLocaleString()}</div>
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3 }}>{price}</div>
@@ -1860,7 +1851,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
 }
 
 // ── Sidebar content (shared between desktop sidebar and mobile inline) ────────
-function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, onGoToWallet, isMobile }) {
+function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, isMobile }) {
   const won    = history.filter(c => c.winner_id === userId).length;
   const lost   = history.filter(c => c.status === 'resolved' && c.winner_id !== userId && c.winner_id != null).length;
   const voided = history.filter(c => c.status !== 'resolved').length;
@@ -1899,13 +1890,14 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
             </div>
           )}
           <button
-            onClick={onGoToWallet}
+            disabled
             style={{
               width: '100%', padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)',
-              background: 'transparent', cursor: 'pointer',
-              ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text2)',
+              background: 'transparent', cursor: 'not-allowed',
+              ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)',
+              opacity: 0.5,
             }}
-          >Buy Coins →</button>
+          >Buy Coins — Coming Soon</button>
         </div>
       </div>
 
