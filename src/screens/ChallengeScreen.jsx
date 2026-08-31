@@ -155,6 +155,68 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
   );
 }
 
+// ── Open challenge card — unclaimed 1:1 challenge, anyone in the circle can claim it
+function OpenChallengeCard({ challenge, onClaim, loading }) {
+  const netWin = Math.floor(challenge.stake_coins * 2 * 0.95) - challenge.stake_coins;
+  return (
+    <div style={{
+      background: 'var(--card)',
+      border: '1px dashed rgba(184,114,14,.3)',
+      borderLeft: '3px solid var(--gold)',
+      borderRadius: 6,
+      padding: '12px 14px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 9,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+        <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.08em', color: 'var(--gold)' }}>🎲 OPEN</span>
+        <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
+          {challenge.challenger_username ?? 'Someone'}&rsquo;s challenge
+        </span>
+        <TypeBadge betType={challenge.bet_type} />
+        <span style={{ marginLeft: 'auto', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.04em' }}>
+          ⏱ {timeUntil(challenge.expires_at)}
+        </span>
+      </div>
+
+      {challenge.bet_type === 'freeform' ? (
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+      ) : (
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{gwLabel(challenge.matchday_id)} · GW Total</div>
+      )}
+
+      {challenge.message && (
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.45 }}>
+          &ldquo;{challenge.message}&rdquo;
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>Stake each</div>
+          <CoinAmt amount={challenge.stake_coins} size="sm" />
+        </div>
+        <div>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>Net win</div>
+          <CoinAmt amount={netWin} size="sm" color="var(--pos)" />
+        </div>
+      </div>
+
+      <button
+        onClick={() => onClaim(challenge.id)}
+        disabled={loading}
+        style={{
+          padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
+          background: 'transparent', border: '1.5px solid var(--gold)',
+          ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase',
+          fontWeight: 600, color: 'var(--gold)', opacity: loading ? 0.6 : 1,
+        }}
+      >Claim</button>
+    </div>
+  );
+}
+
 // ── Sent / outgoing card (accent border) ──────────────────────────────────────
 function OutgoingCard({ challenge, onCancel, loading }) {
   const netWin = Math.floor(challenge.stake_coins * 2 * 0.95) - challenge.stake_coins;
@@ -171,7 +233,7 @@ function OutgoingCard({ challenge, onCancel, loading }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
         <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
-          → {challenge.opponent_username ?? 'Opponent'}
+          {challenge.opponent_id ? `→ ${challenge.opponent_username ?? 'Opponent'}` : '🎲 Open — awaiting claim'}
         </span>
         <TypeBadge betType={challenge.bet_type} />
         <span style={{ marginLeft: 'auto', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
@@ -1647,6 +1709,7 @@ function CreateChallengeModal({
 
   const [betType, setBetType]       = useState(forcedBetType ?? (hasCompetitions ? 'gw_total' : 'freeform'));
   const [opponentId, setOpponentId] = useState(initialOpponentId ?? null);
+  const [isOpenChallenge, setIsOpenChallenge] = useState(false);
   const [leagueId, setLeagueId]     = useState(null);
   const [gw, setGw]                 = useState(null); // 'current' | 'next'
   const [question, setQuestion]     = useState(initialQuestion ?? '');
@@ -1666,7 +1729,7 @@ function CreateChallengeModal({
   const overBudget = stakeCoins > balance;
 
   async function handleSubmit() {
-    if (!opponentId) { setError('Pick an opponent'); return; }
+    if (!opponentId && !isOpenChallenge) { setError('Pick an opponent'); return; }
     if (isFreeform) {
       if (!question.trim()) { setError('Describe what you’re betting on'); return; }
       if (question.trim().length > 140) { setError('Question is too long'); return; }
@@ -1679,7 +1742,7 @@ function CreateChallengeModal({
     setSubmitting(true); setError(null);
     try {
       await onCreate({
-        circleId, betType, opponentId, stakeCoins, message: message || null,
+        circleId, betType, opponentId: isOpenChallenge ? null : opponentId, stakeCoins, message: message || null,
         leagueId: isFreeform ? null : leagueId,
         matchdayId: isFreeform ? null : matchdayId,
         question: isFreeform ? question.trim() : null,
@@ -1817,11 +1880,20 @@ function CreateChallengeModal({
             <div style={{ marginBottom: 14 }}>
               <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Opponent</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                <PickerRow selected={isOpenChallenge} onClick={() => { setIsOpenChallenge(true); setOpponentId(null); }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                    background: 'var(--elev)', border: '1.5px dashed var(--rule)',
+                    display: 'grid', placeItems: 'center', fontSize: 14,
+                  }}>🎲</div>
+                  <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>Open — first to accept</span>
+                  <RadioDot selected={isOpenChallenge} />
+                </PickerRow>
                 {opponents.map((m, i) => (
-                  <PickerRow key={m.user_id} selected={opponentId === m.user_id} onClick={() => setOpponentId(m.user_id)}>
+                  <PickerRow key={m.user_id} selected={!isOpenChallenge && opponentId === m.user_id} onClick={() => { setOpponentId(m.user_id); setIsOpenChallenge(false); }}>
                     <MemberAvatar username={m.username} index={i} />
                     <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>{m.username}</span>
-                    <RadioDot selected={opponentId === m.user_id} />
+                    <RadioDot selected={!isOpenChallenge && opponentId === m.user_id} />
                   </PickerRow>
                 ))}
               </div>
@@ -1924,7 +1996,7 @@ function CreateChallengeModal({
                 opacity: submitting ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Sending…' : '⚔ Send Challenge'}
+              {submitting ? 'Sending…' : isOpenChallenge ? '🎲 Post Open Challenge' : '⚔ Send Challenge'}
             </button>
           </>
         )}
@@ -2137,8 +2209,8 @@ export default function ChallengeScreen() {
   const { wallet, loading: walletLoading } = useWallet(user?.id);
   const { activeCircleId, activeCircle, members, competitions } = useClubhouseContext();
   const {
-    incoming, outgoing, active, disputed, history, loading,
-    createChallenge, acceptChallenge, declineChallenge, cancelChallenge,
+    incoming, outgoing, active, disputed, history, openChallenges, loading,
+    createChallenge, acceptChallenge, declineChallenge, cancelChallenge, claimChallenge,
     declareResult, confirmResult, disputeResult, arbitrateResult,
   } = useChallenges(user?.id, activeCircleId);
 
@@ -2175,7 +2247,7 @@ export default function ChallengeScreen() {
   const isOwner = activeCircle?.role === 'owner';
 
   const allBets = useAllBets(
-    { incoming, outgoing, active, disputed, history, loading },
+    { incoming, outgoing, active, disputed, history, openChallenges, loading },
     betsEnabled
       ? { openInvited, myOpenJoined, closedAwaitingDeclare, closedAwaitingResolution, disputed: disputedBets, history: betHistory, loading: betsLoading }
       : undefined,
@@ -2198,6 +2270,23 @@ export default function ChallengeScreen() {
     setAction(true);
     try { await declineChallenge(id); showToast('Challenge declined.'); }
     catch (e) { showToast(e.message, true); }
+    setAction(false);
+  }
+
+  async function handleClaim(id) {
+    setAction(true);
+    try { await claimChallenge(id); showToast('Challenge claimed — accept it to stake your coins!'); }
+    catch (e) {
+      const friendly = {
+        ALREADY_CLAIMED:            'Someone already claimed this challenge',
+        CHALLENGE_NOT_PENDING:      'This challenge is no longer open',
+        CHALLENGE_EXPIRED:          'This challenge has expired',
+        CANNOT_CLAIM_OWN_CHALLENGE: "You can't claim your own challenge",
+        NOT_CIRCLE_MEMBER:          'You are not a member of this Clubhouse',
+        NOT_LEAGUE_MEMBER:          'You are not a member of that league',
+      }[e.message] ?? e.message;
+      showToast(friendly, true);
+    }
     setAction(false);
   }
 
@@ -2457,6 +2546,8 @@ export default function ChallengeScreen() {
                 <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 6, padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {allBets.incoming.map(item => item.kind === 'challenge' ? (
                     <IncomingCard key={`c-${item.id}`} challenge={item} userId={user?.id} onAccept={handleAccept} onDecline={handleDecline} loading={actionLoading} />
+                  ) : item.kind === 'open_challenge' ? (
+                    <OpenChallengeCard key={`oc-${item.id}`} challenge={item} onClaim={handleClaim} loading={actionLoading} />
                   ) : (
                     <BetCard key={`b-${item.id}`} bet={item} userId={user?.id} section="invited" isOwner={isOwner} onJoin={handleJoinBet} onDecline={handleDeclineBet} loading={betActionLoading} />
                   ))}

@@ -8,7 +8,8 @@ import { useMemo } from 'react';
 export function useAllBets(challengesData, groupBetsData, { isOwner, userId } = {}) {
   const {
     incoming: cIncoming = [], outgoing: cOutgoing = [], active: cActive = [],
-    disputed: cDisputed = [], history: cHistory = [], loading: challengesLoading = false,
+    disputed: cDisputed = [], history: cHistory = [], openChallenges: cOpen = [],
+    loading: challengesLoading = false,
   } = challengesData ?? {};
   const {
     openInvited = [], myOpenJoined = [], closedAwaitingDeclare = [], closedAwaitingResolution = [],
@@ -26,8 +27,9 @@ export function useAllBets(challengesData, groupBetsData, { isOwner, userId } = 
 
   const incoming = useMemo(() => [
     ...cIncoming.map(c => ({ kind: 'challenge', ...c })),
+    ...cOpen.map(c => ({ kind: 'open_challenge', ...c })),
     ...openInvited.map(b => ({ kind: 'bet', ...b })),
-  ], [cIncoming, openInvited]);
+  ], [cIncoming, cOpen, openInvited]);
 
   const sent = useMemo(
     () => cOutgoing.map(c => ({ kind: 'challenge', ...c })),
