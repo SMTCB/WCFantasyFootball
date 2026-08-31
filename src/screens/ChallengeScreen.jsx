@@ -63,7 +63,7 @@ function gwLabel(matchdayId) {
   return parts.length === 2 ? `GW${parts[1]}` : matchdayId;
 }
 
-// ── Bet-type identity badge (gold = Competitor, accent = Freeform) ────────────
+// ── Bet-type identity badge (gold = Football GW, accent = Freeform) ────────────
 function TypeBadge({ betType }) {
   const isFree = betType === 'freeform';
   return (
@@ -72,7 +72,7 @@ function TypeBadge({ betType }) {
       ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase',
       padding: '2px 7px', borderRadius: 100, flexShrink: 0,
     }}>
-      {isFree ? 'Freeform' : 'Competitor'}
+      {isFree ? 'Freeform' : 'Football GW'}
     </span>
   );
 }
@@ -1337,7 +1337,6 @@ const TX_META = {
 };
 
 function WalletTabContent({ wallet, walletLoading }) {
-  const [buyStatus, setBuyStatus] = useState(null);
   const [econStats, setEconStats] = useState(null);
 
   useEffect(() => {
@@ -1373,23 +1372,15 @@ function WalletTabContent({ wallet, walletLoading }) {
                   </div>
                 )}
                 <button
-                  disabled={buyStatus === 'loading'}
-                  onClick={async () => {
-                    setBuyStatus('loading');
-                    try {
-                      const { error } = await supabase.functions.invoke('purchase-coins/create-payment-intent', { body: { pack_coins: 500 } });
-                      setBuyStatus(error?.message?.includes('STRIPE_NOT_CONFIGURED') ? 'coming_soon' : 'coming_soon');
-                    } catch { setBuyStatus('coming_soon'); }
-                    setTimeout(() => setBuyStatus(null), 3000);
-                  }}
+                  disabled
                   style={{
                     width: '100%', padding: '8px 0', borderRadius: 6,
                     border: '1.5px solid var(--rule)', background: 'transparent',
                     ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
-                    color: 'var(--text2)', cursor: 'pointer',
+                    color: 'var(--mute)', cursor: 'not-allowed', opacity: 0.5,
                   }}
                 >
-                  {buyStatus === 'coming_soon' ? 'Payments coming soon' : buyStatus === 'loading' ? 'Connecting…' : 'Buy Coins →'}
+                  Buy Coins — Coming Soon
                 </button>
               </>
             )}
@@ -1401,12 +1392,12 @@ function WalletTabContent({ wallet, walletLoading }) {
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
             <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Buy Coins</div>
           </div>
-          <div style={{ padding: '16px 16px', display: 'flex', gap: 10 }}>
+          <div style={{ padding: '16px 16px', display: 'flex', gap: 10, opacity: 0.5 }}>
             {[{ coins: 500, price: '£1.99' }, { coins: 1500, price: '£4.99' }, { coins: 5000, price: '£12.99' }].map(({ coins, price }) => (
               <div key={coins} style={{
                 flex: 1, padding: '12px 8px', borderRadius: 6,
                 border: '1px solid var(--rule)', background: 'var(--elev)',
-                textAlign: 'center', cursor: 'pointer',
+                textAlign: 'center', cursor: 'not-allowed',
               }}>
                 <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', letterSpacing: '-0.02em', color: 'var(--gold)' }}>{coins.toLocaleString()}</div>
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3 }}>{price}</div>
@@ -1681,7 +1672,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
 
         {showInfo && (
           <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 8, background: 'var(--elev)', border: '1px solid var(--rule)', fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.55 }}>
-            <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>Competitor</strong> — bet against another manager on who scores more points in a gameweek. Resolves automatically once the gameweek closes.</div>
+            <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>Football GW</strong> — football only: bet against another manager on who scores more fantasy football points in a gameweek. Resolves automatically once the gameweek closes. Only shown when this Clubhouse has a linked football competition.</div>
             <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>Freeform</strong> — bet on anything, settled by agreement. After the event, either side declares a winner (or a push); the other confirms. If you disagree, either side can dispute and the Clubhouse owner arbitrates.</div>
             <div>Your stake moves to escrow when you send the challenge and is only released once the bet resolves. The winner gets both stakes minus a 5% rake.</div>
           </div>
@@ -1705,38 +1696,38 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
           </div>
         ) : (
           <>
-            {/* Bet-type picker */}
-            <div style={{ marginBottom: 14 }}>
-              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Bet Type</span>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={() => hasCompetitions && setBetType('gw_total')}
-                  disabled={!hasCompetitions}
-                  style={{
-                    flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: hasCompetitions ? 'pointer' : 'not-allowed',
-                    background: betType === 'gw_total' ? 'var(--gbg)' : 'var(--elev)',
-                    border: `2px solid ${betType === 'gw_total' ? 'var(--gold)' : 'var(--rule)'}`,
-                    opacity: hasCompetitions ? 1 : 0.5,
-                  }}
-                >
-                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>🏆 Competitor</div>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
-                    {hasCompetitions ? 'Auto-resolved GW total' : 'No competitions linked'}
-                  </div>
-                </button>
-                <button
-                  onClick={() => setBetType('freeform')}
-                  style={{
-                    flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                    background: isFreeform ? 'var(--abg)' : 'var(--elev)',
-                    border: `2px solid ${isFreeform ? 'var(--accent)' : 'var(--rule)'}`,
-                  }}
-                >
-                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Settle by agreement</div>
-                </button>
+            {/* Bet-type picker — only shown when this Clubhouse has a linked football
+                competition; otherwise Football GW isn't a real option, so skip the
+                picker entirely rather than showing a disabled/dead choice. */}
+            {hasCompetitions && (
+              <div style={{ marginBottom: 14 }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Bet Type</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => setBetType('gw_total')}
+                    style={{
+                      flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                      background: betType === 'gw_total' ? 'var(--gbg)' : 'var(--elev)',
+                      border: `2px solid ${betType === 'gw_total' ? 'var(--gold)' : 'var(--rule)'}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>⚽ Football GW</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Auto-resolved GW total</div>
+                  </button>
+                  <button
+                    onClick={() => setBetType('freeform')}
+                    style={{
+                      flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                      background: isFreeform ? 'var(--abg)' : 'var(--elev)',
+                      border: `2px solid ${isFreeform ? 'var(--accent)' : 'var(--rule)'}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Settle by agreement</div>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Opponent picker */}
             <div style={{ marginBottom: 14 }}>
@@ -1860,7 +1851,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
 }
 
 // ── Sidebar content (shared between desktop sidebar and mobile inline) ────────
-function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, onGoToWallet, isMobile }) {
+function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, isMobile }) {
   const won    = history.filter(c => c.winner_id === userId).length;
   const lost   = history.filter(c => c.status === 'resolved' && c.winner_id !== userId && c.winner_id != null).length;
   const voided = history.filter(c => c.status !== 'resolved').length;
@@ -1899,13 +1890,14 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
             </div>
           )}
           <button
-            onClick={onGoToWallet}
+            disabled
             style={{
               width: '100%', padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)',
-              background: 'transparent', cursor: 'pointer',
-              ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text2)',
+              background: 'transparent', cursor: 'not-allowed',
+              ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)',
+              opacity: 0.5,
             }}
-          >Buy Coins →</button>
+          >Buy Coins — Coming Soon</button>
         </div>
       </div>
 
@@ -1947,7 +1939,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
         <div style={{ padding: '13px 14px' }}>
           <div style={{ ...HEAD, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em', marginBottom: 6 }}>How Challenges work</div>
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--text2)', lineHeight: 1.55 }}>
-            Challenge any Clubhouse member to a Competitor (auto-resolved GW Total) or Freeform (settle-by-agreement) bet. Both stake coins — winner takes 95%, 5% rake burned.
+            Challenge any Clubhouse member to a Football GW bet (auto-resolved GW total — only available when this Clubhouse has a linked football competition) or a Freeform bet settled by agreement. Both stake coins — winner takes 95%, 5% rake burned.
           </div>
           <div style={{ marginTop: 9, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.04em' }}>Stakes held in escrow until result</div>
         </div>
