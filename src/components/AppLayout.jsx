@@ -402,6 +402,7 @@ export default function AppLayout({ children }) {
             pathname={location.pathname}
             onAdd={() => setShowNewCompFlow(true)}
             hasClubhouse={myCircles.length > 0}
+            clubhouseName={myCircles.find(c => c.id === activeCircleId)?.name}
           />
         )}
 

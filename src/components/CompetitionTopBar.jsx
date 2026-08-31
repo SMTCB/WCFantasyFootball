@@ -26,7 +26,7 @@ const PILL_STYLE = {
   transition: 'color .12s, border-color .12s',
 };
 
-export function CompetitionTopBar({ competitions, pathname, onAdd, hasClubhouse = true }) {
+export function CompetitionTopBar({ competitions, pathname, onAdd, hasClubhouse = true, clubhouseName }) {
   const navigate = useNavigate();
   const active = extractActiveCompId(pathname);
   const isClubhouseHome = /^\/clubhouse(\/[^/]+)?$/.test(pathname);
@@ -59,7 +59,7 @@ export function CompetitionTopBar({ competitions, pathname, onAdd, hasClubhouse 
           borderBottomColor: isClubhouseHome ? 'var(--accent)' : 'transparent',
         }}
       >
-        <span aria-hidden="true">🏠</span>Clubhouse
+        <span aria-hidden="true">🏠</span>{clubhouseName ?? 'Clubhouse'}
       </button>
 
       {allComps.map(comp => {
