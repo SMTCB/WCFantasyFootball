@@ -6607,35 +6607,6 @@ $$;
 ALTER FUNCTION "public"."reject_trade_proposal"("p_proposal_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb") RETURNS "void"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-DECLARE
-  v_escrow int;
-BEGIN
-  IF p_amount <= 0 THEN RAISE EXCEPTION 'AMOUNT_MUST_BE_POSITIVE'; END IF;
-
-  SELECT escrow INTO v_escrow
-  FROM coin_wallets WHERE user_id = p_user_id FOR UPDATE;
-
-  IF NOT FOUND      THEN RAISE EXCEPTION 'WALLET_NOT_FOUND'; END IF;
-  IF v_escrow < p_amount THEN RAISE EXCEPTION 'INSUFFICIENT_ESCROW'; END IF;
-
-  UPDATE coin_wallets
-  SET balance    = balance + p_amount,
-      escrow     = escrow  - p_amount,
-      updated_at = now()
-  WHERE user_id = p_user_id;
-
-  INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
-  VALUES (p_user_id, 'refund', p_amount, p_challenge_id, p_meta);
-END;
-$$;
-
-
-ALTER FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -7199,26 +7170,6 @@ $$;
 
 
 ALTER FUNCTION "public"."search_clubhouses"("p_query" "text") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."seed_cup_clubs"("p_league_id" "uuid") RETURNS "void"
-    LANGUAGE "plpgsql"
-    AS $$
-DECLARE
-  v_tournament_id text;
-BEGIN
-  SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id;
-  INSERT INTO cup_active_clubs (league_id, club_id)
-  SELECT DISTINCT p_league_id, club
-  FROM   players
-  WHERE  club IS NOT NULL AND club <> ''
-    AND  (v_tournament_id IS NULL OR tournament_id = v_tournament_id)
-  ON CONFLICT (league_id, club_id) DO NOTHING;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."seed_cup_clubs"("p_league_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."seed_cup_clubs"("p_league_id" "uuid", "p_tournament_id" "text" DEFAULT NULL::"text") RETURNS "void"
@@ -14649,11 +14600,6 @@ GRANT ALL ON FUNCTION "public"."reject_trade_proposal"("p_proposal_id" "uuid") T
 
 
 
-REVOKE ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "service_role";
@@ -14710,12 +14656,6 @@ GRANT ALL ON FUNCTION "public"."sanitize_starting_xi"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."search_clubhouses"("p_query" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."search_clubhouses"("p_query" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."search_clubhouses"("p_query" "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."seed_cup_clubs"("p_league_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."seed_cup_clubs"("p_league_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."seed_cup_clubs"("p_league_id" "uuid") TO "service_role";
 
 
 
