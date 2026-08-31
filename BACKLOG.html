@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>210</strong><span>closed</span></div>
+      <div class="total-pill"><strong>211</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (131)</span>
+    <span class="chip" data-filter-kind="done">Shipped (132)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">210</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">211</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">131</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">132</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1224,8 +1224,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">131</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">132</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ bet templates, smart-default targeting, one-tap rematch (2026-08-31) — pr #889 
+
+**context**: pr 2 of the approved 8-item p2p social/chat plan (`synchronous-stirring-pretzel.md`), built directly on the unified &quot;bets&quot; tab from pr #887. no migration — pure application-layer changes inside `challengescreen.jsx`.
+
+**what shipped**: one-tap bet-template chips in `creategroupbetmodal`&#x27;s composer (question + stake pre-fill, target picker left to the user); a `localstorage`-backed smart default for the target-mode picker, keyed per clubhouse + user; a &quot;↻ rematch&quot; button on resolved history cards (both 1:1 challenges and group bets) that reopens the create modal pre-filled — football gw rematches still force a fresh gameweek pick, and `selected_users` group-bet rematches fetch the original target list on demand from `p2p_bet_targets`.
+
+**verification gap**: same class as pr #887/#880 — full ci green, but no live interactive click-through (local demo session has no backing circle membership: `get_my_p2p_bets` returned `permission denied`, clubhouse dropdown empty). verified instead via a full line-by-line diff review against the plan spec. recommend a manual pass on the live pilot post-deploy, same as prior p2p prs.
+
+**next in this plan**: pr 1.5 &quot;open challenges&quot;, pr 3 (win-streak badge), and pr 4 (chat quick-bet + live bet feed) each need a migration and their own fresh per-item approval before any sql is written — none sought yet.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Bet templates, smart-default targeting, one-tap rematch</h3>
+        <p class="card-summary">Context : PR 2 of the approved 8-item P2P social/chat plan ( synchronous-stirring-pretzel.md ), built directly on the unified "Bets" tab from PR #887. No migration —…</p>
+        <div class="card-foot"><span class="foot-date">2026-08-31</span><span class="foot-refs">PR #889</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Bet templates, smart-default targeting, one-tap rematch</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : PR 2 of the approved 8-item P2P social/chat plan ( synchronous-stirring-pretzel.md ), built directly on the unified "Bets" tab from PR #887. No migration —…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #889</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-08-31</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: PR 2 of the approved 8-item P2P social/chat plan (<code>synchronous-stirring-pretzel.md</code>), built directly on the unified "Bets" tab from PR #887. No migration — pure application-layer changes inside <code>ChallengeScreen.jsx</code>.</p>
+<p><strong>What shipped</strong>: one-tap bet-template chips in <code>CreateGroupBetModal</code>'s composer (question + stake pre-fill, target picker left to the user); a <code>localStorage</code>-backed smart default for the target-mode picker, keyed per Clubhouse + user; a "↻ Rematch" button on resolved history cards (both 1:1 challenges and group bets) that reopens the create modal pre-filled — Football GW rematches still force a fresh gameweek pick, and <code>selected_users</code> group-bet rematches fetch the original target list on demand from <code>p2p_bet_targets</code>.</p>
+<p><strong>Verification gap</strong>: same class as PR #887/#880 — full CI green, but no live interactive click-through (local demo session has no backing circle membership: <code>get_my_p2p_bets</code> returned <code>permission denied</code>, clubhouse dropdown empty). Verified instead via a full line-by-line diff review against the plan spec. Recommend a manual pass on the live pilot post-deploy, same as prior P2P PRs.</p>
+<p><strong>Next in this plan</strong>: PR 1.5 "Open Challenges", PR 3 (win-streak badge), and PR 4 (chat quick-bet + live bet feed) each need a migration and their own fresh per-item approval before any SQL is written — none sought yet.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ unified bets flow — coin challenges + group bets merged into one tab (2026-08-31) — pr #887 
 
 **context**: pr 1 of the approved 8-item p2p social/chat plan (plan file: `synchronous-stirring-pretzel.md`). the user&#x27;s own complaint drove this — they&#x27;d been using the always-visible 1:1 &quot;new challenge&quot; flow (single-opponent by design) and asked &quot;can&#x27;t we have the bets all in the same place... this is confusing,&quot; not realizing the separate group bets tab already supported multi-select/whole-clubhouse joining. investigation also answered a second question in the same plan (&quot;what&#x27;s the effort of a &#x27;join this bet&#x27; option&quot;) — for group bets it&#x27;s already ≈0 effort, since `join_p2p_bet`&#x27;s `whole_clubhouse` path already only checks circle membership; the real gap was that it lived on an easy-to-miss separate tab.
