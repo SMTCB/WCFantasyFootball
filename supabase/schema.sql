@@ -926,6 +926,63 @@ $$;
 ALTER FUNCTION "public"."apply_relaxation_state"("p_league_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."arbitrate_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[] DEFAULT NULL::"uuid"[], "p_winning_user_ids" "uuid"[] DEFAULT NULL::"uuid"[]) RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet p2p_bets%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_bet FROM p2p_bets WHERE id = p_bet_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'BET_NOT_FOUND';
+  END IF;
+  IF v_bet.status <> 'disputed' THEN
+    RAISE EXCEPTION 'BET_NOT_DISPUTED';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM circle_members WHERE circle_id = v_bet.circle_id AND user_id = auth.uid() AND role = 'owner'
+  ) THEN
+    RAISE EXCEPTION 'NOT_CIRCLE_OWNER';
+  END IF;
+
+  UPDATE p2p_bet_participants SET declared_correct = false, is_winner = false WHERE bet_id = p_bet_id;
+  UPDATE p2p_bet_options SET is_correct = false WHERE bet_id = p_bet_id;
+
+  IF v_bet.answer_mode = 'multiple_choice' THEN
+    IF p_winning_option_ids IS NOT NULL AND array_length(p_winning_option_ids, 1) > 0 THEN
+      IF (SELECT COUNT(*) FROM p2p_bet_options WHERE bet_id = p_bet_id AND id = ANY(p_winning_option_ids))
+         <> array_length(p_winning_option_ids, 1) THEN
+        RAISE EXCEPTION 'INVALID_OPTION';
+      END IF;
+      UPDATE p2p_bet_options SET is_correct = true WHERE bet_id = p_bet_id AND id = ANY(p_winning_option_ids);
+      UPDATE p2p_bet_participants pp SET is_winner = true
+      WHERE pp.bet_id = p_bet_id AND pp.status = 'joined' AND EXISTS (
+        SELECT 1 FROM p2p_bet_participant_answers pa
+        WHERE pa.participant_id = pp.id AND pa.option_id = ANY(p_winning_option_ids)
+      );
+    END IF;
+  ELSE
+    IF p_winning_user_ids IS NOT NULL AND array_length(p_winning_user_ids, 1) > 0 THEN
+      UPDATE p2p_bet_participants SET is_winner = true
+      WHERE bet_id = p_bet_id AND status = 'joined' AND user_id = ANY(p_winning_user_ids);
+    END IF;
+  END IF;
+
+  PERFORM finalize_bet_payout(p_bet_id);
+
+  UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = p_bet_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."arbitrate_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1001,6 +1058,24 @@ $$;
 ALTER FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."auto_close_expired_bets"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF auth.uid() IS NOT NULL THEN
+    RAISE EXCEPTION 'ADMIN_ONLY';
+  END IF;
+
+  UPDATE p2p_bets SET status = 'closed', updated_at = now()
+  WHERE status = 'open' AND ends_at IS NOT NULL AND ends_at <= now();
+END;
+$$;
+
+
+ALTER FUNCTION "public"."auto_close_expired_bets"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."auto_resolve_p2p_challenges"() RETURNS integer
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1039,6 +1114,32 @@ $$;
 
 
 ALTER FUNCTION "public"."auto_resolve_p2p_challenges"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."auto_void_stale_bet_disputes"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet_id uuid;
+BEGIN
+  IF auth.uid() IS NOT NULL THEN
+    RAISE EXCEPTION 'ADMIN_ONLY';
+  END IF;
+
+  FOR v_bet_id IN
+    SELECT id FROM p2p_bets WHERE status = 'disputed' AND dispute_deadline <= now()
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    UPDATE p2p_bet_participants SET is_winner = false, declared_correct = false WHERE bet_id = v_bet_id;
+    PERFORM finalize_bet_payout(v_bet_id);
+    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."auto_void_stale_bet_disputes"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."auto_void_stale_disputes"() RETURNS integer
@@ -1191,6 +1292,36 @@ $$;
 
 
 ALTER FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."cancel_p2p_bet"("p_bet_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_participant RECORD;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM p2p_bets WHERE id = p_bet_id AND creator_id = auth.uid() AND status = 'open' FOR UPDATE) THEN
+    RAISE EXCEPTION 'BET_NOT_FOUND_OR_NOT_OPEN';
+  END IF;
+
+  FOR v_participant IN
+    SELECT user_id, stake_coins FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined'
+  LOOP
+    PERFORM release_escrow(v_participant.user_id, v_participant.stake_coins, NULL,
+      jsonb_build_object('bet_id', p_bet_id, 'reason', 'cancelled'), p_bet_id);
+  END LOOP;
+
+  UPDATE p2p_bets SET status = 'cancelled', updated_at = now() WHERE id = p_bet_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."cancel_p2p_bet"("p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."cancel_p2p_challenge"("p_challenge_id" "uuid") RETURNS "jsonb"
@@ -1495,6 +1626,26 @@ $$;
 
 
 ALTER FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+  UPDATE p2p_bets SET status = 'closed', updated_at = now()
+  WHERE id = p_bet_id AND creator_id = auth.uid() AND status = 'open';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'BET_NOT_FOUND_OR_NOT_OPEN';
+  END IF;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") RETURNS "jsonb"
@@ -1859,6 +2010,108 @@ $$;
 ALTER FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean, "p_circle_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."create_p2p_bet"("p_circle_id" "uuid", "p_question" "text", "p_answer_mode" "text", "p_allow_multiple_answers" boolean, "p_target_mode" "text", "p_target_user_ids" "uuid"[], "p_options" "text"[], "p_stake_coins" integer, "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet_id      uuid;
+  v_option_id   uuid;
+  v_label       text;
+  v_idx         int := 0;
+  v_target      uuid;
+  v_daily_count int;
+  v_starts_at   timestamptz := COALESCE(p_starts_at, now());
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+  IF NOT is_circle_member(p_circle_id) THEN
+    RAISE EXCEPTION 'NOT_CIRCLE_MEMBER';
+  END IF;
+  IF p_answer_mode NOT IN ('freeform_text', 'multiple_choice') THEN
+    RAISE EXCEPTION 'INVALID_ANSWER_MODE';
+  END IF;
+  IF p_target_mode NOT IN ('selected_users', 'whole_clubhouse') THEN
+    RAISE EXCEPTION 'INVALID_TARGET_MODE';
+  END IF;
+  IF p_stake_coins < 10 OR p_stake_coins > 500 THEN
+    RAISE EXCEPTION 'INVALID_STAKE';
+  END IF;
+  IF char_length(coalesce(p_question, '')) NOT BETWEEN 1 AND 140 THEN
+    RAISE EXCEPTION 'INVALID_QUESTION';
+  END IF;
+  IF p_ends_at IS NOT NULL AND p_ends_at <= v_starts_at THEN
+    RAISE EXCEPTION 'INVALID_TIME_WINDOW';
+  END IF;
+
+  IF p_answer_mode = 'multiple_choice' THEN
+    IF p_options IS NULL OR array_length(p_options, 1) < 2 OR array_length(p_options, 1) > 8 THEN
+      RAISE EXCEPTION 'INVALID_OPTIONS';
+    END IF;
+  ELSE
+    IF p_options IS NOT NULL AND array_length(p_options, 1) > 0 THEN
+      RAISE EXCEPTION 'OPTIONS_NOT_ALLOWED';
+    END IF;
+  END IF;
+
+  IF p_target_mode = 'selected_users' THEN
+    IF p_target_user_ids IS NULL OR array_length(p_target_user_ids, 1) < 1 OR array_length(p_target_user_ids, 1) > 50 THEN
+      RAISE EXCEPTION 'INVALID_TARGETS';
+    END IF;
+    FOREACH v_target IN ARRAY p_target_user_ids LOOP
+      IF NOT EXISTS (SELECT 1 FROM circle_members WHERE circle_id = p_circle_id AND user_id = v_target) THEN
+        RAISE EXCEPTION 'TARGET_NOT_CIRCLE_MEMBER';
+      END IF;
+    END LOOP;
+  ELSE
+    IF p_target_user_ids IS NOT NULL AND array_length(p_target_user_ids, 1) > 0 THEN
+      RAISE EXCEPTION 'TARGETS_NOT_ALLOWED';
+    END IF;
+  END IF;
+
+  SELECT COUNT(*) INTO v_daily_count
+  FROM p2p_bets
+  WHERE creator_id = auth.uid() AND circle_id = p_circle_id AND created_at > now() - interval '24 hours';
+  IF v_daily_count >= 5 THEN
+    RAISE EXCEPTION 'DAILY_BET_LIMIT_EXCEEDED';
+  END IF;
+
+  INSERT INTO p2p_bets (
+    circle_id, creator_id, question, answer_mode, allow_multiple_answers,
+    target_mode, stake_coins, starts_at, ends_at
+  ) VALUES (
+    p_circle_id, auth.uid(), p_question, p_answer_mode, COALESCE(p_allow_multiple_answers, false),
+    p_target_mode, p_stake_coins, v_starts_at, p_ends_at
+  ) RETURNING id INTO v_bet_id;
+
+  IF p_answer_mode = 'multiple_choice' THEN
+    FOREACH v_label IN ARRAY p_options LOOP
+      INSERT INTO p2p_bet_options (bet_id, label, sort_order) VALUES (v_bet_id, v_label, v_idx);
+      v_idx := v_idx + 1;
+    END LOOP;
+  END IF;
+
+  IF p_target_mode = 'selected_users' THEN
+    FOREACH v_target IN ARRAY p_target_user_ids LOOP
+      INSERT INTO p2p_bet_targets (bet_id, user_id) VALUES (v_bet_id, v_target);
+    END LOOP;
+  END IF;
+
+  -- Creator auto-joins as the first participant (mirrors the 1:1 challenge flow,
+  -- where the challenger's stake moves to escrow the moment they send it).
+  PERFORM debit_coins_to_escrow(auth.uid(), p_stake_coins, NULL, jsonb_build_object('bet_id', v_bet_id), v_bet_id);
+  INSERT INTO p2p_bet_participants (bet_id, user_id, status, stake_coins, joined_at)
+  VALUES (v_bet_id, auth.uid(), 'joined', p_stake_coins, now());
+
+  RETURN v_bet_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."create_p2p_bet"("p_circle_id" "uuid", "p_question" "text", "p_answer_mode" "text", "p_allow_multiple_answers" boolean, "p_target_mode" "text", "p_target_user_ids" "uuid"[], "p_options" "text"[], "p_stake_coins" integer, "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text" DEFAULT NULL::"text", "p_league_id" "uuid" DEFAULT NULL::"uuid", "p_matchday_id" "text" DEFAULT NULL::"text", "p_question" "text" DEFAULT NULL::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1971,6 +2224,7 @@ BEGIN
     IF p_question IS NULL OR char_length(trim(p_question)) = 0 THEN
       RAISE EXCEPTION 'QUESTION_REQUIRED';
     END IF;
+
     IF char_length(p_question) > 140 THEN
       RAISE EXCEPTION 'QUESTION_TOO_LONG';
     END IF;
@@ -2147,6 +2401,32 @@ $$;
 ALTER FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text" DEFAULT 'admin'::"text", "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_currency" character DEFAULT 'FRC'::"bpchar", "p_reference_id" "text" DEFAULT NULL::"text", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF p_type NOT IN ('purchase', 'win', 'refund', 'admin') THEN
+    RAISE EXCEPTION 'INVALID_CREDIT_TYPE';
+  END IF;
+  IF p_amount <= 0 THEN
+    RAISE EXCEPTION 'INVALID_AMOUNT';
+  END IF;
+
+  UPDATE coin_wallets SET balance = balance + p_amount WHERE user_id = p_user_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'WALLET_NOT_FOUND';
+  END IF;
+
+  INSERT INTO coin_transactions (user_id, type, amount, challenge_id, bet_id, meta, currency, reference_id)
+  VALUES (p_user_id, p_type, p_amount, p_challenge_id, p_bet_id, p_meta, p_currency, p_reference_id);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -2189,6 +2469,94 @@ $$;
 ALTER FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_daily_staked int;
+BEGIN
+  IF p_amount <= 0 THEN
+    RAISE EXCEPTION 'INVALID_AMOUNT';
+  END IF;
+
+  SELECT COALESCE(SUM(amount), 0) INTO v_daily_staked
+  FROM coin_transactions
+  WHERE user_id = p_user_id AND type = 'stake' AND created_at > now() - interval '24 hours';
+
+  IF v_daily_staked + p_amount > 1000 THEN
+    RAISE EXCEPTION 'DAILY_STAKE_LIMIT_EXCEEDED';
+  END IF;
+
+  UPDATE coin_wallets
+  SET balance = balance - p_amount, escrow = escrow + p_amount
+  WHERE user_id = p_user_id AND balance >= p_amount;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'INSUFFICIENT_BALANCE';
+  END IF;
+
+  INSERT INTO coin_transactions (user_id, type, amount, challenge_id, bet_id, meta)
+  VALUES (p_user_id, 'stake', -p_amount, p_challenge_id, p_bet_id, p_meta);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."declare_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[] DEFAULT NULL::"uuid"[], "p_winning_user_ids" "uuid"[] DEFAULT NULL::"uuid"[]) RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet p2p_bets%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_bet FROM p2p_bets WHERE id = p_bet_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'BET_NOT_FOUND';
+  END IF;
+  IF v_bet.creator_id <> auth.uid() THEN
+    RAISE EXCEPTION 'NOT_BET_CREATOR';
+  END IF;
+  IF v_bet.status <> 'closed' THEN
+    RAISE EXCEPTION 'BET_NOT_CLOSED';
+  END IF;
+
+  IF v_bet.answer_mode = 'multiple_choice' THEN
+    IF p_winning_option_ids IS NOT NULL AND array_length(p_winning_option_ids, 1) > 0 THEN
+      IF (SELECT COUNT(*) FROM p2p_bet_options WHERE bet_id = p_bet_id AND id = ANY(p_winning_option_ids))
+         <> array_length(p_winning_option_ids, 1) THEN
+        RAISE EXCEPTION 'INVALID_OPTION';
+      END IF;
+      UPDATE p2p_bet_options SET is_correct = true WHERE bet_id = p_bet_id AND id = ANY(p_winning_option_ids);
+      UPDATE p2p_bet_participants pp SET declared_correct = true
+      WHERE pp.bet_id = p_bet_id AND pp.status = 'joined' AND EXISTS (
+        SELECT 1 FROM p2p_bet_participant_answers pa
+        WHERE pa.participant_id = pp.id AND pa.option_id = ANY(p_winning_option_ids)
+      );
+    END IF;
+  ELSE
+    IF p_winning_user_ids IS NOT NULL AND array_length(p_winning_user_ids, 1) > 0 THEN
+      UPDATE p2p_bet_participants SET declared_correct = true
+      WHERE bet_id = p_bet_id AND status = 'joined' AND user_id = ANY(p_winning_user_ids);
+    END IF;
+  END IF;
+
+  UPDATE p2p_bets
+  SET declared_by = auth.uid(), declared_at = now(), objection_deadline = now() + interval '48 hours', updated_at = now()
+  WHERE id = p_bet_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."declare_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -2225,6 +2593,31 @@ $$;
 
 
 ALTER FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."decline_p2p_bet"("p_bet_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM p2p_bets WHERE id = p_bet_id AND status = 'open') THEN
+    RAISE EXCEPTION 'BET_NOT_OPEN';
+  END IF;
+  IF EXISTS (SELECT 1 FROM p2p_bet_participants WHERE bet_id = p_bet_id AND user_id = auth.uid() AND status = 'joined') THEN
+    RAISE EXCEPTION 'ALREADY_JOINED';
+  END IF;
+
+  INSERT INTO p2p_bet_participants (bet_id, user_id, status)
+  VALUES (p_bet_id, auth.uid(), 'declined')
+  ON CONFLICT (bet_id, user_id) DO UPDATE SET status = 'declined';
+END;
+$$;
+
+
+ALTER FUNCTION "public"."decline_p2p_bet"("p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."decline_p2p_challenge"("p_challenge_id" "uuid") RETURNS "jsonb"
@@ -2511,6 +2904,47 @@ $_$;
 
 
 ALTER FUNCTION "public"."derive_fixture_round_number"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."dispute_bet_outcome"("p_bet_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet p2p_bets%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_bet FROM p2p_bets WHERE id = p_bet_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'BET_NOT_FOUND';
+  END IF;
+  IF v_bet.status <> 'closed' OR v_bet.declared_at IS NULL THEN
+    RAISE EXCEPTION 'BET_NOT_DECLARED';
+  END IF;
+  IF v_bet.objection_deadline IS NOT NULL AND v_bet.objection_deadline <= now() THEN
+    RAISE EXCEPTION 'OBJECTION_WINDOW_CLOSED';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM p2p_bet_participants WHERE bet_id = p_bet_id AND user_id = auth.uid() AND status = 'joined') THEN
+    RAISE EXCEPTION 'NOT_A_PARTICIPANT';
+  END IF;
+
+  UPDATE p2p_bets
+  SET status = 'disputed', dispute_deadline = now() + interval '7 days', updated_at = now()
+  WHERE id = p_bet_id;
+
+  INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
+  SELECT v_bet.circle_id, cm.user_id, 'p2p_bet', p_bet_id, 'dispute',
+         jsonb_build_object('bet_id', p_bet_id, 'question', v_bet.question)
+  FROM circle_members cm
+  WHERE cm.circle_id = v_bet.circle_id AND cm.role = 'owner';
+END;
+$$;
+
+
+ALTER FUNCTION "public"."dispute_bet_outcome"("p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."dispute_freeform_result"("p_challenge_id" "uuid") RETURNS "jsonb"
@@ -3319,6 +3753,92 @@ COMMENT ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") IS 'GDPR rig
 
 
 
+CREATE OR REPLACE FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_pot          int;
+  v_winner_count int;
+  v_rake         int;
+  v_prize_pool   int;
+  v_share        int;
+  v_p            RECORD;
+BEGIN
+  SELECT COALESCE(SUM(stake_coins), 0) INTO v_pot
+  FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined';
+
+  SELECT COUNT(*) INTO v_winner_count
+  FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' AND is_winner = true;
+
+  IF v_winner_count = 0 THEN
+    -- Push / void: refund everyone their own stake, no rake taken.
+    FOR v_p IN SELECT user_id, stake_coins FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
+      PERFORM release_escrow(v_p.user_id, v_p.stake_coins, NULL,
+        jsonb_build_object('bet_id', p_bet_id, 'reason', 'push'), p_bet_id);
+    END LOOP;
+    RETURN;
+  END IF;
+
+  v_rake := FLOOR(v_pot * 0.05);
+  v_prize_pool := v_pot - v_rake;
+  v_share := FLOOR(v_prize_pool / v_winner_count);
+
+  FOR v_p IN SELECT user_id, stake_coins, is_winner FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
+    IF v_p.is_winner THEN
+      -- Settle directly to v_share rather than refund-then-top-up: when every
+      -- participant wins (no losers to fund the payout), v_share can land
+      -- BELOW the winner's own stake once the 5% rake is taken out. A plain
+      -- release_escrow(stake) would refund the full stake and let the rake
+      -- go uncollected in that case, so move escrow->balance for the net
+      -- share directly instead.
+      UPDATE coin_wallets SET balance = balance + v_share, escrow = escrow - v_p.stake_coins
+      WHERE user_id = v_p.user_id AND escrow >= v_p.stake_coins;
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'INSUFFICIENT_ESCROW';
+      END IF;
+      INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
+      VALUES (v_p.user_id, 'win', v_share - v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
+    ELSE
+      UPDATE coin_wallets SET escrow = escrow - v_p.stake_coins WHERE user_id = v_p.user_id;
+      INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
+      VALUES (v_p.user_id, 'loss', -v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
+    END IF;
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."finalize_declared_bets"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet_id uuid;
+BEGIN
+  IF auth.uid() IS NOT NULL THEN
+    RAISE EXCEPTION 'ADMIN_ONLY';
+  END IF;
+
+  FOR v_bet_id IN
+    SELECT id FROM p2p_bets
+    WHERE status = 'closed' AND declared_at IS NOT NULL AND objection_deadline <= now()
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    UPDATE p2p_bet_participants SET is_winner = declared_correct WHERE bet_id = v_bet_id;
+    PERFORM finalize_bet_payout(v_bet_id);
+    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."finalize_declared_bets"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") RETURNS json
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -3724,6 +4244,40 @@ CREATE OR REPLACE FUNCTION "public"."get_club_cap"("p_league_id" "uuid", "p_matc
 
 
 ALTER FUNCTION "public"."get_club_cap"("p_league_id" "uuid", "p_matchday_id" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_clubhouse_bets"("p_circle_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+  IF NOT is_circle_member(p_circle_id) THEN
+    RAISE EXCEPTION 'NOT_CIRCLE_MEMBER';
+  END IF;
+
+  SELECT jsonb_agg(row_to_json(b) ORDER BY b.created_at DESC) INTO v_result
+  FROM (
+    SELECT
+      bt.*,
+      (SELECT jsonb_agg(jsonb_build_object('id', o.id, 'label', o.label, 'sort_order', o.sort_order, 'is_correct', o.is_correct) ORDER BY o.sort_order)
+       FROM p2p_bet_options o WHERE o.bet_id = bt.id) AS options,
+      (SELECT COUNT(*) FROM p2p_bet_participants pp WHERE pp.bet_id = bt.id AND pp.status = 'joined') AS participant_count,
+      EXISTS (SELECT 1 FROM p2p_bet_participants pp WHERE pp.bet_id = bt.id AND pp.user_id = auth.uid() AND pp.status = 'joined') AS is_participant
+    FROM p2p_bets bt
+    WHERE bt.circle_id = p_circle_id
+  ) b;
+
+  RETURN COALESCE(v_result, '[]'::jsonb);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_clubhouse_bets"("p_circle_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_clubhouse_competitions"("p_circle_id" "uuid") RETURNS json
@@ -4156,6 +4710,91 @@ $$;
 
 
 ALTER FUNCTION "public"."get_my_circles"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_my_p2p_bets"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+
+  SELECT jsonb_agg(row_to_json(b) ORDER BY b.created_at DESC) INTO v_result
+  FROM (
+    SELECT
+      bt.*,
+      c.name AS circle_name,
+      (SELECT jsonb_agg(jsonb_build_object('id', o.id, 'label', o.label, 'sort_order', o.sort_order, 'is_correct', o.is_correct) ORDER BY o.sort_order)
+       FROM p2p_bet_options o WHERE o.bet_id = bt.id) AS options,
+      (SELECT COUNT(*) FROM p2p_bet_participants pp WHERE pp.bet_id = bt.id AND pp.status = 'joined') AS participant_count,
+      TRUE AS is_participant
+    FROM p2p_bets bt
+    JOIN circles c ON c.id = bt.circle_id
+    WHERE EXISTS (
+      SELECT 1 FROM p2p_bet_participants pp
+      WHERE pp.bet_id = bt.id AND pp.user_id = auth.uid() AND pp.status = 'joined'
+    )
+  ) b;
+
+  RETURN COALESCE(v_result, '[]'::jsonb);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_my_p2p_bets"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_my_p2p_streak"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_result  jsonb;
+BEGIN
+  IF v_user_id IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
+
+  SELECT jsonb_agg(
+    jsonb_build_object('outcome', outcome, 'resolved_at', resolved_at)
+    ORDER BY resolved_at ASC
+  )
+  INTO v_result
+  FROM (
+    SELECT
+      CASE
+        WHEN c.winner_id IS NULL THEN 'push'
+        WHEN c.winner_id = v_user_id THEN 'win'
+        ELSE 'loss'
+      END AS outcome,
+      c.resolved_at
+    FROM p2p_challenges c
+    WHERE c.status = 'resolved'
+      AND c.resolved_at IS NOT NULL
+      AND (c.challenger_id = v_user_id OR c.opponent_id = v_user_id)
+
+    UNION ALL
+
+    SELECT
+      CASE WHEN bp.is_winner THEN 'win' ELSE 'loss' END AS outcome,
+      b.resolved_at
+    FROM p2p_bet_participants bp
+    JOIN p2p_bets b ON b.id = bp.bet_id
+    WHERE b.status = 'resolved'
+      AND b.resolved_at IS NOT NULL
+      AND bp.user_id = v_user_id
+      AND bp.status = 'joined'
+  ) combined;
+
+  RETURN COALESCE(v_result, '[]'::jsonb);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_my_p2p_streak"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_my_paddocks"() RETURNS TABLE("paddock_id" "uuid", "name" "text", "invite_code" "text", "role" "text", "member_count" bigint, "season" integer, "archived" boolean, "archived_at" timestamp with time zone)
@@ -5381,6 +6020,54 @@ $$;
 ALTER FUNCTION "public"."join_league_by_code"("p_code" "text", "p_user_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."join_p2p_bet"("p_bet_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet p2p_bets%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_bet FROM p2p_bets WHERE id = p_bet_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'BET_NOT_FOUND';
+  END IF;
+  IF v_bet.status <> 'open' THEN
+    RAISE EXCEPTION 'BET_NOT_OPEN';
+  END IF;
+  IF v_bet.ends_at IS NOT NULL AND v_bet.ends_at <= now() THEN
+    RAISE EXCEPTION 'BET_WINDOW_CLOSED';
+  END IF;
+  IF EXISTS (SELECT 1 FROM p2p_bet_participants WHERE bet_id = p_bet_id AND user_id = auth.uid() AND status = 'joined') THEN
+    RAISE EXCEPTION 'ALREADY_JOINED';
+  END IF;
+
+  IF v_bet.target_mode = 'whole_clubhouse' THEN
+    IF NOT is_circle_member(v_bet.circle_id) THEN
+      RAISE EXCEPTION 'NOT_CIRCLE_MEMBER';
+    END IF;
+  ELSE
+    IF NOT EXISTS (SELECT 1 FROM p2p_bet_targets WHERE bet_id = p_bet_id AND user_id = auth.uid()) THEN
+      RAISE EXCEPTION 'NOT_INVITED';
+    END IF;
+  END IF;
+
+  PERFORM debit_coins_to_escrow(auth.uid(), v_bet.stake_coins, NULL, jsonb_build_object('bet_id', p_bet_id), p_bet_id);
+
+  INSERT INTO p2p_bet_participants (bet_id, user_id, status, stake_coins, joined_at)
+  VALUES (p_bet_id, auth.uid(), 'joined', v_bet.stake_coins, now())
+  ON CONFLICT (bet_id, user_id) DO UPDATE
+    SET status = 'joined', stake_coins = v_bet.stake_coins, joined_at = now();
+END;
+$$;
+
+
+ALTER FUNCTION "public"."join_p2p_bet"("p_bet_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."join_paddock_by_code"("p_code" "text") RETURNS "uuid"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -6015,6 +6702,32 @@ $$;
 
 
 ALTER FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF p_amount <= 0 THEN
+    RAISE EXCEPTION 'INVALID_AMOUNT';
+  END IF;
+
+  UPDATE coin_wallets
+  SET balance = balance + p_amount, escrow = escrow - p_amount
+  WHERE user_id = p_user_id AND escrow >= p_amount;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'INSUFFICIENT_ESCROW';
+  END IF;
+
+  INSERT INTO coin_transactions (user_id, type, amount, challenge_id, bet_id, meta)
+  VALUES (p_user_id, 'refund', p_amount, p_challenge_id, p_bet_id, p_meta);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") RETURNS json
@@ -7356,6 +8069,68 @@ $$;
 ALTER FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."submit_bet_answer"("p_bet_id" "uuid", "p_answer_text" "text" DEFAULT NULL::"text", "p_option_ids" "uuid"[] DEFAULT NULL::"uuid"[]) RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_bet         p2p_bets%ROWTYPE;
+  v_participant p2p_bet_participants%ROWTYPE;
+  v_option_id   uuid;
+  v_count       int;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_bet FROM p2p_bets WHERE id = p_bet_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'BET_NOT_FOUND';
+  END IF;
+  IF v_bet.status <> 'open' THEN
+    RAISE EXCEPTION 'BET_NOT_OPEN';
+  END IF;
+  IF v_bet.ends_at IS NOT NULL AND v_bet.ends_at <= now() THEN
+    RAISE EXCEPTION 'BET_WINDOW_CLOSED';
+  END IF;
+
+  SELECT * INTO v_participant FROM p2p_bet_participants
+  WHERE bet_id = p_bet_id AND user_id = auth.uid() AND status = 'joined'
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'NOT_A_PARTICIPANT';
+  END IF;
+
+  IF v_bet.answer_mode = 'freeform_text' THEN
+    IF p_answer_text IS NULL OR char_length(trim(p_answer_text)) = 0 THEN
+      RAISE EXCEPTION 'ANSWER_REQUIRED';
+    END IF;
+    UPDATE p2p_bet_participants SET answer_text = p_answer_text WHERE id = v_participant.id;
+  ELSE
+    IF p_option_ids IS NULL OR array_length(p_option_ids, 1) < 1 THEN
+      RAISE EXCEPTION 'ANSWER_REQUIRED';
+    END IF;
+    IF NOT v_bet.allow_multiple_answers AND array_length(p_option_ids, 1) <> 1 THEN
+      RAISE EXCEPTION 'SINGLE_ANSWER_ONLY';
+    END IF;
+
+    SELECT COUNT(*) INTO v_count FROM p2p_bet_options WHERE bet_id = p_bet_id AND id = ANY(p_option_ids);
+    IF v_count <> array_length(p_option_ids, 1) THEN
+      RAISE EXCEPTION 'INVALID_OPTION';
+    END IF;
+
+    DELETE FROM p2p_bet_participant_answers WHERE participant_id = v_participant.id;
+    FOREACH v_option_id IN ARRAY p_option_ids LOOP
+      INSERT INTO p2p_bet_participant_answers (participant_id, option_id) VALUES (v_participant.id, v_option_id);
+    END LOOP;
+  END IF;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."submit_bet_answer"("p_bet_id" "uuid", "p_answer_text" "text", "p_option_ids" "uuid"[]) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."submit_knockout_keeps"("p_league_id" "uuid", "p_player_ids" "text"[]) RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -8322,7 +9097,7 @@ CREATE TABLE IF NOT EXISTS "public"."circles" (
     "invite_code" "text" DEFAULT "substring"(("gen_random_uuid"())::"text", 1, 8) NOT NULL,
     "created_by" "uuid" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "p2p_betting_enabled" boolean DEFAULT false NOT NULL,
+    "p2p_betting_enabled" boolean DEFAULT true NOT NULL,
     "is_public" boolean DEFAULT false NOT NULL
 );
 
@@ -8411,7 +9186,7 @@ CREATE TABLE IF NOT EXISTS "public"."clubhouse_notifications" (
     "payload" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "read_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "clubhouse_notifications_source_type_check" CHECK (("source_type" = ANY (ARRAY['league'::"text", 'paddock'::"text", 'box'::"text", 'clubhouse'::"text", 'p2p_challenge'::"text"])))
+    CONSTRAINT "clubhouse_notifications_source_type_check" CHECK (("source_type" = ANY (ARRAY['league'::"text", 'paddock'::"text", 'box'::"text", 'clubhouse'::"text", 'p2p_challenge'::"text", 'p2p_bet'::"text"])))
 );
 
 
@@ -8446,6 +9221,7 @@ CREATE TABLE IF NOT EXISTS "public"."coin_transactions" (
     "status" "text" DEFAULT 'completed'::"text" NOT NULL,
     "currency" character(3) DEFAULT 'FRC'::"bpchar" NOT NULL,
     "reference_id" "text",
+    "bet_id" "uuid",
     CONSTRAINT "coin_transactions_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'completed'::"text", 'failed'::"text", 'reversed'::"text"]))),
     CONSTRAINT "no_external_cash_out" CHECK (("type" = ANY (ARRAY['purchase'::"text", 'admin'::"text", 'stake'::"text", 'wager_placement'::"text", 'win'::"text", 'wager_win'::"text", 'loss'::"text", 'rake'::"text", 'refund'::"text", 'wager_refund'::"text", 'entry_fee'::"text"])))
 );
@@ -9064,6 +9840,89 @@ CREATE TABLE IF NOT EXISTS "public"."matchday_scores" (
 
 
 ALTER TABLE "public"."matchday_scores" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."p2p_bet_options" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "bet_id" "uuid" NOT NULL,
+    "label" "text" NOT NULL,
+    "sort_order" integer DEFAULT 0 NOT NULL,
+    "is_correct" boolean DEFAULT false NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "p2p_bet_options_label_check" CHECK ((("char_length"("label") >= 1) AND ("char_length"("label") <= 80)))
+);
+
+
+ALTER TABLE "public"."p2p_bet_options" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."p2p_bet_participant_answers" (
+    "participant_id" "uuid" NOT NULL,
+    "option_id" "uuid" NOT NULL
+);
+
+
+ALTER TABLE "public"."p2p_bet_participant_answers" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."p2p_bet_participants" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "bet_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "status" "text" DEFAULT 'joined'::"text" NOT NULL,
+    "stake_coins" integer,
+    "answer_text" "text",
+    "declared_correct" boolean DEFAULT false NOT NULL,
+    "is_winner" boolean DEFAULT false NOT NULL,
+    "joined_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "p2p_bet_participants_status_check" CHECK (("status" = ANY (ARRAY['joined'::"text", 'declined'::"text"])))
+);
+
+
+ALTER TABLE "public"."p2p_bet_participants" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."p2p_bet_targets" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "bet_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL
+);
+
+
+ALTER TABLE "public"."p2p_bet_targets" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."p2p_bets" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "circle_id" "uuid" NOT NULL,
+    "creator_id" "uuid" NOT NULL,
+    "question" "text" NOT NULL,
+    "answer_mode" "text" NOT NULL,
+    "allow_multiple_answers" boolean DEFAULT false NOT NULL,
+    "target_mode" "text" NOT NULL,
+    "stake_coins" integer NOT NULL,
+    "starts_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "ends_at" timestamp with time zone,
+    "status" "text" DEFAULT 'open'::"text" NOT NULL,
+    "declared_by" "uuid",
+    "declared_at" timestamp with time zone,
+    "objection_deadline" timestamp with time zone,
+    "dispute_deadline" timestamp with time zone,
+    "resolved_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "p2p_bets_answer_mode_check" CHECK (("answer_mode" = ANY (ARRAY['freeform_text'::"text", 'multiple_choice'::"text"]))),
+    CONSTRAINT "p2p_bets_check" CHECK ((("ends_at" IS NULL) OR ("ends_at" > "starts_at"))),
+    CONSTRAINT "p2p_bets_check1" CHECK ((("answer_mode" = 'multiple_choice'::"text") OR ("allow_multiple_answers" = false))),
+    CONSTRAINT "p2p_bets_question_check" CHECK ((("char_length"("question") >= 1) AND ("char_length"("question") <= 140))),
+    CONSTRAINT "p2p_bets_stake_coins_check" CHECK ((("stake_coins" >= 10) AND ("stake_coins" <= 10000))),
+    CONSTRAINT "p2p_bets_status_check" CHECK (("status" = ANY (ARRAY['open'::"text", 'closed'::"text", 'disputed'::"text", 'resolved'::"text", 'cancelled'::"text"]))),
+    CONSTRAINT "p2p_bets_target_mode_check" CHECK (("target_mode" = ANY (ARRAY['selected_users'::"text", 'whole_clubhouse'::"text"])))
+);
+
+
+ALTER TABLE "public"."p2p_bets" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."p2p_challenges" (
@@ -10117,6 +10976,41 @@ ALTER TABLE ONLY "public"."matchday_scores"
 
 
 
+ALTER TABLE ONLY "public"."p2p_bet_options"
+    ADD CONSTRAINT "p2p_bet_options_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_participant_answers"
+    ADD CONSTRAINT "p2p_bet_participant_answers_pkey" PRIMARY KEY ("participant_id", "option_id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_participants"
+    ADD CONSTRAINT "p2p_bet_participants_bet_id_user_id_key" UNIQUE ("bet_id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_participants"
+    ADD CONSTRAINT "p2p_bet_participants_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_targets"
+    ADD CONSTRAINT "p2p_bet_targets_bet_id_user_id_key" UNIQUE ("bet_id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_targets"
+    ADD CONSTRAINT "p2p_bet_targets_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bets"
+    ADD CONSTRAINT "p2p_bets_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."p2p_challenges"
     ADD CONSTRAINT "p2p_challenges_pkey" PRIMARY KEY ("id");
 
@@ -10530,6 +11424,10 @@ CREATE INDEX "idx_chat_messages_mentions" ON "public"."chat_messages" USING "gin
 
 
 
+CREATE INDEX "idx_coin_transactions_bet" ON "public"."coin_transactions" USING "btree" ("bet_id") WHERE ("bet_id" IS NOT NULL);
+
+
+
 CREATE INDEX "idx_daily_jokers_user_date" ON "public"."daily_jokers" USING "btree" ("user_id", "joker_date");
 
 
@@ -10567,6 +11465,38 @@ CREATE INDEX "idx_league_notifications_user_league" ON "public"."league_notifica
 
 
 CREATE INDEX "idx_matchday_deadlines_tournament" ON "public"."matchday_deadlines" USING "btree" ("tournament_id");
+
+
+
+CREATE INDEX "idx_p2p_bet_options_bet" ON "public"."p2p_bet_options" USING "btree" ("bet_id");
+
+
+
+CREATE INDEX "idx_p2p_bet_participants_bet" ON "public"."p2p_bet_participants" USING "btree" ("bet_id");
+
+
+
+CREATE INDEX "idx_p2p_bet_participants_user" ON "public"."p2p_bet_participants" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_p2p_bet_targets_user" ON "public"."p2p_bet_targets" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_p2p_bets_circle" ON "public"."p2p_bets" USING "btree" ("circle_id");
+
+
+
+CREATE INDEX "idx_p2p_bets_declared" ON "public"."p2p_bets" USING "btree" ("status", "objection_deadline") WHERE ("status" = 'closed'::"text");
+
+
+
+CREATE INDEX "idx_p2p_bets_disputed" ON "public"."p2p_bets" USING "btree" ("status", "dispute_deadline") WHERE ("status" = 'disputed'::"text");
+
+
+
+CREATE INDEX "idx_p2p_bets_status_ends_at" ON "public"."p2p_bets" USING "btree" ("status", "ends_at") WHERE ("status" = ANY (ARRAY['open'::"text", 'closed'::"text"]));
 
 
 
@@ -10955,6 +11885,11 @@ ALTER TABLE ONLY "public"."clubhouse_notifications"
 
 
 ALTER TABLE ONLY "public"."coin_transactions"
+    ADD CONSTRAINT "coin_transactions_bet_id_fkey" FOREIGN KEY ("bet_id") REFERENCES "public"."p2p_bets"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."coin_transactions"
     ADD CONSTRAINT "coin_transactions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
@@ -11261,6 +12196,56 @@ ALTER TABLE ONLY "public"."matchday_scores"
 
 ALTER TABLE ONLY "public"."matchday_scores"
     ADD CONSTRAINT "matchday_scores_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_options"
+    ADD CONSTRAINT "p2p_bet_options_bet_id_fkey" FOREIGN KEY ("bet_id") REFERENCES "public"."p2p_bets"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_participant_answers"
+    ADD CONSTRAINT "p2p_bet_participant_answers_option_id_fkey" FOREIGN KEY ("option_id") REFERENCES "public"."p2p_bet_options"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_participant_answers"
+    ADD CONSTRAINT "p2p_bet_participant_answers_participant_id_fkey" FOREIGN KEY ("participant_id") REFERENCES "public"."p2p_bet_participants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_participants"
+    ADD CONSTRAINT "p2p_bet_participants_bet_id_fkey" FOREIGN KEY ("bet_id") REFERENCES "public"."p2p_bets"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_participants"
+    ADD CONSTRAINT "p2p_bet_participants_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_targets"
+    ADD CONSTRAINT "p2p_bet_targets_bet_id_fkey" FOREIGN KEY ("bet_id") REFERENCES "public"."p2p_bets"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_bet_targets"
+    ADD CONSTRAINT "p2p_bet_targets_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bets"
+    ADD CONSTRAINT "p2p_bets_circle_id_fkey" FOREIGN KEY ("circle_id") REFERENCES "public"."circles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_bets"
+    ADD CONSTRAINT "p2p_bets_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_bets"
+    ADD CONSTRAINT "p2p_bets_declared_by_fkey" FOREIGN KEY ("declared_by") REFERENCES "auth"."users"("id");
 
 
 
@@ -12475,6 +13460,61 @@ CREATE POLICY "no client reads" ON "public"."client_errors" USING (false);
 
 
 
+ALTER TABLE "public"."p2p_bet_options" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "p2p_bet_options_select" ON "public"."p2p_bet_options" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."p2p_bets" "b"
+  WHERE (("b"."id" = "p2p_bet_options"."bet_id") AND "public"."is_circle_member"("b"."circle_id")))));
+
+
+
+ALTER TABLE "public"."p2p_bet_participant_answers" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "p2p_bet_participant_answers_select" ON "public"."p2p_bet_participant_answers" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."p2p_bet_participants" "p"
+  WHERE (("p"."id" = "p2p_bet_participant_answers"."participant_id") AND (("p"."user_id" = "auth"."uid"()) OR (EXISTS ( SELECT 1
+           FROM "public"."p2p_bets" "b"
+          WHERE (("b"."id" = "p"."bet_id") AND ("b"."creator_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
+           FROM ("public"."p2p_bets" "b"
+             JOIN "public"."circle_members" "cm" ON (("cm"."circle_id" = "b"."circle_id")))
+          WHERE (("b"."id" = "p"."bet_id") AND ("cm"."user_id" = "auth"."uid"()) AND ("cm"."role" = 'owner'::"text")))) OR (EXISTS ( SELECT 1
+           FROM "public"."p2p_bets" "b"
+          WHERE (("b"."id" = "p"."bet_id") AND ("b"."status" <> 'open'::"text") AND "public"."is_circle_member"("b"."circle_id")))))))));
+
+
+
+ALTER TABLE "public"."p2p_bet_participants" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "p2p_bet_participants_select" ON "public"."p2p_bet_participants" FOR SELECT USING ((("user_id" = "auth"."uid"()) OR (EXISTS ( SELECT 1
+   FROM "public"."p2p_bets" "b"
+  WHERE (("b"."id" = "p2p_bet_participants"."bet_id") AND ("b"."creator_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
+   FROM ("public"."p2p_bets" "b"
+     JOIN "public"."circle_members" "cm" ON (("cm"."circle_id" = "b"."circle_id")))
+  WHERE (("b"."id" = "p2p_bet_participants"."bet_id") AND ("cm"."user_id" = "auth"."uid"()) AND ("cm"."role" = 'owner'::"text")))) OR (EXISTS ( SELECT 1
+   FROM "public"."p2p_bets" "b"
+  WHERE (("b"."id" = "p2p_bet_participants"."bet_id") AND ("b"."status" <> 'open'::"text") AND "public"."is_circle_member"("b"."circle_id"))))));
+
+
+
+ALTER TABLE "public"."p2p_bet_targets" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "p2p_bet_targets_select" ON "public"."p2p_bet_targets" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."p2p_bets" "b"
+  WHERE (("b"."id" = "p2p_bet_targets"."bet_id") AND "public"."is_circle_member"("b"."circle_id")))));
+
+
+
+ALTER TABLE "public"."p2p_bets" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "p2p_bets_select" ON "public"."p2p_bets" FOR SELECT USING ("public"."is_circle_member"("circle_id"));
+
+
+
 ALTER TABLE "public"."p2p_challenges" ENABLE ROW LEVEL SECURITY;
 
 
@@ -12946,14 +13986,32 @@ GRANT ALL ON FUNCTION "public"."apply_relaxation_state"("p_league_id" "uuid") TO
 
 
 
+REVOKE ALL ON FUNCTION "public"."arbitrate_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."arbitrate_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) TO "service_role";
+GRANT ALL ON FUNCTION "public"."arbitrate_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "authenticated";
 
 
 
+GRANT ALL ON FUNCTION "public"."auto_close_expired_bets"() TO "anon";
+GRANT ALL ON FUNCTION "public"."auto_close_expired_bets"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."auto_close_expired_bets"() TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."auto_resolve_p2p_challenges"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."auto_resolve_p2p_challenges"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."auto_void_stale_bet_disputes"() TO "anon";
+GRANT ALL ON FUNCTION "public"."auto_void_stale_bet_disputes"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."auto_void_stale_bet_disputes"() TO "service_role";
 
 
 
@@ -12970,6 +14028,12 @@ GRANT ALL ON FUNCTION "public"."award_trophy"("p_circle_id" "uuid", "p_league_id
 GRANT ALL ON FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."cancel_p2p_bet"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."cancel_p2p_bet"("p_bet_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."cancel_p2p_bet"("p_bet_id" "uuid") TO "authenticated";
 
 
 
@@ -13003,8 +14067,15 @@ GRANT ALL ON FUNCTION "public"."claim_draft_player"("p_league_id" "uuid", "p_pla
 
 
 REVOKE ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") TO "authenticated";
 
 
 
@@ -13044,6 +14115,12 @@ GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text
 
 
 
+REVOKE ALL ON FUNCTION "public"."create_p2p_bet"("p_circle_id" "uuid", "p_question" "text", "p_answer_mode" "text", "p_allow_multiple_answers" boolean, "p_target_mode" "text", "p_target_user_ids" "uuid"[], "p_options" "text"[], "p_stake_coins" integer, "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_p2p_bet"("p_circle_id" "uuid", "p_question" "text", "p_answer_mode" "text", "p_allow_multiple_answers" boolean, "p_target_mode" "text", "p_target_user_ids" "uuid"[], "p_options" "text"[], "p_stake_coins" integer, "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) TO "service_role";
+GRANT ALL ON FUNCTION "public"."create_p2p_bet"("p_circle_id" "uuid", "p_question" "text", "p_answer_mode" "text", "p_allow_multiple_answers" boolean, "p_target_mode" "text", "p_target_user_ids" "uuid"[], "p_options" "text"[], "p_stake_coins" integer, "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text", "p_league_id" "uuid", "p_matchday_id" "text", "p_question" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text", "p_league_id" "uuid", "p_matchday_id" "text", "p_question" "text") TO "service_role";
 GRANT ALL ON FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text", "p_league_id" "uuid", "p_matchday_id" "text", "p_question" "text") TO "authenticated";
@@ -13067,14 +14144,38 @@ GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" int
 
 
 
+GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."declare_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."declare_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) TO "service_role";
+GRANT ALL ON FUNCTION "public"."declare_bet_outcome"("p_bet_id" "uuid", "p_winning_option_ids" "uuid"[], "p_winning_user_ids" "uuid"[]) TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "authenticated";
+
+
+
+REVOKE ALL ON FUNCTION "public"."decline_p2p_bet"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."decline_p2p_bet"("p_bet_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."decline_p2p_bet"("p_bet_id" "uuid") TO "authenticated";
 
 
 
@@ -13099,6 +14200,12 @@ GRANT ALL ON FUNCTION "public"."delete_user_data"("p_user_id" "uuid") TO "servic
 GRANT ALL ON FUNCTION "public"."derive_fixture_round_number"() TO "anon";
 GRANT ALL ON FUNCTION "public"."derive_fixture_round_number"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."derive_fixture_round_number"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."dispute_bet_outcome"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."dispute_bet_outcome"("p_bet_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."dispute_bet_outcome"("p_bet_id" "uuid") TO "authenticated";
 
 
 
@@ -13159,6 +14266,17 @@ GRANT ALL ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") TO "servic
 
 
 
+REVOKE ALL ON FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."finalize_bet_payout"("p_bet_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."finalize_declared_bets"() TO "anon";
+GRANT ALL ON FUNCTION "public"."finalize_declared_bets"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."finalize_declared_bets"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") TO "service_role";
@@ -13210,6 +14328,12 @@ GRANT ALL ON FUNCTION "public"."get_club_cap"("p_league_id" "uuid") TO "service_
 GRANT ALL ON FUNCTION "public"."get_club_cap"("p_league_id" "uuid", "p_matchday_id" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_club_cap"("p_league_id" "uuid", "p_matchday_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_club_cap"("p_league_id" "uuid", "p_matchday_id" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."get_clubhouse_bets"("p_circle_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_clubhouse_bets"("p_circle_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_clubhouse_bets"("p_circle_id" "uuid") TO "authenticated";
 
 
 
@@ -13279,6 +14403,19 @@ GRANT ALL ON FUNCTION "public"."get_my_circles"() TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."get_my_p2p_bets"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_my_p2p_bets"() TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_my_p2p_bets"() TO "authenticated";
+
+
+
+REVOKE ALL ON FUNCTION "public"."get_my_p2p_streak"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_my_p2p_streak"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_my_p2p_streak"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_my_p2p_streak"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_my_paddocks"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_my_paddocks"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_my_paddocks"() TO "service_role";
@@ -13298,8 +14435,9 @@ GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "service_role";
 
 
 REVOKE ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_open_challenges"("p_circle_id" "uuid") TO "service_role";
 
 
 
@@ -13463,6 +14601,12 @@ GRANT ALL ON FUNCTION "public"."join_league_by_code"("p_code" "text", "p_user_id
 
 
 
+REVOKE ALL ON FUNCTION "public"."join_p2p_bet"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."join_p2p_bet"("p_bet_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."join_p2p_bet"("p_bet_id" "uuid") TO "authenticated";
+
+
+
 GRANT ALL ON FUNCTION "public"."join_paddock_by_code"("p_code" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."join_paddock_by_code"("p_code" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."join_paddock_by_code"("p_code" "text") TO "service_role";
@@ -13588,6 +14732,12 @@ GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" i
 
 
 
+GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb", "p_bet_id" "uuid") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") TO "service_role";
@@ -13710,6 +14860,12 @@ GRANT ALL ON FUNCTION "public"."submit_atp_finals_knockout_picks"("p_season_year
 GRANT ALL ON FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."submit_bet_answer"("p_bet_id" "uuid", "p_answer_text" "text", "p_option_ids" "uuid"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."submit_bet_answer"("p_bet_id" "uuid", "p_answer_text" "text", "p_option_ids" "uuid"[]) TO "service_role";
+GRANT ALL ON FUNCTION "public"."submit_bet_answer"("p_bet_id" "uuid", "p_answer_text" "text", "p_option_ids" "uuid"[]) TO "authenticated";
 
 
 
@@ -14134,6 +15290,36 @@ GRANT ALL ON TABLE "public"."matchday_recaps" TO "service_role";
 GRANT ALL ON TABLE "public"."matchday_scores" TO "anon";
 GRANT ALL ON TABLE "public"."matchday_scores" TO "authenticated";
 GRANT ALL ON TABLE "public"."matchday_scores" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."p2p_bet_options" TO "anon";
+GRANT ALL ON TABLE "public"."p2p_bet_options" TO "authenticated";
+GRANT ALL ON TABLE "public"."p2p_bet_options" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."p2p_bet_participant_answers" TO "anon";
+GRANT ALL ON TABLE "public"."p2p_bet_participant_answers" TO "authenticated";
+GRANT ALL ON TABLE "public"."p2p_bet_participant_answers" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."p2p_bet_participants" TO "anon";
+GRANT ALL ON TABLE "public"."p2p_bet_participants" TO "authenticated";
+GRANT ALL ON TABLE "public"."p2p_bet_participants" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."p2p_bet_targets" TO "anon";
+GRANT ALL ON TABLE "public"."p2p_bet_targets" TO "authenticated";
+GRANT ALL ON TABLE "public"."p2p_bet_targets" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."p2p_bets" TO "anon";
+GRANT ALL ON TABLE "public"."p2p_bets" TO "authenticated";
+GRANT ALL ON TABLE "public"."p2p_bets" TO "service_role";
 
 
 
