@@ -80,6 +80,7 @@ export default function TrophyCabinetScreen() {
   const isMobile = useIsMobile();
   const { activeCircle, activeCircleId, competitions, feed, metaStandings } = useClubhouseContext();
   const [trophies, setTrophies] = useState([]);
+  const [showInfo, setShowInfo] = useState(false);
 
   const username = user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? 'Manager';
   const initial  = username[0]?.toUpperCase() ?? 'M';
@@ -170,7 +171,22 @@ export default function TrophyCabinetScreen() {
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', lineHeight: 1 }}>{username}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', lineHeight: 1 }}>{username}</div>
+            <button
+              onClick={() => setShowInfo(v => !v)}
+              aria-label="How the Trophy Cabinet works"
+              title="How the Trophy Cabinet works"
+              style={{
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                border: `1.5px solid ${showInfo ? 'var(--on-shell-gold)' : 'var(--shell-rule)'}`,
+                background: showInfo ? 'rgba(255,255,255,.08)' : 'transparent', cursor: 'pointer',
+                display: 'grid', placeItems: 'center',
+                ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
+                color: showInfo ? 'var(--on-shell-gold)' : 'var(--on-shell-faint)',
+              }}
+            >?</button>
+          </div>
 
           {/* Per-sport badges */}
           <div style={{ display: 'flex', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
@@ -224,6 +240,24 @@ export default function TrophyCabinetScreen() {
           </div>
         )}
       </div>
+
+      {showInfo && (
+        <div style={{
+          margin: isMobile ? '0 16px 16px' : '0 26px 20px', marginTop: isMobile ? 12 : 16,
+          padding: '12px 14px', borderRadius: 8, background: 'var(--elev)', border: '1px solid var(--rule)',
+          fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.55, flexShrink: 0,
+        }}>
+          <div style={{ marginBottom: 6 }}>
+            <strong style={{ color: 'var(--text)' }}>Trophies</strong> are awarded automatically for round wins, event wins, and season wins across every sport in this Clubhouse — football, F1, and tennis all feed the same shelf.
+          </div>
+          <div style={{ marginBottom: 6 }}>
+            <strong style={{ color: 'var(--text)' }}>Group overall rank</strong> is a simple trophy count across all of your sports and competitions in this Clubhouse, ties broken gold → silver → bronze. It's not weighted by sport or competition size — one trophy is one trophy.
+          </div>
+          <div>
+            <strong style={{ color: 'var(--text)' }}>Season standing by sport</strong> shows your current placement within each individual competition, separate from the overall trophy count above.
+          </div>
+        </div>
+      )}
 
       {/* ── Body ── */}
       <div style={{
