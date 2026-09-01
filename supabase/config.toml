@@ -108,6 +108,12 @@ verify_jwt = false
 [functions.sync-tennis-players]
 verify_jwt = false
 
+[functions.sync-tennis-results]
+verify_jwt = false
+
+[functions.lookup-tennis-tournament]
+verify_jwt = false
+
 [functions.score-tennis-tournament]
 verify_jwt = false
 
