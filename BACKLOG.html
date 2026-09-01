@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>215</strong><span>closed</span></div>
+      <div class="total-pill"><strong>216</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (135)</span>
+    <span class="chip" data-filter-kind="done">Shipped (136)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">215</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">216</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">135</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">136</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1226,8 +1226,37 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">135</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">136</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ fixed dead cron bearer tokens — admin_trigger_key rotation + repoint (2026-09-01) — pr #900, migrations 272–275 
+
+**context**: every `net.http_post`-invoking pg_cron job was sending a bearer token that no longer authenticates. root cause: this project&#x27;s supabase keys migrated to the new `sb_secret_.../jwks` system at some point, silently killing 2 of `requireservicerole()`&#x27;s 3 auth paths — path b (old-format `service_role` jwt verified via `supabase_jwt_secret`) is dead because that env var no longer exists; path a (exact match on `supabase_service_role_key`) needs the new `sb_secret_...` value, which none of the cron bodies carry. only path c (`admin_trigger_key`, added 2026-06-28 for exactly this reason) still works. verified via curl against `check-cron-health`: old jwt and old hex secrets both 401, freshly-rotated `admin_trigger_key` 200s.
+
+**found along the way**: migrations 272 (`sync-tennis-results` cron) and 273 (generic active-tournament sync crons, retiring the wc-hardcoded `sync-wc-*` jobs) were written in an earlier session but had never actually been applied to prod — confirmed via `schema_migrations` + `cron.job` absence. fixed their bearer in place (safe, since never shipped) and applied them alongside the new fix.
+
+**migrations**: 272/273 (bearer fixed in place, applied), 274 (repoints the other 12 already-live crons — `award-season-trophies`, `calculate-scores-{live,post-match,late-finishers}`, `check-cron-health`, `generate-frontpage-editions`, `ingest-match-events-live`, `resolve-finished-bets`, `run-draft-lottery`, `run-reverse-standings-draft`, `run-wishlist-draft`, `sync-cup-eliminations`), 275 (fixes a bug in 274: `cron.unschedule()`+`cron.schedule()` always resets `active = true`, which silently reactivated all 12 — they were `active = false` beforehand; caught within minutes, reverted before any fired, made durable via 275). final state: all 12 pre-existing jobs still inactive, credential fixed; `sync-tennis-results` + 3 `sync-active-tourn" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Fixed dead cron bearer tokens — ADMIN_TRIGGER_KEY rotation + repoint</h3>
+        <p class="card-summary">Context : Every net.http_post -invoking pg_cron job was sending a bearer token that no longer authenticates. Root cause: this project's Supabase keys migrated to the new…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-01</span><span class="foot-refs">PR #900, migrations 272–275</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Fixed dead cron bearer tokens — ADMIN_TRIGGER_KEY rotation + repoint</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : Every net.http_post -invoking pg_cron job was sending a bearer token that no longer authenticates. Root cause: this project's Supabase keys migrated to the new…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #900, migrations 272–275</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-01</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: Every <code>net.http_post</code>-invoking pg_cron job was sending a bearer token that no longer authenticates. Root cause: this project's Supabase keys migrated to the new <code>sb_secret_.../JWKS</code> system at some point, silently killing 2 of <code>requireServiceRole()</code>'s 3 auth paths — Path B (old-format <code>service_role</code> JWT verified via <code>SUPABASE_JWT_SECRET</code>) is dead because that env var no longer exists; Path A (exact match on <code>SUPABASE_SERVICE_ROLE_KEY</code>) needs the new <code>sb_secret_...</code> value, which none of the cron bodies carry. Only Path C (<code>ADMIN_TRIGGER_KEY</code>, added 2026-06-28 for exactly this reason) still works. Verified via curl against <code>check-cron-health</code>: old JWT and old hex secrets both 401, freshly-rotated <code>ADMIN_TRIGGER_KEY</code> 200s.</p>
+<p><strong>Found along the way</strong>: migrations 272 (<code>sync-tennis-results</code> cron) and 273 (generic active-tournament sync crons, retiring the WC-hardcoded <code>sync-wc-*</code> jobs) were written in an earlier session but had never actually been applied to prod — confirmed via <code>schema_migrations</code> + <code>cron.job</code> absence. Fixed their bearer in place (safe, since never shipped) and applied them alongside the new fix.</p>
+<p><strong>Migrations</strong>: 272/273 (bearer fixed in place, applied), 274 (repoints the other 12 already-live crons — <code>award-season-trophies</code>, <code>calculate-scores-{live,post-match,late-finishers}</code>, <code>check-cron-health</code>, <code>generate-frontpage-editions</code>, <code>ingest-match-events-live</code>, <code>resolve-finished-bets</code>, <code>run-draft-lottery</code>, <code>run-reverse-standings-draft</code>, <code>run-wishlist-draft</code>, <code>sync-cup-eliminations</code>), 275 (fixes a bug in 274: <code>cron.unschedule()</code>+<code>cron.schedule()</code> always resets <code>active = true</code>, which silently reactivated all 12 — they were <code>active = false</code> beforehand; caught within minutes, reverted before any fired, made durable via 275). Final state: all 12 pre-existing jobs still inactive, credential fixed; <code>sync-tennis-results</code> + 3 <code>sync-active-tournaments-*</code> jobs active by original design.</p>
+<p><strong>Secrets redacted from all 4 migration files before commit</strong> — this repo is public on GitHub, unlike prior sessions' migrations which hardcoded now-dead secrets in git history. Real value applied directly to the live DB, independent of what's tracked in git.</p>
+<p><strong>Also shipped</strong>: <code>sync-tennis-results</code> + <code>lookup-tennis-tournament</code> Edge Functions (written in an earlier session, never committed until this PR) — both deployed, plus a re-deploy of <code>sync-players</code> to clear pre-existing drift from PR #897 (had been live-broken/undeployed since that PR merged earlier the same day). <code>.function-checksums.json</code> updated so the CI drift check (<code>npm run check:drift</code>) is green again.</p>
+<p><strong>Backup</strong>: <code>backups/pre_migration_20260901_210615.sql</code> (full <code>db dump --linked</code>, gitignored, local only).</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ cleaned stale epl 2025-26 + friendlies jun 2026 tournaments from the db (2026-09-01) — no pr (data-only, no code change) 
 
 **context**: following the ucl 2026-27 rollover cleanup (below), audited what&#x27;s actually in `tournaments`: 4 rows — ucl 2026-27 (`1593`), world cup 2026 (`429`), premier league 2025-26 (`426`, season ended 2026-05-24), international friendlies jun 2026 (`623`, wc warm-up window, ended 2026-06-10). user asked to keep only ucl (fresh, in-progress setup) and wc (first-pilot history) and clean the other two.

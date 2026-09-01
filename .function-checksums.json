@@ -10,6 +10,7 @@
   "eliminate-cup-club": "9764097b11736cde8d19c9da79cb534a0a00101e66a3cd10bc199cdb60165b9c",
   "generate-frontpage-edition": "ab8d035cb2a6b3906bbb74ef888c12759adc88b81337eef5719f7249df4f8894",
   "ingest-match-events": "93bf4d71cdf5c6a51a5738d1e1ad44843c01f569aa7e10435de6ca2d30ac72de",
+  "lookup-tennis-tournament": "47315699f1b4f451ddb81b07f252a3324a1c0daee6efce534cd4457b29631cda",
   "process-transfer": "c5847e8f58b6de1c99a1012ccf0e65d8e24038fc3b4da8a2c992ca4189172734",
   "purchase-coins": "3593bb518512e46f9ca52c3ff8b6f6249eb5794b91a3c95a04e23d1e0e41b3ac",
   "resolve-bets": "99890c296446af9c137b331fe993156d1619c46a23cabad0f9649397738b386c",
@@ -21,6 +22,7 @@
   "score-tennis-tournament": "4c5084e889565966ba4b5f67ffb0dc13b929976ad951437af2f6cac8f3a007f3",
   "sync-fixtures": "4a24feeae5b942e398aee4b96f8976fdf0931b3e5588ce53ad5a5f370a27d839",
   "sync-player-status": "507a2669ef2b9a9832db1311d74f277e3deaec7cbb51601be10e4f5075229b1e",
-  "sync-players": "c3ac9aade72656f0b037643492471a2c98ba30d37ff51e5e32c74be0fbbe75c3",
-  "sync-tennis-players": "9b006d08dc811541314e6dda3ffbf5e1d65f42e88f974829c24b79fa233a2037"
+  "sync-players": "8db10d7f16f538da9ad765f715b6e3027b39862c42d7d7485ac6b8a8532a12f9",
+  "sync-tennis-players": "9b006d08dc811541314e6dda3ffbf5e1d65f42e88f974829c24b79fa233a2037",
+  "sync-tennis-results": "40c5eb72ef4dc926910704c2e9a0887f854acfae173e634f3120633d949c2ffa"
 }
