@@ -2244,7 +2244,7 @@ export default function ChallengeScreen() {
     const t = searchParams.get('tab');
     return t === 'wallet' ? t : 'bets';
   });
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(() => searchParams.get('new') === '1');
   const [actionLoading, setAction]  = useState(false);
   const [toast, setToast]           = useState(null);
   const [declaringChallenge, setDeclaringChallenge]     = useState(null);

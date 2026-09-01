@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
@@ -15,10 +16,45 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+// ── Bet activity card — system message for bet/challenge create + resolve ─────
+function BetActivityCard({ msg }) {
+  const navigate = useNavigate();
+  const ref = msg.betRef ?? {};
+  const isResolved = ref.event === 'resolved';
+
+  return (
+    <button
+      onClick={() => navigate('/challenges?tab=bets')}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+        padding: '9px 12px', margin: '4px 0', borderRadius: 8, cursor: 'pointer',
+        background: 'var(--card)', border: '1px solid var(--rule)',
+      }}
+    >
+      <span style={{ fontSize: 'var(--fs-body)', flexShrink: 0 }}>{isResolved ? '✅' : '🎲'}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {ref.question ?? msg.content}
+        </span>
+        {ref.stake_coins != null && (
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+            {ref.stake_coins} coins · {isResolved ? 'resolved' : 'new bet'}
+          </span>
+        )}
+      </span>
+      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>VIEW</span>
+    </button>
+  );
+}
+
 // ── Message bubble ────────────────────────────────────────────────────────────
 function MessageBubble({ msg, prevMsg, onDelete }) {
   const [hovering, setHovering] = useState(false);
   const showMeta = !prevMsg || prevMsg.userId !== msg.userId;
+
+  if (msg.kind === 'bet_activity') {
+    return <BetActivityCard msg={msg} />;
+  }
 
   return (
     <div
@@ -77,6 +113,7 @@ function DmBubble({ msg }) {
 
 // ── Message thread (channel or DM) ────────────────────────────────────────────
 function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete, scrollEndRef, isOwner, onBack, isDm }) {
+  const navigate = useNavigate();
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -140,6 +177,16 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
         onSubmit={handleSend}
         style={{ padding: '10px 16px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, flexShrink: 0 }}
       >
+        {!isDm && (
+          <button
+            type="button"
+            onClick={() => navigate('/challenges?tab=bets&new=1')}
+            title="Quick bet"
+            style={{ flexShrink: 0, padding: '9px 11px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, fontSize: 'var(--fs-body)', cursor: 'pointer', lineHeight: 1 }}
+          >
+            🎲
+          </button>
+        )}
         <input
           value={text}
           onChange={e => setText(e.target.value)}

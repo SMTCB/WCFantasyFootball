@@ -23,7 +23,7 @@ export function useClubhouseChat(channelId) {
     try {
       const { data, error } = await supabase
         .from('clubhouse_messages')
-        .select('id, user_id, content, created_at')
+        .select('id, user_id, content, created_at, kind, bet_ref')
         .eq('channel_id', channelId)
         .order('created_at', { ascending: true })
         .limit(100);
@@ -42,6 +42,8 @@ export function useClubhouseChat(channelId) {
         content: m.content,
         createdAt: m.created_at,
         isOwn: m.user_id === user?.id,
+        kind: m.kind,
+        betRef: m.bet_ref,
       })));
     } catch (err) {
       console.error('useClubhouseChat: fetchMessages failed', err);
@@ -71,6 +73,8 @@ export function useClubhouseChat(channelId) {
           content: msg.content,
           createdAt: msg.created_at,
           isOwn: msg.user_id === user?.id,
+          kind: msg.kind,
+          betRef: msg.bet_ref,
         }]);
       })
       .subscribe();
