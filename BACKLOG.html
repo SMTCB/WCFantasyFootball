@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>213</strong><span>closed</span></div>
+      <div class="total-pill"><strong>214</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -179,6 +179,7 @@
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (3)</span>
+<span class="chip" data-filter-kind="other">Notes (1)</span>
   </div>
   <span id="result-count"></span>
 </div>
@@ -187,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">213</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">214</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -203,6 +204,7 @@
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">3</span></div>
+<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">1</span></div>
     </div>
   </nav>
   <main class="main">
@@ -12556,6 +12558,36 @@ ORDER BY ge.published_at DESC</code></pre>
 <li>All 5 are harmless: "Captain on bench; bonus moved to highest-scoring starter" from our own E2E test sessions. Safe to clear:</li>
 </ul>
 <pre><code>  DELETE FROM edge_function_errors WHERE created_at &lt; NOW() - INTERVAL &#x27;1 day&#x27;;</code></pre>
+<hr></dd></div>
+      </dl></template>
+      </article></div>
+    </section>
+
+    <section class="item-group" id="group-other" data-group="other">
+      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">1</span></h2>
+      <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 p2 — forza tournament ids are reused every season — no durable season-boundary handling (2026-09-01) — open, no pr yet 
+
+**context**: preparing to load uefa champions league 2026-27, discovered `tournaments.forza_id=1593` was still carrying **all of last season&#x27;s** (2025-26) data — 281 stale fixtures and ~3,400 players from clubs no longer in this year&#x27;s competition, still `sync_enabled`-adjacent in the db even though the season had ended. forza does not mint a new tournament id per season — it reuses the same `forza_id` and just rolls `current_season` forward internally, while its `round` field resets to 1 each season. under our schema, `round_number` (and the derived `matchday_id = &#x27;{forza_id}-r{round_number}&#x27;`) is scoped only by `tournament_id`, not by season — so once a new season&#x27;s fixtures land on top of an old season&#x27;s under the same forza_id, round numbers collide (e.g. two completely different sets of 18 matches both claiming to be &quot;round 1&quot;), and `sync-players`&#x27; team list (derived from *all* current `fixtures` rows for that `tournament_id`, not season-filtered — see [supabase/functions/sync-players/index.js](supabase/functions/sync-players/index.js)) gets contaminated with stale clubs, pulling in retired/relegated teams and their full squads.
+
+**what was done this session (manual, one-off fix — not a platform fix)**: confirmed the season boundary was clean (old season&#x27;s last kickoff 2026-05-30, new season&#x27;s first kickoff 2026-07-07, no overlap), backed up the affected rows to `backups/ucl_1593_*_20260901_121817.json` (docker was down, so used the claude.md-documented select-and-save fallback instead of `supabase db dump`), then deleted the 281 old-season fixtures, ~1,418 players tied to the 47 old-season-only clubs (targeted delete, not delete-all, to preserve `price` valuations already set on current-season players), and 7 stale `matchday_deadlines` rows, and updated the `tournaments` row&#x27;s `name`/`slug`/`starts_at`/`ends_at` to the 2026-27 season. veri" style="--tab-color:#5b7285" tabindex="0" data-stamp="NOTE">
+        <div class="card-top"><span class="badge-mini k-other">NOTE</span></div>
+        <h3 class="card-title">P2 — Forza tournament IDs are reused every season — no durable season-boundary handling</h3>
+        <p class="card-summary">Context : Preparing to load UEFA Champions League 2026-27, discovered tournaments.forza_id=1593 was still carrying all of last season's (2025-26) data — 281 stale…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-01</span><span class="foot-refs">open, no PR yet</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-other">NOTE</span></div>
+      <h2 class="drawer-title">P2 — Forza tournament IDs are reused every season — no durable season-boundary handling</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : Preparing to load UEFA Champions League 2026-27, discovered tournaments.forza_id=1593 was still carrying all of last season's (2025-26) data — 281 stale…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>NOTE · open, no PR yet</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-01</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: Preparing to load UEFA Champions League 2026-27, discovered <code>tournaments.forza_id=1593</code> was still carrying <strong>all of last season's</strong> (2025-26) data — 281 stale fixtures and ~3,400 players from clubs no longer in this year's competition, still <code>sync_enabled</code>-adjacent in the DB even though the season had ended. Forza does not mint a new tournament ID per season — it reuses the same <code>forza_id</code> and just rolls <code>current_season</code> forward internally, while its <code>round</code> field resets to 1 each season. Under our schema, <code>round_number</code> (and the derived <code>matchday_id = '{forza_id}-r{round_number}'</code>) is scoped only by <code>tournament_id</code>, not by season — so once a new season's fixtures land on top of an old season's under the same forza_id, round numbers collide (e.g. two completely different sets of 18 matches both claiming to be "round 1"), and <code>sync-players</code>' team list (derived from *all* current <code>fixtures</code> rows for that <code>tournament_id</code>, not season-filtered — see <a href="supabase/functions/sync-players/index.js" target="_blank" rel="noopener">supabase/functions/sync-players/index.js</a>) gets contaminated with stale clubs, pulling in retired/relegated teams and their full squads.</p>
+<p><strong>What was done this session (manual, one-off fix — not a platform fix)</strong>: confirmed the season boundary was clean (old season's last kickoff 2026-05-30, new season's first kickoff 2026-07-07, no overlap), backed up the affected rows to <code>backups/ucl_1593_*_20260901_121817.json</code> (Docker was down, so used the CLAUDE.md-documented SELECT-and-save fallback instead of <code>supabase db dump</code>), then deleted the 281 old-season fixtures, ~1,418 players tied to the 47 old-season-only clubs (targeted delete, not delete-all, to preserve <code>price</code> valuations already set on current-season players), and 7 stale <code>matchday_deadlines</code> rows, and updated the <code>tournaments</code> row's <code>name</code>/<code>slug</code>/<code>starts_at</code>/<code>ends_at</code> to the 2026-27 season. Verified clean afterward: 234 fixtures, rounds 1–8 each with exactly 18 fixtures (no collisions), 2,395 players across 80 clubs, and World Cup (<code>tournament_id='429'</code>) confirmed untouched throughout (104 fixtures, never referenced by any query this session).</p>
+<p><strong>The open problem</strong>: this was done by hand, tournament-by-tournament, and nothing prevents the same collision from recurring — for UCL next season, and for any other tournament that reuses its forza_id year over year (continental/knockout competitions are the likely repeat offenders; single-season domestic leagues like a given EPL season may or may not follow the same pattern — not yet confirmed either way). There is no season-aware cleanup step in <a href="docs/deployment/ADDING_A_NEW_TOURNAMENT.md" target="_blank" rel="noopener">docs/deployment/ADDING_A_NEW_TOURNAMENT.md</a>'s onboarding cookbook, and no code path detects "this forza_id's fixtures just changed season out from under us."</p>
+<p><strong>Suggested direction (not scoped/estimated yet)</strong>: either (a) detect a season rollover automatically — e.g. <code>sync-fixtures</code> compares the API's <code>current_season</code>/season-start date against the DB's last-known value for that <code>forza_id</code> and, on mismatch, purges/archives the prior season's fixtures+players+deadlines before upserting the new batch, or (b) make season part of the schema's identity for recurring tournaments (e.g. a <code>season</code> column feeding into <code>matchday_id</code> instead of relying on <code>tournament_id</code> alone) so old and new season data can coexist without collision instead of requiring deletion. Either approach needs to happen without ever touching a different tournament's rows (this session's <code>429</code>-must-stay-untouched constraint should generalize: any season-rollover logic must be scoped tightly to the one <code>forza_id</code> being rolled over).</p>
+<p><strong>Priority</strong>: P2 — not urgent (this season's UCL data is now correct and playable), but will recur automatically next season unless addressed, and would then block onboarding for whichever tournament hits it, the same way this session's prep work was blocked until manually fixed.</p>
 <hr></dd></div>
       </dl></template>
       </article></div>
