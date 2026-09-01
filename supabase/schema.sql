@@ -976,6 +976,12 @@ BEGIN
   PERFORM settle_bet_coins(p_bet_id);
 
   UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = p_bet_id;
+
+  PERFORM post_bet_activity_message(
+    v_bet.circle_id, auth.uid(),
+    '✅ Bet resolved: ' || v_bet.question,
+    jsonb_build_object('ref_kind', 'bet', 'ref_id', p_bet_id, 'event', 'resolved', 'question', v_bet.question, 'stake_coins', v_bet.stake_coins)
+  );
 END;
 $$;
 
@@ -1050,6 +1056,12 @@ BEGIN
       updated_at  = now()
   WHERE id = p_challenge_id;
 
+  PERFORM post_bet_activity_message(
+    v_ch.circle_id, v_uid,
+    '✅ Challenge resolved: ' || v_ch.question,
+    jsonb_build_object('ref_kind', 'challenge', 'ref_id', p_challenge_id, 'event', 'resolved', 'question', v_ch.question, 'stake_coins', v_ch.stake_coins)
+  );
+
   RETURN jsonb_build_object('status', 'resolved', 'winner_id', p_winner_id);
 END;
 $$;
@@ -1121,19 +1133,25 @@ CREATE OR REPLACE FUNCTION "public"."auto_void_stale_bet_disputes"() RETURNS "vo
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_bet_id uuid;
+  v_bet RECORD;
 BEGIN
   IF auth.uid() IS NOT NULL THEN
     RAISE EXCEPTION 'ADMIN_ONLY';
   END IF;
 
-  FOR v_bet_id IN
-    SELECT id FROM p2p_bets WHERE status = 'disputed' AND dispute_deadline <= now()
+  FOR v_bet IN
+    SELECT id, circle_id, creator_id, question, stake_coins FROM p2p_bets
+    WHERE status = 'disputed' AND dispute_deadline <= now()
     FOR UPDATE SKIP LOCKED
   LOOP
-    UPDATE p2p_bet_participants SET is_winner = false, declared_correct = false WHERE bet_id = v_bet_id;
-    PERFORM settle_bet_coins(v_bet_id);
-    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
+    UPDATE p2p_bet_participants SET is_winner = false, declared_correct = false WHERE bet_id = v_bet.id;
+    PERFORM settle_bet_coins(v_bet.id);
+    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet.id;
+    PERFORM post_bet_activity_message(
+      v_bet.circle_id, v_bet.creator_id,
+      '⚖️ Bet voided (dispute unresolved): ' || v_bet.question,
+      jsonb_build_object('ref_kind', 'bet', 'ref_id', v_bet.id, 'event', 'resolved', 'question', v_bet.question, 'stake_coins', v_bet.stake_coins)
+    );
   END LOOP;
 END;
 $$;
@@ -1856,6 +1874,12 @@ BEGIN
       updated_at  = now()
   WHERE id = p_challenge_id;
 
+  PERFORM post_bet_activity_message(
+    v_ch.circle_id, v_uid,
+    '✅ Challenge resolved: ' || v_ch.question,
+    jsonb_build_object('ref_kind', 'challenge', 'ref_id', p_challenge_id, 'event', 'resolved', 'question', v_ch.question, 'stake_coins', v_ch.stake_coins)
+  );
+
   RETURN jsonb_build_object('status', 'resolved', 'winner_id', v_winner_id);
 END;
 $$;
@@ -2104,6 +2128,12 @@ BEGIN
   INSERT INTO p2p_bet_participants (bet_id, user_id, status, stake_coins, joined_at)
   VALUES (v_bet_id, auth.uid(), 'joined', p_stake_coins, now());
 
+  PERFORM post_bet_activity_message(
+    p_circle_id, auth.uid(),
+    '🎲 New bet: ' || p_question || ' · ' || p_stake_coins || ' coins',
+    jsonb_build_object('ref_kind', 'bet', 'ref_id', v_bet_id, 'event', 'created', 'question', p_question, 'stake_coins', p_stake_coins)
+  );
+
   RETURN v_bet_id;
 END;
 $$;
@@ -2288,6 +2318,12 @@ BEGIN
     AND type       = 'stake'
     AND challenge_id IS NULL
     AND created_at > now() - interval '5 seconds';
+
+  PERFORM post_bet_activity_message(
+    p_circle_id, v_challenger_id,
+    '⚔ New challenge: ' || COALESCE(p_question, 'GW ' || p_matchday_id) || ' · ' || p_stake_coins || ' coins',
+    jsonb_build_object('ref_kind', 'challenge', 'ref_id', v_challenge_id, 'event', 'created', 'question', COALESCE(p_question, 'GW ' || p_matchday_id), 'stake_coins', p_stake_coins)
+  );
 
   RETURN jsonb_build_object('challenge_id', v_challenge_id);
 END;
@@ -3690,20 +3726,25 @@ CREATE OR REPLACE FUNCTION "public"."finalize_declared_bets"() RETURNS "void"
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_bet_id uuid;
+  v_bet RECORD;
 BEGIN
   IF auth.uid() IS NOT NULL THEN
     RAISE EXCEPTION 'ADMIN_ONLY';
   END IF;
 
-  FOR v_bet_id IN
-    SELECT id FROM p2p_bets
+  FOR v_bet IN
+    SELECT id, circle_id, creator_id, question, stake_coins FROM p2p_bets
     WHERE status = 'closed' AND declared_at IS NOT NULL AND objection_deadline <= now()
     FOR UPDATE SKIP LOCKED
   LOOP
-    UPDATE p2p_bet_participants SET is_winner = declared_correct WHERE bet_id = v_bet_id;
-    PERFORM settle_bet_coins(v_bet_id);
-    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
+    UPDATE p2p_bet_participants SET is_winner = declared_correct WHERE bet_id = v_bet.id;
+    PERFORM settle_bet_coins(v_bet.id);
+    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet.id;
+    PERFORM post_bet_activity_message(
+      v_bet.circle_id, v_bet.creator_id,
+      '✅ Bet resolved: ' || v_bet.question,
+      jsonb_build_object('ref_kind', 'bet', 'ref_id', v_bet.id, 'event', 'resolved', 'question', v_bet.question, 'stake_coins', v_bet.stake_coins)
+    );
   END LOOP;
 END;
 $$;
@@ -6450,6 +6491,28 @@ $$;
 ALTER FUNCTION "public"."place_bid"("p_listing_id" "uuid", "p_bid_amount" numeric) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_channel_id uuid;
+BEGIN
+  SELECT id INTO v_channel_id FROM clubhouse_channels
+  WHERE circle_id = p_circle_id AND is_default = true LIMIT 1;
+  IF v_channel_id IS NULL THEN RETURN; END IF;
+
+  INSERT INTO clubhouse_messages (channel_id, user_id, content, kind, bet_ref)
+  VALUES (v_channel_id, p_user_id, p_content, 'bet_activity', p_bet_ref);
+EXCEPTION WHEN OTHERS THEN
+  NULL; -- messaging must never block a bet/challenge/coin operation
+END;
+$$;
+
+
+ALTER FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."preserve_manual_matchday_id"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
@@ -7024,6 +7087,16 @@ BEGIN
       'rake',            v_rake
     ),
     now()
+  );
+
+  PERFORM post_bet_activity_message(
+    v_ch.circle_id,
+    COALESCE(v_winner_id, v_ch.challenger_id),
+    CASE
+      WHEN v_is_tie THEN v_challenger_name || ' vs ' || v_opponent_name || ' — draw, coins returned'
+      ELSE (CASE WHEN v_winner_id = v_ch.challenger_id THEN v_challenger_name ELSE v_opponent_name END) || ' won ' || v_prize || ' coins'
+    END,
+    jsonb_build_object('ref_kind', 'challenge', 'ref_id', p_challenge_id, 'event', 'resolved', 'question', COALESCE(v_ch.question, 'GW ' || v_ch.matchday_id), 'stake_coins', v_ch.stake_coins)
   );
 
   RETURN jsonb_build_object(
@@ -9052,7 +9125,10 @@ CREATE TABLE IF NOT EXISTS "public"."clubhouse_messages" (
     "user_id" "uuid" NOT NULL,
     "content" "text" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "clubhouse_messages_content_check" CHECK ((("length"(TRIM(BOTH FROM "content")) > 0) AND ("length"("content") <= 2000)))
+    "kind" "text" DEFAULT 'text'::"text" NOT NULL,
+    "bet_ref" "jsonb",
+    CONSTRAINT "clubhouse_messages_content_check" CHECK ((("length"(TRIM(BOTH FROM "content")) > 0) AND ("length"("content") <= 2000))),
+    CONSTRAINT "clubhouse_messages_kind_check" CHECK (("kind" = ANY (ARRAY['text'::"text", 'bet_activity'::"text"])))
 );
 
 
@@ -14568,6 +14644,11 @@ GRANT ALL ON FUNCTION "public"."notify_on_gazette_breaking_news"() TO "service_r
 GRANT ALL ON FUNCTION "public"."place_bid"("p_listing_id" "uuid", "p_bid_amount" numeric) TO "anon";
 GRANT ALL ON FUNCTION "public"."place_bid"("p_listing_id" "uuid", "p_bid_amount" numeric) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."place_bid"("p_listing_id" "uuid", "p_bid_amount" numeric) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") TO "service_role";
 
 
 
