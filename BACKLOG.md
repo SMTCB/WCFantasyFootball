@@ -11,6 +11,22 @@
 
 ---
 
+## ✅ Fixed dead cron bearer tokens — ADMIN_TRIGGER_KEY rotation + repoint (2026-09-01) — PR #900, migrations 272–275
+
+**Context**: Every `net.http_post`-invoking pg_cron job was sending a bearer token that no longer authenticates. Root cause: this project's Supabase keys migrated to the new `sb_secret_.../JWKS` system at some point, silently killing 2 of `requireServiceRole()`'s 3 auth paths — Path B (old-format `service_role` JWT verified via `SUPABASE_JWT_SECRET`) is dead because that env var no longer exists; Path A (exact match on `SUPABASE_SERVICE_ROLE_KEY`) needs the new `sb_secret_...` value, which none of the cron bodies carry. Only Path C (`ADMIN_TRIGGER_KEY`, added 2026-06-28 for exactly this reason) still works. Verified via curl against `check-cron-health`: old JWT and old hex secrets both 401, freshly-rotated `ADMIN_TRIGGER_KEY` 200s.
+
+**Found along the way**: migrations 272 (`sync-tennis-results` cron) and 273 (generic active-tournament sync crons, retiring the WC-hardcoded `sync-wc-*` jobs) were written in an earlier session but had never actually been applied to prod — confirmed via `schema_migrations` + `cron.job` absence. Fixed their bearer in place (safe, since never shipped) and applied them alongside the new fix.
+
+**Migrations**: 272/273 (bearer fixed in place, applied), 274 (repoints the other 12 already-live crons — `award-season-trophies`, `calculate-scores-{live,post-match,late-finishers}`, `check-cron-health`, `generate-frontpage-editions`, `ingest-match-events-live`, `resolve-finished-bets`, `run-draft-lottery`, `run-reverse-standings-draft`, `run-wishlist-draft`, `sync-cup-eliminations`), 275 (fixes a bug in 274: `cron.unschedule()`+`cron.schedule()` always resets `active = true`, which silently reactivated all 12 — they were `active = false` beforehand; caught within minutes, reverted before any fired, made durable via 275). Final state: all 12 pre-existing jobs still inactive, credential fixed; `sync-tennis-results` + 3 `sync-active-tournaments-*` jobs active by original design.
+
+**Secrets redacted from all 4 migration files before commit** — this repo is public on GitHub, unlike prior sessions' migrations which hardcoded now-dead secrets in git history. Real value applied directly to the live DB, independent of what's tracked in git.
+
+**Also shipped**: `sync-tennis-results` + `lookup-tennis-tournament` Edge Functions (written in an earlier session, never committed until this PR) — both deployed, plus a re-deploy of `sync-players` to clear pre-existing drift from PR #897 (had been live-broken/undeployed since that PR merged earlier the same day). `.function-checksums.json` updated so the CI drift check (`npm run check:drift`) is green again.
+
+**Backup**: `backups/pre_migration_20260901_210615.sql` (full `db dump --linked`, gitignored, local only).
+
+---
+
 ## ✅ Cleaned stale EPL 2025-26 + Friendlies Jun 2026 tournaments from the DB (2026-09-01) — no PR (data-only, no code change)
 
 **Context**: Following the UCL 2026-27 rollover cleanup (below), audited what's actually in `tournaments`: 4 rows — UCL 2026-27 (`1593`), World Cup 2026 (`429`), Premier League 2025-26 (`426`, season ended 2026-05-24), International Friendlies Jun 2026 (`623`, WC warm-up window, ended 2026-06-10). User asked to keep only UCL (fresh, in-progress setup) and WC (first-pilot history) and clean the other two.
