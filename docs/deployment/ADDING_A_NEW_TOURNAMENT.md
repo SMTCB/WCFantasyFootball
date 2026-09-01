@@ -4,6 +4,17 @@
 
 All core tables (`fixtures`, `players`, `squads`, `leagues`, `scoring_rules`, `matchday_deadlines`) are scoped by `tournament_id`. The steps below cover both **group/league-format** competitions (EPL, La Liga) and **knockout-stage** competitions (World Cup, UCL, domestic cups). Read the format note in Step 2 before proceeding.
 
+**⚠️ Before you start: is `forza_id` actually new, or is it a returning tournament from last season?**
+
+Forza reuses the same `forza_id` for a competition's next edition (confirmed for UCL `1593`: 2025-26 and 2026-27 share the same ID) — there is no separate "season" field. If a row for this `forza_id` already exists in `tournaments`, do **not** treat this as a brand-new setup:
+
+- Running `sync-fixtures` against an already-populated `forza_id` upserts the new season's fixtures **on top of** last season's rows — you'll end up with two seasons mixed in one `tournament_id`, half of them stale.
+- Running `sync-players` at that point derives teams from *all* fixtures for that `forza_id` (see Step 3), so it will also re-populate stale clubs/players from the eliminated/finished season.
+
+**If `forza_id` already exists in `tournaments`, go to [Appendix — Season Rollover / Mid-Season Onboarding Playbook](#appendix--season-rollover--mid-season-onboarding-playbook) first**, then come back and pick up at whichever step still applies (usually Step 3 onward — fixtures are already synced by the time you're pruning them). This is also the path for "start EPL/La Liga midway through its season" — see the same appendix.
+
+This is tracked as an open platform gap — see BACKLOG.md, "🟡 P2 — Forza tournament IDs are reused every season — no durable season-boundary handling" — for why this is still a manual playbook rather than automatic.
+
 ---
 
 ## Step 1 — Register the tournament
@@ -481,7 +492,9 @@ All six checks should return data. Any NULL or empty result = fix it before kick
 |---|---|---|---|
 | Premier League 2025-26 | `426` | `epl-2526` | `sync-fixtures` daily, `sync-players-daily`, `sync-player-status` |
 | FIFA World Cup 2026 | `429` | `wc-2026` | `sync-wc-fixtures-30m`, `sync-wc-players-6h`, `sync-wc-player-status` |
-| UCL 2025-26 | `1593` | `ucl-2526` | `sync_enabled = false` (competition over) |
+| UCL 2026-27 | `1593` | `ucl-2627` | `sync_enabled = false` (pricing pending — see below) |
+
+> **UCL `1593` season-rollover history**: reused the same `forza_id` from 2025-26. On 2026-09-01, ran the [Season Rollover Playbook](#appendix--season-rollover--mid-season-onboarding-playbook) manually: deleted 90 past/qualifying fixtures + 45 eliminated clubs (43 team rows; 2 kept — cross-referenced by tournament `623`), fixed a `sync-players` bug (`isRealTeam()` was rejecting real club names containing `/`, e.g. "FK Bodø/Glimt" — fixed in the deployed function, no longer an issue), and generated a pricing spreadsheet for the 1,075 remaining league-phase players. `sync_enabled` left `false` until prices are imported and the tournament is ready to go live for the new season.
 
 **WC 429 knockout mapping** (for reference — derivable from migration 126):
 
@@ -495,10 +508,84 @@ All six checks should return data. Any NULL or empty result = fix it before kick
 
 ---
 
-Last Updated: **2026-06-04**
+## Appendix — Season Rollover / Mid-Season Onboarding Playbook
+
+**Use this when**: `forza_id` already has a `tournaments` row (a competition returning for a new season, e.g. UCL `1593` 2025-26 → 2026-27), OR you want to onboard a tournament that's already partway through its season and only care about upcoming fixtures (e.g. "start EPL/La Liga midway"). Same playbook either way — the only difference is whether Step 1 (register) has already happened.
+
+This is a **manual process today** — there is no automated season-boundary detection. See BACKLOG.md P2 item "Forza tournament IDs are reused every season" for the standing platform gap this works around, and consider checking that item before repeating this by hand a third time.
+
+### R1 — Sync fixtures first (or confirm they're already synced)
+
+If this is a genuinely new `tournaments` row, run Step 1–2 as normal — `sync-fixtures` will pull the **entire** season Forza has data for, past and future both (confirmed behavior: UCL's initial sync pulled 90 already-finished qualifying-round fixtures alongside the 144 future league-phase fixtures). If the row already existed, just re-run `sync-fixtures` to pick up the new season's schedule on top of whatever's already there.
+
+### R2 — Decide what "upcoming" means for this format
+
+- **League format (EPL, La Liga, …)**: every club plays every round — there's no "eliminated" concept. Mid-season onboarding usually only needs past *fixtures* pruned (if you want a clean "upcoming games" view); club rosters don't need trimming.
+- **Knockout/qualifying format (UCL, cups, …)**: clubs that lost in a qualifying/knockout round before the tournament proper starts should NOT appear in the roster or pricing sheet. Identify them by diffing "teams referenced in future fixtures" against "teams referenced in past fixtures":
+
+```sql
+-- Teams in FUTURE fixtures (keep) vs teams ONLY in PAST fixtures (candidates to remove)
+SELECT DISTINCT home_team_forza_id AS team_id, home_team AS name FROM fixtures
+WHERE tournament_id = '<forza_id>' AND kickoff_at >= now()
+UNION
+SELECT DISTINCT away_team_forza_id, away_team FROM fixtures
+WHERE tournament_id = '<forza_id>' AND kickoff_at >= now();
+```
+
+### R3 — Back up before deleting anything
+
+Docker may be down (`docker info` fails) — if so, `npx supabase db dump --linked` won't work. Fall back to SELECT-and-save-to-JSON, per [Pilot Safeguards](../../CLAUDE.md#-pilot-safeguards--read-before-every-db-operation):
+
+```bash
+npx supabase db query --linked "SELECT row_to_json(f) FROM fixtures f WHERE tournament_id = '<forza_id>' AND kickoff_at < now();" > backups/<slug>_past_fixtures_$(date +%Y%m%d_%H%M%S).json
+npx supabase db query --linked "SELECT row_to_json(p) FROM players p WHERE tournament_id = '<forza_id>' AND forza_team_id IN (<eliminated ids>);" > backups/<slug>_eliminated_players_$(date +%Y%m%d_%H%M%S).json
+```
+
+**Capture the eliminated-team ID list into its own backup file before you delete the fixtures it's derived from.** A CTE that reads `fixtures WHERE kickoff_at < now()` stops working the moment a prior statement has already deleted those rows — extract the ID list to a variable or a saved file first, then use that literal list for every subsequent step.
+
+### R4 — SELECT before every DELETE, get explicit per-item confirmation, then delete
+
+Check dependent tables before deleting fixtures — `player_match_stats` (scoring history), `squads`/`leagues` for this `tournament_id`, and whether any `round_number` is non-NULL (would need `matchday_deadlines` cleanup too):
+
+```sql
+SELECT COUNT(*) FROM player_match_stats WHERE fixture_id IN (SELECT id FROM fixtures WHERE tournament_id = '<forza_id>' AND kickoff_at < now());
+DELETE FROM fixtures WHERE tournament_id = '<forza_id>' AND kickoff_at < now();
+DELETE FROM players WHERE tournament_id = '<forza_id>' AND forza_team_id IN (<eliminated ids>);
+```
+
+### R5 — `teams` is GLOBAL, not tournament-scoped — check cross-tournament references before deleting
+
+Forza reuses numeric team/entity IDs across *different* tournaments (confirmed: UCL clubs Crvena zvezda `7375` and Sturm Graz `50636` collide with tournament `623`'s Slovenia national-team ID). Deleting a `teams` row for an eliminated club can silently break another tournament's directory entry. Before deleting, check every other tournament:
+
+```sql
+SELECT tournament_id, COUNT(*) FROM fixtures
+WHERE (home_team_forza_id = '<id>' OR away_team_forza_id = '<id>') AND tournament_id != '<forza_id>'
+GROUP BY tournament_id;
+```
+
+Exclude any ID that comes back non-empty from the `teams` DELETE — the tournament-scoped `players` row for it can still be deleted safely (players are per-`tournament_id`), only the shared `teams` row needs to stay.
+
+### R6 — Re-sync players to pick up the pruned team list
+
+`sync-players` derives its team list from whatever's left in `fixtures` (see `supabase/functions/sync-players/index.js`), so once step R4 has removed the past/eliminated fixtures, a re-run naturally converges the roster to just the remaining clubs. Toggle `sync_enabled = true`, invoke the function, confirm, then set it back to `false` if the tournament isn't ready to go live yet.
+
+> **Known-fixed gotcha**: `sync-players`' `isRealTeam()` placeholder filter used to reject ANY team name containing `/`, which silently excluded real clubs like "FK Bodø/Glimt" from every sync. Fixed 2026-09-01 (PR #897) — it now only rejects `/`-joined strings where every segment is a bare group code (e.g. `3A/3B/3C`). If a club's players are unexpectedly missing after a sync, check whether its name contains an unusual character the filter might be misreading.
+
+### R7 — Generate a fresh pricing spreadsheet for the surviving roster
+
+Once the roster is final, export `club, position, name, forza_player_id` for every remaining active player and hand it to the user as a spreadsheet (Club → Position [GK→DEF→MID→FWD] → Name, blank `Price` column, `forza_player_id` kept as a hidden column for exact re-matching when prices come back). See this session's `build_ucl_pricing_xlsx.py` pattern (openpyxl: styled header, alternating club shading, frozen header row, autofilter) — not committed to the repo since it's a one-off generation script, but the pattern is reusable for any tournament's initial or rollover pricing pass.
+
+When the priced spreadsheet comes back, importing it is itself a bulk `UPDATE players SET price = ...` — SELECT-and-confirm first, per Pilot Safeguards, matching on the hidden `forza_player_id` column rather than name (names can have diacritics/formatting differences between the export and what a spreadsheet tool round-trips).
+
+---
+
+Last Updated: **2026-09-01**
 - Step 2 table updated: `sync-fixtures` now writes `matchday_id` for competitive rounds (PR #326)
 - Step 2b note updated: trigger + sync-fixtures interaction clarified
 - Step 2c added: friendly/test tournament player copy + manual fixture setup pattern
 - Step 9 added: squad `starting_xi` + `captain_id` setup for live tests
 - Step 10 added: live test dry run checklist (6 SQL checks)
 - Summary checklist updated with all new steps
+- **New**: pre-Step-1 warning that `forza_id` may already exist (season rollover) added, pointing to the new Appendix
+- **New**: Appendix — Season Rollover / Mid-Season Onboarding Playbook, generalized from the UCL 2026-27 cleanup (past-fixture pruning, eliminated-team pruning with cross-tournament ID collision check, pricing spreadsheet regeneration)
+- Reference table: UCL row updated to 2026-27, with rollover history note
