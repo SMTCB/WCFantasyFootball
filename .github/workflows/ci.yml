@@ -176,10 +176,13 @@ jobs:
   # Loads supabase/schema.sql (a verified pg_dump snapshot of prod's real
   # schema — NOT a from-scratch migration replay, which was found 2026-08-01
   # to diverge from prod; see docs/deployment/DOCKER_LOCAL_DEV.md), then
-  # applies every migration file added/changed in this PR on top with
-  # ON_ERROR_STOP=1. A migration that fails here would also fail against real
-  # prod schema — catches that before merge instead of during the next
-  # migration session.
+  # applies every migration file added/changed in this PR on top, failing the
+  # job on any error except the same managed-platform-feature gap class the
+  # schema.sql load step tolerates (pg_cron/pg_net/http/vault/realtime aren't
+  # installed on plain postgres:15-alpine but are on real prod). A migration
+  # that fails here for any other reason would also fail against real prod
+  # schema — catches that before merge instead of during the next migration
+  # session.
   schema-rehearsal:
     name: Schema Rehearsal
     runs-on: ubuntu-latest
@@ -246,13 +249,38 @@ jobs:
       - name: Apply changed migration file(s) on top
         if: steps.changes.outputs.has_changes == 'true' && env.SKIP_REHEARSAL != 'true'
         run: |
+          # Same managed-platform-feature gap as the "Load schema.sql" step above:
+          # postgres:15-alpine has no pg_cron/pg_net/http/supabase_vault/
+          # supabase_realtime, so a migration calling cron.schedule() etc. (valid
+          # against real prod, which has these) fails here on a missing
+          # schema/extension, not a real bug — first hit by migrations 272-275
+          # (all cron.schedule/cron.unschedule/cron.job). Tolerate ONLY that
+          # error class per file; anything else (syntax errors, real constraint
+          # violations, etc.) still fails the job via ON_ERROR_STOP=0 + a
+          # post-hoc scan of the log, rather than ON_ERROR_STOP=1's hard stop.
+          TOLERABLE='schema "(cron|net|http|vault)" does not exist|extension "(pg_cron|pg_net|http|supabase_vault)"|function (cron|net|http)\.[a-zA-Z_]+\(|relation "(cron|net|http|vault|realtime)\.[a-zA-Z_.]+" does not exist|publication "supabase_realtime" does not exist'
+
+          FAILED=0
           while IFS= read -r f; do
             [ -z "$f" ] && continue
             echo "=== Applying $f ==="
-            psql "$REHEARSAL_DATABASE_URL" -v ON_ERROR_STOP=1 < "$f"
+            LOG="migration-apply-$(basename "$f").log"
+            psql "$REHEARSAL_DATABASE_URL" -v ON_ERROR_STOP=0 < "$f" > "$LOG" 2>&1 || true
+            UNEXPECTED=$(grep "^ERROR" "$LOG" | grep -Ev "$TOLERABLE" || true)
+            if [ -n "$UNEXPECTED" ]; then
+              echo "!!! $f failed with unexpected error(s) — see $LOG"
+              echo "$UNEXPECTED"
+              FAILED=1
+            else
+              echo "$f applied (any errors were the expected managed-platform-feature gaps — see $LOG)"
+            fi
           done <<'EOF'
           ${{ steps.changes.outputs.changed_files }}
           EOF
+
+          if [ "$FAILED" = "1" ]; then
+            exit 1
+          fi
 
       - name: No migration changes — skipped
         if: steps.changes.outputs.has_changes != 'true'
