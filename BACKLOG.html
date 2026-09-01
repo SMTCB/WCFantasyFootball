@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>216</strong><span>closed</span></div>
+      <div class="total-pill"><strong>217</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (136)</span>
+    <span class="chip" data-filter-kind="done">Shipped (137)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">216</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">217</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">136</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">137</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1226,8 +1226,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">136</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">137</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 race-result sync automated via cron — replaces manual openf1 fetch (2026-09-01) — pr #903, migrations 276–277 
+
+**context**: user flagged that neither tennis nor f1 should require an admin to manually click a &quot;fetch from provider&quot; button — results should sync via cron the same way the football tournaments already do. tennis was already cron-driven (`sync-tennis-results`, migration 272). auditing `f1adminscreen.jsx` found the opposite: a &quot;⚡ fetch from openf1&quot; button calling client-side `src/lib/f1/openf1.js`, one click per race weekend — the &quot;one-off at season start&quot; assumption in the original ask was wrong; it was actually a recurring per-race manual step.
+
+**what was built**: `supabase/functions/sync-f1-race-results/index.ts` — new cron-only edge function (`requireservicerole` guard, same shape as `sync-tennis-results`) that polls `f1_races` for any row where `race_at` is 2+ hours past and `result_p1 is null` (bounded to a 14-day lookback), queries openf1 (`api.openf1.org` — free, unauthenticated, no daily-budget throttle unlike tennis&#x27;s paid rapidapi provider) for that round&#x27;s `race` session, and fills `result_p1`/`result_p2`/`result_p3` + flips `status` to `&#x27;finished&#x27;`. **scope is deliberately narrow**: dnf drivers, team-most-points, and the special-category answer have no openf1 equivalent and stay fully manual on `f1adminscreen`, as does the final score race click (`is_scored` is never touched by this function) — an admin still opens the race, fills those 3 fields, and scores it once p1–p3 are already populated. `migrations/276_schedule_sync_f1_race_results.sql` schedules it every 30 minutes via the standard `net.http_post` + `&lt;admin_trigger_key&gt;`-placeholder pattern (migrations 272–274).
+
+**cleanup**: removed the manual button, its handler, and its loading state from `f1adminscreen.jsx` (replaced with a one-line hint about the new auto-fill behavior); deleted the now-dead `src/lib/f1/openf1.js` entirely (confirmed via grep it had no other importers) — its" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">F1 race-result sync automated via cron — replaces manual OpenF1 fetch</h3>
+        <p class="card-summary">Context : User flagged that neither Tennis nor F1 should require an admin to manually click a "fetch from provider" button — results should sync via cron the same way…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-01</span><span class="foot-refs">PR #903, migrations 276–277</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">F1 race-result sync automated via cron — replaces manual OpenF1 fetch</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : User flagged that neither Tennis nor F1 should require an admin to manually click a "fetch from provider" button — results should sync via cron the same way…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #903, migrations 276–277</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-01</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: User flagged that neither Tennis nor F1 should require an admin to manually click a "fetch from provider" button — results should sync via cron the same way the football tournaments already do. Tennis was already cron-driven (<code>sync-tennis-results</code>, migration 272). Auditing <code>F1AdminScreen.jsx</code> found the opposite: a "⚡ FETCH FROM OPENF1" button calling client-side <code>src/lib/f1/openf1.js</code>, one click per race weekend — the "one-off at season start" assumption in the original ask was wrong; it was actually a recurring per-race manual step.</p>
+<p><strong>What was built</strong>: <code>supabase/functions/sync-f1-race-results/index.ts</code> — new cron-only Edge Function (<code>requireServiceRole</code> guard, same shape as <code>sync-tennis-results</code>) that polls <code>f1_races</code> for any row where <code>race_at</code> is 2+ hours past and <code>result_p1 IS NULL</code> (bounded to a 14-day lookback), queries OpenF1 (<code>api.openf1.org</code> — free, unauthenticated, no daily-budget throttle unlike tennis's paid RapidAPI provider) for that round's <code>Race</code> session, and fills <code>result_p1</code>/<code>result_p2</code>/<code>result_p3</code> + flips <code>status</code> to <code>'finished'</code>. <strong>Scope is deliberately narrow</strong>: DNF drivers, team-most-points, and the special-category answer have no OpenF1 equivalent and stay fully manual on <code>F1AdminScreen</code>, as does the final SCORE RACE click (<code>is_scored</code> is never touched by this function) — an admin still opens the race, fills those 3 fields, and scores it once P1–P3 are already populated. <code>migrations/276_schedule_sync_f1_race_results.sql</code> schedules it every 30 minutes via the standard <code>net.http_post</code> + <code>&lt;ADMIN_TRIGGER_KEY&gt;</code>-placeholder pattern (migrations 272–274).</p>
+<p><strong>Cleanup</strong>: removed the manual button, its handler, and its loading state from <code>F1AdminScreen.jsx</code> (replaced with a one-line hint about the new auto-fill behavior); deleted the now-dead <code>src/lib/f1/openf1.js</code> entirely (confirmed via grep it had no other importers) — its fetch logic was reimplemented server-side in the new function rather than reused as-is.</p>
+<p><strong>Docs</strong>: new cookbook <a href="docs/deployment/ADDING_A_NEW_F1_SEASON.md" target="_blank" rel="noopener">ADDING_A_NEW_F1_SEASON.md</a>, mirroring <code>ADDING_A_NEW_TENNIS_TOURNAMENT.md</code>'s structure — season seeding is a one-off direct <code>INSERT</code> (no admin UI, no external-ID lookup needed), results now auto-fill, and Step 2b documents the manual P1/P2/P3 fallback (never clobbered by the cron, which only ever fills a <code>NULL</code> result). Added a matching card to <code>DOCS_INDEX.html</code>. With this PR, all four sports the user asked about (EPL/WC football, Tennis, F1) have both cron automation and a cookbook — football's is <code>ADDING_A_NEW_TOURNAMENT.md</code>, already existing.</p>
+<p><strong>Also investigated this session (no action taken)</strong>: user asked to look into unfreezing the 12 dormant football-adjacent pg_cron jobs (<code>DD-P0-2</code>) while working nearby. Confirmed both of <code>DD-P0-2</code>'s gating prerequisites still stand unmet as of 2026-09-01 — no <code>status='active'</code> tournament has a future fixture (<code>DD-P0-3</code>; see the row above on stale-tournament cleanup, which removed 2 of the 4 but did not add new forward-looking fixtures to the remaining <code>1593</code>/<code>429</code>), and no <code>SENTRY_DSN</code>-equivalent backend secret is configured (<code>OPS-SENTRY</code>). Reactivation was deliberately not attempted — see the <code>DD-P0-2</code> row in the Open Items section below for the updated note.</p>
+<p><strong>Unplanned mid-ship blocker → migration 277</strong>: applying migration 276 required embedding the live <code>ADMIN_TRIGGER_KEY</code> value in place of its <code>&lt;ADMIN_TRIGGER_KEY&gt;</code> placeholder. That value (rotated the same day by migrations 272–275) was not recoverable in-session — <code>npx supabase secrets list</code> only ever returns name + hash digest, never plaintext. Asked the user to choose between pasting the old value or generating a fresh one; they chose the latter. Generated a new 32-byte hex key via <code>openssl rand -hex 32</code>, set it live as the <code>ADMIN_TRIGGER_KEY</code> secret, and wrote <code>supabase/migrations/277_rotate_admin_trigger_key.sql</code> to repoint every dependent cron/function in one pass: all 13 pre-existing <code>net.http_post</code>-invoking <code>cron.job</code> rows (12 frozen <code>active=false</code> per <code>DD-P0-2</code>, plus <code>sync-tennis-results</code> which stays <code>active=true</code>) via <code>cron.alter_job()</code> — chosen over migration 274's unschedule+reschedule pattern specifically because <code>alter_job</code> leaves <code>active</code> untouched when omitted, avoiding a repeat of the exact bug migration 275 had to fix — plus <code>cron_sync_active_tournaments()</code>, a plpgsql function (backing the 3 <code>sync-active-tournaments-*</code> jobs) that carries its own hardcoded bearer inside the function body rather than in <code>cron.job.command</code>. Three retired WC-hardcoded functions (<code>trigger_wc2026_sync</code>, <code>sync_wc_players</code>, <code>load_wc_teams</code>) were confirmed dead — no <code>cron.job</code> row references them — and deliberately left unrotated as out of scope.</p>
+<p><strong>Executed live, 2026-09-01</strong> (both approved per-item, per CLAUDE.md): took a pre-migration backup (<code>backups/pre_migration_20260901_232446.sql</code>), applied migration 276 then 277 via <code>npx supabase db query --linked --file</code>, verified every job/function now carries the new key and that <code>active</code> states are exactly unchanged (12×<code>false</code>, <code>sync-tennis-results</code> + new <code>sync-f1-race-results</code> both <code>true</code>), deployed <code>sync-f1-race-results</code> (<code>npx supabase functions deploy</code>), and ran <code>npm run update:checksums</code> to clear the expected function-drift CI failure. Real secret material never touched git — the committed migration files keep the <code>&lt;ADMIN_TRIGGER_KEY&gt;</code> placeholder; substitution happened only in gitignored scratchpad files, deleted immediately after the live queries succeeded.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ fixed dead cron bearer tokens — admin_trigger_key rotation + repoint (2026-09-01) — pr #900, migrations 272–275 
 
 **context**: every `net.http_post`-invoking pg_cron job was sending a bearer token that no longer authenticates. root cause: this project&#x27;s supabase keys migrated to the new `sb_secret_.../jwks` system at some point, silently killing 2 of `requireservicerole()`&#x27;s 3 auth paths — path b (old-format `service_role` jwt verified via `supabase_jwt_secret`) is dead because that env var no longer exists; path a (exact match on `supabase_service_role_key`) needs the new `sb_secret_...` value, which none of the cron bodies carry. only path c (`admin_trigger_key`, added 2026-06-28 for exactly this reason) still works. verified via curl against `check-cron-health`: old jwt and old hex secrets both 401, freshly-rotated `admin_trigger_key` 200s.
@@ -11713,6 +11743,9 @@ supabase functions deploy process-transfer</code></pre>
 </ol>
 <ol>
 <li><strong>0 of 22 pg_cron jobs are active</strong> (<code>DD-P0-2</code>). Deliberately frozen 2026-07-31 while the site was walled and nothing was live — the right call at the time, but it means *nothing* scores, syncs fixtures/players, resolves bets, or closes auctions. A tester onboarded today would see a permanently static app with no failure message. Reversible, but it must be an explicit step in whatever runbook precedes tester onboarding, not an afterthought.</li>
+<ul>
+<li><strong>2026-09-01 update</strong>: re-checked both gating prerequisites while shipping PR #903 (F1 cron automation). Neither is met yet: <code>DD-P0-3</code> still has no <code>status='active'</code> tournament with a future fixture (the same-day tournament cleanup removed 2 stale rows but added no new forward-looking data to the remaining <code>1593</code>/<code>429</code>), and <code>OPS-SENTRY</code>'s backend <code>SENTRY_DSN</code> secret is still unconfigured. Reactivation deliberately not attempted this session — both blockers need their own dedicated work first.</li>
+</ul>
 </ol>
 <ol>
 <li><strong>There is no live football competition</strong> (<code>DD-P0-3</code>). All 4 football tournaments still carry <code>status='active'</code>, but <strong>0 fixtures across the entire database have a kickoff in the future</strong>. WC 2026 (<code>429</code>) is 104/104 finished, last kickoff 2026-07-19; PL (<code>426</code>) 380/380; UCL (<code>1593</code>) 281/281; Friendlies (<code>623</code>) 239/260, last 2026-06-11. Today is 2026-08-01. <strong>All 8 leagues point at tournament <code>429</code>.</strong> A new tester joining a football league today would land in a squad screen with nothing to play for.</li>
