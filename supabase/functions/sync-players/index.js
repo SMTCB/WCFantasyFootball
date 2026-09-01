@@ -32,7 +32,10 @@ function respond(status, body) {
 // Skip placeholder fixture entries (e.g. '1E', 'W101', '3A/3B/3C/3D/3F')
 function isRealTeam(name) {
   if (!name || name.length <= 2) return false;
-  if (name.includes('/')) return false;
+  // Slash-joined placeholders list only short digit-led group codes (e.g. '3A/3B/3C').
+  // A real club name can also contain '/' (e.g. 'FK Bodø/Glimt') — only reject when
+  // every segment looks like a group code, not just because a slash is present.
+  if (name.includes('/') && name.split('/').every(p => /^\d/.test(p.trim()))) return false;
   if (name.startsWith('W') && /^\d/.test(name.slice(1))) return false;
   if (name.startsWith('RU')) return false;
   if (/^\d/.test(name)) return false;
