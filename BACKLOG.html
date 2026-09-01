@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>214</strong><span>closed</span></div>
+      <div class="total-pill"><strong>215</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (134)</span>
+    <span class="chip" data-filter-kind="done">Shipped (135)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">214</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">215</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">134</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">135</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1226,8 +1226,41 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">134</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">135</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ cleaned stale epl 2025-26 + friendlies jun 2026 tournaments from the db (2026-09-01) — no pr (data-only, no code change) 
+
+**context**: following the ucl 2026-27 rollover cleanup (below), audited what&#x27;s actually in `tournaments`: 4 rows — ucl 2026-27 (`1593`), world cup 2026 (`429`), premier league 2025-26 (`426`, season ended 2026-05-24), international friendlies jun 2026 (`623`, wc warm-up window, ended 2026-06-10). user asked to keep only ucl (fresh, in-progress setup) and wc (first-pilot history) and clean the other two.
+
+**what was done**: confirmed zero `leagues`/`squads` existed for either `426` or `623` (never used for real pilot activity — safe to fully remove). json-backed up (docker down again, used the select-and-save fallback per pilot safeguards) then deleted, in dependency order: `player_match_stats` (0 + 648 rows), `fixtures` (380 + 260), `matchday_deadlines` (38 + 4), `players` (661 + 605), `scoring_rules` (5 + 5), the `tournaments` rows themselves, and 148 `teams` rows exclusive to those two tournaments. `teams` is global/shared — cross-checked all 201 distinct clubs/national-teams referenced by `426`/`623` fixtures against ucl + wc fixtures first; kept the 53 that overlap (prem clubs also in ucl&#x27;s league phase, national teams also in the wc) untouched.
+
+**result**: db now holds only `1593` (ucl, 144 fixtures / 1,075 players / 36 clubs) and `429` (wc, 104 fixtures / 1,290 players). `teams` table: 130 rows remain (post-cleanup, post-ucl-rollover).
+
+**backups**: `backups/cleanup_20260901_153122_*.json` (tournaments, fixtures, players, scoring_rules, matchday_deadlines, player_match_stats, teams_exclusive) — gitignored, local only.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Cleaned stale EPL 2025-26 + Friendlies Jun 2026 tournaments from the DB</h3>
+        <p class="card-summary">Context : Following the UCL 2026-27 rollover cleanup (below), audited what's actually in tournaments : 4 rows — UCL 2026-27 ( 1593 ), World Cup 2026 ( 429 ), Premier…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-01</span><span class="foot-refs">no PR (data-only, no code change)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Cleaned stale EPL 2025-26 + Friendlies Jun 2026 tournaments from the DB</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : Following the UCL 2026-27 rollover cleanup (below), audited what's actually in tournaments : 4 rows — UCL 2026-27 ( 1593 ), World Cup 2026 ( 429 ), Premier…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · no PR (data-only, no code change)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-01</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: Following the UCL 2026-27 rollover cleanup (below), audited what's actually in <code>tournaments</code>: 4 rows — UCL 2026-27 (<code>1593</code>), World Cup 2026 (<code>429</code>), Premier League 2025-26 (<code>426</code>, season ended 2026-05-24), International Friendlies Jun 2026 (<code>623</code>, WC warm-up window, ended 2026-06-10). User asked to keep only UCL (fresh, in-progress setup) and WC (first-pilot history) and clean the other two.</p>
+<p><strong>What was done</strong>: confirmed zero <code>leagues</code>/<code>squads</code> existed for either <code>426</code> or <code>623</code> (never used for real pilot activity — safe to fully remove). JSON-backed up (Docker down again, used the SELECT-and-save fallback per Pilot Safeguards) then deleted, in dependency order: <code>player_match_stats</code> (0 + 648 rows), <code>fixtures</code> (380 + 260), <code>matchday_deadlines</code> (38 + 4), <code>players</code> (661 + 605), <code>scoring_rules</code> (5 + 5), the <code>tournaments</code> rows themselves, and 148 <code>teams</code> rows exclusive to those two tournaments. <code>teams</code> is global/shared — cross-checked all 201 distinct clubs/national-teams referenced by <code>426</code>/<code>623</code> fixtures against UCL + WC fixtures first; kept the 53 that overlap (Prem clubs also in UCL's league phase, national teams also in the WC) untouched.</p>
+<p><strong>Result</strong>: DB now holds only <code>1593</code> (UCL, 144 fixtures / 1,075 players / 36 clubs) and <code>429</code> (WC, 104 fixtures / 1,290 players). <code>teams</code> table: 130 rows remain (post-cleanup, post-UCL-rollover).</p>
+<p><strong>Backups</strong>: <code>backups/cleanup_20260901_153122_*.json</code> (tournaments, fixtures, players, scoring_rules, matchday_deadlines, player_match_stats, teams_exclusive) — gitignored, local only.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ chat quick-bet + live bet-activity feed — final item of the p2p social/chat plan (2026-09-01) — pr #895 
 
 **context**: pr 4 (last item) of the approved 8-item p2p social/chat plan (`synchronous-stirring-pretzel.md`). confirmed before building: the live clubhouse chat is `clubhouse_messages` via `useclubhousechat.js`/`clubhousechat.jsx` (`chat_messages`/`chatview.jsx`/`usechatmessages.js` are dead code, not built on).

@@ -11,6 +11,18 @@
 
 ---
 
+## ✅ Cleaned stale EPL 2025-26 + Friendlies Jun 2026 tournaments from the DB (2026-09-01) — no PR (data-only, no code change)
+
+**Context**: Following the UCL 2026-27 rollover cleanup (below), audited what's actually in `tournaments`: 4 rows — UCL 2026-27 (`1593`), World Cup 2026 (`429`), Premier League 2025-26 (`426`, season ended 2026-05-24), International Friendlies Jun 2026 (`623`, WC warm-up window, ended 2026-06-10). User asked to keep only UCL (fresh, in-progress setup) and WC (first-pilot history) and clean the other two.
+
+**What was done**: confirmed zero `leagues`/`squads` existed for either `426` or `623` (never used for real pilot activity — safe to fully remove). JSON-backed up (Docker down again, used the SELECT-and-save fallback per Pilot Safeguards) then deleted, in dependency order: `player_match_stats` (0 + 648 rows), `fixtures` (380 + 260), `matchday_deadlines` (38 + 4), `players` (661 + 605), `scoring_rules` (5 + 5), the `tournaments` rows themselves, and 148 `teams` rows exclusive to those two tournaments. `teams` is global/shared — cross-checked all 201 distinct clubs/national-teams referenced by `426`/`623` fixtures against UCL + WC fixtures first; kept the 53 that overlap (Prem clubs also in UCL's league phase, national teams also in the WC) untouched.
+
+**Result**: DB now holds only `1593` (UCL, 144 fixtures / 1,075 players / 36 clubs) and `429` (WC, 104 fixtures / 1,290 players). `teams` table: 130 rows remain (post-cleanup, post-UCL-rollover).
+
+**Backups**: `backups/cleanup_20260901_153122_*.json` (tournaments, fixtures, players, scoring_rules, matchday_deadlines, player_match_stats, teams_exclusive) — gitignored, local only.
+
+---
+
 ## 🟡 P2 — Forza tournament IDs are reused every season — no durable season-boundary handling (2026-09-01) — open, no PR yet
 
 **Context**: Preparing to load UEFA Champions League 2026-27, discovered `tournaments.forza_id=1593` was still carrying **all of last season's** (2025-26) data — 281 stale fixtures and ~3,400 players from clubs no longer in this year's competition, still `sync_enabled`-adjacent in the DB even though the season had ended. Forza does not mint a new tournament ID per season — it reuses the same `forza_id` and just rolls `current_season` forward internally, while its `round` field resets to 1 each season. Under our schema, `round_number` (and the derived `matchday_id = '{forza_id}-r{round_number}'`) is scoped only by `tournament_id`, not by season — so once a new season's fixtures land on top of an old season's under the same forza_id, round numbers collide (e.g. two completely different sets of 18 matches both claiming to be "round 1"), and `sync-players`' team list (derived from *all* current `fixtures` rows for that `tournament_id`, not season-filtered — see [supabase/functions/sync-players/index.js](supabase/functions/sync-players/index.js)) gets contaminated with stale clubs, pulling in retired/relegated teams and their full squads.
