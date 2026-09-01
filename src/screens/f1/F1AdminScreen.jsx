@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { DRIVERS, TEAMS } from '../../lib/f1/f1-data';
-import { fetchRaceSession, fetchSessionResult } from '../../lib/f1/openf1';
 
 export default function F1AdminScreen() {
   const { paddockId } = useParams();
@@ -26,7 +25,6 @@ export default function F1AdminScreen() {
 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
-  const [fetchingOpenF1, setFetchingOpenF1] = useState(false);
 
   useEffect(() => {
     if (!user?.id || !paddockId) return;
@@ -54,24 +52,6 @@ export default function F1AdminScreen() {
       setManualUnlock(r.is_manual_unlock ?? false);
     }
   }, [selectedId, races]);
-
-  async function fetchFromOpenF1() {
-    if (!race) return;
-    setFetchingOpenF1(true); setMsg('Fetching from OpenF1…');
-    try {
-      const session = await fetchRaceSession(2026, race.round_number);
-      if (!session) { setMsg('No OpenF1 session found for this race.'); return; }
-      const result = await fetchSessionResult(session.session_key);
-      if (result.length >= 3) {
-        setP1(result[0]?.name ?? ''); setP2(result[1]?.name ?? ''); setP3(result[2]?.name ?? '');
-        setMsg(`Fetched from OpenF1: ${result[0]?.name}, ${result[1]?.name}, ${result[2]?.name}`);
-      } else {
-        setMsg('OpenF1 result incomplete — fill manually.');
-      }
-    } catch (e) {
-      setMsg('OpenF1 fetch failed: ' + e.message);
-    } finally { setFetchingOpenF1(false); }
-  }
 
   async function saveRaceResult() {
     if (!race || !p1 || !p2 || !p3) { setMsg('P1, P2, P3 required.'); return; }
@@ -178,11 +158,9 @@ export default function F1AdminScreen() {
 
             {race && (
               <>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={fetchFromOpenF1} disabled={fetchingOpenF1 || busy} style={btnStyle('elev')}>
-                    {fetchingOpenF1 ? 'FETCHING…' : '⚡ FETCH FROM OPENF1'}
-                  </button>
-                </div>
+                <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0 }}>
+                  P1–P3 auto-fill from OpenF1 within ~2h of race start. Fill DNF/team/special manually below, then save.
+                </p>
 
                 {['P1 Winner', 'P2 Second', 'P3 Third'].map((label, i) => {
                   const vals = [p1, p2, p3]; const setters = [setP1, setP2, setP3];
