@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-08-31. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-01. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>212</strong><span>closed</span></div>
+      <div class="total-pill"><strong>213</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (133)</span>
+    <span class="chip" data-filter-kind="done">Shipped (134)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,7 +187,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">212</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">213</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -198,7 +198,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">133</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">134</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1224,8 +1224,36 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">133</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">134</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ chat quick-bet + live bet-activity feed — final item of the p2p social/chat plan (2026-09-01) — pr #895 
+
+**context**: pr 4 (last item) of the approved 8-item p2p social/chat plan (`synchronous-stirring-pretzel.md`). confirmed before building: the live clubhouse chat is `clubhouse_messages` via `useclubhousechat.js`/`clubhousechat.jsx` (`chat_messages`/`chatview.jsx`/`usechatmessages.js` are dead code, not built on).
+
+**what shipped**: migration `271_clubhouse_bet_activity_messages.sql` (applied to production with fresh per-item approval this session, backed up first per pilot safeguards) adds `kind text not null default &#x27;text&#x27;` and `bet_ref jsonb` to `clubhouse_messages` (check `kind in (&#x27;text&#x27;,&#x27;bet_activity&#x27;)`), plus a `post_bet_activity_message()` helper wrapped in `exception when others then null` so a chat-post failure never blocks the caller. wired into `create_p2p_bet`, `create_p2p_challenge`, `arbitrate_bet_outcome`, `finalize_declared_bets`, `auto_void_stale_bet_disputes`, `resolve_p2p_challenge`, `confirm_freeform_result`, and `arbitrate_freeform_result` — posts a feed card on create and resolve only (join is intentionally silent to avoid spam). `useclubhousechat.js` now selects/forwards `kind`/`bet_ref` in both the initial fetch and the realtime insert handler (same subscription, no second channel needed). `clubhousechat.jsx` renders `kind===&#x27;bet_activity&#x27;` messages as a compact `betactivitycard` (question, stake, view link) instead of a plain bubble, and adds a 🎲 quick-bet button next to the composer.
+
+**routing decision** (resolves the plan&#x27;s explicitly-flagged open question): rather than exporting/duplicating the ~1300-line `newbetmodal` tree out of `challengescreen.jsx`, the quick-bet button navigates to `/challenges?tab=bets&amp;new=1`; `challengescreen.jsx`&#x27;s `showcreate` state now initializes from that `new` param, auto-opening its existing unified create-bet modal pre-scoped to the circle via context it already owns. same navigate-with-query-param p" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Chat quick-bet + live bet-activity feed — final item of the P2P social/chat plan</h3>
+        <p class="card-summary">Context : PR 4 (last item) of the approved 8-item P2P social/chat plan ( synchronous-stirring-pretzel.md ). Confirmed before building: the live Clubhouse chat is…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-01</span><span class="foot-refs">PR #895</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Chat quick-bet + live bet-activity feed — final item of the P2P social/chat plan</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : PR 4 (last item) of the approved 8-item P2P social/chat plan ( synchronous-stirring-pretzel.md ). Confirmed before building: the live Clubhouse chat is…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #895</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-01</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: PR 4 (last item) of the approved 8-item P2P social/chat plan (<code>synchronous-stirring-pretzel.md</code>). Confirmed before building: the live Clubhouse chat is <code>clubhouse_messages</code> via <code>useClubhouseChat.js</code>/<code>ClubhouseChat.jsx</code> (<code>chat_messages</code>/<code>ChatView.jsx</code>/<code>useChatMessages.js</code> are dead code, not built on).</p>
+<p><strong>What shipped</strong>: Migration <code>271_clubhouse_bet_activity_messages.sql</code> (applied to production with fresh per-item approval this session, backed up first per Pilot Safeguards) adds <code>kind text NOT NULL DEFAULT 'text'</code> and <code>bet_ref jsonb</code> to <code>clubhouse_messages</code> (CHECK <code>kind IN ('text','bet_activity')</code>), plus a <code>post_bet_activity_message()</code> helper wrapped in <code>EXCEPTION WHEN OTHERS THEN NULL</code> so a chat-post failure never blocks the caller. Wired into <code>create_p2p_bet</code>, <code>create_p2p_challenge</code>, <code>arbitrate_bet_outcome</code>, <code>finalize_declared_bets</code>, <code>auto_void_stale_bet_disputes</code>, <code>resolve_p2p_challenge</code>, <code>confirm_freeform_result</code>, and <code>arbitrate_freeform_result</code> — posts a feed card on create and resolve only (join is intentionally silent to avoid spam). <code>useClubhouseChat.js</code> now selects/forwards <code>kind</code>/<code>bet_ref</code> in both the initial fetch and the realtime INSERT handler (same subscription, no second channel needed). <code>ClubhouseChat.jsx</code> renders <code>kind==='bet_activity'</code> messages as a compact <code>BetActivityCard</code> (question, stake, VIEW link) instead of a plain bubble, and adds a 🎲 quick-bet button next to the composer.</p>
+<p><strong>Routing decision</strong> (resolves the plan's explicitly-flagged open question): rather than exporting/duplicating the ~1300-line <code>NewBetModal</code> tree out of <code>ChallengeScreen.jsx</code>, the quick-bet button navigates to <code>/challenges?tab=bets&amp;new=1</code>; <code>ChallengeScreen.jsx</code>'s <code>showCreate</code> state now initializes from that <code>new</code> param, auto-opening its existing unified create-bet modal pre-scoped to the circle via context it already owns. Same navigate-with-query-param precedent as <code>MyBetsScreen.jsx</code>.</p>
+<p><strong>CI fix found along the way</strong>: the "Schema Rehearsal" job (PR #856) loads <code>supabase/schema.sql</code> then replays any migration files new in the PR on top of it — it expects <code>schema.sql</code> to represent the *pre-migration* state within a PR. Regenerating <code>schema.sql</code> from prod in the same PR after applying migration 271 baked the new columns in already, so the replay failed with "column already exists." Fixed by reverting the regenerated <code>schema.sql</code> back to <code>main</code>'s version for this PR; it'll pick up 271's columns on its next post-merge refresh.</p>
+<p><strong>Verification gap</strong>: same class as prior P2P PRs — full CI green (12/12 checks), but no live two-account browser test of the real-time feed card (no live multi-account test setup available this session). Recommend a manual two-account pass on the live pilot post-deploy: create a bet via the chat 🎲 button and confirm a feed card appears for a second account in real time, then resolve it and confirm a second card appears.</p>
+<p><strong>Plan closed</strong>: this was the final item of the 8-item P2P social/chat plan. All shipped: PR 1 (#887), PR 1.5 (#891), PR 2 (#889), PR 3 (#893, win-streak badge), PR 4 (#895).</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ open challenges — post a 1:1/football gw challenge without naming an opponent (2026-08-31) — pr #891 
 
 **context**: pr 1.5 of the approved 8-item p2p social/chat plan (`synchronous-stirring-pretzel.md`), the migration item slotted between pr 1 and pr 2. closes the &quot;join this bet&quot; gap for 1:1/football gw challenges — `p2p_bets` already let any circle member join a whole-clubhouse bet, but `p2p_challenges.opponent_id` was a required column with a `check (challenger_id &lt;&gt; opponent_id)` constraint assuming exactly one fixed opponent from creation, so there was no way for a third party to claim an open slot.
@@ -1246,7 +1274,7 @@
         <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: PR 1.5 of the approved 8-item P2P social/chat plan (<code>synchronous-stirring-pretzel.md</code>), the migration item slotted between PR 1 and PR 2. Closes the "join this bet" gap for 1:1/Football GW challenges — <code>p2p_bets</code> already let any circle member join a whole-clubhouse bet, but <code>p2p_challenges.opponent_id</code> was a required column with a <code>CHECK (challenger_id &lt;&gt; opponent_id)</code> constraint assuming exactly one fixed opponent from creation, so there was no way for a third party to claim an open slot.</p>
 <p><strong>What shipped</strong>: Migration <code>265_open_challenges.sql</code> (applied to production with fresh per-item approval in the prior session segment, <code>supabase/schema.sql</code> synced) makes <code>opponent_id</code> nullable, relaxes the self-challenge CHECK to tolerate <code>NULL</code>, and adds <code>claim_p2p_challenge(p_challenge_id)</code> (circle-member-only; errors <code>ALREADY_CLAIMED</code>/<code>CHALLENGE_NOT_PENDING</code>/<code>CHALLENGE_EXPIRED</code>/<code>CANNOT_CLAIM_OWN_CHALLENGE</code>/<code>NOT_CIRCLE_MEMBER</code>/<code>NOT_LEAGUE_MEMBER</code>) and <code>get_open_challenges(p_circle_id)</code> (circle-wide, mirrors <code>get_clubhouse_bets</code>). This session shipped the frontend: <code>CreateChallengeModal</code> gains a third target-picker row, "🎲 Open — first to accept," mutually exclusive with picking a named opponent; a new <code>OpenChallengeCard</code> (dashed gold border, single "Claim" button) renders in the unified Incoming list via a three-way <code>kind</code> dispatch (<code>'challenge' | 'open_challenge' | 'bet'</code>) added to <code>useAllBets.js</code>; <code>OutgoingCard</code> labels a still-unclaimed post "🎲 Open — awaiting claim" (no RPC change needed — <code>get_my_challenges</code> already returns the challenger's own open rows). <code>useChallenges.js</code> gained <code>openChallenges</code> state, <code>fetchOpenChallenges</code>/<code>claimChallenge</code>, and its existing Realtime subscription now refetches both on any <code>p2p_challenges</code> change. Once claimed, a challenge behaves exactly like any other 1:1 challenge — existing accept/decline/resolve/auto-resolve RPCs are untouched.</p>
 <p><strong>Verification gap</strong>: same class as PR #887/#889 — full CI green (12/12 checks on PR #891, including a dedicated Schema Rehearsal check re-validating migration 265), but no live interactive claim-flow test (local demo session has no backing circle membership, so <code>CreateChallengeModal</code> correctly shows its "No Clubhouse selected" blocked state). Verified via diff review + lint/build + a clean no-crash browser smoke test. Recommend a manual claim-flow pass on the live pilot post-deploy.</p>
-<p><strong>Next in this plan</strong>: PR 3 (win-streak badge) and PR 4 (chat quick-bet + live bet feed) each still need a migration and their own fresh per-item approval before any SQL is written — none sought yet.</p></dd></div>
+<p><strong>Plan status</strong>: all 8 items now shipped — PR 3 (win-streak badge, #893) and PR 4 (chat quick-bet + live bet feed, #895) closed it out. See PR #895's section above.</p></dd></div>
       </dl></template>
       </article>
 
@@ -1258,7 +1286,7 @@
 
 **verification gap**: same class as pr #887/#880 — full ci green, but no live interactive click-through (local demo session has no backing circle membership: `get_my_p2p_bets` returned `permission denied`, clubhouse dropdown empty). verified instead via a full line-by-line diff review against the plan spec. recommend a manual pass on the live pilot post-deploy, same as prior p2p prs.
 
-**next in this plan**: pr 1.5 &quot;open challenges&quot; shipped (see pr #891, above). pr 3 (win-streak badge) and pr 4 (chat quick-bet + live bet feed) each still need a migration and their own fresh per-item approval before any sql is written — none sought yet.
+**plan status**: all 8 items now shipped (see pr #895&#x27;s section above for the full closure note).
 
 " style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
         <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
@@ -1276,7 +1304,7 @@
         <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: PR 2 of the approved 8-item P2P social/chat plan (<code>synchronous-stirring-pretzel.md</code>), built directly on the unified "Bets" tab from PR #887. No migration — pure application-layer changes inside <code>ChallengeScreen.jsx</code>.</p>
 <p><strong>What shipped</strong>: one-tap bet-template chips in <code>CreateGroupBetModal</code>'s composer (question + stake pre-fill, target picker left to the user); a <code>localStorage</code>-backed smart default for the target-mode picker, keyed per Clubhouse + user; a "↻ Rematch" button on resolved history cards (both 1:1 challenges and group bets) that reopens the create modal pre-filled — Football GW rematches still force a fresh gameweek pick, and <code>selected_users</code> group-bet rematches fetch the original target list on demand from <code>p2p_bet_targets</code>.</p>
 <p><strong>Verification gap</strong>: same class as PR #887/#880 — full CI green, but no live interactive click-through (local demo session has no backing circle membership: <code>get_my_p2p_bets</code> returned <code>permission denied</code>, clubhouse dropdown empty). Verified instead via a full line-by-line diff review against the plan spec. Recommend a manual pass on the live pilot post-deploy, same as prior P2P PRs.</p>
-<p><strong>Next in this plan</strong>: PR 1.5 "Open Challenges" shipped (see PR #891, above). PR 3 (win-streak badge) and PR 4 (chat quick-bet + live bet feed) each still need a migration and their own fresh per-item approval before any SQL is written — none sought yet.</p></dd></div>
+<p><strong>Plan status</strong>: all 8 items now shipped (see PR #895's section above for the full closure note).</p></dd></div>
       </dl></template>
       </article>
 
@@ -1288,7 +1316,9 @@
 
 **verification gap**: same class as prior p2p sessions — full ci green, manual smoke test in demo mode confirmed the ui and the fallback-routing logic live, but no real two-account join test (no live supabase session available locally, and claude does not sign in as a live user). recommend a manual pass on the live pilot post-deploy.
 
-**next in this plan** (see full detail in the plan file / &quot;last updated&quot; banner above): pr 1.5 &quot;open challenges&quot; and pr 3 (win-streak badge) and pr 4 (chat quick-bet + live bet feed) each need a migration and their own fresh per-item" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+**plan status**: all 8 items now shipped (see pr #895&#x27;s section above for the full closure note).
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
         <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
         <h3 class="card-title">Unified Bets Flow — Coin Challenges + Group Bets merged into one tab</h3>
         <p class="card-summary">Context : PR 1 of the approved 8-item P2P social/chat plan (plan file: synchronous-stirring-pretzel.md ). The user's own complaint drove this — they'd been using the…</p>
@@ -1304,7 +1334,7 @@
         <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: PR 1 of the approved 8-item P2P social/chat plan (plan file: <code>synchronous-stirring-pretzel.md</code>). The user's own complaint drove this — they'd been using the always-visible 1:1 "New Challenge" flow (single-opponent by design) and asked "can't we have the bets all in the same place... this is confusing," not realizing the separate Group Bets tab already supported multi-select/whole-clubhouse joining. Investigation also answered a second question in the same plan ("what's the effort of a 'join this bet' option") — for Group Bets it's already ≈0 effort, since <code>join_p2p_bet</code>'s <code>whole_clubhouse</code> path already only checks circle membership; the real gap was that it lived on an easy-to-miss separate tab.</p>
 <p><strong>What shipped</strong>: new <code>src/hooks/useAllBets.js</code> (client-side merge of <code>useChallenges</code>/<code>useGroupBets</code> into kind-tagged status buckets, no new RPC); <code>ChallengeScreen.jsx</code> tab bar collapsed <code>Challenges | Group Bets | Wallet</code> → <code>Bets | Wallet</code>; one "New Bet" entry point (<code>NewBetModal</code>/<code>BetKindPicker</code>) routing Football GW → <code>p2p_challenge</code> (only schema with auto-resolve) and Freeform (any target shape) → <code>p2p_bet</code>, with a <code>betsEnabled=false</code> fallback to the legacy challenge modal; <code>CreateGroupBetModal</code> gained a "One Person" target option; <code>ClubhouseScreen.jsx</code> notification routing simplified to one destination.</p>
 <p><strong>Verification gap</strong>: same class as prior P2P sessions — full CI green, manual smoke test in demo mode confirmed the UI and the fallback-routing logic live, but no real two-account join test (no live Supabase session available locally, and Claude does not sign in as a live user). Recommend a manual pass on the live pilot post-deploy.</p>
-<p><strong>Next in this plan</strong> (see full detail in the plan file / "Last Updated" banner above): PR 1.5 "Open Challenges" and PR 3 (win-streak badge) and PR 4 (chat quick-bet + live bet feed) each need a migration and their own fresh per-item approval before any SQL is written — none sought yet. PR 2 (bet templates, smart default targeting, one-tap rematch) needs no migration and is next up.</p></dd></div>
+<p><strong>Plan status</strong>: all 8 items now shipped (see PR #895's section above for the full closure note).</p></dd></div>
       </dl></template>
       </article>
 
