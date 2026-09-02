@@ -14,8 +14,8 @@ const SPORTS = [
 ];
 
 const FORMATS = [
-  { value: 'noduplicate', label: 'Classic — season-long points' },
-  { value: 'draft',       label: 'Draft' },
+  { value: 'classic',     label: 'Classic — season-long points' },
+  { value: 'noduplicate', label: 'Draft' },
 ];
 
 const SPORT_INFO = {
@@ -91,7 +91,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
 
   const [sport, setSport]             = useState('football');
   const [name, setName]               = useState('');
-  const [format, setFormat]           = useState('noduplicate');
+  const [format, setFormat]           = useState('classic');
   const [h2h, setH2h]                 = useState(false);
   const [tournaments, setTournaments] = useState([]);
   const [tournamentId, setTournamentId] = useState('');
