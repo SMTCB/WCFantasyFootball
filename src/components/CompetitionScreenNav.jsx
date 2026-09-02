@@ -32,7 +32,7 @@ const TENNIS_SCREENS = [
   { key: 'ten-lb',   label: 'LEADERBOARD', path: '/tennis/leaderboard', Icon: null },
 ];
 
-export function CompetitionScreenNav({ pathname, paddockId }) {
+export function CompetitionScreenNav({ pathname, paddockId, leagueId }) {
   const isFoot   = ['/live', '/squad', '/league', '/market', '/recap'].some(
     p => pathname === p || pathname.startsWith(p + '/')
   );
@@ -41,7 +41,17 @@ export function CompetitionScreenNav({ pathname, paddockId }) {
 
   if (!isFoot && !isF1 && !isTennis) return null;
 
-  const screens     = isFoot ? FOOTBALL_SCREENS : isF1 ? buildF1Screens(paddockId) : TENNIS_SCREENS;
+  // SQUAD and MARKET are per-league screens (they need to know which league to
+  // show) — carry the current leagueId across tabs so switching tabs doesn't
+  // drop it. LIVE and RECAP are intentionally cross-league views and take no
+  // leagueId param.
+  const screens = isFoot
+    ? FOOTBALL_SCREENS.map(s =>
+        leagueId && (s.key === 'squad' || s.key === 'market')
+          ? { ...s, href: `${s.path}?leagueId=${leagueId}` }
+          : s
+      )
+    : isF1 ? buildF1Screens(paddockId) : TENNIS_SCREENS;
   const activeColor = isF1 ? 'var(--f1)' : isTennis ? 'var(--ten)' : 'var(--accent)';
   const homePath     = isFoot ? null : isF1 ? (paddockId ? `/f1/${paddockId}` : '/f1') : '/tennis';
 
@@ -57,7 +67,7 @@ export function CompetitionScreenNav({ pathname, paddockId }) {
         minHeight: 44, flexShrink: 0,
       }}
     >
-      {screens.map(({ key, label, path, Icon, isLive }) => {
+      {screens.map(({ key, label, path, href, Icon, isLive }) => {
         const isActive =
           pathname === path ||
           (path !== homePath && pathname.startsWith(path + '/'));
@@ -67,7 +77,7 @@ export function CompetitionScreenNav({ pathname, paddockId }) {
         return (
           <Link
             key={key}
-            to={path}
+            to={href ?? path}
             style={{
               flexShrink: 0,
               padding: '0 14px',
