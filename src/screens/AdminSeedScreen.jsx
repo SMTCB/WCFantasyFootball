@@ -119,6 +119,10 @@ function LeagueControls({ league, tournament, onRefresh }) {
   const [lotteryRunning, setLotteryRunning] = useState(false);
   const [lotteryMsg, setLotteryMsg] = useState(null);
 
+  const [wishlistStatus, setWishlistStatus] = useState(null); // null=loading, else RPC result object
+  const [wishlistRunning, setWishlistRunning] = useState(false);
+  const [wishlistMsg, setWishlistMsg] = useState(null);
+
   useEffect(() => {
     if (league.format !== 'noduplicate') return;
     supabase
@@ -128,6 +132,35 @@ function LeagueControls({ league, tournament, onRefresh }) {
       .not('allocated_players', 'is', null)
       .then(({ count }) => setLotteryStatus(count ?? 0));
   }, [league.id, league.format]);
+
+  const loadWishlistStatus = useCallback(async () => {
+    if (league.format !== 'noduplicate') return;
+    const { data } = await supabase.rpc('get_wishlist_draft_status', { p_league_id: league.id });
+    setWishlistStatus(data ?? { available: false, reason: 'unable to load status' });
+  }, [league.id, league.format]);
+
+  useEffect(() => { loadWishlistStatus(); }, [loadWishlistStatus]);
+
+  const runWishlistDraft = async () => {
+    setWishlistRunning(true);
+    setWishlistMsg(null);
+    try {
+      const result = await callFunction('run-wishlist-draft', { league_id: league.id });
+      if (result?.skipped) {
+        setWishlistMsg({ ok: true, text: result.message || 'No upcoming round found — nothing to allocate' });
+      } else if (result?.error) {
+        setWishlistMsg({ ok: false, text: result.error });
+      } else {
+        const round = result?.roundNumber ?? result?.round_number ?? wishlistStatus?.round_number ?? '?';
+        setWishlistMsg({ ok: true, text: `Wishlist draft allocated for round ${round}` });
+      }
+      await loadWishlistStatus();
+    } catch (err) {
+      setWishlistMsg({ ok: false, text: err.message || 'Wishlist draft failed — check logs' });
+    } finally {
+      setWishlistRunning(false);
+    }
+  };
 
   const updateLeague = async (patch) => {
     setSaving(Object.keys(patch)[0]);
@@ -241,6 +274,38 @@ function LeagueControls({ league, tournament, onRefresh }) {
             {lotteryMsg && (
               <p className={`text-[10px] font-bold mt-2 ${lotteryMsg.ok ? 'text-positive' : 'text-negative'}`}>
                 {lotteryMsg.text}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Run Wishlist Draft — noduplicate leagues only */}
+        {league.format === 'noduplicate' && (
+          <div className="border border-border p-3 mt-1">
+            <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Wishlist Draft</p>
+            {wishlistStatus === null ? (
+              <p className="text-[10px] text-text-secondary">Checking wishlist draft status…</p>
+            ) : wishlistStatus.available === false && wishlistStatus.reason ? (
+              <p className="text-[10px] text-text-secondary">Not available — {wishlistStatus.reason}</p>
+            ) : (
+              <>
+                <p className="text-[10px] text-text-secondary mb-2">
+                  {wishlistStatus.available
+                    ? `Round ${wishlistStatus.round_number} is open for submissions. Manually resolve it now instead of waiting for the transfer window to open automatically.`
+                    : `Round ${wishlistStatus.round_number} has already been allocated.`}
+                </p>
+                <button
+                  onClick={runWishlistDraft}
+                  disabled={wishlistRunning || !wishlistStatus.available}
+                  className="w-full py-2.5 text-[11px] font-black uppercase tracking-widest bg-[#FFC107] text-black disabled:opacity-40"
+                >
+                  {wishlistRunning ? 'Running…' : wishlistStatus.available ? '⚡ Run Wishlist Draft Allocation' : 'Already Allocated'}
+                </button>
+              </>
+            )}
+            {wishlistMsg && (
+              <p className={`text-[10px] font-bold mt-2 ${wishlistMsg.ok ? 'text-positive' : 'text-negative'}`}>
+                {wishlistMsg.text}
               </p>
             )}
           </div>
