@@ -417,6 +417,7 @@ export default function AppLayout({ children }) {
         <CompetitionScreenNav
           pathname={location.pathname}
           paddockId={competitionId}
+          leagueId={new URLSearchParams(location.search).get('leagueId')}
         />
 
         <div className="animate-page-enter">
