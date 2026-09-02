@@ -74,7 +74,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
       >
         <div style={{
           padding:      '3px 7px',
-          background:   'rgba(15,18,24,.92)',
+          background:   'var(--card)',
           border:       `1px solid ${isSelected ? 'var(--cyan)' : posColor}`,
           borderRadius: 3,
           fontFamily:   'Archivo Black, sans-serif',
@@ -127,8 +127,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         alignItems:     'center',
         gap:            10,
         padding:        '8px 12px 8px 10px',
-        background:     'rgba(15,18,24,.92)',
-        backdropFilter: 'blur(4px)',
+        background:     'var(--card)',
         border:         `1px solid ${isSelected ? 'var(--cyan)' : 'var(--rule)'}`,
         borderRadius:   4,
         minWidth:       148,
