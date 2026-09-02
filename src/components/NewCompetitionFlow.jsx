@@ -106,12 +106,13 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
     if (sport !== 'football') return;
     supabase
       .from('tournaments')
-      .select('id, name')
+      .select('forza_id, name')
+      .eq('available_for_league_creation', true)
       .order('name')
       .then(({ data }) => {
         const list = data ?? [];
         setTournaments(list);
-        if (list.length > 0) setTournamentId(prev => prev || list[0].id);
+        if (list.length > 0) setTournamentId(prev => prev || list[0].forza_id);
       });
   }, [sport]);
 
@@ -288,7 +289,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
             >
               {tournaments.length === 0 && <option value="">Loading...</option>}
               {tournaments.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.forza_id} value={t.forza_id}>{t.name}</option>
               ))}
             </select>
           </div>

@@ -15,6 +15,10 @@ export function useClubhouse() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showNewCompFlow, setShowNewCompFlow] = useState(false);
+
+  const openNewCompetitionFlow = useCallback(() => setShowNewCompFlow(true), []);
+  const closeNewCompetitionFlow = useCallback(() => setShowNewCompFlow(false), []);
 
   const setActiveCircleId = useCallback((id) => {
     if (id) localStorage.setItem('activeCircleId', id);
@@ -322,5 +326,8 @@ export function useClubhouse() {
     markAllRead,
     refresh: fetchMyCircles,
     refreshCompetitions,
+    showNewCompFlow,
+    openNewCompetitionFlow,
+    closeNewCompetitionFlow,
   };
 }

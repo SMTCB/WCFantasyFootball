@@ -674,6 +674,7 @@ export default function ClubhouseScreen() {
     removeCompetitionAdmin,
     markRead,
     markAllRead,
+    openNewCompetitionFlow,
   } = useClubhouseContext();
 
   const { wallet } = useWallet(user?.id);
@@ -944,7 +945,7 @@ export default function ClubhouseScreen() {
                       You can also chat and bet without playing.
                     </p>
                     <button
-                      onClick={() => navigate('/league')}
+                      onClick={openNewCompetitionFlow}
                       style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
                     >
                       + CREATE A COMPETITION →
