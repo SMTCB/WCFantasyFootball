@@ -195,9 +195,8 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { unreadCount } = useContext(ClubhouseNotifContext);
-  const { myCircles, competitions, activeCircleId, setActiveCircleId, refreshCompetitions } = useClubhouseContext();
+  const { myCircles, competitions, activeCircleId, setActiveCircleId, refreshCompetitions, showNewCompFlow, openNewCompetitionFlow, closeNewCompetitionFlow } = useClubhouseContext();
   const { competitionId } = useActiveCompetition();
-  const [showNewCompFlow, setShowNewCompFlow] = useState(false);
   const mainRef = useRef(null);
 
   // #main-content persists across route changes and is the real scroll container
@@ -408,7 +407,7 @@ export default function AppLayout({ children }) {
           <CompetitionTopBar
             competitions={competitions}
             pathname={location.pathname}
-            onAdd={() => setShowNewCompFlow(true)}
+            onAdd={openNewCompetitionFlow}
             hasClubhouse={myCircles.length > 0}
             clubhouseName={myCircles.find(c => c.id === activeCircleId)?.name}
           />
@@ -431,7 +430,7 @@ export default function AppLayout({ children }) {
           circleId={activeCircleId}
           clubhouseName={myCircles.find(c => c.id === activeCircleId)?.name}
           onCreated={refreshCompetitions}
-          onClose={() => setShowNewCompFlow(false)}
+          onClose={closeNewCompetitionFlow}
         />
       )}
 

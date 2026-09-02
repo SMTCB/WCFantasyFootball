@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
@@ -93,8 +93,7 @@ function ClubhouseCard({ circle, comps, colorIndex, onEnterClubhouse, onEnterCom
 }
 
 // ── Find / create a Clubhouse — adapted from ClubhouseScreen's FindTab ───────
-function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle }) {
-  const [creating, setCreating] = useState(false);
+function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, creating, setCreating }) {
   const [newName, setNewName] = useState('');
   const [createBusy, setCreateBusy] = useState(false);
   const [createErr, setCreateErr] = useState('');
@@ -284,7 +283,14 @@ export default function HomeDashboardScreen() {
   const navigate = useNavigate();
 
   const [compsByCircle, setCompsByCircle] = useState({});
+  const [creatingClubhouse, setCreatingClubhouse] = useState(false);
+  const findOrCreateRef = useRef(null);
   const circleIdsKey = myCircles.map(c => c.id).join(',');
+
+  function openCreateClubhouse() {
+    setCreatingClubhouse(true);
+    findOrCreateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   useEffect(() => {
     if (!circleIdsKey) { setCompsByCircle({}); return; }
@@ -327,8 +333,22 @@ export default function HomeDashboardScreen() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '22px 20px 20px' }}>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 8 }}>
-          🏠 HOME
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase' }}>
+            🏠 HOME
+          </div>
+          <button
+            onClick={openCreateClubhouse}
+            title="Create a Clubhouse"
+            style={{
+              flexShrink: 0, width: 28, height: 28, borderRadius: '50%',
+              background: 'transparent', border: '1px solid var(--shell-rule-emphasis)',
+              color: '#fff', fontSize: 'var(--fs-body-lg)', fontWeight: 700, lineHeight: 1,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            +
+          </button>
         </div>
         <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
           Every Clubhouse, one page.
@@ -382,7 +402,7 @@ export default function HomeDashboardScreen() {
               </div>
             )}
 
-            <div style={{ marginBottom: 28 }}>
+            <div ref={findOrCreateRef} style={{ marginBottom: 28, scrollMarginTop: 20 }}>
               <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
                 {myCircles.length > 0 ? 'Find Another Clubhouse' : 'Get Started'}
               </div>
@@ -390,6 +410,8 @@ export default function HomeDashboardScreen() {
                 searchClubhouses={searchClubhouses}
                 joinCircleByCode={joinCircleByCode}
                 createCircle={createCircle}
+                creating={creatingClubhouse}
+                setCreating={setCreatingClubhouse}
               />
             </div>
           </>
