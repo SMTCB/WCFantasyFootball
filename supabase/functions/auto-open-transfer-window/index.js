@@ -33,11 +33,16 @@ Deno.serve(async (req) => {
 
   try {
     // ── 1. Get all active leagues ────────────────────────────────────────────
-    // leagues has no 'status' column — filter by is_dry_run=false to skip test leagues
+    // leagues has no 'status' column — filter by is_dry_run=false to skip test
+    // leagues, and archived=false so a finished tournament's leagues don't get
+    // swept into opening a phantom next-round window once nothing further is
+    // ever going to finish for them (this function has no other signal for
+    // "this tournament is over").
     const { data: leagues } = await supabase
       .from('leagues')
       .select('id, tournament_id')
-      .eq('is_dry_run', false);
+      .eq('is_dry_run', false)
+      .eq('archived', false);
 
     if (!leagues?.length) {
       return respond(200, { ok: true, created: 0, note: 'No active leagues' });
