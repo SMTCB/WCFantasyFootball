@@ -10,6 +10,7 @@ import { useActiveCompetition } from '../hooks/useActiveCompetition';
 import { CompetitionTopBar } from './CompetitionTopBar';
 import { CompetitionScreenNav } from './CompetitionScreenNav';
 import NewCompetitionFlow from './NewCompetitionFlow';
+import ClubhouseInviteModal from './ClubhouseInviteModal';
 import {
   NavIconHome,
   NavIconClubhouse,
@@ -198,6 +199,8 @@ export default function AppLayout({ children }) {
   const { myCircles, competitions, activeCircleId, setActiveCircleId, refreshCompetitions, showNewCompFlow, openNewCompetitionFlow, closeNewCompetitionFlow } = useClubhouseContext();
   const { competitionId } = useActiveCompetition();
   const mainRef = useRef(null);
+  const [showInvite, setShowInvite] = useState(false);
+  const activeCircle = myCircles.find(c => c.id === activeCircleId);
 
   // #main-content persists across route changes and is the real scroll container
   // (not window) — reset it on navigation so e.g. switching Clubhouses doesn't
@@ -408,8 +411,9 @@ export default function AppLayout({ children }) {
             competitions={competitions}
             pathname={location.pathname}
             onAdd={openNewCompetitionFlow}
+            onInvite={activeCircle?.invite_code ? () => setShowInvite(true) : undefined}
             hasClubhouse={myCircles.length > 0}
-            clubhouseName={myCircles.find(c => c.id === activeCircleId)?.name}
+            clubhouseName={activeCircle?.name}
           />
         )}
 
@@ -429,10 +433,15 @@ export default function AppLayout({ children }) {
       {showNewCompFlow && (
         <NewCompetitionFlow
           circleId={activeCircleId}
-          clubhouseName={myCircles.find(c => c.id === activeCircleId)?.name}
+          clubhouseName={activeCircle?.name}
           onCreated={refreshCompetitions}
           onClose={closeNewCompetitionFlow}
         />
+      )}
+
+      {/* Invite modal — reachable from the top-bar "+ Add" menu on any competition screen */}
+      {showInvite && activeCircle && (
+        <ClubhouseInviteModal circle={activeCircle} onClose={() => setShowInvite(false)} />
       )}
 
       {/* ── Mobile Bottom Bar ─────────────────────────────────────────── */}
