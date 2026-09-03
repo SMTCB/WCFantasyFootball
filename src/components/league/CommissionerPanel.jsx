@@ -1876,6 +1876,61 @@ function useFreeTransfersConfig(leagueId, commissioner) {
   return { freeTransfers, toggleFreeTransfers: toggle };
 }
 
+// Relaxation formula config — draft leagues only. Admin on/off switch for the
+// pool-pressure no-repeat relaxation (see docs/architecture/POOL_RELAXATION_SYSTEM.md).
+// Default OFF (missing key = disabled, fail-closed — matches process-transfer's
+// missing-key=0 pattern). Stored in league_config('relaxation_formula_enabled').
+// Once current_relaxation_tier > 0 (shared ownership already happened on live
+// squads), a DB trigger (migration 279) blocks turning this back off — the
+// `locked` flag here just mirrors that server-side rule for the UI.
+function useRelaxationFormulaConfig(leagueId, commissioner) {
+  const [enabled, setEnabledState] = useState(false);
+  const [tier, setTier] = useState(0);
+
+  const refresh = useCallback(() => {
+    if (!leagueId) return;
+    supabase
+      .from('league_config')
+      .select('config_key, config_value')
+      .eq('league_id', leagueId)
+      .in('config_key', ['relaxation_formula_enabled', 'current_relaxation_tier'])
+      .then(({ data }) => {
+        const row = (key) => data?.find(r => r.config_key === key)?.config_value;
+        setEnabledState(row('relaxation_formula_enabled') === true);
+        setTier(Number(row('current_relaxation_tier')) || 0);
+      });
+  }, [leagueId]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const locked = tier > 0;
+
+  const toggle = (next) => {
+    if (!next && locked) {
+      commissioner.setCommMsg({ type: 'err', text: `Can't disable — this league already has shared ownership (tier ${tier}).` });
+      return;
+    }
+    commissioner.commAction(async () => {
+      const { error } = await supabase
+        .from('league_config')
+        .upsert(
+          { league_id: leagueId, config_key: 'relaxation_formula_enabled', config_value: next },
+          { onConflict: 'league_id,config_key' }
+        );
+      if (error) throw new Error(error.message);
+      setEnabledState(next);
+      commissioner.setCommMsg({
+        type: 'ok',
+        text: next
+          ? 'Relaxation formula ON — the no-repeat rule will relax as the player pool tightens.'
+          : 'Relaxation formula OFF — no shared ownership, regardless of pool pressure.',
+      });
+    });
+  };
+
+  return { relaxationEnabled: enabled, relaxationLocked: locked, relaxationTier: tier, toggleRelaxation: toggle };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // P2P challenges config — entry fee (league_config) + stake limits (p2p_config)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2104,6 +2159,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
   // Free transfers config — lifts per-round cap while window is open (Classic leagues only).
   const { freeTransfers, toggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
+  const { relaxationEnabled, relaxationLocked, relaxationTier, toggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
 
   // AUDIT-58-A3: derive live status labels for the LifecycleOp cards.
   // Deadline-controlled leagues: show OPEN (OVERRIDE) when manually opened, AUTO-MANAGED otherwise.
@@ -2323,6 +2379,38 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   >RUN ALLOCATION ↯</button>
                 </div>
               )
+            }
+          />
+          </div>
+          )}
+
+          {/* Relaxation formula — draft leagues only. Admin-managed pause on the
+              pool-pressure no-repeat relaxation (negative pilot feedback). Default
+              OFF; locked ON once shared ownership already exists (tier > 0). */}
+          {(!league || league.format === 'noduplicate') && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <LifecycleOp
+            title="RELAXATION FORMULA"
+            status={relaxationEnabled ? 'ON' : 'OFF'}
+            statusTone={relaxationEnabled ? 'var(--positive)' : 'var(--mute)'}
+            sub="Lets the no-repeat rule relax (allow shared ownership) as the player pool tightens late in a cup. Off by default — no shared ownership regardless of pool pressure."
+            when="Leave off unless managers are getting stuck with an empty pool late in a cup run. Once it kicks in and a player is already shared, it can't be turned back off for this league."
+            primary={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {relaxationLocked && (
+                  <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>LOCKED · </span>
+                    Shared ownership already exists (tier {relaxationTier}) — this can't be disabled for this league.
+                  </div>
+                )}
+                <ToggleSwitch
+                  checked={relaxationEnabled}
+                  onChange={() => toggleRelaxation(!relaxationEnabled)}
+                  disabled={commLoading || (relaxationEnabled && relaxationLocked)}
+                  labelOn="RELAXATION ON"
+                  labelOff="RELAXATION OFF"
+                />
+              </div>
             }
           />
           </div>
@@ -2898,6 +2986,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
   // Free transfers config — same dual-call pattern as useFreeTransferWindow above.
   const { freeTransfers: mobFreeTransfers, toggleFreeTransfers: mobToggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
+  const { relaxationEnabled: mobRelaxationEnabled, relaxationLocked: mobRelaxationLocked, relaxationTier: mobRelaxationTier, toggleRelaxation: mobToggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -3068,6 +3157,26 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                 >RUN ALLOCATION ↯</button>
               </>
             )}
+          </MobLifecycleCard>
+          </div>
+          )}
+
+          {(!league || league.format === 'noduplicate') && (
+          <div>
+          <MobLifecycleCard title="RELAXATION FORMULA" status={mobRelaxationEnabled ? 'ON' : 'OFF'} tone={mobRelaxationEnabled ? 'var(--positive)' : 'var(--mute)'} when="Leave off unless managers get stuck with an empty pool late in a cup run. Locks ON once shared ownership exists.">
+            {mobRelaxationLocked && (
+              <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>LOCKED · </span>
+                Shared ownership already exists (tier {mobRelaxationTier}) — can't disable.
+              </div>
+            )}
+            <ToggleSwitch
+              checked={mobRelaxationEnabled}
+              onChange={() => mobToggleRelaxation(!mobRelaxationEnabled)}
+              disabled={commLoading || (mobRelaxationEnabled && mobRelaxationLocked)}
+              labelOn="RELAXATION ON"
+              labelOff="RELAXATION OFF"
+            />
           </MobLifecycleCard>
           </div>
           )}
