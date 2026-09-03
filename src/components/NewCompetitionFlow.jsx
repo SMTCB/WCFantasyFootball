@@ -137,7 +137,13 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         });
         if (err) throw err;
         if (data?.error) throw new Error(data.error);
-        newId = data?.league_id ?? data;
+        // create_league returns row_to_json(v_league) — a flat leagues row
+        // with an `id` column, not `league_id`. The old `data?.league_id ?? data`
+        // fallback silently assigned the whole object to newId when the RPC
+        // succeeded (no top-level `.error`), producing a `/league/[object Object]`
+        // URL that can never resolve — LeagueScreen's header would spin on
+        // "SYNCING..." forever until the user backed out and re-entered.
+        newId = data?.id;
       } else if (sport === 'f1') {
         const { data, error: err } = await supabase.rpc('create_paddock', {
           p_name:      name.trim(),
