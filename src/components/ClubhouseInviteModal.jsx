@@ -65,20 +65,20 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%', maxWidth: 380,
-          background: 'var(--ink-2)', border: '1px solid var(--shell-rule-strong)',
+          background: 'var(--card)', border: '1px solid var(--rule)',
           borderRadius: 12, padding: '24px 22px 22px',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
         }}
       >
         <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 6 }}>
           Invite to your Clubhouse
         </div>
-        <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.01em', marginBottom: 18, overflowWrap: 'anywhere' }}>
+        <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', letterSpacing: '-0.01em', marginBottom: 18, overflowWrap: 'anywhere' }}>
           {circle.name}
         </div>
 
         {/* Invite code */}
-        <div style={{ marginBottom: 6, ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'rgba(240,242,245,0.4)', textTransform: 'uppercase' }}>
+        <div style={{ marginBottom: 6, ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase' }}>
           Invite code
         </div>
         <button
@@ -93,7 +93,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
           <span style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '0.16em', color: 'var(--positive)' }}>
             {circle.invite_code}
           </span>
-          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: codeCopied ? 'var(--positive)' : 'rgba(240,242,245,0.4)' }}>
+          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: codeCopied ? 'var(--positive)' : 'var(--mute)' }}>
             {codeCopied ? '✓ Copied' : 'Tap to copy'}
           </span>
         </button>
@@ -118,8 +118,8 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
           <button
             onClick={copyLink}
             style={{
-              padding: 12, background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-strong)',
-              borderRadius: 10, color: linkCopied ? 'var(--positive)' : 'rgba(240,242,245,0.7)',
+              padding: 12, background: 'var(--elev)', border: '1px solid var(--rule)',
+              borderRadius: 10, color: linkCopied ? 'var(--positive)' : 'var(--paper)',
               fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, letterSpacing: '0.05em',
               textTransform: 'uppercase', cursor: 'pointer',
             }}
@@ -131,8 +131,8 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
             ref={cancelRef}
             onClick={onClose}
             style={{
-              padding: 12, background: 'transparent', border: '1px solid var(--shell-rule-strong)',
-              borderRadius: 10, color: 'rgba(240,242,245,0.45)',
+              padding: 12, background: 'transparent', border: '1px solid var(--rule)',
+              borderRadius: 10, color: 'var(--mute)',
               fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, letterSpacing: '0.05em',
               textTransform: 'uppercase', cursor: 'pointer',
             }}
