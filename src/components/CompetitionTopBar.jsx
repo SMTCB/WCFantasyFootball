@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
 const SPORT_COLOR = {
@@ -32,15 +33,38 @@ export function CompetitionTopBar({ competitions, pathname, onAdd, onInvite, has
   const active = extractActiveCompId(pathname);
   const isClubhouseHome = /^\/clubhouse(\/[^/]+)?$/.test(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [menuPos, setMenuPos] = useState(null);
+  const buttonRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Menu is portaled to document.body (position: fixed, computed from the
+  // button's rect) rather than rendered inline — this row sets overflowX:'auto'
+  // for horizontal pill-scrolling, which per the CSS spec forces its overflowY
+  // to compute to 'auto' too, silently clipping an inline absolutely-positioned
+  // dropdown that pops out below it.
+  const openMenu = () => {
+    const rect = buttonRef.current.getBoundingClientRect();
+    setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    setMenuOpen(true);
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
     const handleClick = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (
+        buttonRef.current && !buttonRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) setMenuOpen(false);
     };
+    const close = () => setMenuOpen(false);
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
   }, [menuOpen]);
 
   const allComps = [
@@ -50,6 +74,7 @@ export function CompetitionTopBar({ competitions, pathname, onAdd, onInvite, has
   ];
 
   return (
+    <>
     <div
       role="navigation"
       aria-label="Competitions"
@@ -101,9 +126,10 @@ export function CompetitionTopBar({ competitions, pathname, onAdd, onInvite, has
           the dropdown. Once inside a Clubhouse, this is the persistent, always-visible
           entry point for both "new competition" and "invite people" (the equivalent
           empty-state buttons on ClubhouseScreen disappear once content exists). */}
-      <div ref={menuRef} style={{ position: 'relative', marginLeft: 'auto', flexShrink: 0, alignSelf: 'center' }}>
+      <div style={{ position: 'relative', marginLeft: 'auto', flexShrink: 0, alignSelf: 'center' }}>
         <button
-          onClick={hasClubhouse ? () => setMenuOpen(o => !o) : () => navigate('/home')}
+          ref={buttonRef}
+          onClick={hasClubhouse ? () => (menuOpen ? setMenuOpen(false) : openMenu()) : () => navigate('/home')}
           title={hasClubhouse ? 'Add competition or invite people' : 'Create a Clubhouse first'}
           aria-haspopup={hasClubhouse ? 'menu' : undefined}
           aria-expanded={hasClubhouse ? menuOpen : undefined}
@@ -123,46 +149,52 @@ export function CompetitionTopBar({ competitions, pathname, onAdd, onInvite, has
           <span aria-hidden="true" style={{ fontSize: 'var(--fs-body-lg)', lineHeight: 1 }}>+</span>
           Add
         </button>
-
-        {menuOpen && hasClubhouse && (
-          <div role="menu" style={{
-            position: 'absolute', top: '100%', right: 0, marginTop: 6,
-            background: 'var(--card)', border: '1px solid var(--rule)',
-            borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.25)', zIndex: 60,
-            overflow: 'hidden', minWidth: 200,
-          }}>
-            <button
-              role="menuitem"
-              onClick={() => { setMenuOpen(false); onAdd(); }}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                padding: '10px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-                background: 'transparent', color: 'var(--paper)',
-                fontSize: 'var(--fs-label)', fontWeight: 500,
-              }}
-            >
-              <span aria-hidden="true">🏆</span>
-              New competition
-            </button>
-            {onInvite && (
-              <button
-                role="menuitem"
-                onClick={() => { setMenuOpen(false); onInvite(); }}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '10px 14px', border: 'none', borderTop: '1px solid var(--rule)',
-                  textAlign: 'left', cursor: 'pointer',
-                  background: 'transparent', color: 'var(--paper)',
-                  fontSize: 'var(--fs-label)', fontWeight: 500,
-                }}
-              >
-                <span aria-hidden="true">💬</span>
-                Invite to Clubhouse
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </div>
+
+    {menuOpen && hasClubhouse && menuPos && createPortal(
+      <div
+        ref={dropdownRef}
+        role="menu"
+        style={{
+          position: 'fixed', top: menuPos.top, right: menuPos.right,
+          background: 'var(--card)', border: '1px solid var(--rule)',
+          borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.25)', zIndex: 9999,
+          overflow: 'hidden', minWidth: 200,
+        }}
+      >
+        <button
+          role="menuitem"
+          onClick={() => { setMenuOpen(false); onAdd(); }}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
+            background: 'transparent', color: 'var(--paper)',
+            fontSize: 'var(--fs-label)', fontWeight: 500,
+          }}
+        >
+          <span aria-hidden="true">🏆</span>
+          New competition
+        </button>
+        {onInvite && (
+          <button
+            role="menuitem"
+            onClick={() => { setMenuOpen(false); onInvite(); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 14px', border: 'none', borderTop: '1px solid var(--rule)',
+              textAlign: 'left', cursor: 'pointer',
+              background: 'transparent', color: 'var(--paper)',
+              fontSize: 'var(--fs-label)', fontWeight: 500,
+            }}
+          >
+            <span aria-hidden="true">💬</span>
+            Invite to Clubhouse
+          </button>
+        )}
+      </div>,
+      document.body
+    )}
+    </>
   );
 }
