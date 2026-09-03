@@ -80,6 +80,15 @@ function JoinRoute() {
   return <Navigate to={`/league?joinCode=${code}`} replace />;
 }
 
+// JoinClubhouseRoute: reads ?code= from query, redirects to ClubhouseScreen with
+// the invite code pre-filled — same pre/post-auth redirect-preservation pattern
+// as JoinRoute above (ProtectedRoute keeps the full path+query across /auth).
+function JoinClubhouseRoute() {
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get('code') ?? '';
+  return <Navigate to={`/clubhouse?circleCode=${code}`} replace />;
+}
+
 // F1PicksRedirect: the standalone PICKS screen was folded into CALENDAR
 // (race rows expand in place). Bounces old bookmarked/shared /picks links
 // to the paddock's CALENDAR screen instead of 404ing.
@@ -165,6 +174,7 @@ function AppRoutes() {
                   <Route path="/home"                 element={<ErrorBoundary screen="Home"><HomeDashboardScreen /></ErrorBoundary>} />
                   <Route path="/trophy"           element={<ErrorBoundary screen="TrophyCabinet"><TrophyCabinetScreen /></ErrorBoundary>} />
                   <Route path="/join"                       element={<JoinRoute />} />
+                  <Route path="/join-clubhouse"             element={<JoinClubhouseRoute />} />
                   <Route path="*"                           element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
                 </Routes>
               </AppLayout>

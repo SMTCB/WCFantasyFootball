@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
@@ -11,6 +11,7 @@ import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 import TabStrip from '../components/shared/TabStrip';
 import { ArchivedBadge } from '../components/league/LeagueBadges';
 import NotificationBell from '../components/NotificationBell';
+import ClubhouseInviteModal from '../components/ClubhouseInviteModal';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -682,14 +683,35 @@ export default function ClubhouseScreen() {
   const frontpage = useClubhouseFrontpage(activeCircleId);
 
   const [tab, setTab] = useState(() => searchParams.get('tab') ?? 'home');
-  const [copied, setCopied] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+  const [showInvite, setShowInvite] = useState(false);
+  const [joinCodeStatus, setJoinCodeStatus] = useState(null); // 'joining' | { error } | null
+  const handledCircleCode = useRef(null);
 
   useEffect(() => {
     const handler = () => setIsDesktop(window.innerWidth >= 1024);
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
   }, []);
+
+  // Auto-join via ?circleCode= — set by JoinClubhouseRoute (App.jsx) after a
+  // /join-clubhouse?code=X share link (WhatsApp invite, copied link, etc).
+  // Runs regardless of how many Clubhouses the user already belongs to.
+  useEffect(() => {
+    const circleCode = searchParams.get('circleCode');
+    if (!circleCode || handledCircleCode.current === circleCode) return;
+    handledCircleCode.current = circleCode;
+    setJoinCodeStatus('joining');
+    joinCircleByCode(circleCode)
+      .then((circleId) => {
+        setJoinCodeStatus(null);
+        navigate(`/clubhouse/${circleId}`, { replace: true });
+      })
+      .catch((err) => {
+        setJoinCodeStatus({ error: err.message === 'INVALID_CODE' ? 'That invite code was not found — check and try again.' : err.message });
+        navigate('/clubhouse', { replace: true });
+      });
+  }, [searchParams, joinCircleByCode, navigate]);
 
   // Honour explicit URL param
   useEffect(() => {
@@ -704,13 +726,6 @@ export default function ClubhouseScreen() {
       navigate(`/clubhouse/${activeCircleId}`, { replace: true });
     }
   }, [activeCircleId, routeCircleId, navigate]);
-
-  function copyCode() {
-    if (!activeCircle?.invite_code) return;
-    navigator.clipboard?.writeText(activeCircle.invite_code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
 
   function enterLeague(league) {
     navigate(`/league/${league.id}`);
@@ -817,15 +832,13 @@ export default function ClubhouseScreen() {
               )}
               {activeCircle?.invite_code && (
                 <button
-                  onClick={copyCode}
-                  title="Copy invite code"
-                  style={{ padding: '6px 12px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-strong)', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
+                  onClick={() => setShowInvite(true)}
+                  title="Invite people to this Clubhouse"
+                  style={{ padding: '8px 14px', background: 'var(--accent)', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                 >
-                  <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, letterSpacing: '0.2em', color: '#fff' }}>
-                    {activeCircle.invite_code}
-                  </span>
-                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: copied ? 'var(--positive)' : 'var(--on-shell-dim)' }}>
-                    {copied ? 'COPIED ✓' : 'COPY CODE'}
+                  <span style={{ fontSize: 'var(--fs-label)' }}>💬</span>
+                  <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, letterSpacing: '0.1em', color: '#0a0e14' }}>
+                    INVITE
                   </span>
                 </button>
               )}
@@ -841,6 +854,18 @@ export default function ClubhouseScreen() {
           </div>
         </div>
       </div>
+
+      {joinCodeStatus === 'joining' && (
+        <div style={{ padding: '10px 16px', background: 'var(--accent-bg)', borderBottom: '1px solid var(--rule)', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', textAlign: 'center' }}>
+          Joining Clubhouse…
+        </div>
+      )}
+      {joinCodeStatus?.error && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 16px', background: 'rgba(220,60,60,0.1)', borderBottom: '1px solid rgba(220,60,60,0.3)', ...MONO, fontSize: 'var(--fs-micro)', color: '#e05a5a' }}>
+          <span>{joinCodeStatus.error}</span>
+          <button onClick={() => setJoinCodeStatus(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)' }}>✕</button>
+        </div>
+      )}
 
       {/* Clubhouse switcher (multi-clubhouse, mobile only — desktop uses the sidebar switcher) */}
       {!isDesktop && myCircles.length > 1 && (
@@ -1033,6 +1058,10 @@ export default function ClubhouseScreen() {
             </div>
           )}
         </>
+      )}
+
+      {showInvite && activeCircle && (
+        <ClubhouseInviteModal circle={activeCircle} onClose={() => setShowInvite(false)} />
       )}
     </div>
   );
