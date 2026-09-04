@@ -25,7 +25,7 @@ function useCountdown(target) {
   return label;
 }
 
-export default function TransferWindowBanner({ status, closesAt, opensAt, transfersRemaining, isUnlimited, windowType }) {
+export default function TransferWindowBanner({ status, closesAt, opensAt, transfersRemaining, isUnlimited, windowType, isDraftLeague, noPenaltyReason }) {
   const closesIn = useCountdown(status === 'open'     ? closesAt : null);
   const opensIn  = useCountdown(status === 'upcoming' ? opensAt  : null);
 
@@ -36,6 +36,15 @@ export default function TransferWindowBanner({ status, closesAt, opensAt, transf
     if (windowType === 'unlimited') {
       // Admin-opened emergency window — genuinely no restrictions
       transferLabel = 'Unlimited transfers';
+    } else if (isDraftLeague) {
+      // Draft leagues never have a free-allowance/penalty mechanism, ever —
+      // not just before round 1 — so never claim "extra buys cost points" here.
+      transferLabel = 'Unlimited transfers · draft league';
+    } else if (noPenaltyReason) {
+      // isUnlimited is also true here, but the caller knows the specific reason
+      // (pre-competition, squad still building, or a commissioner toggle) that
+      // no penalty applies — surface that instead of the generic "costs points" copy.
+      transferLabel = noPenaltyReason;
     } else if (isUnlimited) {
       // Natural between-rounds window — free allowance applies, penalties beyond it
       transferLabel = 'Free transfers available · extra buys cost points';

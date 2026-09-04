@@ -41,14 +41,23 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
   return (
     <div
       ref={setNodeRef}
-      style={{ ...style, touchAction: 'none', userSelect: 'none', background: 'var(--card)' }}
-      {...attributes}
-      {...listeners}
-      className="flex items-center gap-2 rounded-sm px-2 py-2 cursor-grab active:cursor-grabbing border border-[var(--rule)]"
+      style={{ ...style, background: 'var(--card)' }}
+      className="flex items-center gap-2 rounded-sm px-2 py-2 border border-[var(--rule)]"
     >
+      {/*
+        Drag listeners live ONLY on the handle, not the whole row. Two reasons:
+        1. `touch-action: none` has to be scoped to the handle — applying it to the
+           whole row (as before) killed native swipe-to-scroll anywhere over the
+           target list, which made a long wishlist feel broken/unreachable, not
+           just "hard to drag".
+        2. Keeping listeners off the row means taps on the ▲/▼/✕ buttons below
+           are never contested by the drag sensor's pointer capture.
+      */}
       <span
-        className="text-[var(--mute)] shrink-0 select-none"
-        style={{ fontSize: 'var(--fs-body)', lineHeight: 1, padding: '0 2px', fontWeight: 900 }}
+        {...attributes}
+        {...listeners}
+        className="text-[var(--mute)] shrink-0 select-none cursor-grab active:cursor-grabbing flex items-center justify-center"
+        style={{ touchAction: 'none', width: 32, height: 32, margin: '-6px 0', fontSize: 18, fontWeight: 900 }}
         aria-hidden="true"
       >
         ⠿
@@ -62,11 +71,13 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
       </span>
       <span className="text-[var(--paper)] text-[11px] font-bold flex-1 truncate">{p.name}</span>
       <span className="text-[var(--mute)] text-[10px] shrink-0">€{p.price}M</span>
-      <div className="flex flex-col gap-0.5 shrink-0">
+      <div className="flex flex-col shrink-0">
         <button onClick={() => onMoveUp(idx)} disabled={idx === 0}
-          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[10px] leading-none">▲</button>
+          style={{ width: 28, height: 22 }}
+          className="flex items-center justify-center text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[11px] leading-none">▲</button>
         <button onClick={() => onMoveDown(idx)} disabled={idx === listLength - 1}
-          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[10px] leading-none">▼</button>
+          style={{ width: 28, height: 22 }}
+          className="flex items-center justify-center text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[11px] leading-none">▼</button>
       </div>
       <button onClick={() => onRemove(p.id)}
         className="text-[var(--mute)] hover:text-[var(--danger)] text-[14px] leading-none shrink-0 transition-colors">✕</button>
@@ -176,9 +187,13 @@ export default function WishlistDraftScreen() {
     dirtyRef.current = true;
   };
 
+  // Both sensors use distance-based activation, not a hold delay: since the
+  // touch-action:none listeners now live only on the small grip handle (not
+  // the whole row), a touch starting there already signals drag intent, so
+  // there's no scroll-vs-drag ambiguity left to resolve with a long-press wait.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(TouchSensor,   { activationConstraint: { distance: 5 } }),
   );
   const [activePlayer, setActivePlayer] = useState(null);
 

@@ -733,7 +733,16 @@ export default function MarketScreen() {
       )}
 
       {/* â"€â"€ Transfer Window Status Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-      <TransferWindowBanner {...transferWindow} />
+      <TransferWindowBanner
+        {...transferWindow}
+        isDraftLeague={isDraftLeague}
+        noPenaltyReason={
+          mySquad?.initial_build_complete === false ? 'Unlimited transfers · squad still building'
+          : preCompetition                          ? 'Unlimited transfers · before kickoff'
+          : freeTransfers                            ? 'Unlimited transfers · enabled by commissioner'
+          : null
+        }
+      />
 
       {/* -- Shared Ownership (relaxation) Banner -- Tier 1 draft leagues only -- */}
       <RelaxationBanner
