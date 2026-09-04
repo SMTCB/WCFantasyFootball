@@ -10,7 +10,6 @@ import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 import TabStrip from '../components/shared/TabStrip';
 import { ArchivedBadge } from '../components/league/LeagueBadges';
-import { useShowArchived } from '../hooks/useShowArchived';
 import NotificationBell from '../components/NotificationBell';
 import ClubhouseInviteModal from '../components/ClubhouseInviteModal';
 
@@ -766,8 +765,6 @@ export default function ClubhouseScreen() {
   }
 
   const isOwner = activeCircle?.role === 'owner';
-  const [showArchivedClubhouses] = useShowArchived('ffl_show_archived_clubhouses');
-  const switcherCircles = showArchivedClubhouses ? myCircles : myCircles.filter(c => !c.archived);
   const totalComps  = (competitions.football?.length ?? 0) + (competitions.f1?.length ?? 0) + (competitions.tennis?.length ?? 0);
   const activeSports = [(competitions.football?.length ?? 0) > 0, (competitions.f1?.length ?? 0) > 0, (competitions.tennis?.length ?? 0) > 0].filter(Boolean).length;
 
@@ -887,27 +884,6 @@ export default function ClubhouseScreen() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 16px', background: 'rgba(220,60,60,0.1)', borderBottom: '1px solid rgba(220,60,60,0.3)', ...MONO, fontSize: 'var(--fs-micro)', color: '#e05a5a' }}>
           <span>{joinCodeStatus.error}</span>
           <button onClick={() => setJoinCodeStatus(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)' }}>✕</button>
-        </div>
-      )}
-
-      {/* Clubhouse switcher (multi-clubhouse, mobile only — desktop uses the sidebar switcher) */}
-      {!isDesktop && switcherCircles.length > 1 && (
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '10px 16px', borderBottom: '1px solid var(--rule)', scrollbarWidth: 'none' }}>
-          {switcherCircles.map(c => (
-            <button
-              key={c.id}
-              onClick={() => { setActiveCircleId(c.id); navigate(`/clubhouse/${c.id}`, { replace: true }); }}
-              style={{
-                flexShrink: 0, padding: '6px 14px', borderRadius: 20, border: '1px solid',
-                borderColor: c.id === activeCircleId ? 'var(--accent)' : 'var(--rule)',
-                background: c.id === activeCircleId ? 'var(--accent-bg)' : 'transparent',
-                color: c.id === activeCircleId ? 'var(--accent)' : 'var(--mute)',
-                ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              {c.name}
-            </button>
-          ))}
         </div>
       )}
 
