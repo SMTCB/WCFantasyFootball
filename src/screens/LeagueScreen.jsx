@@ -11,7 +11,6 @@ import { useLeagueStats } from '../hooks/useLeagueStats';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
-import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 
 import NotificationBell from '../components/NotificationBell';
@@ -37,6 +36,7 @@ import TradingView            from '../components/league/TradingView';
 import StatsView              from '../components/league/StatsView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
 import RecapView             from '../components/league/RecapView';
+import MarketReportView      from '../components/league/MarketReportView';
 import H2HView               from '../components/league/H2HView';
 
 function timeAgoLabel(iso) {
@@ -1431,6 +1431,14 @@ export default function LeagueScreen() {
            />
          )}
 
+
+         {view === 'market_report' && (
+           <MarketReportView
+             leagueId={activeLeague?.league_id}
+             members={members}
+             currentUser={currentUser}
+           />
+         )}
 
          {view === 'bets' && (
            <BetsTabHub
