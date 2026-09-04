@@ -76,40 +76,6 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
   );
 }
 
-// Manage Squad + Market dual CTA strip
-export function HubActionBar({ onManageSquad, onMarket }) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-      <button
-        onClick={onManageSquad}
-        style={{
-          padding: '14px 18px', background: 'transparent',
-          borderTop: 'none', borderBottom: 'none', borderLeft: 'none',
-          borderRight: '1px solid var(--rule)',
-          color: 'var(--purple)',
-          fontFamily: MONO, fontSize: 'var(--fs-label)', letterSpacing: '.22em',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        }}
-      >
-        <span style={{ width: 14, height: 10, border: '1.5px solid currentColor', display: 'inline-block' }} />
-        MANAGE SQUAD
-      </button>
-      <button
-        onClick={onMarket}
-        style={{
-          padding: '14px 18px', background: 'transparent', border: 'none',
-          color: 'var(--positive)',
-          fontFamily: MONO, fontSize: 'var(--fs-label)', letterSpacing: '.22em',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        }}
-      >
-        <span style={{ width: 14, height: 10, border: '1.5px solid currentColor', display: 'inline-block' }} />
-        MARKET
-      </button>
-    </div>
-  );
-}
-
 // League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5)
 export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [

@@ -21,7 +21,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { useBettingLeaderboard } from '../hooks/useBettingLeaderboard';
 import OnboardingTour from '../components/OnboardingTour';
 import {
-  HubTopbar, HubActionBar, HubTabs,
+  HubTopbar, HubTabs,
   HubLeagueHeader, HubTabPills,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
 } from '../components/league/HubShared';
@@ -1195,10 +1195,6 @@ export default function LeagueScreen() {
               </div>
             }
           />
-          <HubActionBar
-            onManageSquad={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
-            onMarket={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
-          />
         </div>
 
         {/* â”€â”€ Mobile chrome (hidden on desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -1222,21 +1218,6 @@ export default function LeagueScreen() {
               </div>
             }
           />
-          {/* Mobile Squad + Market quick-access bar */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-            <button
-              onClick={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
-              style={{ padding: '10px 14px', background: 'transparent', border: 'none', borderRight: '1px solid var(--rule)', color: 'var(--purple, #A855F7)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            >
-              ⬜ SQUAD
-            </button>
-            <button
-              onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
-              style={{ padding: '10px 14px', background: 'transparent', border: 'none', color: 'var(--positive)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            >
-              ⬜ MARKET
-            </button>
-          </div>
         </div>
 
         <TransferWindowBanner {...transferWindow} />
