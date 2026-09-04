@@ -1254,6 +1254,7 @@ export default function SquadScreen() {
         transfersRemaining={transferWindow.transfersRemaining}
         isUnlimited={transferWindow.isUnlimited}
         windowType={transferWindow.windowType}
+        isDraftLeague={cfg.format === 'noduplicate'}
       />
 
       {/* ── Fetch error banner ──────────────────────────────────────────────── */}
