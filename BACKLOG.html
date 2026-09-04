@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-03. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-04. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>217</strong><span>closed</span></div>
+      <div class="total-pill"><strong>218</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (137)</span>
+    <span class="chip" data-filter-kind="done">Shipped (138)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">217</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">218</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">137</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">138</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1226,8 +1226,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">137</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">138</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tennis stale-tournament fix + daily safety-net sweep (2026-09-04) — pr #923, migration 280 
+
+**context**: user noticed wimbledon still showing as &quot;available&quot; in the app long after the real tournament ended. investigation found two stacked bugs, not one.
+
+**bug 1 — wimbledon was never started**: `tennis_tournaments.status` was still `roster_open` — no admin had ever called `admin_start_tournament`, so the entire sync/scoring pipeline (which only looks at `in_progress`/`qf_captain_open` tournaments) had never had a reason to touch it.
+
+**bug 2 — `sync-tennis-results` was silently broken for every active tournament**: the results endpoint (`/atp/tournament/results/{id}`) returns `{ data: { singles: [...] } }`, not a bare array under `data` like the fixtures/draw endpoint `sync-tennis-players` uses. every cron run (3×/day since migration 272) was throwing `rawmatches.filter is not a function`, caught, and returned as a 200 with the error swallowed into the json body — meaning us open&#x27;s live results sync had likely been silently dead the whole time too, not just wimbledon&#x27;s.
+
+**what was built**: (1) fixed the response-shape parsing in `sync-tennis-results/index.ts` with explicit `array.isarray()` guards per fallback level. (2) added auto-trigger: once a champion is detected, `sync-tennis-results` now calls `score-tennis-tournament` itself instead of waiting for an admin to click &quot;trigger scoring&quot;. (3) migration 280: new daily cron `tennis-stale-tournament-sweep` (06:00 utc) — re-invokes scoring for any tournament stuck `in_progress`/`qf_captain_open` more than 3 days past its `end_date`, and force-completes anything that never left `roster_open`/`upcoming` by the same threshold. this is the actual fix for &quot;stuck open indefinitely&quot; — bug 1 can still happen (an admin forgetting to open a tournament), but now it self-heals within a day of the real event ending instead of sitting open forever.
+
+**executed live, 2026-09-04** (approved per-item, per claude.md): found wimbled" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Tennis stale-tournament fix + daily safety-net sweep</h3>
+        <p class="card-summary">Context : User noticed Wimbledon still showing as "available" in the app long after the real tournament ended. Investigation found two stacked bugs, not one. Bug 1 —…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-04</span><span class="foot-refs">PR #923, migration 280</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Tennis stale-tournament fix + daily safety-net sweep</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : User noticed Wimbledon still showing as "available" in the app long after the real tournament ended. Investigation found two stacked bugs, not one. Bug 1 —…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #923, migration 280</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-04</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: User noticed Wimbledon still showing as "available" in the app long after the real tournament ended. Investigation found two stacked bugs, not one.</p>
+<p><strong>Bug 1 — Wimbledon was never started</strong>: <code>tennis_tournaments.status</code> was still <code>roster_open</code> — no admin had ever called <code>admin_start_tournament</code>, so the entire sync/scoring pipeline (which only looks at <code>in_progress</code>/<code>qf_captain_open</code> tournaments) had never had a reason to touch it.</p>
+<p><strong>Bug 2 — <code>sync-tennis-results</code> was silently broken for every active tournament</strong>: the results endpoint (<code>/atp/tournament/results/{id}</code>) returns <code>{ data: { singles: [...] } }</code>, not a bare array under <code>data</code> like the fixtures/draw endpoint <code>sync-tennis-players</code> uses. Every cron run (3×/day since migration 272) was throwing <code>rawMatches.filter is not a function</code>, caught, and returned as a 200 with the error swallowed into the JSON body — meaning US Open's live results sync had likely been silently dead the whole time too, not just Wimbledon's.</p>
+<p><strong>What was built</strong>: (1) Fixed the response-shape parsing in <code>sync-tennis-results/index.ts</code> with explicit <code>Array.isArray()</code> guards per fallback level. (2) Added auto-trigger: once a champion is detected, <code>sync-tennis-results</code> now calls <code>score-tennis-tournament</code> itself instead of waiting for an admin to click "Trigger Scoring". (3) Migration 280: new daily cron <code>tennis-stale-tournament-sweep</code> (06:00 UTC) — re-invokes scoring for any tournament stuck <code>in_progress</code>/<code>qf_captain_open</code> more than 3 days past its <code>end_date</code>, and force-completes anything that never left <code>roster_open</code>/<code>upcoming</code> by the same threshold. This is the actual fix for "stuck open indefinitely" — Bug 1 can still happen (an admin forgetting to open a tournament), but now it self-heals within a day of the real event ending instead of sitting open forever.</p>
+<p><strong>Executed live, 2026-09-04</strong> (approved per-item, per CLAUDE.md): found Wimbledon had 1 real submitted roster (not empty, as first assumed) — user chose "score it properly" over force-completing with no score. Ran <code>admin_start_tournament</code>, triggered the fixed <code>sync-tennis-results</code> (pulled the real Wimbledon final: Sinner def. Zverev), which auto-triggered scoring. Verified end-to-end: <code>tennis_tournament_players</code> shows Sinner as <code>round_reached = 'champion'</code> (7 rounds won), the 1 roster (a <code>test_qa_manager</code>-labelled test account, not a real pilot user) scored 49 points, a <code>tennis_result</code> gazette entry was written, and <code>tennis_tournaments.status = 'completed'</code>. US Open correctly remains <code>in_progress</code> (real end date 2026-09-13). Migration 280 applied directly and confirmed active in <code>cron.job</code>.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ f1 race-result sync automated via cron — replaces manual openf1 fetch (2026-09-01) — pr #903, migrations 276–277 
 
 **context**: user flagged that neither tennis nor f1 should require an admin to manually click a &quot;fetch from provider&quot; button — results should sync via cron the same way the football tournaments already do. tennis was already cron-driven (`sync-tennis-results`, migration 272). auditing `f1adminscreen.jsx` found the opposite: a &quot;⚡ fetch from openf1&quot; button calling client-side `src/lib/f1/openf1.js`, one click per race weekend — the &quot;one-off at season start&quot; assumption in the original ask was wrong; it was actually a recurring per-race manual step.
