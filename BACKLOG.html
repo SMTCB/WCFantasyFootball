@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>58</strong><span>open</span></div>
-      <div class="total-pill"><strong>218</strong><span>closed</span></div>
+      <div class="total-pill"><strong>219</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (138)</span>
+    <span class="chip" data-filter-kind="done">Shipped (139)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">218</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">219</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">138</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">139</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1226,8 +1226,34 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">138</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">139</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ transfer-window banner text + wishlist drag/scroll ux fix (2026-09-04) — pr #922 
+
+**context**: two related-but-separate ux bugs reported from the same session: (1) draft leagues (and other no-penalty situations) showed the generic &quot;free transfers available · extra buys cost points&quot; banner copy even though draft-league transfers are never penalized — misleading for managers deciding whether to make a move. (2) on mobile, reordering a long wishlist by dragging silently broke the list&#x27;s ability to scroll, because the drag sensor&#x27;s `touch-action: none` was applied to the whole row.
+
+**what was built**: `transferwindowbanner` gained `isdraftleague` and `nopenaltyreason` props — `marketscreen` passes the specific reason (pre-competition, squad still building, or a commissioner&#x27;s free-transfers toggle) so the banner surfaces the real reason instead of the generic penalty copy; `squadscreen` passes `isdraftleague` only (does not yet have the other exemption context locally, left as a known follow-up). in `wishlistdraftscreen`, moved the `dnd-kit` drag listeners and `touch-action: none` off the row and onto a dedicated ⚿ grip handle, and switched `touchsensor` from a 250ms hold-delay to distance-based activation (matching `pointersensor`) since scoping the listener to the handle removes the scroll-vs-drag ambiguity that the hold-delay existed to resolve. also enlarged the ▲/▼ reorder button tap targets.
+
+**verification**: lint, build, and both mobile ci builds passed. the pr&#x27;s &quot;security&quot; ci check failed twice in a row with an identical `npm warn audit 503 service unavailable — post https://registry.npmjs.org/-/npm/v1/security/advisories/bulk` — confirmed as an npm registry-side outage (not a new vulnerability tied to this diff, which touches only `.jsx` files with no dependency changes) and merged past it. full interactive drag/scroll verification on a real draft-league wishlist was not performed in-session — doing so would have required creating real clubhouse/league dat" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Transfer-window banner text + wishlist drag/scroll UX fix</h3>
+        <p class="card-summary">Context : Two related-but-separate UX bugs reported from the same session: (1) draft leagues (and other no-penalty situations) showed the generic "Free transfers…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-04</span><span class="foot-refs">PR #922</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Transfer-window banner text + wishlist drag/scroll UX fix</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : Two related-but-separate UX bugs reported from the same session: (1) draft leagues (and other no-penalty situations) showed the generic "Free transfers…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #922</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-04</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: Two related-but-separate UX bugs reported from the same session: (1) draft leagues (and other no-penalty situations) showed the generic "Free transfers available · extra buys cost points" banner copy even though draft-league transfers are never penalized — misleading for managers deciding whether to make a move. (2) On mobile, reordering a long wishlist by dragging silently broke the list's ability to scroll, because the drag sensor's <code>touch-action: none</code> was applied to the whole row.</p>
+<p><strong>What was built</strong>: <code>TransferWindowBanner</code> gained <code>isDraftLeague</code> and <code>noPenaltyReason</code> props — <code>MarketScreen</code> passes the specific reason (pre-competition, squad still building, or a commissioner's free-transfers toggle) so the banner surfaces the real reason instead of the generic penalty copy; <code>SquadScreen</code> passes <code>isDraftLeague</code> only (does not yet have the other exemption context locally, left as a known follow-up). In <code>WishlistDraftScreen</code>, moved the <code>dnd-kit</code> drag listeners and <code>touch-action: none</code> off the row and onto a dedicated ⚿ grip handle, and switched <code>TouchSensor</code> from a 250ms hold-delay to distance-based activation (matching <code>PointerSensor</code>) since scoping the listener to the handle removes the scroll-vs-drag ambiguity that the hold-delay existed to resolve. Also enlarged the ▲/▼ reorder button tap targets.</p>
+<p><strong>Verification</strong>: Lint, build, and both mobile CI builds passed. The PR's "Security" CI check failed twice in a row with an identical <code>npm warn audit 503 Service Unavailable — POST https://registry.npmjs.org/-/npm/v1/security/advisories/bulk</code> — confirmed as an npm registry-side outage (not a new vulnerability tied to this diff, which touches only <code>.jsx</code> files with no dependency changes) and merged past it. Full interactive drag/scroll verification on a real draft-league wishlist was not performed in-session — doing so would have required creating real Clubhouse/league data in the production database outside the existing <code>TEST_</code>-prefixed fixtures, which was avoided per the pilot data-safety rule; the fix itself follows the standard, well-understood pattern for this class of bug (scoping <code>touch-action: none</code> to the drag handle instead of the whole scrollable row).</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tennis stale-tournament fix + daily safety-net sweep (2026-09-04) — pr #923, migration 280 
 
 **context**: user noticed wimbledon still showing as &quot;available&quot; in the app long after the real tournament ended. investigation found two stacked bugs, not one.
