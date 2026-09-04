@@ -4,6 +4,7 @@ import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
 import { supabase } from '../lib/supabase';
 import { ArchivedBadge } from '../components/league/LeagueBadges';
+import { useShowArchived } from '../hooks/useShowArchived';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -62,7 +63,10 @@ function ClubhouseCard({ circle, comps, colorIndex, onEnterClubhouse, onEnterCom
       >
         <span style={{ width: 9, height: 9, borderRadius: '50%', background: color, flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.2 }}>{circle.name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.2 }}>{circle.name}</div>
+            {circle.archived && <ArchivedBadge />}
+          </div>
           <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)', textTransform: 'uppercase', marginTop: 2 }}>
             {circle.role === 'owner' ? 'OWNER · ' : ''}{allComps.length} {allComps.length === 1 ? 'COMPETITION' : 'COMPETITIONS'}
           </div>
@@ -286,6 +290,9 @@ export default function HomeDashboardScreen() {
   const [creatingClubhouse, setCreatingClubhouse] = useState(false);
   const findOrCreateRef = useRef(null);
   const circleIdsKey = myCircles.map(c => c.id).join(',');
+  const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_clubhouses');
+  const archivedCount = myCircles.filter(c => c.archived).length;
+  const visibleCircles = showArchived ? myCircles : myCircles.filter(c => !c.archived);
 
   function openCreateClubhouse() {
     setCreatingClubhouse(true);
@@ -384,11 +391,21 @@ export default function HomeDashboardScreen() {
           <>
             {myCircles.length > 0 && (
               <div style={{ marginBottom: 28 }}>
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
-                  Your Clubhouses
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+                    Your Clubhouses
+                  </div>
+                  {archivedCount > 0 && (
+                    <button
+                      onClick={() => setShowArchived(v => !v)}
+                      style={{ padding: 0, border: 'none', background: 'transparent', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', cursor: 'pointer' }}
+                    >
+                      {showArchived ? '▾ HIDE ARCHIVED' : `▸ SHOW ARCHIVED (${archivedCount})`}
+                    </button>
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {myCircles.map((circle, i) => (
+                  {visibleCircles.map((circle, i) => (
                     <ClubhouseCard
                       key={circle.id}
                       circle={circle}

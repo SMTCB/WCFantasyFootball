@@ -10,6 +10,7 @@ import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 import TabStrip from '../components/shared/TabStrip';
 import { ArchivedBadge } from '../components/league/LeagueBadges';
+import { useShowArchived } from '../hooks/useShowArchived';
 import NotificationBell from '../components/NotificationBell';
 import ClubhouseInviteModal from '../components/ClubhouseInviteModal';
 
@@ -366,6 +367,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
   const [name,        setName]        = useState(circle.name);
   const [isPublic,    setIsPublic]    = useState(circle.is_public);
   const [p2pEnabled,  setP2pEnabled]  = useState(circle.p2p_betting_enabled);
+  const [archived,    setArchived]    = useState(circle.archived);
   const [savingName,  setSavingName]  = useState(false);
   const [nameMsg,     setNameMsg]     = useState('');
   const [linkableLeagues, setLinkableLeagues] = useState(null);
@@ -405,6 +407,14 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
     setP2pEnabled(next);
     try { await onUpdateSettings({ p2pEnabled: next }); }
     catch { setP2pEnabled(!next); }
+  }
+
+  async function toggleArchived() {
+    const next = !archived;
+    if (next && !window.confirm('Archive this Clubhouse? It will be hidden from your switcher and Home dashboard until you reactivate. Nothing is deleted.')) return;
+    setArchived(next);
+    try { await onUpdateSettings({ archived: next }); }
+    catch { setArchived(!next); }
   }
 
   async function loadLinkableLeagues() {
@@ -508,6 +518,12 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
 
   return (
     <div>
+      {archived && (
+        <div style={{ padding: '10px 14px', marginBottom: 16, background: 'var(--shell-fill)', border: '1px solid var(--rule)', borderRadius: 8, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.06em' }}>
+          ARCHIVED{circle.archived_at ? ` · SINCE ${new Date(circle.archived_at).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}. Hidden from your switcher and Home dashboard.
+        </div>
+      )}
+
       {sectionLabel('Clubhouse Name')}
       <form onSubmit={saveName} style={{ display: 'flex', gap: 8 }}>
         <input
@@ -530,6 +546,11 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {toggle('Public Clubhouse', 'Anyone can find and join via search.', isPublic, togglePublic)}
         {toggle('Group Bets', 'On by default. Turn off to restrict betting to 1:1 challenges only.', p2pEnabled, toggleP2p)}
+      </div>
+
+      {sectionLabel('Archive')}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {toggle('Archive this Clubhouse', 'Hides it from your switcher and Home dashboard. Nothing is deleted — reactivate any time.', archived, toggleArchived)}
       </div>
 
       {sectionLabel('Linked Leagues')}
@@ -745,6 +766,8 @@ export default function ClubhouseScreen() {
   }
 
   const isOwner = activeCircle?.role === 'owner';
+  const [showArchivedClubhouses] = useShowArchived('ffl_show_archived_clubhouses');
+  const switcherCircles = showArchivedClubhouses ? myCircles : myCircles.filter(c => !c.archived);
   const totalComps  = (competitions.football?.length ?? 0) + (competitions.f1?.length ?? 0) + (competitions.tennis?.length ?? 0);
   const activeSports = [(competitions.football?.length ?? 0) > 0, (competitions.f1?.length ?? 0) > 0, (competitions.tennis?.length ?? 0) > 0].filter(Boolean).length;
 
@@ -868,9 +891,9 @@ export default function ClubhouseScreen() {
       )}
 
       {/* Clubhouse switcher (multi-clubhouse, mobile only — desktop uses the sidebar switcher) */}
-      {!isDesktop && myCircles.length > 1 && (
+      {!isDesktop && switcherCircles.length > 1 && (
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '10px 16px', borderBottom: '1px solid var(--rule)', scrollbarWidth: 'none' }}>
-          {myCircles.map(c => (
+          {switcherCircles.map(c => (
             <button
               key={c.id}
               onClick={() => { setActiveCircleId(c.id); navigate(`/clubhouse/${c.id}`, { replace: true }); }}

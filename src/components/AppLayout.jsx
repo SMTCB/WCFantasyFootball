@@ -5,6 +5,7 @@ import { useClubhouseContext } from '../context/ClubhouseContext';
 import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
+import { useShowArchived } from '../hooks/useShowArchived';
 import { supabase } from '../lib/supabase';
 import { useActiveCompetition } from '../hooks/useActiveCompetition';
 import { CompetitionTopBar } from './CompetitionTopBar';
@@ -201,6 +202,10 @@ export default function AppLayout({ children }) {
   const mainRef = useRef(null);
   const [showInvite, setShowInvite] = useState(false);
   const activeCircle = myCircles.find(c => c.id === activeCircleId);
+  // Archived clubhouses stay reachable directly (Settings → unarchive) but
+  // drop out of the switcher by default, mirroring the Paddock/Player Box pattern.
+  const [showArchivedClubhouses] = useShowArchived('ffl_show_archived_clubhouses');
+  const switcherCircles = showArchivedClubhouses ? myCircles : myCircles.filter(c => !c.archived);
 
   // #main-content persists across route changes and is the real scroll container
   // (not window) — reset it on navigation so e.g. switching Clubhouses doesn't
@@ -283,7 +288,7 @@ export default function AppLayout({ children }) {
         {/* Clubhouse switcher — always visible, even with a single Clubhouse */}
         <NavSectionLabel>Your Clubhouses</NavSectionLabel>
         <ClubhouseSwitcher
-          circles={myCircles}
+          circles={switcherCircles}
           activeCircleId={activeCircleId}
           onSelect={(id) => { setActiveCircleId(id); navigate(`/clubhouse/${id}`); }}
           onAdd={() => navigate('/home')}
