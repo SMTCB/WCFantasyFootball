@@ -490,11 +490,12 @@ export default function LeagueScreen() {
     setCirclesLoading(true);
     supabase
       .from('circle_members')
-      .select('role, circles(id, name)')
+      .select('role, circles(id, name, archived)')
       .eq('user_id', user.id)
       .then(({ data }) => {
         if (cancelled) return;
-        setMyCircles((data ?? []).map(r => ({ id: r.circles?.id, name: r.circles?.name, role: r.role })).filter(c => c.id));
+        // Archived Clubhouses aren't offered as a target for a brand-new league.
+        setMyCircles((data ?? []).map(r => ({ id: r.circles?.id, name: r.circles?.name, role: r.role, archived: r.circles?.archived })).filter(c => c.id && !c.archived));
         setCirclesLoading(false);
       });
     return () => { cancelled = true; };

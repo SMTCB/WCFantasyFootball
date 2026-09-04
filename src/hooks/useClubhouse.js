@@ -37,7 +37,7 @@ export function useClubhouse() {
     try {
       const { data, error: err } = await supabase
         .from('circle_members')
-        .select('role, circles(id, name, invite_code, is_public, p2p_betting_enabled, created_by, created_at)')
+        .select('role, circles(id, name, invite_code, is_public, p2p_betting_enabled, created_by, created_at, archived, archived_at)')
         .eq('user_id', user.id);
       if (err) throw err;
       const circles = (data ?? [])
@@ -192,12 +192,13 @@ export function useClubhouse() {
     return Array.isArray(data) ? data : [];
   }, []);
 
-  const updateSettings = useCallback(async (circleId, { name, isPublic, p2pEnabled }) => {
+  const updateSettings = useCallback(async (circleId, { name, isPublic, p2pEnabled, archived }) => {
     const { data, error: err } = await supabase.rpc('update_circle_settings', {
       p_circle_id:   circleId,
       p_name:        name        ?? null,
       p_is_public:   isPublic    ?? null,
       p_p2p_enabled: p2pEnabled  ?? null,
+      p_archived:    archived    ?? null,
     });
     if (err) throw err;
     if (data?.error) throw new Error(data.error);
