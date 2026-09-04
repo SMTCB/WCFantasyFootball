@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
+
 /**
  * PitchView — renders the squad on a pitch surface.
  *
@@ -246,6 +248,22 @@ export default function PitchView({
   matchdayLabel = '',
 }) {
   const isCompact = variant === 'compact';
+  const insetRef = useRef(null);
+  const [pitchWidth, setPitchWidth] = useState(null);
+
+  // The full-size HybridToken is 148px wide, positioned by x% within the inset
+  // pitch surface — on a narrow viewport (or a narrow column on desktop), a
+  // 4- or 5-wide row's spacing can be less than 148px, so neighbouring tokens
+  // overlap. Watch the actual rendered width and fall back to the narrow
+  // `compact` token style whenever the tightest row wouldn't fit.
+  useEffect(() => {
+    const el = insetRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([entry]) => setPitchWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Group players by position
   const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
   for (const p of (squad.players ?? [])) {
@@ -274,6 +292,19 @@ export default function PitchView({
   const def = byPos.DEF.length, mid = byPos.MID.length, fwd = byPos.FWD.length;
   const formation = [def, mid, fwd].filter(n => n > 0).join('-') || '—';
 
+  // Tightest gap (in % of pitch width) between neighbouring tokens across all rows.
+  const rowCounts = [byPos.GK.length, byPos.DEF.length, byPos.MID.length, byPos.FWD.length].filter(n => n > 1);
+  const minGapPercent = rowCounts.length
+    ? Math.min(...rowCounts.map(n => {
+        const xs = xPositions(n);
+        return Math.min(...xs.slice(1).map((v, i) => v - xs[i]));
+      }))
+    : null;
+  const TOKEN_FOOTPRINT = 160; // 148px token + a little breathing room
+  const useCompactTokens = isCompact || (
+    pitchWidth != null && minGapPercent != null && (pitchWidth * minGapPercent) / 100 < TOKEN_FOOTPRINT
+  );
+
   // Outer container sizing
   const outerStyle = isCompact
     ? { position: 'relative', width: '100%', height: 220, background: '#2a5035', padding: '12px 16px 14px' }
@@ -299,13 +330,16 @@ export default function PitchView({
       data-tour="squad-pitch"
       style={outerStyle}
     >
-      <div style={{
-        ...insetStyle,
-        background:   'linear-gradient(180deg, #3d6e4a 0%, #2a5035 100%)',
-        borderRadius: 8,
-        overflow:     'hidden',
-        boxShadow:    'inset 0 0 0 1px var(--rule)',
-      }}>
+      <div
+        ref={insetRef}
+        style={{
+          ...insetStyle,
+          background:   'linear-gradient(180deg, #3d6e4a 0%, #2a5035 100%)',
+          borderRadius: 8,
+          overflow:     'hidden',
+          boxShadow:    'inset 0 0 0 1px var(--rule)',
+        }}
+      >
 
         {/* ── Lane lines ─────────────────────────────────────────── */}
         {[22, 46, 70, 92].map(y => (
@@ -408,7 +442,7 @@ export default function PitchView({
             isCaptain={isCaptain}
             onClick={() => (onPlayerClick ?? (() => {}))(player)}
             isSelected={selectedPlayerId === player.id}
-            compact={isCompact}
+            compact={useCompactTokens}
           />
         ))}
       </div>

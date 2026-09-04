@@ -7,8 +7,7 @@ import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useActiveCompetition } from '../hooks/useActiveCompetition';
-import { CompetitionTopBar } from './CompetitionTopBar';
-import { CompetitionScreenNav } from './CompetitionScreenNav';
+import { CompetitionNav } from './CompetitionNav';
 import NewCompetitionFlow from './NewCompetitionFlow';
 import ClubhouseInviteModal from './ClubhouseInviteModal';
 import {
@@ -21,7 +20,7 @@ import {
 
 // ── Mobile bottom-bar nav — clubhouse-level, mirrors the desktop sidebar's
 // "This Clubhouse" section. Sport/competition screens (Live/Squad/Market/etc.)
-// live in CompetitionScreenNav at the top of the screen, on both mobile and
+// live in CompetitionNav at the top of the screen, on both mobile and
 // desktop, so the bottom bar no longer duplicates them per-sport.
 const CLUBHOUSE_NAV = [
   { key: 'home',       label: 'HOME',   path: '/home',       Icon: NavIconHome },
@@ -400,29 +399,24 @@ export default function AppLayout({ children }) {
           </Link>
         </div>
 
-        {/* Competition top bar — flat list of competition tabs (sport-colored).
-            Hidden on the cross-clubhouse Home dashboard, which has no single active
-            competition to show — it only makes sense once inside a clubhouse.
-            Its own top padding provides the breathing room above the tabs, so the
-            gap is filled with the bar's white background instead of a separate
-            div showing the dark shell color through as a seam. */}
+        {/* Competition nav — clubhouse/competition dropdown + the active sport's
+            screen tabs, merged into one component. Hidden on the cross-clubhouse
+            Home dashboard, which has no single active competition to show — it
+            only makes sense once inside a clubhouse. */}
         {location.pathname !== '/home' && (
-          <CompetitionTopBar
+          <CompetitionNav
+            myCircles={myCircles}
+            activeCircleId={activeCircleId}
+            onSelectCircle={(id) => { setActiveCircleId(id); navigate(`/clubhouse/${id}`); }}
             competitions={competitions}
             pathname={location.pathname}
             onAdd={openNewCompetitionFlow}
             onInvite={activeCircle?.invite_code ? () => setShowInvite(true) : undefined}
             hasClubhouse={myCircles.length > 0}
             clubhouseName={activeCircle?.name}
+            paddockId={competitionId}
           />
         )}
-
-        {/* Competition screen nav — screens within the active sport/competition */}
-        <CompetitionScreenNav
-          pathname={location.pathname}
-          paddockId={competitionId}
-          leagueId={new URLSearchParams(location.search).get('leagueId')}
-        />
 
         <div className="animate-page-enter">
           {children}
