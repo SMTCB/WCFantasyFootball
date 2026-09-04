@@ -39,6 +39,8 @@ export default function TabStrip({
     ? {
         display: 'flex',
         overflowX: 'auto',
+        overflowY: 'hidden',
+        touchAction: 'pan-x',
         scrollbarWidth: 'none',
         borderBottom: '1px solid var(--rule)',
         flexShrink: 0,
@@ -49,6 +51,8 @@ export default function TabStrip({
         gap: 6,
         padding: '10px 18px',
         overflowX: 'auto',
+        overflowY: 'hidden',
+        touchAction: 'pan-x',
         borderBottom: '1px solid var(--rule)',
         background: 'var(--ink)',
         flexShrink: 0,
