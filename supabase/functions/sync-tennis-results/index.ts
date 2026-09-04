@@ -83,14 +83,15 @@ async function processTournament(
   }
 
   const apiData = await apiResp.json();
-  // Same defensive envelope-unwrapping as sync-tennis-players — confirmed live
-  // shape for the fixtures endpoint is a bare `{ data: [...] }`, and the
-  // results endpoint has not been observed to differ, but this tolerates it
-  // if it does.
+  // Confirmed live shape for the results endpoint (differs from sync-tennis-players'
+  // fixtures/draw endpoints): `{ data: { singles: [...] } }` — a nested object, not
+  // a bare array under `data`. The `.data`/`.results`/`.fixtures` fallbacks stay as
+  // defensive unwrapping for other shapes this endpoint might return.
   const rawMatches: ResultMatch[] = (
-    (apiData.data as ResultMatch[]) ||
-    (apiData.results as ResultMatch[]) ||
-    (apiData.fixtures as ResultMatch[]) ||
+    (Array.isArray(apiData.data?.singles) ? apiData.data.singles : null) ||
+    (Array.isArray(apiData.data) ? apiData.data : null) ||
+    (Array.isArray(apiData.results) ? apiData.results : null) ||
+    (Array.isArray(apiData.fixtures) ? apiData.fixtures : null) ||
     []
   );
   const matches: ResultMatch[] = rawMatches.filter(
@@ -98,7 +99,7 @@ async function processTournament(
   );
 
   if (matches.length === 0) {
-    return { tournament: tournament.name, matches_seen: 0, eliminations_written: 0, champions_written: 0, players_seeded: 0 };
+    return { id: tournament.id, tournament: tournament.name, matches_seen: 0, eliminations_written: 0, champions_written: 0, players_seeded: 0 };
   }
 
   matches.sort((a, b) => a.date.localeCompare(b.date));
@@ -187,12 +188,36 @@ async function processTournament(
   }
 
   return {
+    id: tournament.id,
     tournament: tournament.name,
     matches_seen: matches.length,
     players_seeded: missing.size,
     eliminations_written: eliminationsWritten,
     champions_written: championsWritten,
   };
+}
+
+// A champion means the bracket is fully resolved — nothing left to sync. Trigger
+// scoring immediately rather than waiting for an admin to notice and click
+// "Trigger Scoring" (score-tennis-tournament scores every roster AND calls
+// admin_complete_tournament, closing the tournament out in one step).
+async function triggerScoring(supabaseUrl: string, serviceKey: string, tournamentId: string, tournamentName: string) {
+  try {
+    const resp = await fetch(`${supabaseUrl}/functions/v1/score-tennis-tournament`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+      body: JSON.stringify({ tournament_id: tournamentId }),
+    });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      console.error(`[sync-tennis-results] auto-score failed for ${tournamentName}:`, resp.status, JSON.stringify(body));
+      return { triggered: true, ok: false, status: resp.status, body };
+    }
+    return { triggered: true, ok: true, body };
+  } catch (err) {
+    console.error(`[sync-tennis-results] auto-score threw for ${tournamentName}:`, err);
+    return { triggered: true, ok: false, error: String(err) };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -225,14 +250,24 @@ Deno.serve(async (req) => {
       });
     }
 
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+
     const results = [];
     for (const t of tournaments) {
+      let result;
       try {
-        results.push(await processTournament(supabase, rapidApiKey, t as { id: string; name: string; external_id: number; draw_size: number | null }));
+        result = await processTournament(supabase, rapidApiKey, t as { id: string; name: string; external_id: number; draw_size: number | null });
       } catch (err) {
         console.error(`[sync-tennis-results] ${t.name} failed:`, err);
-        results.push({ tournament: t.name, error: String(err) });
+        result = { tournament: t.name, error: String(err) };
       }
+
+      if (result && (result as { champions_written?: number }).champions_written) {
+        (result as Record<string, unknown>).scoring = await triggerScoring(supabaseUrl, serviceKey, t.id as string, t.name as string);
+      }
+
+      results.push(result);
     }
 
     console.log('[sync-tennis-results] Done:', JSON.stringify(results));
