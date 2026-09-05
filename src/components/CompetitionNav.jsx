@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSport } from '../context/SportContext';
 import {
   NavIconLive,
@@ -31,14 +31,17 @@ function extractActiveCompId(pathname) {
   return null;
 }
 
+// All four carry the current league id in the query string — Live uses it to
+// scope its board to this league; Digest's content stays cross-league but still
+// carries it so the back button (AppLayout) knows which league to return to.
 const FOOTBALL_SCREENS = [
-  { key: 'live',   label: 'LIVE',   path: '/live',   Icon: NavIconLive,      isLive: true },
-  { key: 'squad',  label: 'SQUAD',  path: '/squad',  Icon: NavIconSquad              },
-  { key: 'market', label: 'MARKET', path: '/market', Icon: NavIconMarket             },
+  { key: 'live',   label: 'LIVE',   path: '/live',   Icon: NavIconLive,      isLive: true, carriesLeagueId: true },
+  { key: 'squad',  label: 'SQUAD',  path: '/squad',  Icon: NavIconSquad,                   carriesLeagueId: true },
+  { key: 'market', label: 'MARKET', path: '/market', Icon: NavIconMarket,                  carriesLeagueId: true },
   // "Digest" here is the cross-league activity feed (RecapScreen, internally
   // "MY DIGEST") — kept as a distinct label from the in-league "Recap" tab
   // further down the screen (LeagueScreen's HubTabs) so the two aren't confused.
-  { key: 'digest', label: 'DIGEST', path: '/recap',  Icon: NavIconRecap              },
+  { key: 'digest', label: 'DIGEST', path: '/recap',  Icon: NavIconRecap,                   carriesLeagueId: true },
 ];
 
 function buildF1Screens(paddockId) {
@@ -71,6 +74,7 @@ export function CompetitionNav({
   paddockId,
 }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setActivePlayerBoxId } = useSport();
   const active = extractActiveCompId(pathname);
   const isClubhouseHome = /^\/clubhouse(\/[^/]+)?$/.test(pathname);
@@ -134,14 +138,20 @@ export function CompetitionNav({
   const isF1     = pathname.startsWith('/f1');
   const isTennis = pathname.startsWith('/tennis');
 
-  // SQUAD and MARKET are per-league screens — carry the current league across
-  // tabs via the resolved competition id (route-derived when on /league/:id,
-  // otherwise whatever the active competition pill resolves to) so switching
-  // tabs never drops it. LIVE and DIGEST are cross-league views and take none.
-  const footballLeagueId = active?.sport === 'football' ? active.id : activeComp?.sport === 'football' ? activeComp.id : null;
+  // Resolve the current league id for the tab bar: prefer the route (on
+  // /league/:id), then the active competition pill, then whatever ?leagueId=
+  // is already on the current URL — that last fallback is what keeps the id
+  // alive once the user is *on* /squad?leagueId=X or /market?leagueId=X,
+  // where the pathname alone no longer carries it (pathname-only derivation
+  // used to drop the id here, silently sending the next tab click to the
+  // bare /market or /live route and triggering the multi-league picker).
+  const footballLeagueId =
+    active?.sport === 'football' ? active.id
+    : activeComp?.sport === 'football' ? activeComp.id
+    : (isFoot ? searchParams.get('leagueId') : null);
   const screens = isFoot
     ? FOOTBALL_SCREENS.map(s =>
-        footballLeagueId && (s.key === 'squad' || s.key === 'market')
+        footballLeagueId && s.carriesLeagueId
           ? { ...s, href: `${s.path}?leagueId=${footballLeagueId}` }
           : s
       )

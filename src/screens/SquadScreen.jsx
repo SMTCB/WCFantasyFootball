@@ -21,7 +21,6 @@ import { useAvailabilityFlag } from '../hooks/useAvailabilityFlag';
 import { useAuctions } from '../hooks/useAuctions';
 import { useAutoFill } from '../hooks/useAutoFill';
 import { useToast } from '../hooks/useToast';
-import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 import Button from '../components/Button';
@@ -38,9 +37,7 @@ import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 import FormStrip from '../components/FormStrip';
-import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
-import { useShowArchived } from '../hooks/useShowArchived';
 import { useIsMobile } from '../hooks/useViewport';
 import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 
@@ -118,12 +115,18 @@ export default function SquadScreen() {
           type, format,
         };
       });
-      // Always set leagues list so the selector can be shown.
-      // Auto-select only when coming from a leagueId URL param (handled above).
       setLeagues(list);
     };
     if (user?.id) init();
   }, [user?.id, leagueIdParam]);
+
+  // Squad is only ever reached via Clubhouse → League → Squad, so a missing
+  // ?leagueId= (e.g. a stale bookmark) means the entry point was wrong, not
+  // that the user should pick from an in-page list of all their leagues —
+  // send them back to the Clubhouse to re-enter through the league itself.
+  useEffect(() => {
+    if (leagues && leagues.length >= 1 && !activeLeague) navigate('/clubhouse', { replace: true });
+  }, [leagues, activeLeague, navigate]);
 
   // Resolve tournament_id whenever the active league is known or changes
   useEffect(() => {
@@ -136,8 +139,6 @@ export default function SquadScreen() {
       .then(({ data }) => { if (data?.tournament_id) setTournamentId(data.tournament_id); });
   }, [activeLeague]);
 
-  // B-13: shared "show archived leagues" toggle for the league picker/selector
-  const [showArchived, setShowArchived] = useShowArchived();
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
@@ -828,18 +829,9 @@ export default function SquadScreen() {
     );
   }
 
-  // League picker — shown when user has one or more leagues and none is selected
-  if (leagues && leagues.length >= 1 && !activeLeague) {
-    return (
-      <SelectLeaguePicker
-        leagues={leagues}
-        eyebrow="MY SQUAD"
-        showArchived={showArchived}
-        onToggleShowArchived={setShowArchived}
-        onSelect={l => { setActiveLeague(l.id); if (l.tournament_id) setTournamentId(l.tournament_id); }}
-      />
-    );
-  }
+  // No leagueId in the URL — the redirect effect above is sending the user
+  // back to the Clubhouse; render nothing in the meantime.
+  if (leagues && leagues.length >= 1 && !activeLeague) return null;
 
   // â"€â"€ Loading â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   if (loading || !squadData) {
@@ -887,7 +879,6 @@ export default function SquadScreen() {
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
                 My Squad
               </div>
-              <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={setActiveLeague} />
             </div>
           </div>
           <div className="text-right">
@@ -1321,7 +1312,6 @@ export default function SquadScreen() {
             <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
-            <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={setActiveLeague} />
             <button
               onClick={() => setShowScoringModal(true)}
               title="Scoring & game rules"
@@ -1611,7 +1601,6 @@ export default function SquadScreen() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
                   </div>
-                  <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={setActiveLeague} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div />
