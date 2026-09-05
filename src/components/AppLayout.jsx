@@ -251,6 +251,20 @@ export default function AppLayout({ children }) {
     location.pathname === '/challenges' ||
     location.pathname === '/wallet';
 
+  // The 4 league-scoped tabs (Live/Squad/Market/Digest) are one level "deeper"
+  // than the league frontpage itself — back from these should return to the
+  // league (/league/:id), not skip past it straight to the Clubhouse. They
+  // always carry ?leagueId= (see CompetitionNav) so it's read straight off
+  // the URL rather than tracked in separate state.
+  const isLeagueScopedScreen =
+    location.pathname === '/squad' ||
+    location.pathname === '/live' ||
+    location.pathname === '/market' ||
+    location.pathname === '/recap';
+  const backLeagueId = isLeagueScopedScreen
+    ? new URLSearchParams(location.search).get('leagueId')
+    : null;
+
   const showBackButton = !isMainRoute;
 
   return (
@@ -369,7 +383,8 @@ export default function AppLayout({ children }) {
           {showBackButton ? (
             <button
               onClick={() => {
-                if (isCompetitionScreen) navigate(activeCircleId ? `/clubhouse/${activeCircleId}` : '/clubhouse');
+                if (backLeagueId) navigate(`/league/${backLeagueId}`);
+                else if (isCompetitionScreen) navigate(activeCircleId ? `/clubhouse/${activeCircleId}` : '/clubhouse');
                 else navigate(-1);
               }}
               aria-label="Go back"

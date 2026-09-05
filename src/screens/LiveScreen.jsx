@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -379,6 +380,8 @@ export default function LiveScreen() {
   const [allFixtures,   setAllFixtures]   = useState([]);
 
   const initialSet = useRef(false);
+  const [searchParams] = useSearchParams();
+  const urlLeagueId = searchParams.get('leagueId');
 
   const fetchAll = useCallback(async () => {
     try {
@@ -706,7 +709,8 @@ export default function LiveScreen() {
       setUserLeagues(enrichedLeagues);
 
       if (!initialSet.current && enrichedLeagues.length) {
-        setActiveLeague(enrichedLeagues[0]);
+        const preferred = urlLeagueId ? enrichedLeagues.find(l => l.id === urlLeagueId) : null;
+        setActiveLeague(preferred || enrichedLeagues[0]);
         initialSet.current = true;
       }
 
@@ -991,8 +995,8 @@ export default function LiveScreen() {
           })}
         </div>
 
-        {/* League selector */}
-        {desktopLeagueSelector}
+        {/* League selector — hidden when scoped to a single league via ?leagueId= */}
+        {!urlLeagueId && desktopLeagueSelector}
 
         {/* Body — two columns */}
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 520px) 1fr', minHeight: 0 }}>
@@ -1134,7 +1138,8 @@ export default function LiveScreen() {
           </div>
         </div>
 
-        {/* League selector cards */}
+        {/* League selector cards — hidden when scoped to a single league via ?leagueId= */}
+        {!urlLeagueId && (
         <div style={{ padding: '4px 0 14px' }}>
           <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', padding: '0 18px 8px' }}>YOUR LEAGUES — TAP TO SWITCH</div>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 18px 4px', scrollbarWidth: 'none' }}>
@@ -1185,6 +1190,7 @@ export default function LiveScreen() {
             })}
           </div>
         </div>
+        )}
 
         {/* Live fixtures */}
         <div style={{ borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>

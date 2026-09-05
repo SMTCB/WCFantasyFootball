@@ -10,7 +10,6 @@ import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAutoFill } from '../hooks/useAutoFill';
 import { useToast } from '../hooks/useToast';
-import LeagueSelector    from '../components/LeagueSelector';
 import ScoringInfoModal  from '../components/ScoringInfoModal';
 import OnboardingTour  from '../components/OnboardingTour';
 import ConfirmModal    from '../components/ConfirmModal';
@@ -28,8 +27,6 @@ import RelaxationBanner from '../components/RelaxationBanner';
 import WishlistDraftBanner from '../components/WishlistDraftBanner';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
-import { useShowArchived } from '../hooks/useShowArchived';
-import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
@@ -206,9 +203,6 @@ export default function MarketScreen() {
   // League ownership % per player — used in full stats dashboard
   const { ownershipMap } = useLeagueOwnership(activeLeague);
 
-  // B-13: shared "show archived leagues" toggle for the league picker/selector
-  const [showArchived, setShowArchived] = useShowArchived();
-
   // Full stats dashboard modal — set to a player object to open
   const [statsDashboardPlayer, setStatsDashboardPlayer] = useState(null);
 
@@ -344,6 +338,10 @@ export default function MarketScreen() {
     };
     if (user?.id) init();
   }, [user?.id, leagueId]);
+
+  useEffect(() => {
+    if (leagues && leagues.length >= 1 && !activeLeague) navigate('/clubhouse', { replace: true });
+  }, [leagues, activeLeague, navigate]);
 
   const fetchMarketParams = async () => {
     setLoading(true);
@@ -678,23 +676,9 @@ export default function MarketScreen() {
   const emptySlots  = Math.max(0, squadSize - squadCount);
   const [showScoringModal, setShowScoringModal] = useState(false);
 
-  // League picker — shown when user has multiple leagues and none is selected
-  if (leagues && leagues.length > 1 && !activeLeague) {
-    return (
-      <SelectLeaguePicker
-        leagues={leagues}
-        eyebrow="TRANSFER MARKET"
-        showArchived={showArchived}
-        onToggleShowArchived={setShowArchived}
-        onSelect={l => {
-          setActiveLeague(l.id);
-          if (l.rawFormat) setLeagueFormat(l.rawFormat);
-          if (l.tournament_id) setTournamentId(l.tournament_id);
-          else resolveLeagueTournament(l.id);
-        }}
-      />
-    );
-  }
+  // No leagueId in the URL — the redirect effect above is sending the user
+  // back to the Clubhouse; render nothing in the meantime.
+  if (leagues && leagues.length >= 1 && !activeLeague) return null;
 
   return (
     <div className="min-h-screen bg-bg">
@@ -793,13 +777,6 @@ export default function MarketScreen() {
                   flexShrink: 0,
                 }}
               >?</button>
-              <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={(lid) => {
-                setActiveLeague(lid);
-                const found = leagues?.find(l => l.id === lid);
-                if (found?.rawFormat) setLeagueFormat(found.rawFormat);
-                if (found?.tournament_id) setTournamentId(found.tournament_id);
-                else resolveLeagueTournament(lid);
-              }} />
             </div>
           </div>
 
