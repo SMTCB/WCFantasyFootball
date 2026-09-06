@@ -1986,18 +1986,18 @@ export default function SquadScreen() {
         <div
           className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] animate-slide-up"
           style={{
-            background: 'var(--shell)',
+            background: 'var(--card)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
-            borderTop: '1px solid var(--shell-rule)',
-            boxShadow: '0 -8px 40px rgba(0,0,0,0.25)',
+            borderTop: '1px solid var(--rule)',
+            boxShadow: '0 -8px 40px rgba(0,0,0,0.12)',
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
           <div className="max-w-2xl mx-auto px-5 pt-4 pb-5">
             {/* Handle */}
             <div className="flex justify-center mb-3">
-              <div className="w-10 h-1 rounded-full" style={{ background: 'var(--shell-fill-active)' }} />
+              <div className="w-10 h-1 rounded-full" style={{ background: 'var(--rule)' }} />
             </div>
             {/* Player info */}
             <div className="flex items-start justify-between mb-4 gap-3">
@@ -2010,7 +2010,7 @@ export default function SquadScreen() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: 'var(--shell-fill-strong)',
+                  background: 'var(--elev)',
                   border: `1.5px solid ${
                     selectedPlayer.position === 'GK' ? 'var(--pos-gk)' :
                     selectedPlayer.position === 'DEF' ? 'var(--pos-def)' :
@@ -2036,26 +2036,26 @@ export default function SquadScreen() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
                     {selectedPlayer.club}
                     {selectedPlayer.id === captainId && (
-                      <span style={{ color: 'var(--gold)', background: 'rgba(224,168,0,0.12)', border: '1px solid rgba(224,168,0,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
+                      <span style={{ color: 'var(--gold-text)', background: 'rgba(184,114,14,0.12)', border: '1px solid rgba(184,114,14,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
                     )}
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedPlayer(null)}
-                style={{ width: 28, height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-strong)', color: 'var(--on-shell-mid)', fontSize: 'var(--fs-body-lg)', cursor: 'pointer' }}
+                style={{ width: 28, height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 'var(--fs-body-lg)', cursor: 'pointer' }}
               >×</button>
             </div>
             {/* Form + next fixture + ownership context strip */}
-            <div className="flex items-stretch gap-3 mb-3" style={{ borderTop: '1px solid var(--shell-rule)', borderBottom: '1px solid var(--shell-rule)', padding: '10px 0' }}>
+            <div className="flex items-stretch gap-3 mb-3" style={{ borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', padding: '10px 0' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>FORM</div>
                 <FormStrip rounds={squadStatsMap[selectedPlayer.id]} />
               </div>
-              <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid var(--shell-rule)', paddingLeft: 12 }}>
+              <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid var(--rule)', paddingLeft: 12 }}>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>NEXT FIXTURE</div>
                 <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: selectedPlayer.fixtureStatus?.color || 'var(--paper)', letterSpacing: '-0.01em' }}>
                   {selectedPlayer.fixtureStatus?.label || 'NO FIXTURE'}
@@ -2164,7 +2164,7 @@ export default function SquadScreen() {
         <div
           className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] px-5 py-3 flex justify-between items-center"
           style={{
-            background: 'rgba(8,10,14,0.97)',
+            background: 'rgba(255,255,255,0.97)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderTop: '2px solid var(--cyan)',
@@ -2176,14 +2176,14 @@ export default function SquadScreen() {
             <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--cyan)' }}>
               {selectedIsBench ? 'Select a starter to replace' : 'Select a bench player to bring on'}
             </div>
-            <div className="text-[10px] mt-0.5" style={{ color: 'var(--on-shell-dim)', fontFamily: 'JetBrains Mono, monospace' }}>
+            <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace' }}>
               Swapping out: {selectedPlayer?.name}
             </div>
           </div>
           <button
             onClick={() => { setSwapMode(false); setSelectedPlayer(null); }}
             className="px-4 py-1.5 rounded-sm font-bold uppercase text-[10px] tracking-widest"
-            style={{ background: 'var(--shell-fill-strong)', color: 'var(--on-shell)', border: '1px solid var(--shell-rule-strong)', fontFamily: 'Archivo Black, sans-serif' }}
+            style={{ background: 'var(--elev)', color: 'var(--paper)', border: '1px solid var(--rule)', fontFamily: 'Archivo Black, sans-serif' }}
           >
             Cancel
           </button>
