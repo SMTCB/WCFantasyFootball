@@ -11,6 +11,16 @@
 
 ---
 
+## ✅ Restore football bet creation/resolution/history on Commissioner admin screen (2026-09-06) — PR #941
+
+**Root cause**: the v2→main cutover left the newer `BetCreatorPanel.jsx` (bet creation UI) built but never wired into `CommissionerPanel.jsx`, while the panel's render still called the fully-superseded `CreateBetWizard` plus its exclusive `BET_TYPES`/helper functions. The older, still-correct `ResolvePendingBets` and `BettingHistory` components (resolution + history) were present in the codebase but dead — not rendered anywhere — so commissioners had no way to create, resolve, or review football bets from the admin screen.
+
+**Fix**: wired `BetCreatorPanel` into `CommissionerPanel.jsx` for bet creation; restored `ResolvePendingBets` and `BettingHistory` (verbatim from their last-known-working render calls) for resolution and history, in both the desktop ("CREATE BET" / "RESOLVE BETS" / "BETTING HISTORY") and mobile ("BET MANAGEMENT") layouts; deleted the dead `CreateBetWizard` component and its exclusive `BET_TYPES`/helpers entirely rather than leaving them as unused dead code. Net diff: 1 file changed, 85 insertions(+), 700 deletions(-).
+
+**Verification**: local demo mode (`VITE_AUTH_ENABLED=false`) cannot exercise this — RLS (`is_circle_member()` etc.) strictly requires a real `auth.uid()`, which the hardcoded demo user never has, so every RLS-protected query returns empty regardless of DB content; this is a permanent limitation of local dev, not specific to this change. Generating a real authenticated session via the Supabase service-role admin API (no password involved) was attempted next but blocked by the Claude Code auto-mode safety classifier before execution — correctly not worked around. Per the user's explicit choice ("ship with code-review confidence"), this PR shipped without live browser verification; confidence rests on an exact prop/data match to `useCommissioner.js`'s existing return shape, `ResolvePendingBets`/`BettingHistory` being restored unchanged from their prior working call sites, and clean lint/build/CI (all checks green, including E2E, unit, Tier 3 local full-stack, schema rehearsal, security, build, lint, Android/iOS builds).
+
+---
+
 ## ✅ Fix broken new-user signup — "Database error saving new user" (2026-09-06) — PR #939, migration 284
 
 **Context**: User reported a signup failure via screenshot ("Database error saving new user" on the live Create Account form). Diagnosed via read-only inspection: migration 262 (P2P Group Bets) redefined `credit_coins()` to require an existing `coin_wallets` row (strict `UPDATE` + `RAISE EXCEPTION 'WALLET_NOT_FOUND'`), replacing the auto-creating upsert body from migrations 208/209. The signup welcome-bonus trigger (`_create_user_wallet()`, `AFTER INSERT ON auth.users`) calls `credit_coins()` for a brand-new user with no wallet yet, so every signup since 262 shipped raised `WALLET_NOT_FOUND`, rolling back the entire `auth.users` insert. Confirmed via SQL: all 59 existing users already had wallets (predating the regression), but zero signups succeeded since 2026-08-27 — every signup attempt since the maintenance wall came down (2026-08-30) was affected.
