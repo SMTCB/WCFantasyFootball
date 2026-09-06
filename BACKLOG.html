@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>66</strong><span>open</span></div>
-      <div class="total-pill"><strong>219</strong><span>closed</span></div>
+      <div class="total-pill"><strong>220</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (139)</span>
+    <span class="chip" data-filter-kind="done">Shipped (140)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">66</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">219</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">220</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">139</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">140</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1362,8 +1362,41 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">139</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">140</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tier 3 e2e-local fix — stale schema.sql snapshot missing migration 281 (2026-09-06) — pr #932 
+
+**context**: ci&#x27;s &quot;tier 3 local full-stack e2e&quot; check was failing on `main` (run 33927999209, reproduced on pr #931): `draft-allocation-e2e.spec.js` timed out waiting for the circle-picker, and `trophy-cabinet-screen.spec.js` rendered &quot;no trophies yet&quot; instead of the seeded trophy, on both desktop-chrome and mobile-chrome.
+
+**root cause**: test-infra staleness, not an app regression. `scripts/e2e-local.mjs` bootstraps the local tier 3 db from `supabase/schema.sql` (a pg_dump snapshot) plus a hand-maintained `pending_migrations` allowlist for anything merged after the snapshot was taken. `281_clubhouse_archive.sql` (adds `circles.archived`/`archived_at`, merged 2026-09-04 via pr #928) was never added to that allowlist, so every local/ci tier 3 run hit postgres `42703` (`column circles_1.archived does not exist`) inside `useclubhouse.js`&#x27;s `fetchmycircles()` circle join — breaking circle resolution app-wide, which cascaded into both failing specs.
+
+**fix**: added `&#x27;281_clubhouse_archive.sql&#x27;` to `pending_migrations`. no migration file or app code touched.
+
+**verified**: full `npm run test:e2e:local` clean (both originally-failing specs pass on both browser projects; the 24 additional failures seen in one interim run were traced to a stale local docker `edge_runtime` container 4 days out of date on this machine, unrelated to the fix, and cleared after `supabase stop`/`start`); `npm run lint` 0 errors; `npm run build` clean (no rolldown tdz regression); `npx playwright test e2e/platform.spec.js` 84/84 passed; pr&#x27;s own ci green across all checks including tier 3 itself. no migration applied to production, no edge function deployed, no `db query --linked` write.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Tier 3 e2e-local fix — stale schema.sql snapshot missing migration 281</h3>
+        <p class="card-summary">Context : CI's "Tier 3 Local Full-Stack E2E" check was failing on main (run 33927999209, reproduced on PR #931): draft-allocation-e2e.spec.js timed out waiting for the…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #932</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Tier 3 e2e-local fix — stale schema.sql snapshot missing migration 281</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : CI's "Tier 3 Local Full-Stack E2E" check was failing on main (run 33927999209, reproduced on PR #931): draft-allocation-e2e.spec.js timed out waiting for the…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #932</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: CI's "Tier 3 Local Full-Stack E2E" check was failing on <code>main</code> (run 33927999209, reproduced on PR #931): <code>draft-allocation-e2e.spec.js</code> timed out waiting for the circle-picker, and <code>trophy-cabinet-screen.spec.js</code> rendered "No trophies yet" instead of the seeded trophy, on both desktop-chrome and mobile-chrome.</p>
+<p><strong>Root cause</strong>: test-infra staleness, not an app regression. <code>scripts/e2e-local.mjs</code> bootstraps the local Tier 3 DB from <code>supabase/schema.sql</code> (a pg_dump snapshot) plus a hand-maintained <code>PENDING_MIGRATIONS</code> allowlist for anything merged after the snapshot was taken. <code>281_clubhouse_archive.sql</code> (adds <code>circles.archived</code>/<code>archived_at</code>, merged 2026-09-04 via PR #928) was never added to that allowlist, so every local/CI Tier 3 run hit Postgres <code>42703</code> (<code>column circles_1.archived does not exist</code>) inside <code>useClubhouse.js</code>'s <code>fetchMyCircles()</code> circle join — breaking circle resolution app-wide, which cascaded into both failing specs.</p>
+<p><strong>Fix</strong>: added <code>'281_clubhouse_archive.sql'</code> to <code>PENDING_MIGRATIONS</code>. No migration file or app code touched.</p>
+<p><strong>Verified</strong>: full <code>npm run test:e2e:local</code> clean (both originally-failing specs pass on both browser projects; the 24 additional failures seen in one interim run were traced to a stale local Docker <code>edge_runtime</code> container 4 days out of date on this machine, unrelated to the fix, and cleared after <code>supabase stop</code>/<code>start</code>); <code>npm run lint</code> 0 errors; <code>npm run build</code> clean (no Rolldown TDZ regression); <code>npx playwright test e2e/platform.spec.js</code> 84/84 passed; PR's own CI green across all checks including Tier 3 itself. No migration applied to production, no Edge Function deployed, no <code>db query --linked</code> write.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ transfer-window banner text + wishlist drag/scroll ux fix (2026-09-04) — pr #922 
 
 **context**: two related-but-separate ux bugs reported from the same session: (1) draft leagues (and other no-penalty situations) showed the generic &quot;free transfers available · extra buys cost points&quot; banner copy even though draft-league transfers are never penalized — misleading for managers deciding whether to make a move. (2) on mobile, reordering a long wishlist by dragging silently broke the list&#x27;s ability to scroll, because the drag sensor&#x27;s `touch-action: none` was applied to the whole row.
