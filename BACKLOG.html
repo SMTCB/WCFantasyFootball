@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>67</strong><span>open</span></div>
-      <div class="total-pill"><strong>223</strong><span>closed</span></div>
+      <div class="total-pill"><strong>224</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (143)</span>
+    <span class="chip" data-filter-kind="done">Shipped (144)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">67</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">223</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">224</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">143</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">144</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1379,8 +1379,34 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">143</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">144</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ restore football bet creation/resolution/history on commissioner admin screen (2026-09-06) — pr #941 
+
+**root cause**: the v2→main cutover left the newer `betcreatorpanel.jsx` (bet creation ui) built but never wired into `commissionerpanel.jsx`, while the panel&#x27;s render still called the fully-superseded `createbetwizard` plus its exclusive `bet_types`/helper functions. the older, still-correct `resolvependingbets` and `bettinghistory` components (resolution + history) were present in the codebase but dead — not rendered anywhere — so commissioners had no way to create, resolve, or review football bets from the admin screen.
+
+**fix**: wired `betcreatorpanel` into `commissionerpanel.jsx` for bet creation; restored `resolvependingbets` and `bettinghistory` (verbatim from their last-known-working render calls) for resolution and history, in both the desktop (&quot;create bet&quot; / &quot;resolve bets&quot; / &quot;betting history&quot;) and mobile (&quot;bet management&quot;) layouts; deleted the dead `createbetwizard` component and its exclusive `bet_types`/helpers entirely rather than leaving them as unused dead code. net diff: 1 file changed, 85 insertions(+), 700 deletions(-).
+
+**verification**: local demo mode (`vite_auth_enabled=false`) cannot exercise this — rls (`is_circle_member()` etc.) strictly requires a real `auth.uid()`, which the hardcoded demo user never has, so every rls-protected query returns empty regardless of db content; this is a permanent limitation of local dev, not specific to this change. generating a real authenticated session via the supabase service-role admin api (no password involved) was attempted next but blocked by the claude code auto-mode safety classifier before execution — correctly not worked around. per the user&#x27;s explicit choice (&quot;ship with code-review confidence&quot;), this pr shipped without live browser verification; confidence rests on an exact prop/data match to `usecommissioner.js`&#x27;s existing return shape, `resolvependingbets`/`bettinghistory` being restored unch" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Restore football bet creation/resolution/history on Commissioner admin screen</h3>
+        <p class="card-summary">Root cause : the v2→main cutover left the newer BetCreatorPanel.jsx (bet creation UI) built but never wired into CommissionerPanel.jsx , while the panel's render still…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #941</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Restore football bet creation/resolution/history on Commissioner admin screen</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Root cause : the v2→main cutover left the newer BetCreatorPanel.jsx (bet creation UI) built but never wired into CommissionerPanel.jsx , while the panel's render still…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #941</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Root cause</strong>: the v2→main cutover left the newer <code>BetCreatorPanel.jsx</code> (bet creation UI) built but never wired into <code>CommissionerPanel.jsx</code>, while the panel's render still called the fully-superseded <code>CreateBetWizard</code> plus its exclusive <code>BET_TYPES</code>/helper functions. The older, still-correct <code>ResolvePendingBets</code> and <code>BettingHistory</code> components (resolution + history) were present in the codebase but dead — not rendered anywhere — so commissioners had no way to create, resolve, or review football bets from the admin screen.</p>
+<p><strong>Fix</strong>: wired <code>BetCreatorPanel</code> into <code>CommissionerPanel.jsx</code> for bet creation; restored <code>ResolvePendingBets</code> and <code>BettingHistory</code> (verbatim from their last-known-working render calls) for resolution and history, in both the desktop ("CREATE BET" / "RESOLVE BETS" / "BETTING HISTORY") and mobile ("BET MANAGEMENT") layouts; deleted the dead <code>CreateBetWizard</code> component and its exclusive <code>BET_TYPES</code>/helpers entirely rather than leaving them as unused dead code. Net diff: 1 file changed, 85 insertions(+), 700 deletions(-).</p>
+<p><strong>Verification</strong>: local demo mode (<code>VITE_AUTH_ENABLED=false</code>) cannot exercise this — RLS (<code>is_circle_member()</code> etc.) strictly requires a real <code>auth.uid()</code>, which the hardcoded demo user never has, so every RLS-protected query returns empty regardless of DB content; this is a permanent limitation of local dev, not specific to this change. Generating a real authenticated session via the Supabase service-role admin API (no password involved) was attempted next but blocked by the Claude Code auto-mode safety classifier before execution — correctly not worked around. Per the user's explicit choice ("ship with code-review confidence"), this PR shipped without live browser verification; confidence rests on an exact prop/data match to <code>useCommissioner.js</code>'s existing return shape, <code>ResolvePendingBets</code>/<code>BettingHistory</code> being restored unchanged from their prior working call sites, and clean lint/build/CI (all checks green, including E2E, unit, Tier 3 local full-stack, schema rehearsal, security, build, lint, Android/iOS builds).</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ fix broken new-user signup — &quot;database error saving new user&quot; (2026-09-06) — pr #939, migration 284 
 
 **context**: user reported a signup failure via screenshot (&quot;database error saving new user&quot; on the live create account form). diagnosed via read-only inspection: migration 262 (p2p group bets) redefined `credit_coins()` to require an existing `coin_wallets` row (strict `update` + `raise exception &#x27;wallet_not_found&#x27;`), replacing the auto-creating upsert body from migrations 208/209. the signup welcome-bonus trigger (`_create_user_wallet()`, `after insert on auth.users`) calls `credit_coins()` for a brand-new user with no wallet yet, so every signup since 262 shipped raised `wallet_not_found`, rolling back the entire `auth.users` insert. confirmed via sql: all 59 existing users already had wallets (predating the regression), but zero signups succeeded since 2026-08-27 — every signup attempt since the maintenance wall came down (2026-08-30) was affected.
