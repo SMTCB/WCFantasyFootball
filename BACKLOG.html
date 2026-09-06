@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>229</strong><span>closed</span></div>
+      <div class="total-pill"><strong>230</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (148)</span>
+    <span class="chip" data-filter-kind="done">Shipped (149)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">229</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">230</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">148</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">149</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">148</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">149</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ squad formation self-heal + club logos on squad/live pitches (2026-09-06) — pr #953 
+
+**user report with screenshot**: after auto-fill, &quot;champions eder 26/27&quot; squad `79e12342...` had a starting xi of 1 gk / 5 def / 5 mid / 0 fwd (all showing 0 pts), with bench holding 3 fwd + 1 gk. also requested: club logos on the squad pitch view (desktop+mobile) and the mobile squad list tab (desktop list already had them), and a retheme of the desktop live pitch to match the squad screen&#x27;s styling (was flat dark navy) plus club logos there too.
+
+- root cause: `squadscreen.jsx`&#x27;s `fetchsquad` self-heal only guaranteed &quot;11 players, exactly 1 gk&quot; — nothing enforced `useleagueconfig`&#x27;s per-position `minformation` (`{gk:1, def:1, mid:1, fwd:1}`), so an xi could satisfy both existing checks while still having zero players at an outfield position.
+- fix: `fetchsquad` now also enforces per-position minimums, swapping a bench player of the missing position in for a pitch player from whichever outfield position currently has the largest surplus above its own minimum, and persists the corrected `starting_xi`. verified against the real broken row via a read-only `select` (def=5, mid=5, fwd=0) — the fix pulls in a bench fwd and benches a def, landing on a valid 4 def/1 fwd/1 gk/5 mid xi.
+- added `clubcrest` club logos to the squad pitch view (desktop + mobile, in [pitchview.jsx](src/components/pitchview.jsx) and [squadscreen.jsx](src/screens/squadscreen.jsx)) and the mobile squad list tab.
+- retheme `livescreen.jsx`&#x27;s desktop `minipitch` from flat navy to the same green gradient/guide-lines/centre-circle used by `pitchview`, fixed `pos_tone` to import the canonical palette from `lib/formations` (was a local duplicate with the wrong gk color), and added club logos to the mini player tokens.
+- verification note: could not exercise the fix live in a browser — the production-preview build has no real demo league/squad data, and creating some would have written real rows into the live pilot db." style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Squad formation self-heal + club logos on Squad/Live pitches</h3>
+        <p class="card-summary">User report with screenshot : after auto-fill, "Champions Eder 26/27" squad 79e12342... had a starting XI of 1 GK / 5 DEF / 5 MID / 0 FWD (all showing 0 PTS), with bench…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #953</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Squad formation self-heal + club logos on Squad/Live pitches</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User report with screenshot : after auto-fill, "Champions Eder 26/27" squad 79e12342... had a starting XI of 1 GK / 5 DEF / 5 MID / 0 FWD (all showing 0 PTS), with bench…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #953</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>User report with screenshot</strong>: after auto-fill, "Champions Eder 26/27" squad <code>79e12342...</code> had a starting XI of 1 GK / 5 DEF / 5 MID / 0 FWD (all showing 0 PTS), with bench holding 3 FWD + 1 GK. Also requested: club logos on the Squad pitch view (desktop+mobile) and the mobile Squad LIST tab (desktop LIST already had them), and a retheme of the desktop Live pitch to match the Squad screen's styling (was flat dark navy) plus club logos there too.</p>
+<ul>
+<li>Root cause: <code>SquadScreen.jsx</code>'s <code>fetchSquad</code> self-heal only guaranteed "11 players, exactly 1 GK" — nothing enforced <code>useLeagueConfig</code>'s per-position <code>minFormation</code> (<code>{GK:1, DEF:1, MID:1, FWD:1}</code>), so an XI could satisfy both existing checks while still having zero players at an outfield position.</li>
+<li>Fix: <code>fetchSquad</code> now also enforces per-position minimums, swapping a bench player of the missing position in for a pitch player from whichever outfield position currently has the largest surplus above its own minimum, and persists the corrected <code>starting_xi</code>. Verified against the real broken row via a read-only <code>SELECT</code> (DEF=5, MID=5, FWD=0) — the fix pulls in a bench FWD and benches a DEF, landing on a valid 4 DEF/1 FWD/1 GK/5 MID XI.</li>
+<li>Added <code>ClubCrest</code> club logos to the Squad pitch view (desktop + mobile, in <a href="src/components/PitchView.jsx" target="_blank" rel="noopener">PitchView.jsx</a> and <a href="src/screens/SquadScreen.jsx" target="_blank" rel="noopener">SquadScreen.jsx</a>) and the mobile Squad LIST tab.</li>
+<li>Retheme <code>LiveScreen.jsx</code>'s desktop <code>MiniPitch</code> from flat navy to the same green gradient/guide-lines/centre-circle used by <code>PitchView</code>, fixed <code>POS_TONE</code> to import the canonical palette from <code>lib/formations</code> (was a local duplicate with the wrong GK color), and added club logos to the mini player tokens.</li>
+<li>Verification note: could not exercise the fix live in a browser — the production-preview build has no real demo league/squad data, and creating some would have written real rows into the live pilot DB. Verified instead via a direct read-only query against the actual broken squad row, plus clean <code>lint</code>/<code>build</code>.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse invite-link &quot;already a member&quot; error banner (2026-09-06) — pr #949 
 
 **user report**: tapping a whatsapp clubhouse invite link for the &quot;mundial do eder&quot; clubhouse — already joined — showed a raw red `already_member` error banner instead of just landing the member in the clubhouse.
