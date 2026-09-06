@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import ClubCrest from './ClubCrest';
 
 /**
  * PitchView — renders the squad on a pitch surface.
@@ -175,12 +176,16 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           </span>
         </div>
         <div style={{
+          display:       'flex',
+          alignItems:    'center',
+          gap:           4,
           fontFamily:    'JetBrains Mono, monospace',
           fontSize: 'var(--fs-micro)',
           color:         'var(--mute)',
           letterSpacing: '.14em',
           marginTop:     2,
         }}>
+          <ClubCrest name={player.club} size={14} />
           {club} · {pts} PTS
         </div>
         {player.fixtureStatus && (
