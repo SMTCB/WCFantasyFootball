@@ -67,6 +67,7 @@ async function runSqlFile(client, path, label) {
 // prod snapshot is regenerated and already includes it.
 const PENDING_MIGRATIONS = [
   '260_fix_paddock_playerbox_members_rls_recursion.sql', // 42P17 recursion fix — not yet in prod, needed by F1/tennis paddock/player-box join specs
+  '281_clubhouse_archive.sql', // adds circles.archived/archived_at — schema.sql predates this (regenerated 2026-08-31, migration merged 2026-09-04); needed by useClubhouse.js/LeagueScreen.jsx circle joins
 ];
 
 async function applyPendingMigrations(client) {
