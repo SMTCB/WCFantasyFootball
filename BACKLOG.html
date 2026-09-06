@@ -154,8 +154,8 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>67</strong><span>open</span></div>
-      <div class="total-pill"><strong>228</strong><span>closed</span></div>
+      <div class="total-pill"><strong>68</strong><span>open</span></div>
+      <div class="total-pill"><strong>229</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -169,12 +169,12 @@
     <span class="chip active" data-filter-priority="all">All priorities</span>
     <span class="chip" data-filter-priority="p0">P0 — BLOCKER (3)</span>
 <span class="chip" data-filter-priority="p1">P1 — HIGH (11)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (20)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (21)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (33)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (147)</span>
+    <span class="chip" data-filter-kind="done">Shipped (148)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,19 +187,19 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">67</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">228</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">229</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
       <div class="sidebar-item" data-jump-priority="p0"><span class="swatch" style="--tab-color:#7a1414"></span>P0 — BLOCKER<span class="sidebar-count">3</span></div>
 <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">11</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">20</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">21</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">33</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">147</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">148</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -457,7 +457,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">20</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">21</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="test-seed-1 `tests/unit/seed.sql` is a time bomb — a stale docker volume silently produces 7 false test failures found 2026-08-21, first thing that happened on returning from a 3-week pause: `npm run test:unit` reported **7 failures** (6 in `auction.test.js`, 1 in `bet.test.js`) with errors like `auction deadline passed` and `bet_still_open` never firing. **not a regression — a harness defect.** `seed.sql` seeds its time-sensitive fixtures relatively (`now() + interval &#x27;1 day&#x27;` for the auction listing, `+ 2 days` for the bet instance, `+ 7 days` for the matchday deadline) but every insert ends `on conflict (id) do nothing`. on a persistent local docker volume the rows keep whatever timestamp they were first seeded with, and **re-running the seed silently refreshes nothing** — so any developer returning after more than a day gets failures that look like real breakage in the money rpcs. confirmed empirically: local rows carried 2026-08-01 deadlines against a 2026-08-21 clock; re-stamping the three rows restored **56/56 green** with no code change. ci is unaffected (fresh db every run), which is exactly why this went unnoticed. **fix**: change the three time-sensitive inserts to `on conflict (id) do update set deadline_at = excluded.deadline_at` (or have `setup.js` re-stamp them unconditionally after seeding). cheap, and it removes a false-alarm trap that costs a confused half-hour every time. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
@@ -804,6 +804,23 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p><code>guard_coin_columns()</code> trigger silently cancels every DELETE on <code>coin_wallets</code>, regardless of role</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-09-06 while cleaning up a test account for the migration-284 signup fix (see changelog entry above). For a <code>BEFORE DELETE</code> trigger, Postgres cancels the operation when the function returns <code>NULL</code> — but <code>guard_coin_columns()</code> unconditionally does <code>RETURN NEW</code>, and <code>NEW</code> is always <code>NULL</code> in a DELETE context, so <strong>every</strong> delete of a <code>coin_wallets</code> row is silently a no-op, even for <code>postgres</code>/service-role callers who should be exempt (the function's own <code>IF current_user IN ('authenticated','anon')</code> check never matters for DELETE — it always falls through to the no-op <code>RETURN NEW</code>). Practical impact: whenever a user is deleted (<code>auth.users</code> cascade or otherwise), their <code>coin_wallets</code> row is never actually removed — orphaned wallet rows accumulate forever. Fix: change the function to branch on <code>TG_OP</code> — <code>RETURN OLD</code> for the DELETE case (and only cancel via <code>RAISE EXCEPTION</code>, never silently, when blocking <code>authenticated</code>/<code>anon</code>). Worked around manually for one row via <code>ALTER TABLE ... DISABLE/ENABLE TRIGGER</code> around the single DELETE; the trigger itself is still broken.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="ci-ut1 `tests/unit/scoring-logic.test.js` red on `main` since pr #943 — ci `unit tests` job failing on every push test expectations were never updated when scoring v3 phase 1 (pr #943) changed the formula (clean-sheet minute thresholds, conceded-goal penalty, card/own-goal/missed-penalty deductions, shootout scoring). 7/24 assertions fail. confirmed pre-existing and unrelated to prs #946–#951 (all merged anyway per their own passing checks) via `gh run list --branch main` (red for every push since pr #943) and a local `node --test tests/unit/scoring-logic.test.js` run — still red as of pr #951, the latest push at session end. fix: update the test file&#x27;s expected values to match the live scoring v3 formula in `supabase/functions/calculate-scores/scoring-logic.js` (source of truth), not the other way around. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
+        <h3 class="card-title"><code>tests/unit/scoring-logic.test.js</code> red on <code>main</code> since PR #943 — CI <code>Unit Tests</code> job failing on every push</h3>
+        <p class="card-summary">Test expectations were never updated when Scoring v3 Phase 1 (PR #943) changed the formula (clean-sheet minute thresholds, conceded-goal penalty, card/own-goal/missed-penalty deductions, shootout scoring). 7/24 assertions fail. Confirmed pre-existing and unrelated to PRs #946–#951 (all merged anyway per their own passing checks) via <code>gh run list --branch main</code> (red for every push since PR #943) and a local <code>node --test tests/unit/scoring-logic.test.js</code> run — still red as of PR #951, the latest push at session end. Fix: update the test file's expected values to match the live Scoring v3 formula in <code>supabase/functions/calculate-scores/scoring-logic.js</code> (source of truth), not the other way around.</p>
+        <div class="card-foot"><span class="foot-id">CI-UT1</span><span class="foot-effort">~30 min</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
+      <h2 class="drawer-title"><code>tests/unit/scoring-logic.test.js</code> red on <code>main</code> since PR #943 — CI <code>Unit Tests</code> job failing on every push</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p><code>tests/unit/scoring-logic.test.js</code> red on <code>main</code> since PR #943 — CI <code>Unit Tests</code> job failing on every push</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Test expectations were never updated when Scoring v3 Phase 1 (PR #943) changed the formula (clean-sheet minute thresholds, conceded-goal penalty, card/own-goal/missed-penalty deductions, shootout scoring). 7/24 assertions fail. Confirmed pre-existing and unrelated to PRs #946–#951 (all merged anyway per their own passing checks) via <code>gh run list --branch main</code> (red for every push since PR #943) and a local <code>node --test tests/unit/scoring-logic.test.js</code> run — still red as of PR #951, the latest push at session end. Fix: update the test file's expected values to match the live Scoring v3 formula in <code>supabase/functions/calculate-scores/scoring-logic.js</code> (source of truth), not the other way around.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -1379,8 +1396,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">147</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">148</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse invite-link &quot;already a member&quot; error banner (2026-09-06) — pr #949 
+
+**user report**: tapping a whatsapp clubhouse invite link for the &quot;mundial do eder&quot; clubhouse — already joined — showed a raw red `already_member` error banner instead of just landing the member in the clubhouse.
+
+- root cause: `join_circle_by_code`&#x27;s `already_member` response (migration 286, see entry below) never includes a `circle_id`, so `joincirclebycode` in [useclubhouse.js](src/hooks/useclubhouse.js) had nothing to navigate to and just re-threw the raw error — which `clubhousescreen.jsx`&#x27;s auto-join-via-link effect (and its manual code-entry form) surfaced verbatim as an error banner.
+- fix: client-side only, no migration. `joincirclebycode` now catches the `already_member` case and resolves the circle itself from the caller&#x27;s own `circle_members` rows (matched by `invite_code`, same rls-permitted query shape as `fetchmycircles`), returning that `circle_id` instead of throwing. a member re-clicking or re-entering an invite code they&#x27;ve already used is now silently navigated straight into the clubhouse — nothing shown, matching the requested behavior. new members joining for the first time are unaffected (still go through the normal insert path).
+- verified: repo-wide search confirmed `join_circle_by_code`&#x27;s `already_member` branch has only this one caller.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Clubhouse invite-link "already a member" error banner</h3>
+        <p class="card-summary">User report : tapping a WhatsApp Clubhouse invite link for the "Mundial do Eder" clubhouse — already joined — showed a raw red ALREADY_MEMBER error banner instead of…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #949</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Clubhouse invite-link "already a member" error banner</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User report : tapping a WhatsApp Clubhouse invite link for the "Mundial do Eder" clubhouse — already joined — showed a raw red ALREADY_MEMBER error banner instead of…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #949</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>User report</strong>: tapping a WhatsApp Clubhouse invite link for the "Mundial do Eder" clubhouse — already joined — showed a raw red <code>ALREADY_MEMBER</code> error banner instead of just landing the member in the clubhouse.</p>
+<ul>
+<li>Root cause: <code>join_circle_by_code</code>'s <code>ALREADY_MEMBER</code> response (migration 286, see entry below) never includes a <code>circle_id</code>, so <code>joinCircleByCode</code> in <a href="src/hooks/useClubhouse.js" target="_blank" rel="noopener">useClubhouse.js</a> had nothing to navigate to and just re-threw the raw error — which <code>ClubhouseScreen.jsx</code>'s auto-join-via-link effect (and its manual code-entry form) surfaced verbatim as an error banner.</li>
+<li>Fix: client-side only, no migration. <code>joinCircleByCode</code> now catches the <code>ALREADY_MEMBER</code> case and resolves the circle itself from the caller's own <code>circle_members</code> rows (matched by <code>invite_code</code>, same RLS-permitted query shape as <code>fetchMyCircles</code>), returning that <code>circle_id</code> instead of throwing. A member re-clicking or re-entering an invite code they've already used is now silently navigated straight into the clubhouse — nothing shown, matching the requested behavior. New members joining for the first time are unaffected (still go through the normal insert path).</li>
+<li>Verified: repo-wide search confirmed <code>join_circle_by_code</code>'s <code>ALREADY_MEMBER</code> branch has only this one caller.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse invite-code case bug + missing league-join gate (2026-09-06) — pr #946, migration 286 
 
 **two live pilot bugs reported by real users, both fixed same session:**
