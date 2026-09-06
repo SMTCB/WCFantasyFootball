@@ -42,10 +42,10 @@ const logError = (severity, message, context = {}) => _logError('calculate-score
 // (v3 revision) so a tournament with no DB rows doesn't inherit a stale/divergent ruleset.
 
 const FALLBACK_POINTS = {
-  GK:  { goal: 5, assist: 3, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 5, save: 0.5,  tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
-  DEF: { goal: 5, assist: 3, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0.5, interception: 0.25, penalty_scored: 0, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
-  MID: { goal: 4, assist: 3, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0.25, shot_on_target: 0.5,  big_chance_created: 0 },
-  FWD: { goal: 4, assist: 3, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0,    shot_on_target: 0.25, big_chance_created: 1.0 },
+  GK:  { goal: 5, assist: 3, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 5, save: 0.5,  tackle: 0,   interception: 0,    penalty_scored: 3, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
+  DEF: { goal: 5, assist: 3, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0.5, interception: 0.25, penalty_scored: 3, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
+  MID: { goal: 4, assist: 3, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 3, key_pass: 0.25, shot_on_target: 0.5,  big_chance_created: 0 },
+  FWD: { goal: 4, assist: 3, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 3, key_pass: 0,    shot_on_target: 0.25, big_chance_created: 1.0 },
 };
 
 const FALLBACK_UNIVERSAL = {

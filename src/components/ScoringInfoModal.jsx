@@ -69,6 +69,7 @@ const UNIVERSAL = [
   { label: 'Yellow Card',       val: '−1',  neg: true  },
   { label: 'Red Card',          val: '−3',  neg: true  },
   { label: 'Own Goal',          val: '−2',  neg: true  },
+  { label: 'Penalty Scored',    val: '+3',  neg: false, note: 'flat, not the goal value' },
   { label: 'Penalty Missed',    val: '−2',  neg: true  },
   { label: 'Shootout Goal',     val: '+1',  neg: false },
   { label: 'Shootout Miss',     val: '−1',  neg: true  },
@@ -223,6 +224,10 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
 
             <div style={{ margin: '16px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
               A RED CARD SUPERSEDES ANY YELLOW IN THE SAME MATCH — CAPPED AT −3 TOTAL, NEVER STACKED
+            </div>
+
+            <div style={{ margin: '10px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
+              A PENALTY CONVERSION SCORES THE FLAT PENALTY VALUE ONLY — NEVER ALSO THE POSITION'S GOAL VALUE
             </div>
 
             <div style={{ margin: '10px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>

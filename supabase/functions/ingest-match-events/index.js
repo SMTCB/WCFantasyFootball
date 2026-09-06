@@ -185,7 +185,10 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
           result.penaltyScoredMap[playerForzaId] = (result.penaltyScoredMap[playerForzaId] ?? 0) + 1;
         }
 
-        if (!isOwnGoal && playerForzaId) {
+        // Penalty conversions score via penalty_scored (flat +3), never also the
+        // position's per-goal rate — see scorePlayer(). Excluding them here is what
+        // prevents the double-count.
+        if (!isOwnGoal && !isPenalty && playerForzaId) {
           result.goalsMap[playerForzaId] = (result.goalsMap[playerForzaId] ?? 0) + 1;
         }
         const assistForzaId = ev.assisting_player?.id ? String(ev.assisting_player.id) : null;
