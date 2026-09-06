@@ -154,8 +154,8 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>66</strong><span>open</span></div>
-      <div class="total-pill"><strong>222</strong><span>closed</span></div>
+      <div class="total-pill"><strong>67</strong><span>open</span></div>
+      <div class="total-pill"><strong>223</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -169,12 +169,12 @@
     <span class="chip active" data-filter-priority="all">All priorities</span>
     <span class="chip" data-filter-priority="p0">P0 — BLOCKER (3)</span>
 <span class="chip" data-filter-priority="p1">P1 — HIGH (11)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (19)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (20)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (33)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (142)</span>
+    <span class="chip" data-filter-kind="done">Shipped (143)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -187,19 +187,19 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">66</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">222</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">67</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">223</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
       <div class="sidebar-item" data-jump-priority="p0"><span class="swatch" style="--tab-color:#7a1414"></span>P0 — BLOCKER<span class="sidebar-count">3</span></div>
 <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">11</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">19</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">20</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">33</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">142</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">143</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -457,7 +457,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">19</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">20</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="test-seed-1 `tests/unit/seed.sql` is a time bomb — a stale docker volume silently produces 7 false test failures found 2026-08-21, first thing that happened on returning from a 3-week pause: `npm run test:unit` reported **7 failures** (6 in `auction.test.js`, 1 in `bet.test.js`) with errors like `auction deadline passed` and `bet_still_open` never firing. **not a regression — a harness defect.** `seed.sql` seeds its time-sensitive fixtures relatively (`now() + interval &#x27;1 day&#x27;` for the auction listing, `+ 2 days` for the bet instance, `+ 7 days` for the matchday deadline) but every insert ends `on conflict (id) do nothing`. on a persistent local docker volume the rows keep whatever timestamp they were first seeded with, and **re-running the seed silently refreshes nothing** — so any developer returning after more than a day gets failures that look like real breakage in the money rpcs. confirmed empirically: local rows carried 2026-08-01 deadlines against a 2026-08-21 clock; re-stamping the three rows restored **56/56 green** with no code change. ci is unaffected (fresh db every run), which is exactly why this went unnoticed. **fix**: change the three time-sensitive inserts to `on conflict (id) do update set deadline_at = excluded.deadline_at` (or have `setup.js` re-stamp them unconditionally after seeding). cheap, and it removes a false-alarm trap that costs a confused half-hour every time. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
@@ -790,6 +790,23 @@
 </ol>
 <p><strong>Doesn't affect the native path</strong>: if the app ever ships to the App Store via the existing Capacitor iOS/Android projects, that would use native push (APNs/FCM) — a separate mechanism from Web Push, needing its own wiring later. This item is scoped purely to the current installed-PWA/no-App-Store case.</p>
 <hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="bug-cw1 `guard_coin_columns()` trigger silently cancels every delete on `coin_wallets`, regardless of role found 2026-09-06 while cleaning up a test account for the migration-284 signup fix (see changelog entry above). for a `before delete` trigger, postgres cancels the operation when the function returns `null` — but `guard_coin_columns()` unconditionally does `return new`, and `new` is always `null` in a delete context, so **every** delete of a `coin_wallets` row is silently a no-op, even for `postgres`/service-role callers who should be exempt (the function&#x27;s own `if current_user in (&#x27;authenticated&#x27;,&#x27;anon&#x27;)` check never matters for delete — it always falls through to the no-op `return new`). practical impact: whenever a user is deleted (`auth.users` cascade or otherwise), their `coin_wallets` row is never actually removed — orphaned wallet rows accumulate forever. fix: change the function to branch on `tg_op` — `return old` for the delete case (and only cancel via `raise exception`, never silently, when blocking `authenticated`/`anon`). worked around manually for one row via `alter table ... disable/enable trigger` around the single delete; the trigger itself is still broken. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
+        <h3 class="card-title"><code>guard_coin_columns()</code> trigger silently cancels every DELETE on <code>coin_wallets</code>, regardless of role</h3>
+        <p class="card-summary">Found 2026-09-06 while cleaning up a test account for the migration-284 signup fix (see changelog entry above). For a <code>BEFORE DELETE</code> trigger, Postgres cancels the operation when the function returns <code>NULL</code> — but <code>guard_coin_columns()</code> unconditionally does <code>RETURN NEW</code>, and <code>NEW</code> is always <code>NULL</code> in a DELETE context, so <strong>every</strong> delete of a <code>coin_wallets</code> row is silently a no-op, even for <code>postgres</code>/service-role callers who should be exempt (the function's own <code>IF current_user IN ('authenticated','anon')</code> check never matters for DELETE — it always falls through to the no-op <code>RETURN NEW</code>). Practical impact: whenever a user is deleted (<code>auth.users</code> cascade or otherwise), their <code>coin_wallets</code> row is never actually removed — orphaned wallet rows accumulate forever. Fix: change the function to branch on <code>TG_OP</code> — <code>RETURN OLD</code> for the DELETE case (and only cancel via <code>RAISE EXCEPTION</code>, never silently, when blocking <code>authenticated</code>/<code>anon</code>). Worked around manually for one row via <code>ALTER TABLE ... DISABLE/ENABLE TRIGGER</code> around the single DELETE; the trigger itself is still broken.</p>
+        <div class="card-foot"><span class="foot-id">BUG-CW1</span><span class="foot-effort">~15 min</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
+      <h2 class="drawer-title"><code>guard_coin_columns()</code> trigger silently cancels every DELETE on <code>coin_wallets</code>, regardless of role</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p><code>guard_coin_columns()</code> trigger silently cancels every DELETE on <code>coin_wallets</code>, regardless of role</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-09-06 while cleaning up a test account for the migration-284 signup fix (see changelog entry above). For a <code>BEFORE DELETE</code> trigger, Postgres cancels the operation when the function returns <code>NULL</code> — but <code>guard_coin_columns()</code> unconditionally does <code>RETURN NEW</code>, and <code>NEW</code> is always <code>NULL</code> in a DELETE context, so <strong>every</strong> delete of a <code>coin_wallets</code> row is silently a no-op, even for <code>postgres</code>/service-role callers who should be exempt (the function's own <code>IF current_user IN ('authenticated','anon')</code> check never matters for DELETE — it always falls through to the no-op <code>RETURN NEW</code>). Practical impact: whenever a user is deleted (<code>auth.users</code> cascade or otherwise), their <code>coin_wallets</code> row is never actually removed — orphaned wallet rows accumulate forever. Fix: change the function to branch on <code>TG_OP</code> — <code>RETURN OLD</code> for the DELETE case (and only cancel via <code>RAISE EXCEPTION</code>, never silently, when blocking <code>authenticated</code>/<code>anon</code>). Worked around manually for one row via <code>ALTER TABLE ... DISABLE/ENABLE TRIGGER</code> around the single DELETE; the trigger itself is still broken.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article></div>
     </section>
@@ -1362,8 +1379,37 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">142</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">143</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ fix broken new-user signup — &quot;database error saving new user&quot; (2026-09-06) — pr #939, migration 284 
+
+**context**: user reported a signup failure via screenshot (&quot;database error saving new user&quot; on the live create account form). diagnosed via read-only inspection: migration 262 (p2p group bets) redefined `credit_coins()` to require an existing `coin_wallets` row (strict `update` + `raise exception &#x27;wallet_not_found&#x27;`), replacing the auto-creating upsert body from migrations 208/209. the signup welcome-bonus trigger (`_create_user_wallet()`, `after insert on auth.users`) calls `credit_coins()` for a brand-new user with no wallet yet, so every signup since 262 shipped raised `wallet_not_found`, rolling back the entire `auth.users` insert. confirmed via sql: all 59 existing users already had wallets (predating the regression), but zero signups succeeded since 2026-08-27 — every signup attempt since the maintenance wall came down (2026-08-30) was affected.
+
+**fix**: `_create_user_wallet()` now creates the `coin_wallets` row itself (idempotent `on conflict (user_id) do nothing`) before crediting the welcome bonus, instead of relying on `credit_coins()`&#x27;s auto-create behavior. `credit_coins()` itself is untouched — scoped narrowly to the signup path in case other call sites (e.g. p2p bets) now rely on its stricter behavior.
+
+**verified live** (per pilot safeguards): dumped a full backup (`backups/pre_migration_20260906_151334.sql`) before applying; applied migration 284 to the live db; created a real `test_`-prefixed signup through the actual create account ui (`test_signup_bugfix`) — succeeded, landed in onboarding, no error; confirmed via sql that `auth.users`/`public.users`/`coin_wallets` all created correctly with the 500-coin welcome bonus; deleted the test account and its rows afterward.
+
+**side finding (not fixed, separate issue)**: while cleaning up the test account, discovered `guard_coin_columns()` (the trigger guarding direct writes to `coin_wallets`) has a p" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Fix broken new-user signup — "Database error saving new user"</h3>
+        <p class="card-summary">Context : User reported a signup failure via screenshot ("Database error saving new user" on the live Create Account form). Diagnosed via read-only inspection: migration…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #939, migration 284</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Fix broken new-user signup — "Database error saving new user"</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : User reported a signup failure via screenshot ("Database error saving new user" on the live Create Account form). Diagnosed via read-only inspection: migration…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #939, migration 284</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: User reported a signup failure via screenshot ("Database error saving new user" on the live Create Account form). Diagnosed via read-only inspection: migration 262 (P2P Group Bets) redefined <code>credit_coins()</code> to require an existing <code>coin_wallets</code> row (strict <code>UPDATE</code> + <code>RAISE EXCEPTION 'WALLET_NOT_FOUND'</code>), replacing the auto-creating upsert body from migrations 208/209. The signup welcome-bonus trigger (<code>_create_user_wallet()</code>, <code>AFTER INSERT ON auth.users</code>) calls <code>credit_coins()</code> for a brand-new user with no wallet yet, so every signup since 262 shipped raised <code>WALLET_NOT_FOUND</code>, rolling back the entire <code>auth.users</code> insert. Confirmed via SQL: all 59 existing users already had wallets (predating the regression), but zero signups succeeded since 2026-08-27 — every signup attempt since the maintenance wall came down (2026-08-30) was affected.</p>
+<p><strong>Fix</strong>: <code>_create_user_wallet()</code> now creates the <code>coin_wallets</code> row itself (idempotent <code>ON CONFLICT (user_id) DO NOTHING</code>) before crediting the welcome bonus, instead of relying on <code>credit_coins()</code>'s auto-create behavior. <code>credit_coins()</code> itself is untouched — scoped narrowly to the signup path in case other call sites (e.g. P2P bets) now rely on its stricter behavior.</p>
+<p><strong>Verified live</strong> (per Pilot Safeguards): dumped a full backup (<code>backups/pre_migration_20260906_151334.sql</code>) before applying; applied migration 284 to the live DB; created a real <code>TEST_</code>-prefixed signup through the actual Create Account UI (<code>TEST_signup_bugfix</code>) — succeeded, landed in onboarding, no error; confirmed via SQL that <code>auth.users</code>/<code>public.users</code>/<code>coin_wallets</code> all created correctly with the 500-coin welcome bonus; deleted the test account and its rows afterward.</p>
+<p><strong>Side finding (not fixed, separate issue)</strong>: while cleaning up the test account, discovered <code>guard_coin_columns()</code> (the trigger guarding direct writes to <code>coin_wallets</code>) has a pre-existing bug — for a <code>BEFORE DELETE</code> trigger it does <code>RETURN NEW</code>, but <code>NEW</code> is always <code>NULL</code> in a DELETE context, so it silently cancels <strong>every</strong> delete on <code>coin_wallets</code> regardless of role, leaving orphaned wallet rows behind whenever a user is deleted. Worked around it for this one cleanup (disabled/re-enabled the trigger around the single DELETE); the trigger itself still needs a proper fix — tracked as a new open item below.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ light-theme the squad pitch player-detail sheet (2026-09-06) — pr #937 
 
 **context**: user reported that selecting a player on the squad screen&#x27;s pitch tab opens a bottom sheet still styled in the old dark navy color scheme, inconsistent with the rest of the app&#x27;s &quot;kit light&quot; theme (screenshot showed a mid/france player card in dark colors — form squares, &quot;view full stats dashboard&quot;, action buttons all on a dark surface).
