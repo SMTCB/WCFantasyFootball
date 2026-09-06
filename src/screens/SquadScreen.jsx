@@ -26,6 +26,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import Button from '../components/Button';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
+import ClubCrest from '../components/ClubCrest';
 import PlayerPickerSheet from '../components/PlayerPickerSheet';
 import SectionHeader from '../components/SectionHeader';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
@@ -394,6 +395,34 @@ export default function SquadScreen() {
           benchPlayers = benchPlayers.filter(p => p.id !== next.id);
         }
         if (pitchPlayers.length === 11) needsXiFix = true;
+      }
+
+      // Enforce per-position minimums (at least 1 DEF/MID/FWD) — the two fixes above
+      // only guarantee "1 GK, 11 total" and can otherwise land on e.g. 5 DEF/5 MID/0 FWD
+      // (seen after auto-fill, since players get appended to squad.players in GK→DEF→MID→FWD
+      // order and any position-blind slice/lazy-init picks the earliest array slots first).
+      // Rebalance by swapping a bench player of the missing position in for a pitch player
+      // from whichever outfield position is currently furthest above its own minimum.
+      for (const [pos, min] of Object.entries(cfg.minFormation)) {
+        if (pos === 'GK') continue; // GK count already fixed to exactly 1 above
+        for (let guard = 0; guard < 5; guard++) {
+          const counts = { DEF: 0, MID: 0, FWD: 0 };
+          pitchPlayers.forEach(p => { if (counts[p.position] !== undefined) counts[p.position]++; });
+          if (counts[pos] >= min) break;
+          const benchCandidate = benchPlayers.find(p => p.position === pos);
+          if (!benchCandidate) break; // squad has no player of this position at all — can't fix client-side
+          const donorPositions = Object.keys(counts).filter(p2 => p2 !== pos);
+          const donorPos = donorPositions.reduce((best, p2) => {
+            const bestSurplus = counts[best] - (cfg.minFormation[best] ?? 1);
+            const p2Surplus = counts[p2] - (cfg.minFormation[p2] ?? 1);
+            return p2Surplus > bestSurplus ? p2 : best;
+          }, donorPositions[0]);
+          const donor = pitchPlayers.find(p => p.position === donorPos);
+          if (!donor) break;
+          pitchPlayers = [...pitchPlayers.filter(p => p.id !== donor.id), benchCandidate];
+          benchPlayers = [...benchPlayers.filter(p => p.id !== benchCandidate.id), donor];
+          needsXiFix = true;
+        }
       }
 
       // Persist corrected starting_xi to DB so it doesn't re-break on every load.
@@ -1517,7 +1546,10 @@ export default function SquadScreen() {
                               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
                           </div>
-                          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, minWidth: 40, justifyContent: 'flex-end' }}>
+                            <ClubCrest name={player.club} size={16} />
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</span>
+                          </div>
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{Math.round(player.points ?? 0)}</div>
                         </button>
                       );
@@ -1575,7 +1607,10 @@ export default function SquadScreen() {
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
                           )}
                         </div>
-                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, minWidth: 40, justifyContent: 'flex-end' }}>
+                          <ClubCrest name={player.club} size={16} />
+                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</span>
+                        </div>
                         <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{Math.round(player.points ?? 0)}</div>
                       </button>
                     );
@@ -1672,7 +1707,10 @@ export default function SquadScreen() {
                               {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                              <ClubCrest name={player.club} size={14} />
+                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.12em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</span>
+                            </div>
                             {player.fixtureStatus && (
                               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.12em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
