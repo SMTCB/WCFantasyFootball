@@ -222,6 +222,13 @@ export default function LeagueScreen() {
   const [joinCode,     setJoinCode]     = useState(() => searchParams.get('joinCode') ?? '');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
+
+  // Membership gate — a Clubhouse member can see a league card in "All Competitions"
+  // without having joined that specific league yet. Block squad/market access until
+  // they actually join, instead of letting them build a full squad and only finding
+  // out at the transfer step (process-transfer's own membership check).
+  const [needsJoin,      setNeedsJoin]      = useState(false);
+  const [joinGateLeague, setJoinGateLeague] = useState(null);
   const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications, clearByType: clearNotificationsByType } = useNotifications(activeLeague?.league_id);
   const {
     incoming: incomingTrades,
@@ -553,6 +560,25 @@ export default function LeagueScreen() {
         setMembersLoading(false);
         return;
       }
+
+      // Membership gate — a Clubhouse's "All Competitions" list shows every league
+      // linked to the circle, but that doesn't make the viewer a league member.
+      // Block squad/market access until they actually join.
+      const { data: memberRow } = await supabase
+        .from('league_members')
+        .select('user_id')
+        .eq('league_id', id)
+        .eq('user_id', uid)
+        .maybeSingle();
+      if (!memberRow) {
+        setJoinGateLeague(lData);
+        setJoinCode(lData.join_code ?? '');
+        setNeedsJoin(true);
+        setMembersLoading(false);
+        return;
+      }
+      setNeedsJoin(false);
+
       setActiveLeague({ league_id: id, leagues: lData });
       const { data: mData } = await supabase.from('league_members').select('rank, total_points, user_id, users(username)').eq('league_id', id).order('total_points', { ascending: false });
 
@@ -655,10 +681,12 @@ export default function LeagueScreen() {
       setMySquadId(null);
       setMySquadBudget(null);
       setDraftOpen(false);
+      setNeedsJoin(false);
       loadLeagueById(leagueId);
     } else if (!leagueId) {
       setActiveLeague(null);
       setMembers([]);
+      setNeedsJoin(false);
     }
   }, [leagueId, user?.id, loadLeagueById]);
 
@@ -790,6 +818,38 @@ export default function LeagueScreen() {
       if (joinedId) navigate(`/league/${joinedId}`);
     } catch (err) {
       console.error('[joinLeague]', err);
+      setJoinError('Something went wrong — please try again.');
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
+  // Membership gate submit — join the specific league the viewer landed on
+  // (from a Clubhouse competition card) rather than navigating away, so the
+  // squad/market screen loads in place once membership is confirmed.
+  const handleJoinGateSubmit = async (e) => {
+    e.preventDefault();
+    const code = joinCode.trim().toUpperCase();
+    if (!code || code.length < 4 || !leagueId) return;
+    try {
+      setJoinLoading(true);
+      setJoinError('');
+      const { error } = await supabase.rpc('join_league_by_code', {
+        p_code:    code,
+        p_user_id: user?.id,
+      });
+      if (error) {
+        const msg = error.message || '';
+        if (msg.includes('LEAGUE_NOT_FOUND'))    setJoinError('No league found with that code — check the spelling.');
+        else if (msg.includes('ALREADY_MEMBER')) setJoinError('You\'re already in this league.');
+        else if (msg.includes('LEAGUE_FULL'))    setJoinError('This league is full.');
+        else setJoinError('Something went wrong — please try again.');
+        return;
+      }
+      fetchLeagues();
+      await loadLeagueById(leagueId);
+    } catch (err) {
+      console.error('[joinLeagueGate]', err);
       setJoinError('Something went wrong — please try again.');
     } finally {
       setJoinLoading(false);
@@ -1095,6 +1155,58 @@ export default function LeagueScreen() {
             {formLoading ? 'Creating…' : 'Start Season'}
           </button>
         </form>
+      </div>
+    );
+  }
+
+  if (leagueId && needsJoin) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--ink)', color: 'var(--paper)', padding: 24, textAlign: 'center' }}>
+        <div className="fk-eyebrow" style={{ marginBottom: 10 }}>Join To Continue</div>
+        <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', textTransform: 'uppercase', letterSpacing: '-0.02em', marginBottom: 10, maxWidth: 480 }}>
+          {joinGateLeague?.name || 'This league'}
+        </div>
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)', marginBottom: 28, maxWidth: 420 }}>
+          You're not a member of this league yet — join with the code below to build your squad and use the transfer market.
+        </div>
+        <form onSubmit={handleJoinGateSubmit} style={{ display: 'flex', gap: 0, width: '100%', maxWidth: 360 }}>
+          <input
+            type="text"
+            value={joinCode}
+            onChange={e => {
+              const val = e.target.value.toUpperCase();
+              setJoinCode(val);
+              setJoinError(val.trim().length > 0 && val.trim().length < 4 ? 'Codes are 6+ characters' : '');
+            }}
+            placeholder="XXXXXX"
+            maxLength={8}
+            style={{
+              flex: 1, minWidth: 0, padding: '11px 16px',
+              background: 'var(--ink-2)',
+              border: `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'var(--rule)'}`,
+              borderRight: 'none', color: 'var(--paper)',
+              fontSize: 'var(--fs-body)', fontFamily: MONO, fontWeight: 700,
+              letterSpacing: '0.2em', textTransform: 'uppercase', outline: 'none',
+            }}
+          />
+          <button
+            type="submit"
+            disabled={joinLoading || joinCode.trim().length < 4}
+            className="ffl-btn ffl-btn--gold ffl-btn--md"
+            style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', flexShrink: 0 }}
+          >
+            {joinLoading ? '…' : 'Join →'}
+          </button>
+        </form>
+        {joinError && (
+          <div style={{ marginTop: 12, fontSize: 'var(--fs-label)', color: 'var(--danger)', fontFamily: MONO }}>{joinError}</div>
+        )}
+        <button
+          onClick={() => navigate('/league')}
+          style={{ marginTop: 28, background: 'none', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', cursor: 'pointer' }}
+        >
+          ← Back to My Leagues
+        </button>
       </div>
     );
   }
