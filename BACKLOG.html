@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>67</strong><span>open</span></div>
-      <div class="total-pill"><strong>224</strong><span>closed</span></div>
+      <div class="total-pill"><strong>226</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,12 +174,12 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (144)</span>
+    <span class="chip" data-filter-kind="done">Shipped (145)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (3)</span>
-<span class="chip" data-filter-kind="other">Notes (1)</span>
+<span class="chip" data-filter-kind="other">Notes (2)</span>
   </div>
   <span id="result-count"></span>
 </div>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">67</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">224</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">226</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,12 +199,12 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">144</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">145</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">3</span></div>
-<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">1</span></div>
+<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">2</span></div>
     </div>
   </nav>
   <main class="main">
@@ -1379,8 +1379,48 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">144</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">145</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ scoring v3 phase 1 — appearance point, minutes bonus, flat +3 assist, card no-stack rule (2026-09-06) — pr #943, migration 285 
+
+phase 1 of the sept 2026 scoring revision (audited against `forza fantasy points.docx`; plan approved by user). chips, mvp bonus, and backfill of already-played fixtures are explicitly deferred/out of scope for this and later phases — see the approved plan for full phase breakdown (phase 2: penalty goals as their own event; phase 3: time-on-pitch clean sheet/conceded mechanic).
+
+- new universal terms `appearance` (+1, any minutes played) and `minutes_60_bonus` (+1, at 60+ minutes) replace the old per-90-minute rate, in [scoring-logic.js](supabase/functions/calculate-scores/scoring-logic.js).
+- assist bumped to a flat +3 across def/mid/fwd (gk was already +3).
+- card accumulation rule: a red card always supersedes any yellow(s) in the same match — capped at −3 total, never stacked (forza&#x27;s match-event data can&#x27;t distinguish a two-yellow send-off from a separate straight red).
+- `penalty_missed` aligned to −2 everywhere.
+- migration `285_scoring_v3_foundational.sql` applied live to `scoring_rules` for tournaments 429 (world cup) and 1593 (champions league) via surgical `jsonb_set`, backed up first per pilot safeguards.
+- `fallback_points`/`fallback_universal` in [calculate-scores/index.js](supabase/functions/calculate-scores/index.js) updated to match, so a tournament with no `scoring_rules` row doesn&#x27;t inherit the old ruleset.
+- [scoringinfomodal.jsx](src/components/scoringinfomodal.jsx) updated: new appearance/60+ min bonus rows, +3 assist rows, card-accumulation caption, v3 tab label.
+- verified via a standalone node script exercising `scoreplayer`/`buildbreakdown` directly (11/11 assertions), plus lint/build/`platform.spec.js` all green.
+- **pending**: `calculate-scores` edge function has not been deployed yet — vercel doesn&#x27;t auto-deploy functions, and this needs its own explicit go-ahead separate from the migration confirmation alrea" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Scoring v3 Phase 1 — appearance point, minutes bonus, flat +3 assist, card no-stack rule</h3>
+        <p class="card-summary">Phase 1 of the Sept 2026 scoring revision (audited against Forza Fantasy Points.docx ; plan approved by user). Chips, MVP bonus, and backfill of already-played fixtures…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #943, migration 285</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Scoring v3 Phase 1 — appearance point, minutes bonus, flat +3 assist, card no-stack rule</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Phase 1 of the Sept 2026 scoring revision (audited against Forza Fantasy Points.docx ; plan approved by user). Chips, MVP bonus, and backfill of already-played fixtures…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #943, migration 285</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Phase 1 of the Sept 2026 scoring revision (audited against <code>Forza Fantasy Points.docx</code>; plan approved by user). Chips, MVP bonus, and backfill of already-played fixtures are explicitly deferred/out of scope for this and later phases — see the approved plan for full phase breakdown (Phase 2: penalty goals as their own event; Phase 3: time-on-pitch clean sheet/conceded mechanic).</p>
+<ul>
+<li>New UNIVERSAL terms <code>appearance</code> (+1, any minutes played) and <code>minutes_60_bonus</code> (+1, at 60+ minutes) replace the old per-90-minute rate, in <a href="supabase/functions/calculate-scores/scoring-logic.js" target="_blank" rel="noopener">scoring-logic.js</a>.</li>
+<li>Assist bumped to a flat +3 across DEF/MID/FWD (GK was already +3).</li>
+<li>Card Accumulation Rule: a red card always supersedes any yellow(s) in the same match — capped at −3 total, never stacked (Forza's match-event data can't distinguish a two-yellow send-off from a separate straight red).</li>
+<li><code>penalty_missed</code> aligned to −2 everywhere.</li>
+<li>Migration <code>285_scoring_v3_foundational.sql</code> applied live to <code>scoring_rules</code> for tournaments 429 (World Cup) and 1593 (Champions League) via surgical <code>jsonb_set</code>, backed up first per Pilot Safeguards.</li>
+<li><code>FALLBACK_POINTS</code>/<code>FALLBACK_UNIVERSAL</code> in <a href="supabase/functions/calculate-scores/index.js" target="_blank" rel="noopener">calculate-scores/index.js</a> updated to match, so a tournament with no <code>scoring_rules</code> row doesn't inherit the old ruleset.</li>
+<li><a href="src/components/ScoringInfoModal.jsx" target="_blank" rel="noopener">ScoringInfoModal.jsx</a> updated: new Appearance/60+ Min Bonus rows, +3 assist rows, card-accumulation caption, v3 tab label.</li>
+<li>Verified via a standalone Node script exercising <code>scorePlayer</code>/<code>buildBreakdown</code> directly (11/11 assertions), plus lint/build/<code>platform.spec.js</code> all green.</li>
+<li><strong>Pending</strong>: <code>calculate-scores</code> Edge Function has not been deployed yet — Vercel doesn't auto-deploy functions, and this needs its own explicit go-ahead separate from the migration confirmation already given.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ restore football bet creation/resolution/history on commissioner admin screen (2026-09-06) — pr #941 
 
 **root cause**: the v2→main cutover left the newer `betcreatorpanel.jsx` (bet creation ui) built but never wired into `commissionerpanel.jsx`, while the panel&#x27;s render still called the fully-superseded `createbetwizard` plus its exclusive `bet_types`/helper functions. the older, still-correct `resolvependingbets` and `bettinghistory` components (resolution + history) were present in the codebase but dead — not rendered anywhere — so commissioners had no way to create, resolve, or review football bets from the admin screen.
@@ -13017,8 +13057,29 @@ ORDER BY ge.published_at DESC</code></pre>
     </section>
 
     <section class="item-group" id="group-other" data-group="other">
-      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">1</span></h2>
+      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">2</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 p3 — fallback conceded-penalty is silently always 0 due to a field-name mismatch — open, no pr yet (2026-09-06, found during scoring v3 phase 1) 
+
+`fallback_points` in [calculate-scores/index.js](supabase/functions/calculate-scores/index.js) names the goals-conceded-penalty field `conceded_per_goal`, but [scoring-logic.js](supabase/functions/calculate-scores/scoring-logic.js)&#x27;s `scoreplayer`/`buildbreakdown` reads `rules.conceded_2plus_penalty` — so any tournament falling back to `fallback_points` (no `scoring_rules` db row, e.g. a future epl/426 tournament) silently never applies the conceded-goals penalty for gk/def, with no error. pre-existing bug, not introduced by phase 1 — found while auditing the fallback constants for that pr, deliberately left out of its scope. fix: rename `conceded_per_goal` → `conceded_2plus_penalty` in `fallback_points` (both gk and def rows currently have it at value `0` anyway, so no scoring change today — but the field name needs to match before that value is ever made non-zero, or before a tournament without a db row goes live).
+
+" style="--tab-color:#5b7285" tabindex="0" data-stamp="NOTE">
+        <div class="card-top"><span class="badge-mini k-other">NOTE</span></div>
+        <h3 class="card-title">P3 — Fallback conceded-penalty is silently always 0 due to a field-name mismatch</h3>
+        <p class="card-summary">FALLBACK_POINTS in calculate-scores/index.js names the goals-conceded-penalty field conceded_per_goal , but scoring-logic.js 's scorePlayer / buildBreakdown reads…</p>
+        <div class="card-foot"><span class="foot-refs">open, no PR yet (2026-09-06, found during Scoring v3 Phase 1)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-other">NOTE</span></div>
+      <h2 class="drawer-title">P3 — Fallback conceded-penalty is silently always 0 due to a field-name mismatch</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>FALLBACK_POINTS in calculate-scores/index.js names the goals-conceded-penalty field conceded_per_goal , but scoring-logic.js 's scorePlayer / buildBreakdown reads…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>NOTE · open, no PR yet (2026-09-06, found during Scoring v3 Phase 1)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><code>FALLBACK_POINTS</code> in <a href="supabase/functions/calculate-scores/index.js" target="_blank" rel="noopener">calculate-scores/index.js</a> names the goals-conceded-penalty field <code>conceded_per_goal</code>, but <a href="supabase/functions/calculate-scores/scoring-logic.js" target="_blank" rel="noopener">scoring-logic.js</a>'s <code>scorePlayer</code>/<code>buildBreakdown</code> reads <code>rules.conceded_2plus_penalty</code> — so any tournament falling back to <code>FALLBACK_POINTS</code> (no <code>scoring_rules</code> DB row, e.g. a future EPL/426 tournament) silently never applies the conceded-goals penalty for GK/DEF, with no error. Pre-existing bug, not introduced by Phase 1 — found while auditing the fallback constants for that PR, deliberately left out of its scope. Fix: rename <code>conceded_per_goal</code> → <code>conceded_2plus_penalty</code> in <code>FALLBACK_POINTS</code> (both GK and DEF rows currently have it at value <code>0</code> anyway, so no scoring change today — but the field name needs to match before that value is ever made non-zero, or before a tournament without a DB row goes live).</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 p2 — forza tournament ids are reused every season — no durable season-boundary handling (2026-09-01) — open, no pr yet 
 
 **context**: preparing to load uefa champions league 2026-27, discovered `tournaments.forza_id=1593` was still carrying **all of last season&#x27;s** (2025-26) data — 281 stale fixtures and ~3,400 players from clubs no longer in this year&#x27;s competition, still `sync_enabled`-adjacent in the db even though the season had ended. forza does not mint a new tournament id per season — it reuses the same `forza_id` and just rolls `current_season` forward internally, while its `round` field resets to 1 each season. under our schema, `round_number` (and the derived `matchday_id = &#x27;{forza_id}-r{round_number}&#x27;`) is scoped only by `tournament_id`, not by season — so once a new season&#x27;s fixtures land on top of an old season&#x27;s under the same forza_id, round numbers collide (e.g. two completely different sets of 18 matches both claiming to be &quot;round 1&quot;), and `sync-players`&#x27; team list (derived from *all* current `fixtures` rows for that `tournament_id`, not season-filtered — see [supabase/functions/sync-players/index.js](supabase/functions/sync-players/index.js)) gets contaminated with stale clubs, pulling in retired/relegated teams and their full squads.
