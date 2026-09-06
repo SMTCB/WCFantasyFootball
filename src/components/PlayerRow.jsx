@@ -2,6 +2,7 @@ import { formatFixtureStatus } from '../lib/players';
 import PositionChip from './PositionChip';
 import StatusDot    from './StatusDot';
 import CaptainPill  from './CaptainPill';
+import ClubCrest    from './ClubCrest';
 
 /**
  * PlayerRow — the universal row pattern (spec §4.4).
@@ -89,6 +90,9 @@ export default function PlayerRow({
 
       {/* Position chip */}
       <PositionChip pos={player.position} empty={isDummy} />
+
+      {/* Club crest */}
+      {!isDummy && <ClubCrest name={player.club} />}
 
       {/* Status dot + name block */}
       <div className="flex-1 min-w-0 flex items-center" style={{ gap: 8 }}>
