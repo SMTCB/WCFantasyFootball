@@ -147,14 +147,14 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-04. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-06. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>58</strong><span>open</span></div>
+      <div class="total-pill"><strong>66</strong><span>open</span></div>
       <div class="total-pill"><strong>219</strong><span>closed</span></div>
     </div>
   </div>
@@ -170,7 +170,7 @@
     <span class="chip" data-filter-priority="p0">P0 — BLOCKER (3)</span>
 <span class="chip" data-filter-priority="p1">P1 — HIGH (11)</span>
 <span class="chip" data-filter-priority="p2">P2 — MEDIUM (19)</span>
-<span class="chip" data-filter-priority="p3">P3 — LOW (25)</span>
+<span class="chip" data-filter-priority="p3">P3 — LOW (33)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
@@ -187,7 +187,7 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">58</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">66</span></button>
       <button class="status-btn" data-status="closed">Closed <span class="status-count">219</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
@@ -195,7 +195,7 @@
       <div class="sidebar-item" data-jump-priority="p0"><span class="swatch" style="--tab-color:#7a1414"></span>P0 — BLOCKER<span class="sidebar-count">3</span></div>
 <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">11</span></div>
 <div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">19</span></div>
-<div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">25</span></div>
+<div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">33</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
@@ -795,7 +795,7 @@
     </section>
 
     <section class="item-group" id="group-p3" data-group="p3">
-      <h2 class="group-title" style="--tab-color:#5b7285">P3 — LOW <span class="group-count">25</span></h2>
+      <h2 class="group-title" style="--tab-color:#5b7285">P3 — LOW <span class="group-count">33</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="code-2 typescript migration **still makes sense, but not as stated — recommend rescoping or closing.** `src/` is ~100% plain jsx today, so a wholesale migration is a multi-week rewrite touching every file, with real rolldown/tdz regression risk (see claude.md&#x27;s tdz rule — three past production crashes) and near-zero user-visible benefit. **the honest cost/benefit**: the bugs this codebase actually ships are data-shape and ordering bugs at the db/rpc boundary (`bug-rb1`, the `uuid = text` drift in `dd-p2-2`, `null is not an object` in the historic error logs) — and those are precisely the ones ts *would* catch, but only if the supabase types are generated. **recommendation**: replace this item with a much smaller one — run `supabase gen types typescript` into a checked-in `database.types.ts`, type the `src/lib/` and `src/hooks/` boundary layer only (~15 files), and leave screens/components as jsx (`allowjs: true`, no `strict`). that captures most of the defect-prevention value for ~1 week. if that slice isn&#x27;t wanted, close this item rather than carrying a 4–6 week &quot;typescript migration&quot; line that will never be scheduled. platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
@@ -1148,6 +1148,142 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>✅ <strong>RESOLVED 2026-07-31</strong> — [TECH DEBT] Untracked working files in the repo root</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-08-01 (pre-pilot DD): <code>git status</code> showed three untracked paths sitting uncommitted. <code>supabase/.temp/</code> (Supabase CLI scratch dir, contains <code>start-secrets/</code>) added to <code>.gitignore</code>. <code>Pilot_Engagement_Report.html</code>/<code>.pdf</code> — user confirmed these are a deliverable, not a local artefact — moved from <code>docs/platform_revision/</code> to <code>docs/deployment/</code> (better fit: it's a launch-readiness report, same category as <code>DRY_RUN_PREP_CHECKLIST.md</code>, not platform-revision tracking material) and committed.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="# item notes platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span></div>
+        <h3 class="card-title">Item</h3>
+        <p class="card-summary">Notes</p>
+        <div class="card-foot"><span class="foot-id">#</span><span class="foot-effort">Complexity</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span></div>
+      <h2 class="drawer-title">Item</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Item</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Notes</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="--- ------ ------- platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span></div>
+        <h3 class="card-title">------</h3>
+        <p class="card-summary">-------</p>
+        <div class="card-foot"><span class="foot-id">---</span><span class="foot-effort">-----------</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span></div>
+      <h2 class="drawer-title">------</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>------</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>-------</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="fb-15 market sort options (price / form / minutes) market results render in a fixed price-descending order with no sort control at all. all the underlying fields are already fetched client-side, so this is ui-only: a sort control plus a comparator, no schema or rpc change. the cheapest win in this batch. platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Market sort options (price / form / minutes)</h3>
+        <p class="card-summary">Market results render in a fixed price-descending order with no sort control at all. All the underlying fields are already fetched client-side, so this is UI-only: a sort control plus a comparator, no schema or RPC change. The cheapest win in this batch.</p>
+        <div class="card-foot"><span class="foot-id">FB-15</span><span class="foot-effort"><strong>Low</strong> — ~1–2 days</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Market sort options (price / form / minutes)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Market sort options (price / form / minutes)</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Market results render in a fixed price-descending order with no sort control at all. All the underlying fields are already fetched client-side, so this is UI-only: a sort control plus a comparator, no schema or RPC change. The cheapest win in this batch.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="fb-28 admin bet management — edit deadline, lock/reopen admin control today is limited to `resolve_bet` and `void_bet`, both one-way terminal actions — no way to edit a bet&#x27;s deadline or lock/reopen a live one. needs 2–3 new rpcs with state-machine guards (can&#x27;t edit a resolved/voided bet; can&#x27;t reopen past a hard cutoff) and new `commissionerpanel` ui. bounded, well-understood work — no schema redesign. platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Admin bet management — edit deadline, lock/reopen</h3>
+        <p class="card-summary">Admin control today is limited to <code>resolve_bet</code> and <code>void_bet</code>, both one-way terminal actions — no way to edit a bet's deadline or lock/reopen a live one. Needs 2–3 new RPCs with state-machine guards (can't edit a resolved/voided bet; can't reopen past a hard cutoff) and new <code>CommissionerPanel</code> UI. Bounded, well-understood work — no schema redesign.</p>
+        <div class="card-foot"><span class="foot-id">FB-28</span><span class="foot-effort"><strong>Medium</strong> — ~3–5 days</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Admin bet management — edit deadline, lock/reopen</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Admin bet management — edit deadline, lock/reopen</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Admin control today is limited to <code>resolve_bet</code> and <code>void_bet</code>, both one-way terminal actions — no way to edit a bet's deadline or lock/reopen a live one. Needs 2–3 new RPCs with state-machine guards (can't edit a resolved/voided bet; can't reopen past a hard cutoff) and new <code>CommissionerPanel</code> UI. Bounded, well-understood work — no schema redesign.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="fb-30 scale bet payouts by consensus size `167_resolve_bet_points_aggregation.sql` already computes `winners_count` at settlement but the payout formula ignores it — every correct guess earns the same flat reward regardless of how many others also got it right. the data needed already exists; the work is designing the inverse-scaling formula (and whether it applies retroactively or only to new bets) and wiring it into the existing settlement migration. platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Scale bet payouts by consensus size</h3>
+        <p class="card-summary"><code>167_resolve_bet_points_aggregation.sql</code> already computes <code>winners_count</code> at settlement but the payout formula ignores it — every correct guess earns the same flat reward regardless of how many others also got it right. The data needed already exists; the work is designing the inverse-scaling formula (and whether it applies retroactively or only to new bets) and wiring it into the existing settlement migration.</p>
+        <div class="card-foot"><span class="foot-id">FB-30</span><span class="foot-effort"><strong>Medium</strong> — ~2–4 days</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Scale bet payouts by consensus size</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Scale bet payouts by consensus size</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p><code>167_resolve_bet_points_aggregation.sql</code> already computes <code>winners_count</code> at settlement but the payout formula ignores it — every correct guess earns the same flat reward regardless of how many others also got it right. The data needed already exists; the work is designing the inverse-scaling formula (and whether it applies retroactively or only to new bets) and wiring it into the existing settlement migration.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="fb-29 stake/risk option on commissioner league bets no stake/amount column exists on `bet_submissions` — bets are flat-reward only today. needs new schema (a stake field plus escrow/ledger handling — the coverage report&#x27;s flag 04 notes the existing p2p challenges coin-escrow mechanics could plausibly be extended rather than rebuilt), new stake-setting/accepting ui, and payout-distribution logic. **the source doc itself flags that a real-money variant needs separate compliance review** — this estimate covers the coin/points-based opt-in version only; treat real-money as a distinct, larger item if ever pursued. platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Stake/risk option on commissioner league bets</h3>
+        <p class="card-summary">No stake/amount column exists on <code>bet_submissions</code> — bets are flat-reward only today. Needs new schema (a stake field plus escrow/ledger handling — the coverage report's flag 04 notes the existing P2P Challenges coin-escrow mechanics could plausibly be extended rather than rebuilt), new stake-setting/accepting UI, and payout-distribution logic. <strong>The source doc itself flags that a real-money variant needs separate compliance review</strong> — this estimate covers the coin/points-based opt-in version only; treat real-money as a distinct, larger item if ever pursued.</p>
+        <div class="card-foot"><span class="foot-id">FB-29</span><span class="foot-effort"><strong>High</strong> — ~1–2 wk</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Stake/risk option on commissioner league bets</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Stake/risk option on commissioner league bets</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>No stake/amount column exists on <code>bet_submissions</code> — bets are flat-reward only today. Needs new schema (a stake field plus escrow/ledger handling — the coverage report's flag 04 notes the existing P2P Challenges coin-escrow mechanics could plausibly be extended rather than rebuilt), new stake-setting/accepting UI, and payout-distribution logic. <strong>The source doc itself flags that a real-money variant needs separate compliance review</strong> — this estimate covers the coin/points-based opt-in version only; treat real-money as a distinct, larger item if ever pursued.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="fb-24 larger draft squads with bench-only reserve slots (e.g. 20 rostered, 15 count) `useleagueconfig.js` hardcodes `squadsize` to 15 with no beyond-15 reserve concept anywhere in the schema or docs. rated very high not because changing a number is hard, but because **the source doc itself flags `squadsize` as a constant shared with the scoring system**, which is currently paused (see the platform revision items above) — implementing this in isolation risks a scoring-layer regression once that system is unpaused. do not schedule without first deciding the scoring system&#x27;s status. platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Larger draft squads with bench-only reserve slots (e.g. 20 rostered, 15 count)</h3>
+        <p class="card-summary"><code>useLeagueConfig.js</code> hardcodes <code>squadSize</code> to 15 with no beyond-15 reserve concept anywhere in the schema or docs. Rated Very High not because changing a number is hard, but because <strong>the source doc itself flags <code>squadSize</code> as a constant shared with the scoring system</strong>, which is currently paused (see the platform revision items above) — implementing this in isolation risks a scoring-layer regression once that system is unpaused. Do not schedule without first deciding the scoring system's status.</p>
+        <div class="card-foot"><span class="foot-id">FB-24</span><span class="foot-effort"><strong>Very High</strong> — multi-week, blocked</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Larger draft squads with bench-only reserve slots (e.g. 20 rostered, 15 count)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Larger draft squads with bench-only reserve slots (e.g. 20 rostered, 15 count)</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p><code>useLeagueConfig.js</code> hardcodes <code>squadSize</code> to 15 with no beyond-15 reserve concept anywhere in the schema or docs. Rated Very High not because changing a number is hard, but because <strong>the source doc itself flags <code>squadSize</code> as a constant shared with the scoring system</strong>, which is currently paused (see the platform revision items above) — implementing this in isolation risks a scoring-layer regression once that system is unpaused. Do not schedule without first deciding the scoring system's status.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="pcard-2 player cards — national flags + player photos** (remaining half of the visual-identity ask; club badges are tracked separately and already in progress) `playercard.jsx` renders name/position/stats as text only. flags need a nationality field mapped to a flag-icon set (moderate effort). photos need a licensed image per player across every tracked competition, a storage/cdn pipeline, and a no-photo fallback — that sourcing/rights question is the actual blocker, not implementation time. recommend scoping flags and photos as two separate efforts rather than one. platform revision — consolidated open items p3 — low" style="--tab-color:#5b7285" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Player cards — national flags + player photos** (remaining half of the visual-identity ask; club badges are tracked separately and already in progress)</h3>
+        <p class="card-summary"><code>PlayerCard.jsx</code> renders name/position/stats as text only. Flags need a nationality field mapped to a flag-icon set (moderate effort). Photos need a licensed image per player across every tracked competition, a storage/CDN pipeline, and a no-photo fallback — that sourcing/rights question is the actual blocker, not implementation time. Recommend scoping flags and photos as two separate efforts rather than one.</p>
+        <div class="card-foot"><span class="foot-id">PCARD-2</span><span class="foot-effort"><strong>High</strong> — asset-sourcing bound, not code-bound</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Player cards — national flags + player photos** (remaining half of the visual-identity ask; club badges are tracked separately and already in progress)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Player cards — national flags + player photos** (remaining half of the visual-identity ask; club badges are tracked separately and already in progress)</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p><code>PlayerCard.jsx</code> renders name/position/stats as text only. Flags need a nationality field mapped to a flag-icon set (moderate effort). Photos need a licensed image per player across every tracked competition, a storage/CDN pipeline, and a no-photo fallback — that sourcing/rights question is the actual blocker, not implementation time. Recommend scoping flags and photos as two separate efforts rather than one.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
