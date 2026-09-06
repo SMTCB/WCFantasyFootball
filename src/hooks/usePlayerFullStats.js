@@ -5,7 +5,8 @@ import { teamCode } from '../lib/fixtures';
 // Maps player_match_stats.breakdown JSONB keys -> display labels.
 // All keys are always present in the row; zero values are skipped.
 const BREAKDOWN_LABELS = {
-  minutes: 'APPEARANCE',
+  appearance: 'APPEARANCE',
+  minutes_bonus: 'MINUTES BONUS (60+)',
   goals: 'GOALS',
   assists: 'ASSISTS',
   clean_sheet: 'CLEAN SHEET',
