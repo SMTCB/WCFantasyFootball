@@ -93,13 +93,14 @@ function flattenPlayerStats(raw) {
 //   penaltyMissedByTeamSide: { 'home'|'away': count },   ← used to credit opposing GK
 //   penaltyScoredMap:        { [forza_player_id]: count },
 //   activityEvents:          [],
+//   concededEvents:          [{ team: forza_team_id, minute }],  // Scoring v3 Phase 3: one per in-match goal (incl. penalties/own goals), team = the side that conceded it
 //   // Penalty shootout — routed here when period.name/type contains 'penalt':
 //   shootoutScoredMap:       { [forza_player_id]: count },  // +1 pt each
 //   shootoutMissed:          Set<forza_player_id>,          // -1 pt each
 //   shootoutSavedByTeamSide: { 'home'|'away': count },     // opposing GK +0.5 pt each
 //   hasShootout:             boolean,
 // }
-function processPeriodsData(periodsData, homeTeamForzaId) {
+function processPeriodsData(periodsData, homeTeamForzaId, awayTeamForzaId) {
   const result = {
     redCards:                new Set(),
     penaltyMissed:           new Set(),
@@ -108,6 +109,7 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
     goalsMap:                {},
     assistsMap:              {},
     activityEvents:          [],
+    concededEvents:          [],
     // Shootout tracking
     shootoutScoredMap:       {},
     shootoutMissed:          new Set(),
@@ -196,6 +198,17 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
           result.assistsMap[assistForzaId] = (result.assistsMap[assistForzaId] ?? 0) + 1;
         }
 
+        // Scoring v3 Phase 3: which side conceded this goal, for on-pitch-interval
+        // cross-referencing. A regular goal concedes against the opponent; an own
+        // goal concedes against the scorer's own team_side (see own-goal convention
+        // in docs/api/FORZA_API_KNOWLEDGE.md).
+        const concedingTeamId = isOwnGoal
+          ? (ev.team_side === 'home' ? homeTeamForzaId : ev.team_side === 'away' ? awayTeamForzaId : null)
+          : (ev.team_side === 'home' ? awayTeamForzaId : ev.team_side === 'away' ? homeTeamForzaId : null);
+        if (concedingTeamId) {
+          result.concededEvents.push({ team: concedingTeamId, minute: parseMinute(ev.match_minute ?? '?') });
+        }
+
         result.activityEvents.push({
           type: 'goal',
           player_forza_id: playerForzaId,
@@ -227,6 +240,47 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
   }
 
   return result;
+}
+
+// ── Scoring v3 Phase 3: on-pitch intervals for goals-conceded cross-referencing ─
+// For each player, [start, end] = the match minutes they were actually on the
+// pitch. end = matchDurationMinutes unless the player was substituted off — with
+// one exception: a red-carded player's interval is NOT shortened by a card, since
+// the team plays a man down (and stays exposed to conceded goals) for whatever's
+// left of the match regardless of when the dismissal happened. A player who never
+// appears in lineups/subs has no interval (didn't play).
+function buildOnPitchIntervals(lineupsData, subEvents, redCards, matchDurationMinutes) {
+  const intervals = {}; // forza_player_id -> { start, end }
+
+  if (lineupsData?.lineups) {
+    for (const side of ['home', 'away']) {
+      const lineup = lineupsData.lineups[side];
+      if (!lineup) continue;
+      for (const p of (lineup.pitch_players ?? [])) {
+        if (!p.player_id) continue;
+        intervals[String(p.player_id)] = { start: 0, end: matchDurationMinutes };
+      }
+    }
+  }
+
+  for (const ev of subEvents) {
+    if (ev.type !== 'sub') continue;
+    const minInt = parseMinute(ev.minute);
+    if (minInt <= 0) continue;
+    if (ev.player_forza_id && intervals[ev.player_forza_id]) {
+      intervals[ev.player_forza_id].end = minInt; // subbed off — on the pitch only until here
+    }
+    if (ev.player_in_forza_id) {
+      intervals[ev.player_in_forza_id] = { start: minInt, end: matchDurationMinutes };
+    }
+  }
+
+  // Red-card exception: dismissal doesn't shorten pitch-time exposure for conceded goals.
+  for (const fpid of redCards) {
+    if (intervals[fpid]) intervals[fpid].end = matchDurationMinutes;
+  }
+
+  return intervals;
 }
 
 Deno.serve(async (req) => {
@@ -385,7 +439,7 @@ Deno.serve(async (req) => {
     // ── 5b. Adjust minutesMap using substitution events from E9 ─────────────────
     // Already have activityEvents from processPeriodsData (called below in step 7).
     // We process periods now just for substitutions, then re-use the full result.
-    const periodsForSubs = processPeriodsData(periodsData, homeId);
+    const periodsForSubs = processPeriodsData(periodsData, homeId, awayId);
     for (const ev of periodsForSubs.activityEvents) {
       if (ev.type !== 'sub') continue;
       const minInt = parseMinute(ev.minute); // 2.5.c: handles "45+2" added-time format
@@ -402,6 +456,12 @@ Deno.serve(async (req) => {
         );
       }
     }
+
+    // Scoring v3 Phase 3: per-player on-pitch interval, for cross-referencing
+    // which conceded goals happened while each player was actually on the pitch.
+    const onPitchIntervals = buildOnPitchIntervals(
+      lineupsData, periodsForSubs.activityEvents, periodsForSubs.redCards, matchDurationMinutes
+    );
 
     // ── 5c. 2.5.d: wider player lookup — fall back to tournament-wide search ─────
     // Players absent from the team-scoped query (e.g., recently transferred) would
@@ -448,6 +508,24 @@ Deno.serve(async (req) => {
       [awayId]: homeScore,
     };
 
+    // Scoring v3 Phase 3: goals conceded per team, summed from period events
+    // (used for the per-player on-pitch-interval cross-reference below). Only
+    // trusted if it agrees with the final match score — if E9's event feed missed
+    // a goal, mis-tagged a team_side, or a shootout leaked in, this will disagree
+    // with matchInfo's authoritative score and we fall back to today's
+    // final-score-only behavior for every player in this fixture rather than
+    // risk a wrong per-player conceded count.
+    const concededByTeamFromEvents = {};
+    for (const ce of periodsForSubs.concededEvents) {
+      concededByTeamFromEvents[ce.team] = (concededByTeamFromEvents[ce.team] ?? 0) + 1;
+    }
+    const useTimeOnPitch = !!(lineupsData?.lineups && periodsData?.periods) &&
+      (concededByTeamFromEvents[homeId] ?? 0) === concededByTeam[homeId] &&
+      (concededByTeamFromEvents[awayId] ?? 0) === concededByTeam[awayId];
+    if (!useTimeOnPitch && (lineupsData?.lineups && periodsData?.periods)) {
+      console.log(`[ingest-match-events] Phase 3: event-derived conceded counts disagree with final score for match ${fmid} (events: home=${concededByTeamFromEvents[homeId] ?? 0} away=${concededByTeamFromEvents[awayId] ?? 0}, final: home=${concededByTeam[homeId]} away=${concededByTeam[awayId]}) — falling back to final-score-based goals_conceded`);
+    }
+
     // ── 9. Build player_match_stats upsert rows ───────────────────────────────
     const statsUpserts = [];
 
@@ -464,8 +542,19 @@ Deno.serve(async (req) => {
       const s        = statsMap[fpid] ?? {};
       // Fall back to lineup-derived values for players absent from E10 (e.g. GKs with no stats)
       const teamId   = s.forza_team_id ?? lineupTeamMap[fpid] ?? null;
-      const conceded = teamId ? (concededByTeam[teamId] ?? 0) : 0;
       const mins     = s.minutes_played ?? minutesMap[fpid] ?? 0;
+
+      // Scoring v3 Phase 3: goals conceded only while this player was on the pitch
+      // (see onPitchIntervals), instead of the team's full-match total — falls back
+      // to the final-score-based count when interval data isn't available/trustworthy
+      // for this fixture, or when this specific player never has an interval (e.g.
+      // resolved only via the tournament-wide E10 fallback in step 5c, with no lineup entry).
+      const interval = onPitchIntervals[fpid];
+      const conceded = (useTimeOnPitch && interval)
+        ? periodsForSubs.concededEvents.filter(
+            ce => ce.team === teamId && ce.minute >= interval.start && ce.minute <= interval.end
+          ).length
+        : (teamId ? (concededByTeam[teamId] ?? 0) : 0);
 
       // Penalty save (regular in-match): GKs only. Opposing team missed → this GK saved.
       // (Approximation: can't distinguish save from post/bar, but saves are the vast majority.)
@@ -517,7 +606,8 @@ Deno.serve(async (req) => {
         // From E5 EventDigest — only source for own goals
         own_goals:       ownGoalMap[fpid] ?? 0,
 
-        // Derived from match scores
+        // Time-on-pitch (Scoring v3 Phase 3), falling back to full-match score when
+        // interval data is unavailable/untrustworthy — see `conceded` above.
         goals_conceded:  conceded,
         clean_sheet:     conceded === 0, // minutes gate applied per-position in calculate-scores scorePlayer (GK/DEF≥45, MID≥60)
 

@@ -282,6 +282,13 @@ Deno.serve(async (req) => {
     // Determine clubs in match
     const clubsInMatch = [...new Set(Object.values(clubMap))];
 
+    // Scoring v3 Phase 3: PATH A (ingest-match-events) now computes goals_conceded
+    // from each player's actual on-pitch interval instead of the full-match score.
+    // PATH B intentionally stays on the full-match-score behavior below — this manual/
+    // mock pipeline has no lineup/roster source (only these aggregated events), so
+    // there's no way to know a non-substituted player was on the pitch from minute 0
+    // without guessing. Per the plan's own "skip gracefully when the data isn't there"
+    // rule, PATH B keeps today's known-correct behavior rather than a partial mechanic.
     for (const [pid, stats] of Object.entries(statsMap)) {
       const club         = clubMap[pid];
       // Goals conceded = goals scored by all OTHER clubs in the match
