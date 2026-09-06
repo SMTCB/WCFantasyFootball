@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>66</strong><span>open</span></div>
-      <div class="total-pill"><strong>221</strong><span>closed</span></div>
+      <div class="total-pill"><strong>222</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (141)</span>
+    <span class="chip" data-filter-kind="done">Shipped (142)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">66</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">221</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">222</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">141</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">142</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1362,8 +1362,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">141</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">142</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ light-theme the squad pitch player-detail sheet (2026-09-06) — pr #937 
+
+**context**: user reported that selecting a player on the squad screen&#x27;s pitch tab opens a bottom sheet still styled in the old dark navy color scheme, inconsistent with the rest of the app&#x27;s &quot;kit light&quot; theme (screenshot showed a mid/france player card in dark colors — form squares, &quot;view full stats dashboard&quot;, action buttons all on a dark surface).
+
+**what was built**: retheme of `squadscreen.jsx`&#x27;s player-action bottom sheet and swap-mode banner from the dark `--shell`/`--on-shell-*` token family to the light `--card`/`--rule`/`--elev`/`--mute`/`--gold-text` tokens already used by the app&#x27;s canonical light sheet (`src/components/shared/bottomsheet.jsx`). changed: sheet background/border/shadow, drag handle, position badge, club/captain-pill row text and captain pill colors, close button, form/next fixture divider borders, and the swap-mode banner background/label/cancel button. confirmed via repo-wide grep that the dark `--shell` sticky header used on every screen (squad, market, live, etc.) is a deliberate, unrelated app-wide chrome convention — out of scope and left untouched, along with `--cyan`/`--gold`/`--danger` action-button accents which were already correct.
+
+**verification**: `npm run lint` (0 errors, pre-existing warning count unchanged) and `npm run build` (clean, no rolldown tdz regression) confirmed locally. a live browser check in demo mode wasn&#x27;t possible — the demo account has no clubhouse/league/squad membership, and faking its id client-side doesn&#x27;t work around supabase rls (`auth.uid()` comes from the real auth jwt, which demo mode never creates) — so this shipped on code review + the established `bottomsheet.jsx` token convention rather than a visual screenshot; flagged to the user for a live check.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Light-theme the Squad pitch player-detail sheet</h3>
+        <p class="card-summary">Context : User reported that selecting a player on the Squad screen's Pitch tab opens a bottom sheet still styled in the old dark navy color scheme, inconsistent with…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #937</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Light-theme the Squad pitch player-detail sheet</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : User reported that selecting a player on the Squad screen's Pitch tab opens a bottom sheet still styled in the old dark navy color scheme, inconsistent with…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #937</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: User reported that selecting a player on the Squad screen's Pitch tab opens a bottom sheet still styled in the old dark navy color scheme, inconsistent with the rest of the app's "Kit Light" theme (screenshot showed a MID/France player card in dark colors — form squares, "VIEW FULL STATS DASHBOARD", action buttons all on a dark surface).</p>
+<p><strong>What was built</strong>: Retheme of <code>SquadScreen.jsx</code>'s player-action bottom sheet and swap-mode banner from the dark <code>--shell</code>/<code>--on-shell-*</code> token family to the light <code>--card</code>/<code>--rule</code>/<code>--elev</code>/<code>--mute</code>/<code>--gold-text</code> tokens already used by the app's canonical light sheet (<code>src/components/shared/BottomSheet.jsx</code>). Changed: sheet background/border/shadow, drag handle, position badge, club/captain-pill row text and CAPTAIN pill colors, close button, FORM/NEXT FIXTURE divider borders, and the swap-mode banner background/label/cancel button. Confirmed via repo-wide grep that the dark <code>--shell</code> sticky header used on every screen (Squad, Market, Live, etc.) is a deliberate, unrelated app-wide chrome convention — out of scope and left untouched, along with <code>--cyan</code>/<code>--gold</code>/<code>--danger</code> action-button accents which were already correct.</p>
+<p><strong>Verification</strong>: <code>npm run lint</code> (0 errors, pre-existing warning count unchanged) and <code>npm run build</code> (clean, no Rolldown TDZ regression) confirmed locally. A live browser check in demo mode wasn't possible — the demo account has no clubhouse/league/squad membership, and faking its id client-side doesn't work around Supabase RLS (<code>auth.uid()</code> comes from the real Auth JWT, which demo mode never creates) — so this shipped on code review + the established <code>BottomSheet.jsx</code> token convention rather than a visual screenshot; flagged to the user for a live check.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ club crests + country flags on player rows (2026-09-06) — pr #935, migration 283 
 
 **context**: player rows (squad screen, market screen) showed club/country only as plain text, no visual badge. user approved self-hosting ucl club crests (36 clubs) and hotlinking world cup national flags (48 countries, via flagcdn.com) into a new `club_logos` name→url lookup table, choosing flags over federation crests for wc and scoping to both tournaments.
