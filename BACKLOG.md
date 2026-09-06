@@ -11,6 +11,18 @@
 
 ---
 
+## ✅ Clubhouse invite-code case bug + missing league-join gate (2026-09-06) — PR #946, migration 286
+
+**Two live pilot bugs reported by real users, both fixed same session:**
+
+**Bug 1 — clubhouse/paddock invite links never worked.** `circles.invite_code` and `paddocks.invite_code` are generated lowercase (migrations 188/191, `DEFAULT substring(gen_random_uuid()::text, 1, 8)`, no `upper()`). `join_circle_by_code` compared case-sensitively against the client, which always uppercases input (`useClubhouse.js`) — so no clubhouse invite link or manual code entry could ever succeed. `join_paddock_by_code` had the mirror bug (uppercases input, compares to lowercase column). Tennis (`player_boxes.invite_code`, migration 197) already wraps its DEFAULT in `upper()` and was unaffected. `leagues.join_code` is numeric, so league joins were never affected by this bug class.
+- Fix: migration 286 redefines both RPCs to compare `lower(invite_code) = lower(trim(p_code))`, preserving return types/error codes verbatim from the live definitions. Verified live against the real "Mundial do Eder" invite code post-migration.
+
+**Bug 2 — auto-fill failed mid-flow with "not a member of this league."** `ClubhouseScreen`'s `enterLeague()` navigates any circle member into `/league/:id` for any league linked to the circle (`get_clubhouse_competitions` lists all circle-linked leagues, not just ones the viewer joined). `LeagueScreen`'s `loadLeagueById` set `activeLeague` unconditionally with no `league_members` check, and `MarketScreen` trusted the URL's `leagueId` with no client-side gate either — so a user could build a full 15-player squad in the transfer market UI before hitting the only real enforcement, `process-transfer`'s server-side 403.
+- Fix: `LeagueScreen.jsx` now checks `league_members` in `loadLeagueById` and renders a join-gate screen (prefilled with the league's numeric join code) instead of loading squad/market UI, if the viewer hasn't actually joined. Verified live against the real "Champions Eder 26/27" league and its actual join code.
+
+**Note — unrelated pre-existing CI break found during this PR's merge check**: `tests/unit/scoring-logic.test.js` has been red on `main` for 3 consecutive pushes (since PR #943, "Scoring v3 Phase 1") — 7/24 unit tests fail because the scoring-formula rewrite (clean-sheet minute thresholds, conceded-goal penalty, card/own-goal/missed-penalty deductions, shootout scoring) was never reflected in the test file's expected values. Confirmed via `gh run list --branch main` and a local `node --test` run — not caused by, or touched by, this PR. **Needs its own fix** — the test expectations should be updated to match the new Scoring v3 formula (or the formula reverted, whichever PR #943's author intended).
+
 ## ✅ Scoring v3 Phase 1 — appearance point, minutes bonus, flat +3 assist, card no-stack rule (2026-09-06) — PR #943, migration 285
 
 Phase 1 of the Sept 2026 scoring revision (audited against `Forza Fantasy Points.docx`; plan approved by user). Chips, MVP bonus, and backfill of already-played fixtures are explicitly deferred/out of scope for this and later phases — see the approved plan for full phase breakdown (Phase 2: penalty goals as their own event; Phase 3: time-on-pitch clean sheet/conceded mechanic).
