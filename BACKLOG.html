@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>66</strong><span>open</span></div>
-      <div class="total-pill"><strong>220</strong><span>closed</span></div>
+      <div class="total-pill"><strong>221</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (140)</span>
+    <span class="chip" data-filter-kind="done">Shipped (141)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">66</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">220</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">221</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">140</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">141</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1362,8 +1362,35 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">140</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">141</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ club crests + country flags on player rows (2026-09-06) — pr #935, migration 283 
+
+**context**: player rows (squad screen, market screen) showed club/country only as plain text, no visual badge. user approved self-hosting ucl club crests (36 clubs) and hotlinking world cup national flags (48 countries, via flagcdn.com) into a new `club_logos` name→url lookup table, choosing flags over federation crests for wc and scoping to both tournaments.
+
+**what was built**: migration 283 creates `public.club_logos` (name, type, logo_url) plus a public `club-logos` storage bucket with rls read policy. 36 club crest svgs downloaded and uploaded to that bucket; all 84 rows (36 clubs + 48 countries) inserted after diffing the generated name list byte-for-byte against a live `select distinct club from players` query across both tournaments (zero discrepancies, including special characters — atlético, fenerbahçe, bodø/glimt, türkiye, côte d&#x27;ivoire, curaçao). new `useclublogos` hook fetches the table once per session (shared cache). new `clubcrest` component renders a 20px circular badge, falling back to a dashed ghost ring — never a broken image — when a name isn&#x27;t mapped or the image fails to load. wired into [playerrow.jsx](src/components/playerrow.jsx) (squad + any other row-based list) and [marketscreen.jsx](src/screens/marketscreen.jsx)&#x27;s own inline row markup, between the position chip and player name. not yet wired into `playercard.jsx`&#x27;s compact &quot;pitch&quot; nameplate variant or `matchcard.jsx`&#x27;s existing `teamcrest` placeholder — both explicitly out of scope for this pass.
+
+**ci fix included**: the pr&#x27;s own &quot;schema rehearsal&quot; check failed on the new migration — `storage.buckets`/`storage.objects` don&#x27;t exist on the plain `postgres:15-alpine` container that job rehearses against (a managed-supabase-only schema, same class of gap already tolerated for `cron`/`net`/`http`/`vault`/`realtime`, first hit here by a migration touching storage). extended the job&#x27;s `tolerable` error rege" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Club crests + country flags on player rows</h3>
+        <p class="card-summary">Context : Player rows (Squad screen, Market screen) showed club/country only as plain text, no visual badge. User approved self-hosting UCL club crests (36 clubs) and…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #935, migration 283</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Club crests + country flags on player rows</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : Player rows (Squad screen, Market screen) showed club/country only as plain text, no visual badge. User approved self-hosting UCL club crests (36 clubs) and…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #935, migration 283</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: Player rows (Squad screen, Market screen) showed club/country only as plain text, no visual badge. User approved self-hosting UCL club crests (36 clubs) and hotlinking World Cup national flags (48 countries, via flagcdn.com) into a new <code>club_logos</code> name→URL lookup table, choosing flags over federation crests for WC and scoping to both tournaments.</p>
+<p><strong>What was built</strong>: Migration 283 creates <code>public.club_logos</code> (name, type, logo_url) plus a public <code>club-logos</code> Storage bucket with RLS read policy. 36 club crest SVGs downloaded and uploaded to that bucket; all 84 rows (36 clubs + 48 countries) inserted after diffing the generated name list byte-for-byte against a live <code>SELECT DISTINCT club FROM players</code> query across both tournaments (zero discrepancies, including special characters — Atlético, Fenerbahçe, Bodø/Glimt, Türkiye, Côte d'Ivoire, Curaçao). New <code>useClubLogos</code> hook fetches the table once per session (shared cache). New <code>ClubCrest</code> component renders a 20px circular badge, falling back to a dashed ghost ring — never a broken image — when a name isn't mapped or the image fails to load. Wired into <a href="src/components/PlayerRow.jsx" target="_blank" rel="noopener">PlayerRow.jsx</a> (Squad + any other row-based list) and <a href="src/screens/MarketScreen.jsx" target="_blank" rel="noopener">MarketScreen.jsx</a>'s own inline row markup, between the position chip and player name. Not yet wired into <code>PlayerCard.jsx</code>'s compact "pitch" nameplate variant or <code>MatchCard.jsx</code>'s existing <code>TeamCrest</code> placeholder — both explicitly out of scope for this pass.</p>
+<p><strong>CI fix included</strong>: the PR's own "Schema Rehearsal" check failed on the new migration — <code>storage.buckets</code>/<code>storage.objects</code> don't exist on the plain <code>postgres:15-alpine</code> container that job rehearses against (a managed-Supabase-only schema, same class of gap already tolerated for <code>cron</code>/<code>net</code>/<code>http</code>/<code>vault</code>/<code>realtime</code>, first hit here by a migration touching Storage). Extended the job's <code>TOLERABLE</code> error regex in <code>.github/workflows/ci.yml</code> to include <code>storage</code>.</p>
+<p><strong>Verification</strong>: <code>npm run lint</code> 0 errors, <code>npm run build</code> clean (no Rolldown TDZ regression), full PR CI green (Lint/Build/Security/Schema Rehearsal/Unit/E2E/Tier 3/iOS/Android). Visual verification in a running browser (real crests/flags rendering, not the ghost fallback) was <strong>not completed this session</strong> — blocked by a Browser-pane permission denial (<code>navigate</code>/reload/key-press all refused by the run-mode classifier) with no real league visible under the local demo-mode account. User will check the live badges post-merge and report back.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ tier 3 e2e-local fix — stale schema.sql snapshot missing migration 281 (2026-09-06) — pr #932 
 
 **context**: ci&#x27;s &quot;tier 3 local full-stack e2e&quot; check was failing on `main` (run 33927999209, reproduced on pr #931): `draft-allocation-e2e.spec.js` timed out waiting for the circle-picker, and `trophy-cabinet-screen.spec.js` rendered &quot;no trophies yet&quot; instead of the seeded trophy, on both desktop-chrome and mobile-chrome.
