@@ -175,15 +175,32 @@ export function useClubhouse() {
   }, [fetchMyCircles, setActiveCircleId]);
 
   const joinCircleByCode = useCallback(async (code) => {
+    const trimmed = code.trim().toUpperCase();
     const { data, error: err } = await supabase.rpc('join_circle_by_code', {
-      p_code: code.trim().toUpperCase(),
+      p_code: trimmed,
     });
     if (err) throw err;
+    if (data?.error === 'ALREADY_MEMBER') {
+      // Not a real failure from the caller's perspective (e.g. re-clicking a
+      // WhatsApp invite link to a Clubhouse already joined) — the RPC's error
+      // response has no circle_id, so resolve it ourselves and let the caller
+      // navigate in as if the join had just succeeded.
+      const { data: rows } = await supabase
+        .from('circle_members')
+        .select('circles(id, invite_code)')
+        .eq('user_id', user.id);
+      const match = (rows ?? []).find(r => r.circles?.invite_code?.toUpperCase() === trimmed);
+      if (match) {
+        setActiveCircleId(match.circles.id);
+        return match.circles.id;
+      }
+      throw new Error(data.error);
+    }
     if (data?.error) throw new Error(data.error);
     setActiveCircleId(data.circle_id);
     await fetchMyCircles();
     return data.circle_id;
-  }, [fetchMyCircles, setActiveCircleId]);
+  }, [fetchMyCircles, setActiveCircleId, user?.id]);
 
   const searchClubhouses = useCallback(async (query) => {
     const { data, error: err } = await supabase.rpc('search_clubhouses', { p_query: query.trim() });
