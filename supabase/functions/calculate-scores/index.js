@@ -38,25 +38,27 @@ const supabase = createClient(
 const logError = (severity, message, context = {}) => _logError('calculate-scores', severity, message, context);
 
 // ─── Hard-coded fallback scoring (used only if scoring_rules table is empty) ───
-// These match the EPL 2025/26 season rules exactly.
+// Baseline ruleset — kept in step with the scoring_rules rows for tournaments 429/1593
+// (v3 revision) so a tournament with no DB rows doesn't inherit a stale/divergent ruleset.
 
 const FALLBACK_POINTS = {
   GK:  { goal: 5, assist: 3, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 5, save: 0.5,  tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
-  DEF: { goal: 5, assist: 2, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0.5, interception: 0.25, penalty_scored: 0, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
-  MID: { goal: 4, assist: 2, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0.25, shot_on_target: 0.5,  big_chance_created: 0 },
-  FWD: { goal: 4, assist: 2, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0,    shot_on_target: 0.25, big_chance_created: 1.0 },
+  DEF: { goal: 5, assist: 3, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0.5, interception: 0.25, penalty_scored: 0, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
+  MID: { goal: 4, assist: 3, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0.25, shot_on_target: 0.5,  big_chance_created: 0 },
+  FWD: { goal: 4, assist: 3, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0,    shot_on_target: 0.25, big_chance_created: 1.0 },
 };
 
 const FALLBACK_UNIVERSAL = {
-  minute_per_90:    1,
-  own_goal:         -2,
-  yellow_card:      -1,
-  red_card:         -3,
-  penalty_missed:   -1,
+  appearance:        1,
+  minutes_60_bonus:  1,
+  own_goal:          -2,
+  yellow_card:       -1,
+  red_card:          -3,
+  penalty_missed:    -2,
   // Penalty shootout — scored differently from regular in-match penalties
-  shootout_scored:  1,
-  shootout_missed:  -1,
-  shootout_saved:   0.5,   // GK only (applied per save, not per miss — ingest sets correct count)
+  shootout_scored:   1,
+  shootout_missed:   -1,
+  shootout_saved:    0.5,   // GK only (applied per save, not per miss — ingest sets correct count)
 };
 
 // ─── Load scoring rules from DB ────────────────────────────────────────────────

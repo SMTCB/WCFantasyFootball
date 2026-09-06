@@ -26,7 +26,7 @@ const POSITIONS = [
     pos: 'DEF', color: 'var(--cyan)',
     rules: [
       { label: 'Goal',               val: '+6' },
-      { label: 'Assist',             val: '+2' },
+      { label: 'Assist',             val: '+3' },
       { label: 'Clean Sheet',        val: '+4', note: '45+ min' },
       { label: 'Tackle Won',         val: '+0.5' },
       { label: 'Interception',       val: '+0.25' },
@@ -40,7 +40,7 @@ const POSITIONS = [
     pos: 'MID', color: 'var(--positive)',
     rules: [
       { label: 'Goal',               val: '+5' },
-      { label: 'Assist',             val: '+2' },
+      { label: 'Assist',             val: '+3' },
       { label: 'Clean Sheet',        val: '+1', note: '60+ min' },
       { label: 'Tackle Won',         val: '+0.5' },
       { label: 'Interception',       val: '+0.25' },
@@ -53,7 +53,7 @@ const POSITIONS = [
     pos: 'FWD', color: 'var(--danger)',
     rules: [
       { label: 'Goal',               val: '+4' },
-      { label: 'Assist',             val: '+2' },
+      { label: 'Assist',             val: '+3' },
       { label: 'Tackle Won',         val: '+0.5' },
       { label: 'Interception',       val: '+0.25' },
       { label: 'Key Pass',           val: '+0.25' },
@@ -64,13 +64,14 @@ const POSITIONS = [
 ];
 
 const UNIVERSAL = [
-  { label: 'Minutes (per 60)', val: '+1',  neg: false },
-  { label: 'Yellow Card',      val: '−1',  neg: true  },
-  { label: 'Red Card',         val: '−3',  neg: true  },
-  { label: 'Own Goal',         val: '−2',  neg: true  },
-  { label: 'Penalty Missed',   val: '−2',  neg: true  },
-  { label: 'Shootout Goal',    val: '+1',  neg: false },
-  { label: 'Shootout Miss',    val: '−1',  neg: true  },
+  { label: 'Appearance',        val: '+1',  neg: false, note: 'any minutes played' },
+  { label: '60+ Min Bonus',     val: '+1',  neg: false, note: 'max +2 total' },
+  { label: 'Yellow Card',       val: '−1',  neg: true  },
+  { label: 'Red Card',          val: '−3',  neg: true  },
+  { label: 'Own Goal',          val: '−2',  neg: true  },
+  { label: 'Penalty Missed',    val: '−2',  neg: true  },
+  { label: 'Shootout Goal',     val: '+1',  neg: false },
+  { label: 'Shootout Miss',     val: '−1',  neg: true  },
 ];
 
 const SQUAD_RULES = [
@@ -91,7 +92,7 @@ const TABS = [
 ];
 
 const TAB_META = {
-  scoring:    { title: 'SCORING SYSTEM',  sub: 'V2 — ADDITIVE · EVERY POINT TRACEABLE' },
+  scoring:    { title: 'SCORING SYSTEM',  sub: 'V3 — ADDITIVE · EVERY POINT TRACEABLE' },
   rules:      { title: 'SQUAD RULES',     sub: 'FORMATION & LIMITS'                    },
   game_rules: { title: 'GAME RULES',      sub: 'TRANSFERS · LINEUPS · CAPTAIN'         },
 };
@@ -215,12 +216,16 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             ))}
 
             <Section title="ALL POSITIONS" accent="var(--mute)">
-              {UNIVERSAL.map(({ label, val, neg }) => (
-                <Row key={label} label={label} val={val} valColor={neg ? 'var(--danger)' : 'var(--positive)'} />
+              {UNIVERSAL.map(({ label, val, neg, note }) => (
+                <Row key={label} label={label} val={val} note={note} valColor={neg ? 'var(--danger)' : 'var(--positive)'} />
               ))}
             </Section>
 
             <div style={{ margin: '16px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
+              A RED CARD SUPERSEDES ANY YELLOW IN THE SAME MATCH — CAPPED AT −3 TOTAL, NEVER STACKED
+            </div>
+
+            <div style={{ margin: '10px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
               CAPTAIN ×2 · TRIPLE CAPTAIN ×3 · JOKER ×2 · CHIPS DO NOT STACK — MAX APPLIES
             </div>
           </>
