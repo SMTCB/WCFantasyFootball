@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>231</strong><span>closed</span></div>
+      <div class="total-pill"><strong>232</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (150)</span>
+    <span class="chip" data-filter-kind="done">Shipped (151)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">231</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">232</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">150</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">151</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,7 +1396,7 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">150</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">151</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ fix desktop squad-list logo blink + white live pitch league name (2026-09-06) — pr #955 
 
@@ -1523,6 +1523,27 @@
 <li>Fix: <code>LeagueScreen.jsx</code> now checks <code>league_members</code> in <code>loadLeagueById</code> and renders a join-gate screen (prefilled with the league's numeric join code) instead of loading squad/market UI, if the viewer hasn't actually joined. Verified live against the real "Champions Eder 26/27" league and its actual join code.</li>
 </ul>
 <p><strong>Note — unrelated pre-existing CI break found during this PR's merge check</strong>: <code>tests/unit/scoring-logic.test.js</code> has been red on <code>main</code> for 3 consecutive pushes (since PR #943, "Scoring v3 Phase 1") — 7/24 unit tests fail because the scoring-formula rewrite (clean-sheet minute thresholds, conceded-goal penalty, card/own-goal/missed-penalty deductions, shootout scoring) was never reflected in the test file's expected values. Confirmed via <code>gh run list --branch main</code> and a local <code>node --test</code> run — not caused by, or touched by, this PR. <strong>Needs its own fix</strong> — the test expectations should be updated to match the new Scoring v3 formula (or the formula reverted, whichever PR #943's author intended).</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ scoring v3 phase 3 — time-on-pitch clean sheet &amp; goals-conceded (2026-09-06) — pr #957, checksums pr #958 
+
+final phase of the sept 2026 scoring revision (see phase 1 entry below for the approved plan/scope). clean sheet and goals-conceded no longer key off the final match score — path a (`ingest-match-events`) now builds each player&#x27;s actual on-pitch interval `[start, end]` from lineup/substitution data and only counts goals conceded while that player was on the pitch, with the doc&#x27;s explicit exception that a red card does not shorten the player&#x27;s exposure window (their interval still runs to full time, since the team stays a player down for the rest of the match). a self-consistency safety net (`usetimeonpitch`) cross-checks the new per-player tally against the authoritative final-score conceded count for both teams before trusting it, falling back to the prior final-score-based behavior whenever lineup/period data is missing or the counts disagree — guards against own-goal mis-attribution or incomplete event data. path b (`calculate-scores` manual/mock pipeline) has no lineup/roster source at all, so it intentionally keeps today&#x27;s final-score-based behavior rather than guessing, per the plan&#x27;s own &quot;skip gracefully when the data isn&#x27;t there&quot; rule. `scoringinfomodal.jsx` updated with a caption explaining the mechanic. no migration was needed — this is a pure logic change, `scoring_rules` point values are untouched. verified via a standalone hand-trace script covering substitution, red-card, and unused-bench-player scenarios before deploy. this completes all three phases of scoring revision v3 (phases 1–3 all shipped) — chips, mvp bonus, and backfill of already-played fixtures remain explicitly out of scope. open follow-up: a manual spot-check of a real live fixture&#x27;s `goals_conceded`/`clean_sheet` values once a match with a substitution or red card occurs post-deploy.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Scoring v3 Phase 3 — time-on-pitch clean sheet &amp; goals-conceded</h3>
+        <p class="card-summary">Final phase of the Sept 2026 scoring revision (see Phase 1 entry below for the approved plan/scope). Clean sheet and goals-conceded no longer key off the final match…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #957, checksums PR #958</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Scoring v3 Phase 3 — time-on-pitch clean sheet &amp; goals-conceded</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Final phase of the Sept 2026 scoring revision (see Phase 1 entry below for the approved plan/scope). Clean sheet and goals-conceded no longer key off the final match…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #957, checksums PR #958</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Final phase of the Sept 2026 scoring revision (see Phase 1 entry below for the approved plan/scope). Clean sheet and goals-conceded no longer key off the final match score — PATH A (<code>ingest-match-events</code>) now builds each player's actual on-pitch interval <code>[start, end]</code> from lineup/substitution data and only counts goals conceded while that player was on the pitch, with the doc's explicit exception that a red card does NOT shorten the player's exposure window (their interval still runs to full time, since the team stays a player down for the rest of the match). A self-consistency safety net (<code>useTimeOnPitch</code>) cross-checks the new per-player tally against the authoritative final-score conceded count for both teams before trusting it, falling back to the prior final-score-based behavior whenever lineup/period data is missing or the counts disagree — guards against own-goal mis-attribution or incomplete event data. PATH B (<code>calculate-scores</code> manual/mock pipeline) has no lineup/roster source at all, so it intentionally keeps today's final-score-based behavior rather than guessing, per the plan's own "skip gracefully when the data isn't there" rule. <code>ScoringInfoModal.jsx</code> updated with a caption explaining the mechanic. No migration was needed — this is a pure logic change, <code>scoring_rules</code> point values are untouched. Verified via a standalone hand-trace script covering substitution, red-card, and unused-bench-player scenarios before deploy. This completes all three phases of Scoring Revision v3 (Phases 1–3 all shipped) — chips, MVP bonus, and backfill of already-played fixtures remain explicitly out of scope. Open follow-up: a manual spot-check of a real live fixture's <code>goals_conceded</code>/<code>clean_sheet</code> values once a match with a substitution or red card occurs post-deploy.</p></dd></div>
       </dl></template>
       </article>
 
