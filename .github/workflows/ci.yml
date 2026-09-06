@@ -251,14 +251,16 @@ jobs:
         run: |
           # Same managed-platform-feature gap as the "Load schema.sql" step above:
           # postgres:15-alpine has no pg_cron/pg_net/http/supabase_vault/
-          # supabase_realtime, so a migration calling cron.schedule() etc. (valid
-          # against real prod, which has these) fails here on a missing
-          # schema/extension, not a real bug — first hit by migrations 272-275
-          # (all cron.schedule/cron.unschedule/cron.job). Tolerate ONLY that
-          # error class per file; anything else (syntax errors, real constraint
-          # violations, etc.) still fails the job via ON_ERROR_STOP=0 + a
-          # post-hoc scan of the log, rather than ON_ERROR_STOP=1's hard stop.
-          TOLERABLE='schema "(cron|net|http|vault)" does not exist|extension "(pg_cron|pg_net|http|supabase_vault)"|function (cron|net|http)\.[a-zA-Z_]+\(|relation "(cron|net|http|vault|realtime)\.[a-zA-Z_.]+" does not exist|publication "supabase_realtime" does not exist'
+          # supabase_realtime/storage, so a migration calling cron.schedule() or
+          # inserting into storage.buckets (valid against real prod, which has
+          # these) fails here on a missing schema/extension, not a real bug —
+          # first hit by migrations 272-275 (cron.schedule/unschedule/job), and
+          # by migration 283 (storage.buckets/storage.objects, for a Storage
+          # bucket + its RLS policies). Tolerate ONLY that error class per file;
+          # anything else (syntax errors, real constraint violations, etc.)
+          # still fails the job via ON_ERROR_STOP=0 + a post-hoc scan of the
+          # log, rather than ON_ERROR_STOP=1's hard stop.
+          TOLERABLE='schema "(cron|net|http|vault|storage)" does not exist|extension "(pg_cron|pg_net|http|supabase_vault)"|function (cron|net|http)\.[a-zA-Z_]+\(|relation "(cron|net|http|vault|realtime|storage)\.[a-zA-Z_.]+" does not exist|publication "supabase_realtime" does not exist'
 
           FAILED=0
           while IFS= read -r f; do
