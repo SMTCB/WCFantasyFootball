@@ -15,6 +15,7 @@ import OnboardingTour  from '../components/OnboardingTour';
 import ConfirmModal    from '../components/ConfirmModal';
 import PositionChip    from '../components/PositionChip';
 import StatusDot       from '../components/StatusDot';
+import ClubCrest       from '../components/ClubCrest';
 import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { usePlayerScoreDetail } from '../hooks/usePlayerScoreDetail';
@@ -1283,6 +1284,9 @@ export default function MarketScreen() {
               >
                 {/* Position chip — replaces circle avatar */}
                 <PositionChip pos={p.position} />
+
+                {/* Club crest */}
+                <ClubCrest name={p.club} />
 
                 {/* Status dot + name block */}
                 <div className="flex-1 min-w-0 flex items-center gap-2">
