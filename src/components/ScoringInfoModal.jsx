@@ -231,6 +231,10 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             </div>
 
             <div style={{ margin: '10px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
+              CLEAN SHEET &amp; GOALS CONCEDED COUNT ONLY WHAT HAPPENS WHILE YOU'RE ACTUALLY ON THE PITCH — A RED CARD DOESN'T SHORTEN YOUR EXPOSURE FOR THE REST OF THE MATCH
+            </div>
+
+            <div style={{ margin: '10px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
               CAPTAIN ×2 · TRIPLE CAPTAIN ×3 · JOKER ×2 · CHIPS DO NOT STACK — MAX APPLIES
             </div>
           </>
