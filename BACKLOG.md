@@ -11,6 +11,18 @@
 
 ---
 
+## ✅ Tier 3 e2e-local fix — stale schema.sql snapshot missing migration 281 (2026-09-06) — PR #932
+
+**Context**: CI's "Tier 3 Local Full-Stack E2E" check was failing on `main` (run 33927999209, reproduced on PR #931): `draft-allocation-e2e.spec.js` timed out waiting for the circle-picker, and `trophy-cabinet-screen.spec.js` rendered "No trophies yet" instead of the seeded trophy, on both desktop-chrome and mobile-chrome.
+
+**Root cause**: test-infra staleness, not an app regression. `scripts/e2e-local.mjs` bootstraps the local Tier 3 DB from `supabase/schema.sql` (a pg_dump snapshot) plus a hand-maintained `PENDING_MIGRATIONS` allowlist for anything merged after the snapshot was taken. `281_clubhouse_archive.sql` (adds `circles.archived`/`archived_at`, merged 2026-09-04 via PR #928) was never added to that allowlist, so every local/CI Tier 3 run hit Postgres `42703` (`column circles_1.archived does not exist`) inside `useClubhouse.js`'s `fetchMyCircles()` circle join — breaking circle resolution app-wide, which cascaded into both failing specs.
+
+**Fix**: added `'281_clubhouse_archive.sql'` to `PENDING_MIGRATIONS`. No migration file or app code touched.
+
+**Verified**: full `npm run test:e2e:local` clean (both originally-failing specs pass on both browser projects; the 24 additional failures seen in one interim run were traced to a stale local Docker `edge_runtime` container 4 days out of date on this machine, unrelated to the fix, and cleared after `supabase stop`/`start`); `npm run lint` 0 errors; `npm run build` clean (no Rolldown TDZ regression); `npx playwright test e2e/platform.spec.js` 84/84 passed; PR's own CI green across all checks including Tier 3 itself. No migration applied to production, no Edge Function deployed, no `db query --linked` write.
+
+---
+
 ## ✅ Transfer-window banner text + wishlist drag/scroll UX fix (2026-09-04) — PR #922
 
 **Context**: Two related-but-separate UX bugs reported from the same session: (1) draft leagues (and other no-penalty situations) showed the generic "Free transfers available · extra buys cost points" banner copy even though draft-league transfers are never penalized — misleading for managers deciding whether to make a move. (2) On mobile, reordering a long wishlist by dragging silently broke the list's ability to scroll, because the drag sensor's `touch-action: none` was applied to the whole row.
