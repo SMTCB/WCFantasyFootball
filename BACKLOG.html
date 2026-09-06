@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>230</strong><span>closed</span></div>
+      <div class="total-pill"><strong>231</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (149)</span>
+    <span class="chip" data-filter-kind="done">Shipped (150)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">230</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">231</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">149</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">150</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">149</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">150</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ fix desktop squad-list logo blink + white live pitch league name (2026-09-06) — pr #955 
+
+**user report**: &quot;the club logos in the desktop in list view seem to be blinking&quot; + &quot;on the live view can you also change the league name (to the right) to white font.&quot;
+
+- root cause of the blink: `squadscreen.jsx`&#x27;s desktop list tab renders a `playerlist` helper defined as `const playerlist = () =&gt; {...}` **inside** the component body, then invoked as `&lt;playerlist /&gt;` (jsx component syntax). redefining it every render gives it a new identity each render, so react treats it as a new component type and unmounts/remounts the whole list subtree — including every `clubcrest` inside `playerrow` — which resets each crest&#x27;s local image-load state back to its ghost-ring placeholder before flipping back to the cached image. this screen also runs a `setinterval(tick, 1000)` countdown that ticks state once a second, so the list (and its logos) visibly blinked roughly once per second.
+- fix: call `playerlist()` as a plain function (`{playerlist()}`) instead of rendering it as jsx (`&lt;playerlist /&gt;`), so its output is inlined into the parent&#x27;s own element tree and diffed normally by key instead of torn down and rebuilt every render.
+- `livescreen.jsx`&#x27;s `minipitch` header league name now uses `--on-shell` (white) instead of the league&#x27;s own accent tone.
+- verification note: could not exercise live in the browser — the local demo account has no real league/squad data to load these screens with, and creating some would mean writing rows into the live pilot db. verified via careful code-path tracing (`playercard variant=&quot;row&quot;` → `playerrow` → `clubcrest`, plus the 1s interval as the render trigger) and clean `lint`/`build`.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Fix desktop squad-list logo blink + white Live pitch league name</h3>
+        <p class="card-summary">User report : "the club logos in the desktop in list view seem to be blinking" + "on the live view can you also change the league name (to the right) to white font."…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-06</span><span class="foot-refs">PR #955</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Fix desktop squad-list logo blink + white Live pitch league name</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User report : "the club logos in the desktop in list view seem to be blinking" + "on the live view can you also change the league name (to the right) to white font."…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #955</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-06</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>User report</strong>: "the club logos in the desktop in list view seem to be blinking" + "on the live view can you also change the league name (to the right) to white font."</p>
+<ul>
+<li>Root cause of the blink: <code>SquadScreen.jsx</code>'s desktop LIST tab renders a <code>PlayerList</code> helper defined as <code>const PlayerList = () =&gt; {...}</code> <strong>inside</strong> the component body, then invoked as <code>&lt;PlayerList /&gt;</code> (JSX component syntax). Redefining it every render gives it a new identity each render, so React treats it as a new component type and unmounts/remounts the whole list subtree — including every <code>ClubCrest</code> inside <code>PlayerRow</code> — which resets each crest's local image-load state back to its ghost-ring placeholder before flipping back to the cached image. This screen also runs a <code>setInterval(tick, 1000)</code> countdown that ticks state once a second, so the list (and its logos) visibly blinked roughly once per second.</li>
+<li>Fix: call <code>PlayerList()</code> as a plain function (<code>{PlayerList()}</code>) instead of rendering it as JSX (<code>&lt;PlayerList /&gt;</code>), so its output is inlined into the parent's own element tree and diffed normally by key instead of torn down and rebuilt every render.</li>
+<li><code>LiveScreen.jsx</code>'s <code>MiniPitch</code> header league name now uses <code>--on-shell</code> (white) instead of the league's own accent tone.</li>
+<li>Verification note: could not exercise live in the browser — the local demo account has no real league/squad data to load these screens with, and creating some would mean writing rows into the live pilot DB. Verified via careful code-path tracing (<code>PlayerCard variant="row"</code> → <code>PlayerRow</code> → <code>ClubCrest</code>, plus the 1s interval as the render trigger) and clean <code>lint</code>/<code>build</code>.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ squad formation self-heal + club logos on squad/live pitches (2026-09-06) — pr #953 
 
 **user report with screenshot**: after auto-fill, &quot;champions eder 26/27&quot; squad `79e12342...` had a starting xi of 1 gk / 5 def / 5 mid / 0 fwd (all showing 0 pts), with bench holding 3 fwd + 1 gk. also requested: club logos on the squad pitch view (desktop+mobile) and the mobile squad list tab (desktop list already had them), and a retheme of the desktop live pitch to match the squad screen&#x27;s styling (was flat dark navy) plus club logos there too.
