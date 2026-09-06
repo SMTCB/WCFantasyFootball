@@ -1982,7 +1982,7 @@ export default function SquadScreen() {
                 {autoFillMsg && (
                   <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
                 )}
-                <PlayerList />
+                {PlayerList()}
               </div>
             </>
           )}
