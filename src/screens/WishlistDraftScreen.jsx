@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWishlistDraft } from '../hooks/useWishlistDraft';
+import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
+import { useLeagueConfig } from '../hooks/useLeagueConfig';
+import { usePlayerStats } from '../hooks/usePlayerStats';
+import { usePlayerScoreDetail } from '../hooks/usePlayerScoreDetail';
+import ClubCrest from '../components/ClubCrest';
+import FormStrip from '../components/FormStrip';
+import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
+import WishlistInfoModal from '../components/WishlistInfoModal';
 import {
   DndContext,
   closestCenter,
@@ -102,12 +110,18 @@ export default function WishlistDraftScreen() {
   const [clubSearch,     setClubSearch]     = useState('');
   const [showClubPicker, setShowClubPicker] = useState(false);
   const [search,         setSearch]         = useState('');
-  const [expandedId,     setExpandedId]     = useState(null);
   const [finalized,      setFinalized]      = useState(false);
   const [lastSaved,      setLastSaved]      = useState(null);
   const [saveError,      setSaveError]      = useState(null);
   const [hydrated,       setHydrated]       = useState(false);
+  const [showInfoModal,        setShowInfoModal]        = useState(false);
+  const [statsDashboardPlayer, setStatsDashboardPlayer]  = useState(null);
   const dirtyRef = useRef(false);
+
+  const cfg = useLeagueConfig(leagueId);
+  const { ownershipMap } = useLeagueOwnership(leagueId);
+  const { statsMap } = usePlayerStats(cfg.tournamentId);
+  const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
 
   const isLocked = submissionStatus === 'processed';
 
@@ -130,23 +144,26 @@ export default function WishlistDraftScreen() {
     return names;
   }, [playerPool]);
 
-  // Target pool excludes players already owned (nothing to "target" there —
-  // use the drop panel to release them) and players already ranked.
+  // Target pool excludes players already owned — by this manager (nothing to
+  // "target" there, use the drop panel to release them) or by ANY other squad
+  // in the league (via ownershipMap — a draft league has no free market, so a
+  // rostered player simply isn't a legal target) — and players already ranked.
   const filteredPool = useMemo(() => {
     return playerPool.filter(p => {
       if (listedIds.has(p.id) || ownedIds.has(p.id)) return false;
+      if (ownershipMap[p.id] > 0) return false;
       if (filterPos !== 'ALL' && p.position !== filterPos) return false;
       if (filterClubs.size > 0 && !filterClubs.has(p.club)) return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [playerPool, listedIds, ownedIds, filterPos, filterClubs, search]);
+  }, [playerPool, listedIds, ownedIds, ownershipMap, filterPos, filterClubs, search]);
 
   const addTarget = (player) => {
     if (targets.length >= maxTargets) return;
     setTargets(prev => (prev.some(p => p.id === player.id) ? prev : [...prev, player]));
     dirtyRef.current = true;
-    setExpandedId(null);
+    if (expandedPlayerId === player.id) togglePanel(player.id); // close the expanded panel
   };
 
   const removeTarget = (id) => {
@@ -251,6 +268,17 @@ export default function WishlistDraftScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocked, hydrated]);
 
+  // SAVE checkpoints the current list without leaving the editing screen —
+  // useful on top of the silent auto-save so managers get an explicit
+  // confirmation their changes are persisted.
+  const handleSave = async () => {
+    if (targets.length === 0 && dropIds.size === 0) return;
+    await doSave(targets.map(p => p.id), [...dropIds]);
+  };
+
+  // SUBMIT saves and shows the confirmation screen — but doesn't lock
+  // anything server-side, so managers can still return and keep editing
+  // (via "Edit list") right up until the round resolves.
   const handleSubmit = async () => {
     if (targets.length === 0 && dropIds.size === 0) return;
     const result = await doSave(targets.map(p => p.id), [...dropIds]);
@@ -328,21 +356,45 @@ export default function WishlistDraftScreen() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
 
-      {/* Header */}
-      <div className="bg-[var(--shell)] border-b border-[var(--rule)] px-4 pt-10 pb-4 sticky top-0 z-20">
-        <div className="flex items-center justify-between mb-3">
-          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--on-shell-dim)] text-[20px] leading-none">←</button>
-          <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--on-shell-dim)] font-serif">
-              Wishlist Draft
-            </div>
-            <div className="text-[var(--paper)] font-black text-[15px] uppercase tracking-wider">
-              Round {roundNumber}
+      {/* Header — styled to match the app's other sticky screen headers (Market, Live) */}
+      <div
+        className="sticky top-0 z-20"
+        style={{
+          background: 'var(--shell)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid var(--shell-rule)',
+        }}
+      >
+        <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between gap-3">
+          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--on-shell-dim)] text-[20px] leading-none shrink-0">←</button>
+          <div className="flex-1 text-center">
+            <div className="fz-label" style={{ color: 'var(--on-shell-dim)' }}>Wishlist Draft</div>
+            <div className="flex items-center justify-center gap-2 mt-0.5">
+              <div
+                className="text-[16px] font-black uppercase tracking-tight"
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: '#fff' }}
+              >
+                Round {roundNumber}
+              </div>
+              <button
+                onClick={() => setShowInfoModal(true)}
+                title="What is the Wishlist Draft?"
+                style={{
+                  width: 20, height: 20, borderRadius: '50%',
+                  border: '1px solid var(--shell-rule-strong)',
+                  background: 'var(--shell-fill)',
+                  color: 'var(--on-shell-dim)',
+                  fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >?</button>
             </div>
           </div>
-          <div className="w-6" />
+          <div className="w-5 shrink-0" />
         </div>
-        <div className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest text-center">
+        <div className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest text-center pb-2.5">
           No fixed deadline — resolves automatically before the market opens
         </div>
       </div>
@@ -541,28 +593,49 @@ export default function WishlistDraftScreen() {
             )}
             {filteredPool.map(p => {
               const disabled = targets.length >= maxTargets;
-              const isExpanded = expandedId === p.id;
+              const isExpanded = expandedPlayerId === p.id;
+              const detail = playerDetails[p.id];
               return (
                 <div key={p.id}>
                   <div
-                    className={`flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
-                    onClick={() => !disabled && setExpandedId(isExpanded ? null : p.id)}
+                    className={`flex items-center gap-2.5 bg-[var(--card)] rounded-sm px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
+                    onClick={() => !disabled && togglePanel(p.id)}
                   >
                     <span className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}>
                       {p.position}
                     </span>
-                    <span className="text-[var(--paper)] text-[12px] font-bold flex-1 truncate">{p.name}</span>
-                    <span className="text-[var(--mute)] text-[11px] shrink-0">{p.club}</span>
+                    <ClubCrest name={p.club} size={22} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[var(--paper)] text-[12px] font-bold truncate">{p.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[var(--mute)] text-[10px] truncate">{p.club}</span>
+                        <FormStrip rounds={(statsMap[p.id] || []).slice(0, 5)} />
+                      </div>
+                    </div>
                     <span className="text-[var(--mute)] text-[11px] font-bold shrink-0">€{p.price}M</span>
                     {!disabled && <span className="text-[var(--mute)] text-[11px] shrink-0">{isExpanded ? '▲' : '+'}</span>}
                   </div>
                   {isExpanded && !disabled && (
-                    <div className="border border-[var(--rule)] border-t-0 rounded-b-lg px-3 py-2 flex items-center justify-between" style={{ background: 'var(--elev)' }}>
-                      <div className="text-[10px] text-[var(--mute)]">#{targets.length + 1} priority</div>
+                    <div className="border border-[var(--rule)] border-t-0 rounded-b-lg px-3 py-2.5 flex items-center justify-between gap-2" style={{ background: 'var(--elev)' }}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="text-[10px] text-[var(--mute)] shrink-0">#{targets.length + 1} priority</div>
+                        {detail?.season && (
+                          <div className="text-[10px] text-[var(--mute)] truncate">
+                            {detail.season.apps} apps · {detail.season.goals}G {detail.season.assists}A · {detail.season.avgPts} avg
+                          </div>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setStatsDashboardPlayer(p); }}
+                          className="text-[9px] font-black uppercase tracking-widest shrink-0"
+                          style={{ color: 'var(--cyan)' }}
+                        >
+                          Stats ↗
+                        </button>
+                      </div>
                       <button
-                        onClick={() => addTarget(p)}
-                        className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
+                        onClick={(e) => { e.stopPropagation(); addTarget(p); }}
+                        className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform shrink-0"
                         style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
                       >
                         Add to List
@@ -582,11 +655,23 @@ export default function WishlistDraftScreen() {
         </div>
       )}
 
-      <div className="bg-[var(--shell)] border-t border-[var(--rule)] px-4 py-4">
+      <div className="bg-[var(--shell)] border-t border-[var(--rule)] px-4 py-4 flex gap-2">
+        <button
+          onClick={handleSave}
+          disabled={(targets.length === 0 && dropIds.size === 0) || saving}
+          className="flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+          style={{
+            background: 'var(--elev)',
+            border: '1px solid var(--rule)',
+            color: 'var(--paper)',
+          }}
+        >
+          {saving ? 'Saving...' : 'Save'}
+        </button>
         <button
           onClick={handleSubmit}
           disabled={(targets.length === 0 && dropIds.size === 0) || saving}
-          className="w-full py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+          className="flex-[2] py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
             background:      (targets.length > 0 || dropIds.size > 0) ? 'var(--positive)' : undefined,
             color:           (targets.length > 0 || dropIds.size > 0) ? '#fff'            : 'var(--on-shell-dim)',
@@ -596,6 +681,16 @@ export default function WishlistDraftScreen() {
           {saving ? 'Saving...' : (targets.length === 0 && dropIds.size === 0) ? 'Add targets or releases' : `Submit (${targets.length} targets, ${dropIds.size} releases)`}
         </button>
       </div>
+
+      {showInfoModal && <WishlistInfoModal onClose={() => setShowInfoModal(false)} />}
+
+      {statsDashboardPlayer && (
+        <PlayerStatsDashboard
+          player={statsDashboardPlayer}
+          ownershipPct={ownershipMap[statsDashboardPlayer.id]}
+          onClose={() => setStatsDashboardPlayer(null)}
+        />
+      )}
     </div>
   );
 }

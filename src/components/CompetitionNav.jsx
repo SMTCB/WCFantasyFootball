@@ -7,6 +7,7 @@ import {
   NavIconSquad,
   NavIconMarket,
   NavIconRecap,
+  NavIconWishlist,
   NavIconF1Calendar,
   NavIconF1Standings,
   NavIconF1Report,
@@ -149,13 +150,27 @@ export function CompetitionNav({
     active?.sport === 'football' ? active.id
     : activeComp?.sport === 'football' ? activeComp.id
     : (isFoot ? searchParams.get('leagueId') : null);
-  const screens = isFoot
+  let screens = isFoot
     ? FOOTBALL_SCREENS.map(s =>
         footballLeagueId && s.carriesLeagueId
           ? { ...s, href: `${s.path}?leagueId=${footballLeagueId}` }
           : s
       )
     : isF1 ? buildF1Screens(paddockId) : isTennis ? TENNIS_SCREENS : [];
+
+  // Wishlist Draft tab — draft-mode football leagues only. Nested under
+  // /league/:id/wishlist (unlike the other flat ?leagueId= screens), so it's
+  // inserted with its own baked-in path rather than via carriesLeagueId.
+  const isDraftLeague = activeComp?.sport === 'football' && activeComp?.format === 'noduplicate';
+  if (isFoot && isDraftLeague && footballLeagueId) {
+    const wishlistPath = `/league/${footballLeagueId}/wishlist`;
+    const marketIdx = screens.findIndex(s => s.key === 'market');
+    screens = [
+      ...screens.slice(0, marketIdx + 1),
+      { key: 'wishlist', label: 'WISHLIST', path: wishlistPath, href: wishlistPath, Icon: NavIconWishlist },
+      ...screens.slice(marketIdx + 1),
+    ];
+  }
   const activeColor = isF1 ? 'var(--f1)' : isTennis ? 'var(--ten)' : 'var(--accent)';
   const homePath     = isFoot ? null : isF1 ? (paddockId ? `/f1/${paddockId}` : '/f1') : '/tennis';
 
