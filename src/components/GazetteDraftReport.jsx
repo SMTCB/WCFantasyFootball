@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import ClubCrest from './ClubCrest';
 
 // Renders the draft audit trail for a league: the most recent season-draft
 // report (entry_type='draft_report') plus every wishlist-draft round report
@@ -57,7 +58,7 @@ export default function GazetteDraftReport({ leagueId }) {
 
         const [{ data: pRows }, { data: uRows }] = await Promise.all([
           playerIds.length
-            ? supabase.from('players').select('id, name').in('id', playerIds)
+            ? supabase.from('players').select('id, name, club').in('id', playerIds)
             : Promise.resolve({ data: [] }),
           userIds.length
             ? supabase.from('users').select('id, username').in('id', [...new Set(userIds)])
@@ -65,7 +66,7 @@ export default function GazetteDraftReport({ leagueId }) {
         ]);
         if (cancelled) return;
 
-        setPlayers(Object.fromEntries((pRows ?? []).map(p => [p.id, p.name])));
+        setPlayers(Object.fromEntries((pRows ?? []).map(p => [p.id, p])));
         setMembers(Object.fromEntries((uRows ?? []).map(u => [u.id, u.username])));
       } finally {
         if (!cancelled) setLoading(false);
@@ -130,8 +131,9 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
               {b.text ? (
                 <span className="italic opacity-70">{b.text}</span>
               ) : (
-                <span>
-                  <span className="font-bold">{players[b.player_id] ?? b.player_id}</span>
+                <span className="inline-flex items-center gap-1.5 flex-wrap">
+                  <ClubCrest name={players[b.player_id]?.club} size={14} />
+                  <span className="font-bold">{players[b.player_id]?.name ?? b.player_id}</span>
                   <span className="opacity-60"> — wanted by {b.wanted_by} manager{b.wanted_by > 1 ? 's' : ''} — goes to </span>
                   <span className="font-bold">{members[b.winner_id] ?? 'Unknown'}</span>
                 </span>

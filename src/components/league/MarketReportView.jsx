@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, BODY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
 import GazetteDraftReport from '../GazetteDraftReport';
+import ClubCrest from '../ClubCrest';
 
 // League-wide transfer log grouped by matchday, plus the draft allocation
 // report (overlaps/ties resolved by lottery) when one exists for this league.
@@ -63,6 +64,7 @@ function HeatMapPanel({ items, playerMap }) {
           const pct = Math.max(8, Math.round((count / max) * 100));
           return (
             <div key={player_id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <ClubCrest name={p?.club} size={18} />
               <span style={{
                 fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[p?.position] || 'var(--mute)',
                 width: 30, flexShrink: 0,
@@ -108,6 +110,7 @@ function TransferRow({ t, playerMap, username, isMe }) {
         {isMe ? 'You' : username}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        {pOut && <ClubCrest name={pOut.club} size={16} />}
         {pOut && (
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pOut.position] || 'var(--mute)' }}>
             {pOut.position}
@@ -117,6 +120,7 @@ function TransferRow({ t, playerMap, username, isMe }) {
           {pOut?.name ?? t.player_out ?? '—'}
         </span>
         <span style={{ color: 'var(--mute)' }}>→</span>
+        {pIn && <ClubCrest name={pIn.club} size={16} />}
         {pIn && (
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pIn.position] || 'var(--mute)' }}>
             {pIn.position}
@@ -201,7 +205,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
       if (cancelled || ranked.length === 0) return;
 
       const missingIds = ranked.map(r => r.player_id);
-      const { data: playerRows } = await supabase.from('players').select('id, name, position').in('id', missingIds);
+      const { data: playerRows } = await supabase.from('players').select('id, name, position, club').in('id', missingIds);
       if (cancelled) return;
       setPlayerMap(prev => ({ ...prev, ...Object.fromEntries((playerRows ?? []).map(p => [p.id, p])) }));
       setWantedCounts(ranked);
@@ -247,7 +251,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
         });
 
         if (pidSet.size > 0) {
-          const { data: playerRows } = await supabase.from('players').select('id, name, position').in('id', [...pidSet]);
+          const { data: playerRows } = await supabase.from('players').select('id, name, position, club').in('id', [...pidSet]);
           if (cancelled) return;
           setPlayerMap(Object.fromEntries((playerRows ?? []).map(p => [p.id, p])));
         } else {
