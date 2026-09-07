@@ -451,7 +451,6 @@ function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions) {
   const contestedBullets = Object.entries(wantedBy)
     .filter(([pid, count]) => count > 1 && wonBy[pid])
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
     .map(([pid, count]) => ({ player_id: pid, wanted_by: count, winner_id: wonBy[pid] }));
 
   const bullets = [];
