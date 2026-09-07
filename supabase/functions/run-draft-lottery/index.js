@@ -434,30 +434,56 @@ function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions) {
     ? `DRAFT SETTLED: ${totalManagers} squads allocated — ${incompleteCount} with open slots`
     : `DRAFT SETTLED: All ${totalManagers} squads fully allocated`;
 
+  // Draft-overlap detail: how many managers listed each player, and who the
+  // lottery actually settled it on. Only counts as "contested" when more than
+  // one manager wanted it and someone ended up with it (a player nobody's
+  // squad has room for isn't a meaningful overlap to report).
+  const wantedBy = {};
+  for (const sub of submissions) {
+    for (const pid of new Set(sub.player_ids)) {
+      wantedBy[pid] = (wantedBy[pid] ?? 0) + 1;
+    }
+  }
+  const wonBy = {};
+  for (const [userId, data] of Object.entries(allocations)) {
+    for (const pid of data.allocated_players) wonBy[pid] = userId;
+  }
+  const contestedBullets = Object.entries(wantedBy)
+    .filter(([pid, count]) => count > 1 && wonBy[pid])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([pid, count]) => ({ player_id: pid, wanted_by: count, winner_id: wonBy[pid] }));
+
   const bullets = [];
   if (incompleteCount > 0) {
     bullets.push({
       text: `${incompleteCount} manager${incompleteCount > 1 ? 's' : ''} enter with incomplete squads — first available picks now open`,
     });
   }
+  bullets.push(...contestedBullets);
 
   const fullData = {
-    snake_order:    snakeOrder,   // round-1 pick order; reverses every round
-    allocations:    Object.entries(allocations).map(([userId, data]) => ({
+    snake_order:     snakeOrder,   // round-1 pick order; reverses every round
+    allocations:     Object.entries(allocations).map(([userId, data]) => ({
       user_id:     userId,
       players:     data.allocated_players,
       gaps:        data.unresolved_slots,
       budget_used: data.budget_used,
     })),
-    total_managers: totalManagers,
+    total_managers:  totalManagers,
+    contested_count: contestedBullets.length,
   };
 
+  // JSON.stringify before insert — bullets/full_data are jsonb columns and
+  // supabase-js returns jsonb as an already-parsed object/array on read, so a
+  // raw-object insert here would silently break the reader's JSON.parse()
+  // (matches run-reverse-standings-draft's and wishlistDraft.ts's convention).
   return {
     league_id:    leagueId,
     entry_type:   'draft_report',
     headline,
-    bullets,
-    full_data:    fullData,
+    bullets:      JSON.stringify(bullets),
+    full_data:    JSON.stringify(fullData),
     published_at: new Date().toISOString(),
   };
 }
