@@ -129,6 +129,32 @@ export function isValidFormation(ids, posLookup) {
       && c.FWD >= 1 && (c.GK + c.DEF + c.MID + c.FWD) === ids.length;
 }
 
+// Guaranteed-valid XI picker (mirrors LiveScreen.jsx's client-side pickValidStarters).
+// Used whenever a stored/derived starting XI is missing or fails isValidFormation —
+// e.g. a squad whose starting_xi was never set, so the naive "first 11 owned players"
+// fallback landed on a lineup with 0 (or 2+) GKs. Selects exactly 1 GK + 1 each of
+// DEF/MID/FWD first, then fills the rest in squad-list order, skipping extra GKs.
+export function pickValidStarters(playerIds, posLookup) {
+  const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
+  for (const id of playerIds) {
+    const pos = posLookup[id];
+    if (byPos[pos]) byPos[pos].push(id);
+  }
+  const starters = new Set();
+  if (byPos.GK.length)  starters.add(byPos.GK[0]);
+  if (byPos.DEF.length) starters.add(byPos.DEF[0]);
+  if (byPos.MID.length) starters.add(byPos.MID[0]);
+  if (byPos.FWD.length) starters.add(byPos.FWD[0]);
+  const gkAlreadyIn = byPos.GK.length > 0;
+  for (const id of playerIds) {
+    if (starters.size >= 11) break;
+    if (starters.has(id)) continue;
+    if (posLookup[id] === 'GK' && gkAlreadyIn) continue; // never a second GK
+    starters.add(id);
+  }
+  return [...starters];
+}
+
 // Replace DNP starters (0 minutes) with the highest-priority bench player who played,
 // keeping the formation valid. Bench priority = order in the squad's players array.
 export function applyAutoSubs(pitch, bench, minutesLookup, posLookup) {

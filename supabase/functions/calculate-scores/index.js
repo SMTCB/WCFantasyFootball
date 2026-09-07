@@ -1,4 +1,10 @@
-// Edge Function: calculate-scores  (v31 — settled-round guard: once effective_xi is frozen, refuse to rescore; v30 — freeze live_xi snapshot when squad.matchday_id advances; v29 bug: roundComplete gate on squadAdvanced meant every live pass overwrote the snapshot with post-transfer XI)
+// Edge Function: calculate-scores  (v32 — GK/formation guard: currentXI/baseXI and the final
+// pre-freeze effective_xi are now validated with isValidFormation and repaired via
+// pickValidStarters whenever invalid, so a squad whose starting_xi was never set (naive
+// "first 11 owned players" fallback) can no longer freeze a lineup with 0 or 2+ GKs;
+// v31 — settled-round guard: once effective_xi is frozen, refuse to rescore; v30 — freeze
+// live_xi snapshot when squad.matchday_id advances; v29 bug: roundComplete gate on
+// squadAdvanced meant every live pass overwrote the snapshot with post-transfer XI)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -27,7 +33,7 @@ import { logError as _logError } from '../_shared/log.ts';
 import { requireServiceRole } from '../_shared/auth.ts';
 import {
   calcBPS, assignBonus, scorePlayer, buildBreakdown,
-  isValidFormation, applyAutoSubs,
+  isValidFormation, applyAutoSubs, pickValidStarters,
 } from './scoring-logic.js';
 
 const supabase = createClient(
@@ -533,10 +539,18 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     }
   }
 
-  // positions for every squad player (formation validation for auto-subs)
+  // positions for every squad player — needed unconditionally (not just when
+  // roundComplete) because currentXI/baseXI are now formation-validated on every
+  // pass (v32), not only for auto-subs at round completion. Covers players from
+  // the live squad row, the kickoff snapshot, and any previously-frozen live_xi
+  // breakdown, since baseXI can be sourced from any of those three.
   const posLookup = {};
-  if (roundComplete) {
-    const allSquadPlayerIds = [...new Set(squads.flatMap(s => s.players || []))];
+  {
+    const allSquadPlayerIds = [...new Set([
+      ...squads.flatMap(s => s.players || []),
+      ...Object.values(snapshotMap).flatMap(r => r.players || []),
+      ...Object.values(existingBDMap).flatMap(bd => bd.live_players || []),
+    ])];
     if (allSquadPlayerIds.length) {
       const { data: posRows } = await supabase
         .from('players').select('id, position').in('id', allSquadPlayerIds);
@@ -554,9 +568,14 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // IMPORTANT: if the squad has already advanced to a later round (matchday_id !== roundMatchdayId)
     // the squad row reflects post-transfer state — use the frozen snapshot instead to avoid
     // crediting players acquired AFTER the round's transfer window re-opened.
-    const currentXI = (squad.starting_xi?.length > 0)
+    // v32: the naive players[0..10] fallback has no positional guarantee (draft-order slice) —
+    // validate it and repair with pickValidStarters when it isn't a real 1-GK/DEF/MID/FWD XI.
+    const rawCurrentXI = (squad.starting_xi?.length > 0)
       ? squad.starting_xi
       : (squad.players || []).slice(0, 11);
+    const currentXI = isValidFormation(rawCurrentXI, posLookup)
+      ? rawCurrentXI
+      : pickValidStarters(squad.players || [], posLookup);
     const existingBD = existingBDMap[squad.id] ?? {};
     // v30 FIX: drop the `roundComplete &&` gate that was here in v29.
     // v29 bug: live passes (not roundComplete) always saw squadAdvanced=false, so they kept
@@ -569,14 +588,20 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     //   1. squad_matchday_snapshots: immutable kickoff snapshot (immune to transfer corruption)
     //   2. existingBD.live_xi: frozen by v30 fix once squad advances (fallback for pre-182 rounds)
     //   3. currentXI: squad.starting_xi / players[0..10] — only used when squad hasn't advanced
+    // v32: each branch is formation-validated and repaired with pickValidStarters — a snapshot
+    // or frozen breakdown can itself predate this guard and carry a bad (0/2+ GK) XI.
     const snapshot = snapshotMap[mgrKey];
     let baseXI;
     if (squadAdvanced && snapshot?.starting_xi?.length) {
-      baseXI = snapshot.starting_xi;   // most reliable: immutable kickoff snapshot
+      baseXI = isValidFormation(snapshot.starting_xi, posLookup)
+        ? snapshot.starting_xi   // most reliable: immutable kickoff snapshot
+        : pickValidStarters(snapshot.players || squad.players || [], posLookup);
     } else if (squadAdvanced && existingBD.live_xi?.length) {
-      baseXI = existingBD.live_xi;     // v30 frozen snapshot in breakdown (pre-182 rounds)
+      baseXI = isValidFormation(existingBD.live_xi, posLookup)
+        ? existingBD.live_xi     // v30 frozen snapshot in breakdown (pre-182 rounds)
+        : pickValidStarters(existingBD.live_players || squad.players || [], posLookup);
     } else {
-      baseXI = currentXI;              // squad still in this round — current XI is correct
+      baseXI = currentXI;              // squad still in this round — already validated above
     }
 
     // #17: at round completion, auto-sub DNP starters (0 min) for the highest-priority
@@ -595,6 +620,17 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     let pitchPlayers = baseXI;
     if (roundComplete) {
       pitchPlayers = applyAutoSubs(baseXI, bench, minutesLookup, posLookup);
+    }
+    // v32: final belt-and-braces guard — applyAutoSubs can only swap within an already-valid
+    // formation, so a broken baseXI (0/2+ GK) would otherwise pass through unrepaired and get
+    // permanently frozen into effective_xi below. Repair before that freeze ever happens.
+    if (roundComplete && !isValidFormation(pitchPlayers, posLookup)) {
+      const fixedXI = pickValidStarters(allPlayers, posLookup);
+      logError('warning', 'effective_xi failed formation validation — corrected before freeze', {
+        fixture_id, squad_id: squad.id, matchday_id: roundMatchdayId,
+        original: pitchPlayers, corrected: fixedXI,
+      });
+      pitchPlayers = fixedXI;
     }
     // Players not in the effective XI — this is what we store as historical bench.
     const benchPlayers = allPlayers.filter(pid => !pitchPlayers.includes(pid));
