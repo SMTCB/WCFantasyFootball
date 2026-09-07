@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>233</strong><span>closed</span></div>
+      <div class="total-pill"><strong>234</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (152)</span>
+    <span class="chip" data-filter-kind="done">Shipped (153)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">233</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">234</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">152</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">153</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,54 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">152</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">153</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft submit-status tracker + transfer basket colors fixed (2026-09-07) — pr #966 
+
+two live pilot bugs reported by a commissioner and surfaced via user testing on &quot;draft champions 26/27&quot;:
+
+- **commissioner draft submit-status false positive**: `commissionerpanel.jsx`&#x27;s lifecycleops built its
+  &quot;who has submitted&quot; set from *any* row in `draft_submissions` for the league, but `draftscreen.jsx`&#x27;s
+  3-second debounced auto-save and 30-second heartbeat both `upsert` rows with `submitted_at: null` long
+  before a manager clicks the explicit submit button — only that click sets `submitted_at`. result: a
+  manager who had merely started (and auto-saved) their list, without ever submitting, showed as
+  ✓ submitted to the commissioner. confirmed live against &quot;draft champions 26/27&quot; (one of the league&#x27;s
+  rows had `submitted_at: null` and was being displayed as submitted). fixed by filtering the set-building
+  logic to only include rows where `submitted_at` is truthy. the parallel wishlist draft tracker (added in
+  pr #964, table `wishlist_draft_submissions`) does not share this bug — that table&#x27;s `submitted_at` is
+  `not null default now()` by design, since wishlist rounds stay always-editable and every save legitimately
+  counts as a submission.
+- **transfer basket unreadable color scheme**: the market screen&#x27;s bottom &quot;transfer basket&quot; bar (shown when
+  players are queued for transfer) predates the app&#x27;s &quot;kit light&quot; light-theme redesign. it still used
+  `--paper`/`--mute`/`--rule`/`--positive`/`--danger`/`--cyan` — tokens the redesign repurposed to mean
+  dark-text-on-light — against the bar&#x27;s own hardcoded near-black background (`rgba(13,17,23,0.98)`),
+  producing effectively invisible dark-on-dark text (player names, prices, tags all unreadable). fixed by
+  retokenizing the entire bar to the `--on-shell*`/`--shell-rule*` family (`--shell`, `--on-shell`,
+  `--on-shell-dim`, `--on-shell-mid`, `--on-shell-accent`, `--on-shell-danger`, `--on-shell-gold`,
+  `--shell-rule`, `" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Draft submit-status tracker + Transfer Basket colors fixed</h3>
+        <p class="card-summary">Two live pilot bugs reported by a commissioner and surfaced via user testing on "Draft Champions 26/27": Commissioner draft submit-status false positive :…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-07</span><span class="foot-refs">PR #966</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Draft submit-status tracker + Transfer Basket colors fixed</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Two live pilot bugs reported by a commissioner and surfaced via user testing on "Draft Champions 26/27": Commissioner draft submit-status false positive :…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #966</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-07</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Two live pilot bugs reported by a commissioner and surfaced via user testing on "Draft Champions 26/27":</p>
+<ul>
+<li><strong>Commissioner draft submit-status false positive</strong>: <code>CommissionerPanel.jsx</code>'s LifecycleOps built its</li>
+<p>"who has submitted" Set from *any* row in <code>draft_submissions</code> for the league, but <code>DraftScreen.jsx</code>'s 3-second debounced auto-save and 30-second heartbeat both <code>upsert</code> rows with <code>submitted_at: null</code> long before a manager clicks the explicit Submit button — only that click sets <code>submitted_at</code>. Result: a manager who had merely started (and auto-saved) their list, without ever submitting, showed as ✓ SUBMITTED to the commissioner. Confirmed live against "Draft Champions 26/27" (one of the league's rows had <code>submitted_at: null</code> and was being displayed as submitted). Fixed by filtering the Set-building logic to only include rows where <code>submitted_at</code> is truthy. The parallel Wishlist Draft tracker (added in PR #964, table <code>wishlist_draft_submissions</code>) does not share this bug — that table's <code>submitted_at</code> is <code>NOT NULL DEFAULT NOW()</code> by design, since wishlist rounds stay always-editable and every save legitimately counts as a submission.</p>
+<li><strong>Transfer Basket unreadable color scheme</strong>: the Market screen's bottom "Transfer Basket" bar (shown when</li>
+<p>players are queued for transfer) predates the app's "Kit Light" light-theme redesign. It still used <code>--paper</code>/<code>--mute</code>/<code>--rule</code>/<code>--positive</code>/<code>--danger</code>/<code>--cyan</code> — tokens the redesign repurposed to mean dark-text-on-light — against the bar's own hardcoded near-black background (<code>rgba(13,17,23,0.98)</code>), producing effectively invisible dark-on-dark text (player names, prices, tags all unreadable). Fixed by retokenizing the entire bar to the <code>--on-shell*</code>/<code>--shell-rule*</code> family (<code>--shell</code>, <code>--on-shell</code>, <code>--on-shell-dim</code>, <code>--on-shell-mid</code>, <code>--on-shell-accent</code>, <code>--on-shell-danger</code>, <code>--on-shell-gold</code>, <code>--shell-rule</code>, <code>--shell-rule-strong</code>) — the same WCAG-AA-tuned dark-panel token set this same screen's own sticky header already uses correctly for the identical "dark panel over light app" scenario. The positive net-change color (no <code>--on-shell</code> positive/green token exists) uses the same raw <code>rgba(24,201,107,0.95)</code> literal already established in <code>FormStrip.jsx</code> for bright-green-on-dark-shell text.</p>
+</ul>
+<p><strong>Verification</strong>: <code>npm run lint</code> (0 errors, 706 pre-existing warnings unrelated to these files) and <code>npm run build</code> (clean, no Rolldown TDZ errors) both pass. Live visual confirmation of the basket-bar fix was not captured — the demo account in the dev preview has no clubhouse/squad data to populate a transfer basket — but the change is a direct token substitution mirroring an already-verified in-file pattern, and the new token values were confirmed in <code>src/index.css</code> to resolve to white/near-white against the dark <code>--shell</code> background.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft redesign — commissioner visibility, ownership filter, market-style ui (2026-09-07) — pr #964 
 
 **nine-item overhaul** of the recurring per-round wishlist draft feature (draft-mode leagues only) — the pick list managers use each round to rank incoming targets and squad players they&#x27;d release, resolved automatically via a rotating snake order before the market opens.
