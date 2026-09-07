@@ -1438,6 +1438,45 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, league?.format, league?.cup_phase]);
 
+  // Wishlist Draft submission tracker — recurring, per-round (unlike the one-time
+  // season draft above). Resolves the currently-open round via get_wishlist_draft_status,
+  // then reads who has a submitted row for that round.
+  const [wishlistRound, setWishlistRound]             = useState(null); // null = no round currently open
+  const [wishlistSubmissions, setWishlistSubmissions] = useState(null); // null = not yet loaded
+  const [wishlistMembers, setWishlistMembers]         = useState([]);
+
+  useEffect(() => {
+    if (!leagueId || !league || league.format !== 'noduplicate') return;
+    let cancelled = false;
+    (async () => {
+      const { data: status } = await supabase.rpc('get_wishlist_draft_status', { p_league_id: leagueId });
+      if (cancelled) return;
+      if (!status?.available || !status?.round_number) {
+        setWishlistRound(null);
+        setWishlistSubmissions(null);
+        return;
+      }
+      setWishlistRound(status.round_number);
+      const [{ data: members }, { data: subs }] = await Promise.all([
+        supabase
+          .from('league_members')
+          .select('user_id, users(username)')
+          .eq('league_id', leagueId)
+          .order('total_points', { ascending: false }),
+        supabase
+          .from('wishlist_draft_submissions')
+          .select('user_id')
+          .eq('league_id', leagueId)
+          .eq('round_number', status.round_number),
+      ]);
+      if (cancelled) return;
+      setWishlistMembers(members || []);
+      setWishlistSubmissions(new Set((subs || []).map(s => s.user_id)));
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueId, league?.format]);
+
   // Deadline-controlled = league belongs to a tournament with matchday_deadlines
   // (WC/cup leagues). Manual-controlled = EPL/season leagues with no tournamentId,
   // always governed by transfer_windows.
@@ -1679,6 +1718,35 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     disabled={commLoading}
                     style={opBtnStyle('var(--gold)')}
                   >RUN ALLOCATION ↯</button>
+                </div>
+              )
+            }
+          />
+          </div>
+          )}
+
+          {/* Wishlist Draft — draft mode only. Recurring per-round submission tracker,
+              separate from the one-time season DRAFT above. */}
+          {(!league || league.format === 'noduplicate') && (
+          <div data-tour="comm-wishlist-draft">
+          <LifecycleOp
+            title="WISHLIST DRAFT"
+            status={wishlistRound ? `ROUND ${wishlistRound} · OPEN` : 'CLOSED'}
+            statusTone={wishlistRound ? 'var(--positive)' : 'var(--mute)'}
+            sub="Recurring pick list — managers rank incoming targets and release candidates each round. No fixed deadline; resolves automatically before the market opens."
+            when="Check before each round's market opens to see who still needs to submit."
+            primary={
+              wishlistRound ? (
+                wishlistMembers.length > 0 && wishlistSubmissions !== null ? (
+                  <DraftSubmissionTracker members={wishlistMembers} submitted={wishlistSubmissions} />
+                ) : (
+                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                    Loading submissions…
+                  </div>
+                )
+              ) : (
+                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                  No wishlist round is currently open for submissions — either it already resolved for this round, or no completed round yet exists to base one on.
                 </div>
               )
             }

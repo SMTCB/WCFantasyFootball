@@ -37,6 +37,14 @@ export const NavIconMarket = ({ size = 24 }) => (
   </svg>
 );
 
+export const NavIconWishlist = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 4L10.2 7.1L13.5 7.4L11 9.6L11.7 12.9L9 11.1L6.3 12.9L7 9.6L4.5 7.4L7.8 7.1L9 4Z" fill={CYAN} />
+    <rect x="13" y="15" width="7" height="2" rx="1" fill={PAPER} />
+    <rect x="13" y="19" width="4" height="2" rx="1" fill={MUTE} />
+  </svg>
+);
+
 export const NavIconLeagues = ({ size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="10" y="5" width="4" height="2" rx="1" fill={CYAN} />
