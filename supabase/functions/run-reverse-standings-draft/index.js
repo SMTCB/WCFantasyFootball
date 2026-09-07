@@ -256,8 +256,7 @@ async function runReverseDraft(leagueId) {
 
 function buildGazetteEntry(leagueId, conflictLog, allocations, standings) {
   const top = conflictLog
-    .sort((a, b) => b.wanters.length - a.wanters.length)
-    .slice(0, 3);
+    .sort((a, b) => b.wanters.length - a.wanters.length);
 
   const headline = conflictLog.length > 0
     ? `ELIMINATION DRAFT: ${conflictLog.length} battle${conflictLog.length > 1 ? 's' : ''} settled by standings — underdogs get first pick`
