@@ -1429,8 +1429,10 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
       ]);
       if (cancelled) return;
       setDraftMembers(members || []);
-      // Build a Set of user_ids who have a submitted row (any phase)
-      const submittedSet = new Set((subs || []).map(s => s.user_id));
+      // Build a Set of user_ids who have actually submitted (not just auto-saved a
+      // draft-in-progress — draft_submissions rows exist from the 3s auto-save long
+      // before the manager hits Submit, so submitted_at is the only true signal).
+      const submittedSet = new Set((subs || []).filter(s => s.submitted_at).map(s => s.user_id));
       setDraftSubmissions(submittedSet);
     })();
     return () => { cancelled = true; };

@@ -1524,14 +1524,14 @@ export default function MarketScreen() {
         const numTransfers = Math.max(sells.length, buys.length);
         const netChange    = basket.reduce((n, b) => b.type === 'sell' ? n + b.player.price : n - b.player.price, 0);
         const netLabel     = netChange > 0 ? `+€${netChange.toFixed(1)}M` : netChange < 0 ? `-€${Math.abs(netChange).toFixed(1)}M` : null;
-        const netColor     = netChange >= 0 ? 'var(--positive)' : 'var(--danger)';
+        const netColor     = netChange >= 0 ? 'rgba(24,201,107,0.95)' : 'var(--on-shell-danger)';
         return (
           <div
             style={{
               position: 'fixed',
               bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom))' : 0,
               left: 0, right: 0, zIndex: 9000,
-              background: 'rgba(13,17,23,0.98)',
+              background: 'var(--shell)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
               borderTop: '2px solid var(--gold)',
@@ -1541,7 +1541,7 @@ export default function MarketScreen() {
             <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 16px 0' }}>
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--gold)', textTransform: 'uppercase' }}>
+                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--on-shell-gold)', textTransform: 'uppercase' }}>
                   Transfer Basket · {numTransfers} transfer{numTransfers !== 1 ? 's' : ''}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1550,11 +1550,11 @@ export default function MarketScreen() {
                       {netLabel}
                     </span>
                   )}
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)' }}>
                     €{effectiveBudget.toFixed(1)}M left
                   </span>
                   {penaltyPointsCost > 0 && (
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-danger)', fontWeight: 700 }}>
                       −{penaltyPointsCost}pts
                     </span>
                   )}
@@ -1572,45 +1572,45 @@ export default function MarketScreen() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 6,
                         padding: '5px 0',
-                        borderBottom: i < numTransfers - 1 ? '1px solid var(--rule)' : 'none',
+                        borderBottom: i < numTransfers - 1 ? '1px solid var(--shell-rule)' : 'none',
                       }}
                     >
                       {/* OUT side */}
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
                         {sell ? (
                           <>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: 'var(--danger)', border: '1px solid var(--danger)', padding: '1px 4px', flexShrink: 0 }}>OUT</span>
-                            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sell.player.name}</span>
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{sell.player.price}M</span>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: 'var(--on-shell-danger)', border: '1px solid var(--on-shell-danger)', padding: '1px 4px', flexShrink: 0 }}>OUT</span>
+                            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sell.player.name}</span>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', flexShrink: 0 }}>€{sell.player.price}M</span>
                             <button
                               onClick={() => setBasket(prev => prev.filter(b => b.player.id !== sell.player.id))}
                               disabled={confirming}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute)', fontSize: 'var(--fs-body)', padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-shell-dim)', fontSize: 'var(--fs-body)', padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
                               title="Remove from basket"
                             >×</button>
                           </>
                         ) : (
-                          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>—</span>
+                          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)' }}>—</span>
                         )}
                       </div>
                       {/* Divider */}
-                      <span style={{ color: 'var(--text-2)', fontSize: 'var(--fs-label)', flexShrink: 0 }}>⇄</span>
+                      <span style={{ color: 'var(--on-shell-mid)', fontSize: 'var(--fs-label)', flexShrink: 0 }}>⇄</span>
                       {/* IN side */}
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
                         {buy ? (
                           <>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '1px 4px', flexShrink: 0 }}>IN</span>
-                            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{buy.player.name}</span>
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{buy.player.price}M</span>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: 'var(--on-shell-accent)', border: '1px solid var(--on-shell-accent)', padding: '1px 4px', flexShrink: 0 }}>IN</span>
+                            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{buy.player.name}</span>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', flexShrink: 0 }}>€{buy.player.price}M</span>
                             <button
                               onClick={() => setBasket(prev => prev.filter(b => b.player.id !== buy.player.id))}
                               disabled={confirming}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute)', fontSize: 'var(--fs-body)', padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-shell-dim)', fontSize: 'var(--fs-body)', padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
                               title="Remove from basket"
                             >×</button>
                           </>
                         ) : (
-                          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>—</span>
+                          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)' }}>—</span>
                         )}
                       </div>
                     </div>
@@ -1626,8 +1626,8 @@ export default function MarketScreen() {
                   style={{
                     flex: 1, padding: '10px 8px',
                     background: 'transparent',
-                    border: '1px solid var(--rule)',
-                    color: 'var(--mute)',
+                    border: '1px solid var(--shell-rule-strong)',
+                    color: 'var(--on-shell-dim)',
                     fontFamily: 'Archivo Black, sans-serif',
                     fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
                     cursor: confirming ? 'not-allowed' : 'pointer',
