@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-06. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-07. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>232</strong><span>closed</span></div>
+      <div class="total-pill"><strong>233</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (151)</span>
+    <span class="chip" data-filter-kind="done">Shipped (152)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">232</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">233</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">151</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">152</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,48 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">151</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">152</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft redesign — commissioner visibility, ownership filter, market-style ui (2026-09-07) — pr #964 
+
+**nine-item overhaul** of the recurring per-round wishlist draft feature (draft-mode leagues only) — the pick list managers use each round to rank incoming targets and squad players they&#x27;d release, resolved automatically via a rotating snake order before the market opens.
+
+- **commissioner visibility fix**: `commissionerpanel.jsx`&#x27;s lifecycleops now fetches `get_wishlist_draft_status` + `wishlist_draft_submissions` for the currently open round and renders a submitted/not-submitted tracker (reusing the existing `draftsubmissiontracker`, same pattern as the one-time season draft above it) — previously the commissioner had no way to see who still needed to submit.
+- added a persistent market-adjacent nav button in `competitionnav.jsx`/`navicons.jsx`, shown only for draft-mode (`noduplicate`) leagues.
+- `usewishlistdraft.js`&#x27;s player pool is now filtered to unowned players only (excludes anyone already on a roster anywhere in the league) — previously showed the full player database.
+- restyled the player list in `wishlistdraftscreen.jsx` to match `marketscreen`: club crest, price, an expandable row revealing priority rank, season-stats line, a &quot;stats ↗&quot; link, and &quot;add to list&quot;.
+- added a &quot;save&quot; button alongside &quot;add to list&quot;, a 3s debounced auto-save on target/drop-list changes, and a 30s dirty-state heartbeat save — mirrors the season draft screen&#x27;s existing auto-save pattern.
+- the list stays always-editable: &quot;submit&quot; no longer locks it server-side: managers can keep adjusting targets/releases until the round actually resolves.
+- added `wishlistinfomodal.jsx`, a &quot;?&quot; info sheet covering what the wishlist draft is, why it exists (draft leagues have no free-buy market), how it resolves (rotating snake order), when it runs (no fixed deadline, resolves automatically pre-market), and how editing works.
+- restyled the wishlist&#x27;s top header bar to match the rest of " style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Wishlist Draft redesign — commissioner visibility, ownership filter, Market-style UI</h3>
+        <p class="card-summary">Nine-item overhaul of the recurring per-round Wishlist Draft feature (draft-mode leagues only) — the pick list managers use each round to rank incoming targets and squad…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-07</span><span class="foot-refs">PR #964</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Wishlist Draft redesign — commissioner visibility, ownership filter, Market-style UI</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Nine-item overhaul of the recurring per-round Wishlist Draft feature (draft-mode leagues only) — the pick list managers use each round to rank incoming targets and squad…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #964</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-07</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Nine-item overhaul</strong> of the recurring per-round Wishlist Draft feature (draft-mode leagues only) — the pick list managers use each round to rank incoming targets and squad players they'd release, resolved automatically via a rotating snake order before the market opens.</p>
+<ul>
+<li><strong>Commissioner visibility fix</strong>: <code>CommissionerPanel.jsx</code>'s LifecycleOps now fetches <code>get_wishlist_draft_status</code> + <code>wishlist_draft_submissions</code> for the currently open round and renders a submitted/not-submitted tracker (reusing the existing <code>DraftSubmissionTracker</code>, same pattern as the one-time season draft above it) — previously the commissioner had no way to see who still needed to submit.</li>
+<li>Added a persistent MARKET-adjacent nav button in <code>CompetitionNav.jsx</code>/<code>NavIcons.jsx</code>, shown only for draft-mode (<code>noduplicate</code>) leagues.</li>
+<li><code>useWishlistDraft.js</code>'s player pool is now filtered to unowned players only (excludes anyone already on a roster anywhere in the league) — previously showed the full player database.</li>
+<li>Restyled the player list in <code>WishlistDraftScreen.jsx</code> to match <code>MarketScreen</code>: club crest, price, an expandable row revealing priority rank, season-stats line, a "Stats ↗" link, and "Add to List".</li>
+<li>Added a "Save" button alongside "Add to List", a 3s debounced auto-save on target/drop-list changes, and a 30s dirty-state heartbeat save — mirrors the season draft screen's existing auto-save pattern.</li>
+<li>The list stays always-editable: "Submit" no longer locks it server-side: managers can keep adjusting targets/releases until the round actually resolves.</li>
+<li>Added <code>WishlistInfoModal.jsx</code>, a "?" info sheet covering what the wishlist draft is, why it exists (draft leagues have no free-buy market), how it resolves (rotating snake order), when it runs (no fixed deadline, resolves automatically pre-market), and how editing works.</li>
+<li>Restyled the wishlist's top header bar to match the rest of the app.</li>
+<li><strong>Verification</strong>: live-tested against the real <code>football_draft_wishlist</code> test league (real Supabase data) — temporarily added the dev demo account to <code>league_members</code> for that league, confirmed ownership filtering against hundreds of real unowned players, row expand/collapse, target add/reorder/remove, and the info modal's content all render and function correctly, then deleted the temporary membership row afterward. The Save button's RPC call failed in this demo-mode session — traced to <code>submit_wishlist_draft</code> (migration 252) requiring <code>auth.uid()</code> with <code>EXECUTE</code> revoked from <code>anon</code>/granted only to <code>authenticated</code>; the dev demo account has no real Supabase Auth session (see <code>AuthContext.jsx</code>), so this is an expected demo-mode limitation mirroring the existing <code>knockout_keep_submissions</code> RPC (migration 143), not a regression — a real authenticated user's save/submit/auto-save was not itself broken by this change.</li>
+<li><code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ), <code>npx playwright test platform.spec.js</code> (83/84 passed, 1 unrelated flaky timeout that passed on retry) all green before merge.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ fix desktop squad-list logo blink + white live pitch league name (2026-09-06) — pr #955 
 
 **user report**: &quot;the club logos in the desktop in list view seem to be blinking&quot; + &quot;on the live view can you also change the league name (to the right) to white font.&quot;
