@@ -277,7 +277,13 @@ async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: n
   // JSON.stringify-before-insert, matching run-reverse-standings-draft's
   // convention (not run-draft-lottery's raw-object insert, which the
   // read-side's defensive JSON.parse silently fails against).
-  await supabase.from('gazette_entries').insert({
+  //
+  // No created_at here — gazette_entries has no such column, only
+  // published_at (defaults to now()). Passing created_at made every insert
+  // fail with an unknown-column error from PostgREST; since the result was
+  // never checked, that failure was silent — no gazette entry ever got
+  // written, even though the allocation itself committed successfully.
+  const { error } = await supabase.from('gazette_entries').insert({
     league_id:  leagueId,
     entry_type: 'wishlist_draft_report',
     headline:   `Wishlist Draft resolved for round ${roundNumber}`,
@@ -287,6 +293,8 @@ async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: n
       order,
       submissions: submissions.map((s) => ({ user_id: s.user_id, target_ids: s.target_ids, drop_ids: s.drop_ids })),
     }),
-    created_at: new Date().toISOString(),
   });
+  if (error) {
+    await logError(FN, 'critical', 'wishlist draft gazette insert failed', { leagueId, roundNumber, error: error.message });
+  }
 }

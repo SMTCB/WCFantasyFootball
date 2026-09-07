@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, BODY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
 import GazetteDraftReport from '../GazetteDraftReport';
+import ClubCrest from '../ClubCrest';
 
 // League-wide transfer log grouped by matchday, plus the draft allocation
 // report (overlaps/ties resolved by lottery) when one exists for this league.
@@ -49,6 +50,47 @@ function formatWindowSub(w) {
   return closed ? `WINDOW CLOSED ${d}` : `WINDOW CLOSES ${d}`;
 }
 
+function HeatMapPanel({ items, playerMap }) {
+  if (!items.length) return null;
+  const max = items[0].count;
+  return (
+    <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--rule)' }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 10 }}>
+        MOST WANTED
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {items.map(({ player_id, count }) => {
+          const p = playerMap[player_id];
+          const pct = Math.max(8, Math.round((count / max) * 100));
+          return (
+            <div key={player_id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <ClubCrest name={p?.club} size={18} />
+              <span style={{
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[p?.position] || 'var(--mute)',
+                width: 30, flexShrink: 0,
+              }}>
+                {p?.position ?? '—'}
+              </span>
+              <span style={{
+                fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)',
+                width: 120, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {p?.name ?? player_id}
+              </span>
+              <div style={{ flex: 1, height: 6, background: 'var(--rule)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: 'var(--cyan)' }} />
+              </div>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 20, textAlign: 'right', flexShrink: 0 }}>
+                {count}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function TransferRow({ t, playerMap, username, isMe }) {
   const pOut = playerMap[t.player_out];
   const pIn  = playerMap[t.player_in];
@@ -68,6 +110,7 @@ function TransferRow({ t, playerMap, username, isMe }) {
         {isMe ? 'You' : username}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        {pOut && <ClubCrest name={pOut.club} size={16} />}
         {pOut && (
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pOut.position] || 'var(--mute)' }}>
             {pOut.position}
@@ -77,6 +120,7 @@ function TransferRow({ t, playerMap, username, isMe }) {
           {pOut?.name ?? t.player_out ?? '—'}
         </span>
         <span style={{ color: 'var(--mute)' }}>→</span>
+        {pIn && <ClubCrest name={pIn.club} size={16} />}
         {pIn && (
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pIn.position] || 'var(--mute)' }}>
             {pIn.position}
@@ -98,6 +142,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
   const [loading,   setLoading]   = useState(true);
   const [selectedRound, setSelectedRound] = useState('all');
   const [hasDraftReport, setHasDraftReport] = useState(false);
+  const [wantedCounts, setWantedCounts] = useState([]); // [{player_id, count}], draft-mode leagues only
 
   useEffect(() => {
     if (!leagueId) return;
@@ -105,8 +150,67 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
     supabase.from('gazette_entries')
       .select('id', { count: 'exact', head: true })
       .eq('league_id', leagueId)
-      .eq('entry_type', 'draft_report')
+      .in('entry_type', ['draft_report', 'wishlist_draft_report'])
       .then(({ count }) => { if (!cancelled) setHasDraftReport((count ?? 0) > 0); });
+    return () => { cancelled = true; };
+  }, [leagueId]);
+
+  // "Most Wanted" heat map. Draft-mode leagues: aggregate every priority-list
+  // submission (season draft) and wishlist target (recurring rounds) — this is
+  // the demand signal, since exclusive ownership means most of it never
+  // resolves into a "purchase". Classic leagues: aggregate actual purchases
+  // (transfers.player_in) since that's the closest analogue.
+  useEffect(() => {
+    if (!leagueId) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data: leagueRow } = await supabase
+        .from('leagues')
+        .select('format, league_mode')
+        .eq('id', leagueId)
+        .maybeSingle();
+      if (cancelled || !leagueRow) return;
+
+      const isDraftMode = leagueRow.format === 'noduplicate' || leagueRow.league_mode === 'draft';
+      const counts = {};
+
+      if (isDraftMode) {
+        const [{ data: draftSubs }, { data: wishlistSubs }] = await Promise.all([
+          supabase.from('draft_submissions').select('player_ids').eq('league_id', leagueId),
+          supabase.from('wishlist_draft_submissions').select('target_ids').eq('league_id', leagueId),
+        ]);
+        if (cancelled) return;
+        for (const row of draftSubs ?? []) {
+          for (const pid of row.player_ids ?? []) counts[pid] = (counts[pid] ?? 0) + 1;
+        }
+        for (const row of wishlistSubs ?? []) {
+          for (const pid of row.target_ids ?? []) counts[pid] = (counts[pid] ?? 0) + 1;
+        }
+      } else {
+        const { data: allTransfers } = await supabase
+          .from('transfers')
+          .select('player_in')
+          .eq('league_id', leagueId);
+        if (cancelled) return;
+        for (const row of allTransfers ?? []) {
+          if (row.player_in) counts[row.player_in] = (counts[row.player_in] ?? 0) + 1;
+        }
+      }
+
+      const ranked = Object.entries(counts)
+        .map(([player_id, count]) => ({ player_id, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      if (cancelled || ranked.length === 0) return;
+
+      const missingIds = ranked.map(r => r.player_id);
+      const { data: playerRows } = await supabase.from('players').select('id, name, position, club').in('id', missingIds);
+      if (cancelled) return;
+      setPlayerMap(prev => ({ ...prev, ...Object.fromEntries((playerRows ?? []).map(p => [p.id, p])) }));
+      setWantedCounts(ranked);
+    })();
+
     return () => { cancelled = true; };
   }, [leagueId]);
 
@@ -147,7 +251,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
         });
 
         if (pidSet.size > 0) {
-          const { data: playerRows } = await supabase.from('players').select('id, name, position').in('id', [...pidSet]);
+          const { data: playerRows } = await supabase.from('players').select('id, name, position, club').in('id', [...pidSet]);
           if (cancelled) return;
           setPlayerMap(Object.fromEntries((playerRows ?? []).map(p => [p.id, p])));
         } else {
@@ -205,6 +309,8 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
           Every transfer made across the league, grouped by matchday. Pick a single window below to see just the last transfer window, or view All for the full season.
         </p>
       </div>
+
+      <HeatMapPanel items={wantedCounts} playerMap={playerMap} />
 
       <RoundNav rounds={allRounds} lastRound={lastRound} selected={selectedRound} onSelect={setSelectedRound} />
 
