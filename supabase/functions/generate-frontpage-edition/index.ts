@@ -3,18 +3,27 @@
 // Generates a daily AI-powered newspaper edition via Groq.
 //
 // Three invocation modes:
-//   CRON   — body: { "mode": "cron" }          service-role JWT, processes all leagues + circles
+//   CRON   — body: { "mode": "cron", "edition_type"?: "recap" | "preview" }   service-role JWT, processes all leagues + circles
 //   LEAGUE — body: { "league_id": "uuid" }      user JWT, commissioner only, rate-limited 1/4h
 //   CIRCLE — body: { "circle_id": "uuid" }      user JWT, Clubhouse owner only, rate-limited 1/4h
+//
+// CRON edition_type (defaults to "recap" for back-compat with the existing job):
+//   "recap"   — the day-after report on games that happened yesterday. Skipped for a
+//               league/circle whose tournament(s) had no fixtures yesterday — no games,
+//               nothing to recap.
+//   "preview" — a same-day, pre-kickoff edition for the FIRST day of a new fixture
+//               block (today has fixtures, but the preceding PREVIEW_LOOKBACK_DAYS did
+//               not) so transfers/auctions ahead of a new round get covered too.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
 
-const FN             = 'generate-frontpage-edition';
-const GROQ_URL       = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL     = 'llama-3.1-8b-instant';
-const RATE_LIMIT_MS  = 4 * 60 * 60 * 1000;
-const CRON_SKIP_MS   = 12 * 60 * 60 * 1000;
+const FN                     = 'generate-frontpage-edition';
+const GROQ_URL               = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL             = 'llama-3.1-8b-instant';
+const RATE_LIMIT_MS          = 4 * 60 * 60 * 1000;
+const CRON_SKIP_MS           = 12 * 60 * 60 * 1000;
+const PREVIEW_LOOKBACK_DAYS  = 3;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -27,6 +36,75 @@ function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
 
 function today(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+function addDays(dateStr: string, delta: number): string {
+  const d = new Date(dateStr + 'T00:00:00.000Z');
+  d.setUTCDate(d.getUTCDate() + delta);
+  return d.toISOString().split('T')[0];
+}
+
+// Half-open [start, end) UTC-day boundary for a "YYYY-MM-DD" calendar date.
+function dayRangeUTC(dateStr: string): [string, string] {
+  return [`${dateStr}T00:00:00.000Z`, `${addDays(dateStr, 1)}T00:00:00.000Z`];
+}
+
+// Does this tournament have any fixture kicking off on the given calendar date (UTC)?
+async function tournamentHasFixturesOnDate(sb: ReturnType<typeof createClient>, tournamentId: string, dateStr: string): Promise<boolean> {
+  const [start, end] = dayRangeUTC(dateStr);
+  const { count } = await sb.from('fixtures').select('id', { count: 'exact', head: true })
+    .eq('tournament_id', tournamentId).gte('kickoff_at', start).lt('kickoff_at', end);
+  return (count ?? 0) > 0;
+}
+
+// Does this tournament have any fixture in [fromDateStr, toDateStrExclusive)?
+async function tournamentHasFixturesInRange(sb: ReturnType<typeof createClient>, tournamentId: string, fromDateStr: string, toDateStrExclusive: string): Promise<boolean> {
+  const [start] = dayRangeUTC(fromDateStr);
+  const [end]   = dayRangeUTC(toDateStrExclusive);
+  const { count } = await sb.from('fixtures').select('id', { count: 'exact', head: true })
+    .eq('tournament_id', tournamentId).gte('kickoff_at', start).lt('kickoff_at', end);
+  return (count ?? 0) > 0;
+}
+
+// Recap: only for a tournament that had fixtures yesterday.
+// Preview: only for a tournament kicking off today that had no fixtures in the
+// preceding lookback window — i.e. today is the first day of a new round.
+async function leagueShouldGenerate(sb: ReturnType<typeof createClient>, tournamentId: string, editionType: 'recap' | 'preview'): Promise<boolean> {
+  if (editionType === 'recap') {
+    return tournamentHasFixturesOnDate(sb, tournamentId, addDays(today(), -1));
+  }
+  const hasToday = await tournamentHasFixturesOnDate(sb, tournamentId, today());
+  if (!hasToday) return false;
+  const hadRecent = await tournamentHasFixturesInRange(sb, tournamentId, addDays(today(), -PREVIEW_LOOKBACK_DAYS), today());
+  return !hadRecent;
+}
+
+async function getCircleTournamentIds(sb: ReturnType<typeof createClient>, circleId: string): Promise<string[]> {
+  const { data } = await sb.from('circle_leagues').select('leagues(tournament_id)').eq('circle_id', circleId);
+  const ids = new Set<string>();
+  for (const row of (data ?? []) as { leagues: { tournament_id: string } | null }[]) {
+    if (row.leagues?.tournament_id) ids.add(row.leagues.tournament_id);
+  }
+  return [...ids];
+}
+
+// Same recap/preview rule as leagueShouldGenerate, applied across every football
+// tournament linked to the Clubhouse (any one having games is enough). A Clubhouse
+// with no linked football leagues (e.g. F1-only) has nothing to gate on, so it falls
+// back to the old always-eligible behaviour rather than never generating.
+async function circleShouldGenerate(sb: ReturnType<typeof createClient>, tournamentIds: string[], editionType: 'recap' | 'preview'): Promise<boolean> {
+  if (tournamentIds.length === 0) return true;
+  if (editionType === 'recap') {
+    const yesterday = addDays(today(), -1);
+    for (const id of tournamentIds) if (await tournamentHasFixturesOnDate(sb, id, yesterday)) return true;
+    return false;
+  }
+  let hasToday = false;
+  for (const id of tournamentIds) if (await tournamentHasFixturesOnDate(sb, id, today())) { hasToday = true; break; }
+  if (!hasToday) return false;
+  const lookbackStart = addDays(today(), -PREVIEW_LOOKBACK_DAYS);
+  for (const id of tournamentIds) if (await tournamentHasFixturesInRange(sb, id, lookbackStart, today())) return false;
+  return true;
 }
 
 // ── Groq call ─────────────────────────────────────────────────────────────────
@@ -417,6 +495,7 @@ Deno.serve(async (req) => {
 
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const isCronMode = body.mode === 'cron';
+    const editionType = (body.edition_type === 'preview' ? 'preview' : 'recap') as 'recap' | 'preview';
 
     // ── CRON mode ─────────────────────────────────────────────────────────────
     if (isCronMode) {
@@ -439,6 +518,7 @@ Deno.serve(async (req) => {
         const league = activeLeagues[i];
         if (i > 0) await new Promise(resolve => setTimeout(resolve, DELAY_MS));
         try {
+          if (!(await leagueShouldGenerate(sb, league.tournament_id, editionType))) { results.skipped++; continue; }
           const { data: todayEdition } = await sb.from('frontpage_editions').select('is_manual, generated_at').eq('league_id', league.id).eq('edition_date', today()).maybeSingle();
           if (todayEdition?.is_manual) {
             const hoursSince = (Date.now() - new Date(todayEdition.generated_at).getTime()) / 3_600_000;
@@ -460,6 +540,9 @@ Deno.serve(async (req) => {
           // Skip if circle has no linked leagues (nothing to report)
           const { count: linkedCount } = await sb.from('circle_leagues').select('*', { count: 'exact', head: true }).eq('circle_id', circle.id);
           if (!linkedCount) { results.skipped++; continue; }
+
+          const circleTournamentIds = await getCircleTournamentIds(sb, circle.id);
+          if (!(await circleShouldGenerate(sb, circleTournamentIds, editionType))) { results.skipped++; continue; }
 
           const { data: todayEdition } = await sb.from('frontpage_editions').select('is_manual, generated_at').eq('circle_id', circle.id).eq('edition_date', today()).maybeSingle();
           if (todayEdition?.is_manual) {
