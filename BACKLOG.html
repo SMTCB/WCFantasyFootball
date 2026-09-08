@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>244</strong><span>closed</span></div>
+      <div class="total-pill"><strong>245</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (163)</span>
+    <span class="chip" data-filter-kind="done">Shipped (164)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">244</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">245</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">163</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">164</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,39 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">163</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">164</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft back-nav, disappearing tab, save contrast, live club crests (2026-09-08) — pr #989 
+
+four small ux fixes reported by a pilot user in one session, all frontend-only:
+
+1. **wishlist tab disappearing while navigating squad/live/market/digest** — root-caused, not flaky. `competitionnav.jsx`&#x27;s draft-format lookup (`isdraftleague`) resolved the league via `activecomp`, which is only set when `extractactivecompid(pathname)` matches `/league/:id`-shaped paths. the four flat `?leagueid=` screens (squad/live/market/digest) never match that regex, so `activecomp` was always `undefined` there and the wishlist tab silently dropped every time the user left the league hub — deterministic, not intermittent. fixed by resolving the league via the existing, more robust `footballleagueid` fallback chain (already used elsewhere in the same file) instead of `activecomp`.
+2. **wishlist screen missing &quot;back to league&quot;** — added the same mobile &quot;← back&quot; top bar + desktop &quot;← back to league&quot; bar that squad/live/market/digest already get from `applayout.jsx`, by extending its `isleaguescopedscreen`/`backleagueid` logic to also match the wishlist screen&#x27;s `/league/:id/wishlist` path shape (path param, not query string). removed `wishlistdraftscreen.jsx`&#x27;s own redundant in-header back arrow (an earlier one-off workaround) now that `applayout` covers it consistently — avoids a double-back-arrow ui.
+3. **wishlist save button hard to see** — was `color: var(--cyan)` text directly on the `--shell` header background; both tokens are in the same blue family, so contrast was very low. restyled as a filled accent cta (`background: var(--accent)`, white text, rounded), matching the filled-button pattern already used on tennis/f1 screens.
+4. **club logos in live screen&#x27;s points log** — added the existing `clubcrest` component next to player names in both the desktop and mobile points log rows (it was already imported in this file and used elsewhere). kept it on mobile as well as desktop: " style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Wishlist Draft back-nav, disappearing tab, Save contrast, Live club crests</h3>
+        <p class="card-summary">Four small UX fixes reported by a pilot user in one session, all frontend-only: Wishlist tab disappearing while navigating Squad/Live/Market/Digest — root-caused, not…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #989</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Wishlist Draft back-nav, disappearing tab, Save contrast, Live club crests</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Four small UX fixes reported by a pilot user in one session, all frontend-only: Wishlist tab disappearing while navigating Squad/Live/Market/Digest — root-caused, not…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #989</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Four small UX fixes reported by a pilot user in one session, all frontend-only:</p>
+<ol>
+<li><strong>Wishlist tab disappearing while navigating Squad/Live/Market/Digest</strong> — root-caused, not flaky. <code>CompetitionNav.jsx</code>'s draft-format lookup (<code>isDraftLeague</code>) resolved the league via <code>activeComp</code>, which is only set when <code>extractActiveCompId(pathname)</code> matches <code>/league/:id</code>-shaped paths. The four flat <code>?leagueId=</code> screens (Squad/Live/Market/Digest) never match that regex, so <code>activeComp</code> was always <code>undefined</code> there and the Wishlist tab silently dropped every time the user left the league hub — deterministic, not intermittent. Fixed by resolving the league via the existing, more robust <code>footballLeagueId</code> fallback chain (already used elsewhere in the same file) instead of <code>activeComp</code>.</li>
+<li><strong>Wishlist screen missing "back to league"</strong> — added the same mobile "← Back" top bar + desktop "← Back to League" bar that Squad/Live/Market/Digest already get from <code>AppLayout.jsx</code>, by extending its <code>isLeagueScopedScreen</code>/<code>backLeagueId</code> logic to also match the Wishlist screen's <code>/league/:id/wishlist</code> path shape (path param, not query string). Removed <code>WishlistDraftScreen.jsx</code>'s own redundant in-header back arrow (an earlier one-off workaround) now that <code>AppLayout</code> covers it consistently — avoids a double-back-arrow UI.</li>
+<li><strong>Wishlist Save button hard to see</strong> — was <code>color: var(--cyan)</code> text directly on the <code>--shell</code> header background; both tokens are in the same blue family, so contrast was very low. Restyled as a filled accent CTA (<code>background: var(--accent)</code>, white text, rounded), matching the filled-button pattern already used on Tennis/F1 screens.</li>
+<li><strong>Club logos in Live screen's Points Log</strong> — added the existing <code>ClubCrest</code> component next to player names in both the desktop and mobile Points Log rows (it was already imported in this file and used elsewhere). Kept it on mobile as well as desktop: the component is small (14–16px) and fails gracefully to a dashed ghost ring rather than a broken image if a club isn't mapped in <code>club_logos</code>.</li>
+</ol>
+<p>Verified: <code>npm run lint</code> (0 errors, pre-existing warnings only, none in touched files), full CI green before merge. Local dev has no seeded/authenticated session, so visual confirmation with live data (real Points Log rows, a draft-mode league) was not possible locally — recommend spot-checking the live app.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft pick-log transparency + formation-floor safety net (2026-09-08) — pr #987 
 
 extended the pick-log transparency shipped for the season draft (pr #981, below) to the recurring wishlist draft, and closed a formation-safety gap the user flagged: &quot;we don&#x27;t run the risk of subbing out a mid and subbing in a fwd because of the wishlist the manager submitted and other managers[&#x27;] wishlist.&quot;
