@@ -1,6 +1,6 @@
 {
   "_note": "SHA-256 of each supabase/functions/*/index.{ts,js} + combined _shared/*.ts at last deploy. Run 'npm run update:checksums' after every function deploy, then commit this file. CI fails if checksums drift.",
-  "_shared_hash": "434cdbd79dfa7458147dafde8d3555e65b2d92f4df4f0ab140579e4b89098170",
+  "_shared_hash": "cef488382c66e0a2e9622b86bbef1128c083b8e022c9859abf6572c338f65cc0",
   "auto-open-transfer-window": "5591bd8857a3234dd0bc584f2d6d6a812b928cbbd845146bb07232ec6e98c1e4",
   "award-season-trophies": "073769d4a77a5dee431f669561d933c5496446eedb34f0ed343772715026a931",
   "calculate-relaxation": "ccd36232def1a9482ec9ed3fafe0766b60923992f80b444993200b90b2d6f0b5",
