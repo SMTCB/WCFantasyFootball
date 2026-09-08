@@ -1233,6 +1233,45 @@ function useRelaxationFormulaConfig(leagueId, commissioner) {
   return { relaxationEnabled: enabled, relaxationLocked: locked, relaxationTier: tier, toggleRelaxation: toggle };
 }
 
+// Draft submission tracker — shows which managers have submitted their pick list.
+// Reads only user_id + submitted_at (NOT player_ids) so the blind draft stays blind.
+// Shared across desktop LifecycleOps and the mobile DRAFT card below (same
+// dual-call pattern as useFreeTransferWindow) so both surfaces show live status.
+function useDraftSubmissionTracker(leagueId, league) {
+  const [draftSubmissions, setDraftSubmissions] = useState(null); // null = not yet loaded
+  const [draftMembers,     setDraftMembers]     = useState([]);   // all league members
+
+  useEffect(() => {
+    if (!leagueId || !league || league.format !== 'noduplicate') return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: members }, { data: subs }] = await Promise.all([
+        supabase
+          .from('league_members')
+          .select('user_id, users(username)')
+          .eq('league_id', leagueId)
+          .order('total_points', { ascending: false }),
+        supabase
+          .from('draft_submissions')
+          .select('user_id, submitted_at, phase')
+          .eq('league_id', leagueId),
+      ]);
+      if (cancelled) return;
+      setDraftMembers(members || []);
+      // Build a Set of user_ids who have actually submitted (not just auto-saved a
+      // draft-in-progress — draft_submissions rows exist from the 3s auto-save long
+      // before the manager hits Submit, so submitted_at is the only true signal).
+      const submittedSet = new Set((subs || []).filter(s => s.submitted_at).map(s => s.user_id));
+      setDraftSubmissions(submittedSet);
+    })();
+    return () => { cancelled = true; };
+  // Re-run when the league or allocation status changes (e.g. after allocation runs)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueId, league?.format, league?.cup_phase]);
+
+  return { draftMembers, draftSubmissions };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // P2P challenges config — entry fee (league_config) + stake limits (p2p_config)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1394,7 +1433,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp }) {
+function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp, draftMembers = [], draftSubmissions = null }) {
   const {
     commLoading,
     windowOpensAt, setWindowOpensAt,
@@ -1406,39 +1445,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     scoreFixtureId, setScoreFixtureId, triggerScores,
     archiveLeague, unarchiveLeague,
   } = commissioner;
-
-  // Draft submission tracker — shows which managers have submitted their pick list.
-  // Reads only user_id + submitted_at (NOT player_ids) so the blind draft stays blind.
-  const [draftSubmissions, setDraftSubmissions]   = useState(null); // null = not yet loaded
-  const [draftMembers,     setDraftMembers]       = useState([]);   // all league members
-
-  useEffect(() => {
-    if (!leagueId || !league || league.format !== 'noduplicate') return;
-    let cancelled = false;
-    (async () => {
-      const [{ data: members }, { data: subs }] = await Promise.all([
-        supabase
-          .from('league_members')
-          .select('user_id, users(username)')
-          .eq('league_id', leagueId)
-          .order('total_points', { ascending: false }),
-        supabase
-          .from('draft_submissions')
-          .select('user_id, submitted_at, phase')
-          .eq('league_id', leagueId),
-      ]);
-      if (cancelled) return;
-      setDraftMembers(members || []);
-      // Build a Set of user_ids who have actually submitted (not just auto-saved a
-      // draft-in-progress — draft_submissions rows exist from the 3s auto-save long
-      // before the manager hits Submit, so submitted_at is the only true signal).
-      const submittedSet = new Set((subs || []).filter(s => s.submitted_at).map(s => s.user_id));
-      setDraftSubmissions(submittedSet);
-    })();
-    return () => { cancelled = true; };
-  // Re-run when the league or allocation status changes (e.g. after allocation runs)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, league?.format, league?.cup_phase]);
 
   // Wishlist Draft submission tracker — recurring, per-round (unlike the one-time
   // season draft above). Resolves the currently-open round via get_wishlist_draft_status,
@@ -2359,6 +2365,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   // Free transfers config — same dual-call pattern as useFreeTransferWindow above.
   const { freeTransfers: mobFreeTransfers, toggleFreeTransfers: mobToggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
   const { relaxationEnabled: mobRelaxationEnabled, relaxationLocked: mobRelaxationLocked, relaxationTier: mobRelaxationTier, toggleRelaxation: mobToggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
+  // Draft submission tracker — same dual-call pattern, shared by desktop LifecycleOps and the mobile DRAFT card.
+  const { draftMembers, draftSubmissions } = useDraftSubmissionTracker(leagueId, league);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -2519,11 +2527,19 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           <div data-tour="comm-draft-deadline">
           <MobLifecycleCard title="DRAFT" status={mobDraftStatus} tone={mobDraftTone} when="After all picks. Before GW1.">
             {mobAllocationDone ? (
-              <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
-                ✓ Allocation complete — squads are live
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                  ✓ Allocation complete — squads are live
+                </div>
+                {draftMembers.length > 0 && draftSubmissions !== null && (
+                  <DraftSubmissionTracker members={draftMembers} submitted={draftSubmissions} />
+                )}
               </div>
             ) : (
               <>
+                {draftMembers.length > 0 && draftSubmissions !== null && (
+                  <DraftSubmissionTracker members={draftMembers} submitted={draftSubmissions} />
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
                   <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={mobInput} />
@@ -2678,6 +2694,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         tournamentId={tournamentId}
         league={league}
         onHelp={() => setHelpModal('lifecycle')}
+        draftMembers={draftMembers}
+        draftSubmissions={draftSubmissions}
       />
 
       {/* Zone C — Bet creation */}
