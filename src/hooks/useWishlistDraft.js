@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { normalizeIntelligence } from '../lib/intelligence';
 
 const DEFAULT_MAX_TARGETS = 10;
 const DEFAULT_MAX_DROPS   = 5;
@@ -79,13 +80,22 @@ export function useWishlistDraft(leagueId) {
         setSquadPlayers([]);
       }
 
-      // Full player pool for target search (tournament-scoped)
+      // Full player pool for target search (tournament-scoped), with fitness
+      // intel attached (mirrors MarketScreen's players+player_status join) so
+      // the target list can show the same availability dot/warning as Market.
       if (leagueRow?.tournament_id) {
-        const { data: pool } = await supabase
-          .from('players')
-          .select('id, name, position, club, price, forza_team_id')
-          .eq('tournament_id', leagueRow.tournament_id);
-        setPlayerPool(pool ?? []);
+        const [{ data: pool }, { data: intelData }] = await Promise.all([
+          supabase
+            .from('players')
+            .select('id, name, position, club, price, forza_team_id')
+            .eq('tournament_id', leagueRow.tournament_id),
+          supabase.from('player_status').select('*'),
+        ]);
+        const poolWithIntel = (pool ?? []).map(p => ({
+          ...p,
+          intel: normalizeIntelligence(intelData?.find(i => i.player_id === p.id)),
+        }));
+        setPlayerPool(poolWithIntel);
       } else {
         setPlayerPool([]);
       }
