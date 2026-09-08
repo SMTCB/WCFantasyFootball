@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>237</strong><span>closed</span></div>
+      <div class="total-pill"><strong>238</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (156)</span>
+    <span class="chip" data-filter-kind="done">Shipped (157)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">237</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">238</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">156</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">157</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,35 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">156</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">157</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft window made permanently open — round-rollover fix (2026-09-08) — migration 288 
+
+user reported the wishlist draft screen showing &quot;not available&quot; in `football_draft_wishlist`. root cause: `get_wishlist_draft_status()` (migration 253/278) computed the active round purely from finished fixtures (`max(finished round)+1`), then reported `available: false` the instant that round&#x27;s window was processed (`wishlist_draft_windows.processed_at` set) — leaving the screen dark for the entire gap between &quot;draft just ran&quot; and &quot;next matchday&#x27;s fixtures actually finish,&quot; even though nothing was wrong.
+
+product decision this session (see conversation): the wishlist should be a standing watchlist, not a per-round submission window — always open once the league&#x27;s first round has played, editable any time, resolved automatically by the existing snake-draft allocation job right before each market opens. no explicit &quot;close during an open market&quot; gate needed (once the market&#x27;s open, managers transact directly and won&#x27;t touch the wishlist screen anyway).
+
+fix (migration 288, `get_wishlist_draft_status` only): once the fixture-derived round is at or behind the highest round this league has already processed (`wishlist_draft_windows.processed_at is not null`), roll the reported round forward to `max_processed_round + 1` and always return `available: true` (once the earlier league-exists/draft-mode/enabled/has-a-finished-round gates pass). `submit_wishlist_draft`&#x27;s existing `window_closed` guard (migration 252) is untouched — still correct, just no longer reachable in normal flow since the round number submitted against is always the one just proven open. `auto-open-transfer-window`&#x27;s and `run-wishlist-draft`&#x27;s allocation triggers are both untouched — they compute the round to actually resolve purely from fixtures, same base calculation as this function, so a submission filed under a round bumped forward early just sits `pending` until the cron&#x27;s fixture-based round catches up" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Wishlist Draft window made permanently open — round-rollover fix</h3>
+        <p class="card-summary">User reported the Wishlist Draft screen showing "not available" in football_draft_wishlist . Root cause: get_wishlist_draft_status() (migration 253/278) computed the…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">migration 288</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Wishlist Draft window made permanently open — round-rollover fix</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User reported the Wishlist Draft screen showing "not available" in football_draft_wishlist . Root cause: get_wishlist_draft_status() (migration 253/278) computed the…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · migration 288</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>User reported the Wishlist Draft screen showing "not available" in <code>football_draft_wishlist</code>. Root cause: <code>get_wishlist_draft_status()</code> (migration 253/278) computed the active round purely from finished fixtures (<code>MAX(finished round)+1</code>), then reported <code>available: false</code> the instant that round's window was processed (<code>wishlist_draft_windows.processed_at</code> set) — leaving the screen dark for the entire gap between "draft just ran" and "next matchday's fixtures actually finish," even though nothing was wrong.</p>
+<p>Product decision this session (see conversation): the wishlist should be a standing watchlist, not a per-round submission window — always open once the league's first round has played, editable any time, resolved automatically by the existing snake-draft allocation job right before each market opens. No explicit "close during an open market" gate needed (once the market's open, managers transact directly and won't touch the wishlist screen anyway).</p>
+<p>Fix (migration 288, <code>get_wishlist_draft_status</code> only): once the fixture-derived round is at or behind the highest round this league has already processed (<code>wishlist_draft_windows.processed_at IS NOT NULL</code>), roll the reported round forward to <code>max_processed_round + 1</code> and always return <code>available: true</code> (once the earlier league-exists/draft-mode/enabled/has-a-finished-round gates pass). <code>submit_wishlist_draft</code>'s existing <code>WINDOW_CLOSED</code> guard (migration 252) is untouched — still correct, just no longer reachable in normal flow since the round number submitted against is always the one just proven open. <code>auto-open-transfer-window</code>'s and <code>run-wishlist-draft</code>'s allocation triggers are both untouched — they compute the round to actually resolve purely from fixtures, same base calculation as this function, so a submission filed under a round bumped forward early just sits <code>pending</code> until the cron's fixture-based round catches up to it; no desync, no double-processing.</p>
+<p>"Clean wishlist per round" requirement: no explicit clear/delete step needed. <code>wishlist_draft_submissions</code> is already <code>UNIQUE(league_id, user_id, round_number)</code> — the moment the effective round advances, there's no submission row yet for the new round number, so <code>useWishlistDraft.js</code>'s existing-targets query naturally comes back empty. Prior rounds' rows stay as history under their own round_number (read by the gazette report), never resurface in the UI.</p>
+<p>Verified live: <code>get_wishlist_draft_status('1b54a459-443f-4d5c-aaac-6d187fb3805a')</code> (football_draft_wishlist) went from <code>{"available": false, "round_number": 9}</code> (round 9 already processed, round 10's fixtures not yet finished) to <code>{"available": true, "round_number": 10}</code> post-fix. Checked <code>WishlistDraftBanner.jsx</code>/<code>useWishlistDraft.js</code> for any separate market-open-state gate — found none; visibility is driven solely by <code>status.available</code>, so no other code changes were required.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft target-list ui parity with market screen (2026-09-08) — pr #975 
 
 the wishlist draft screen&#x27;s target-pool player list looked noticeably more basic than the market tab&#x27;s — inline hand-rolled position badges instead of the shared `positionchip`, no availability/injury indicator, and expanding a player showed only a plain-text season summary line instead of a real stats table.

@@ -11,6 +11,18 @@
 
 ---
 
+## ✅ Wishlist Draft window made permanently open — round-rollover fix (2026-09-08) — migration 288
+
+User reported the Wishlist Draft screen showing "not available" in `football_draft_wishlist`. Root cause: `get_wishlist_draft_status()` (migration 253/278) computed the active round purely from finished fixtures (`MAX(finished round)+1`), then reported `available: false` the instant that round's window was processed (`wishlist_draft_windows.processed_at` set) — leaving the screen dark for the entire gap between "draft just ran" and "next matchday's fixtures actually finish," even though nothing was wrong.
+
+Product decision this session (see conversation): the wishlist should be a standing watchlist, not a per-round submission window — always open once the league's first round has played, editable any time, resolved automatically by the existing snake-draft allocation job right before each market opens. No explicit "close during an open market" gate needed (once the market's open, managers transact directly and won't touch the wishlist screen anyway).
+
+Fix (migration 288, `get_wishlist_draft_status` only): once the fixture-derived round is at or behind the highest round this league has already processed (`wishlist_draft_windows.processed_at IS NOT NULL`), roll the reported round forward to `max_processed_round + 1` and always return `available: true` (once the earlier league-exists/draft-mode/enabled/has-a-finished-round gates pass). `submit_wishlist_draft`'s existing `WINDOW_CLOSED` guard (migration 252) is untouched — still correct, just no longer reachable in normal flow since the round number submitted against is always the one just proven open. `auto-open-transfer-window`'s and `run-wishlist-draft`'s allocation triggers are both untouched — they compute the round to actually resolve purely from fixtures, same base calculation as this function, so a submission filed under a round bumped forward early just sits `pending` until the cron's fixture-based round catches up to it; no desync, no double-processing.
+
+"Clean wishlist per round" requirement: no explicit clear/delete step needed. `wishlist_draft_submissions` is already `UNIQUE(league_id, user_id, round_number)` — the moment the effective round advances, there's no submission row yet for the new round number, so `useWishlistDraft.js`'s existing-targets query naturally comes back empty. Prior rounds' rows stay as history under their own round_number (read by the gazette report), never resurface in the UI.
+
+Verified live: `get_wishlist_draft_status('1b54a459-443f-4d5c-aaac-6d187fb3805a')` (football_draft_wishlist) went from `{"available": false, "round_number": 9}` (round 9 already processed, round 10's fixtures not yet finished) to `{"available": true, "round_number": 10}` post-fix. Checked `WishlistDraftBanner.jsx`/`useWishlistDraft.js` for any separate market-open-state gate — found none; visibility is driven solely by `status.available`, so no other code changes were required.
+
 ## ✅ Wishlist Draft target-list UI parity with Market screen (2026-09-08) — PR #975
 
 The Wishlist Draft screen's target-pool player list looked noticeably more basic than the Market tab's — inline hand-rolled position badges instead of the shared `PositionChip`, no availability/injury indicator, and expanding a player showed only a plain-text season summary line instead of a real stats table.
