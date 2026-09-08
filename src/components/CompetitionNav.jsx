@@ -161,7 +161,17 @@ export function CompetitionNav({
   // Wishlist Draft tab — draft-mode football leagues only. Nested under
   // /league/:id/wishlist (unlike the other flat ?leagueId= screens), so it's
   // inserted with its own baked-in path rather than via carriesLeagueId.
-  const isDraftLeague = activeComp?.sport === 'football' && activeComp?.format === 'noduplicate';
+  //
+  // Looked up via footballLeagueId (not activeComp) deliberately: activeComp
+  // only resolves when the pathname itself is /league/:id, so on the flat
+  // /squad, /live, /market, /recap routes (reached via the query-string
+  // fallback baked into footballLeagueId above) activeComp was always
+  // undefined and this tab would vanish the moment the user left the league
+  // hub — the "Wishlist tab disappears when switching tabs" bug.
+  const draftLeagueComp = footballLeagueId
+    ? allComps.find(c => c.sport === 'football' && c.id === footballLeagueId)
+    : null;
+  const isDraftLeague = draftLeagueComp?.format === 'noduplicate';
   if (isFoot && isDraftLeague && footballLeagueId) {
     const wishlistPath = `/league/${footballLeagueId}/wishlist`;
     const marketIdx = screens.findIndex(s => s.key === 'market');
