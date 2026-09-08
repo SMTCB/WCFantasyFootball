@@ -267,6 +267,12 @@ export default function AppLayout({ children }) {
 
   const showBackButton = !isMainRoute;
 
+  const handleBack = () => {
+    if (backLeagueId) navigate(`/league/${backLeagueId}`);
+    else if (isCompetitionScreen) navigate(activeCircleId ? `/clubhouse/${activeCircleId}` : '/clubhouse');
+    else navigate(-1);
+  };
+
   return (
     <div className="min-h-screen flex items-start" style={{ background: 'var(--ink)' }}>
       <SkipToContent targetId="main-content" />
@@ -382,11 +388,7 @@ export default function AppLayout({ children }) {
         >
           {showBackButton ? (
             <button
-              onClick={() => {
-                if (backLeagueId) navigate(`/league/${backLeagueId}`);
-                else if (isCompetitionScreen) navigate(activeCircleId ? `/clubhouse/${activeCircleId}` : '/clubhouse');
-                else navigate(-1);
-              }}
+              onClick={handleBack}
               aria-label="Go back"
               className="flex items-center gap-2 px-2 py-1.5 transition-colors"
               style={{ color: 'var(--cyan)', cursor: 'pointer' }}
@@ -418,6 +420,30 @@ export default function AppLayout({ children }) {
             ⚙
           </Link>
         </div>
+
+        {/* Desktop back bar — the 4 league-scoped tabs (Live/Squad/Market/Digest)
+            have no other way back to the league frontpage on desktop, since the
+            sidebar is a persistent clubhouse-level spine, not per-screen nav. */}
+        {backLeagueId && (
+          <div
+            className="hidden lg:flex items-center px-4"
+            style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)', minHeight: 40 }}
+          >
+            <button
+              onClick={handleBack}
+              aria-label="Back to league"
+              className="flex items-center gap-2 py-1.5 transition-colors"
+              style={{ color: 'var(--cyan)', cursor: 'pointer' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--paper)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--cyan)'}
+            >
+              <span style={{ fontSize: 'var(--fs-body-lg)' }}>←</span>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                Back to League
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Competition nav — clubhouse/competition dropdown + the active sport's
             screen tabs, merged into one component. Hidden on the cross-clubhouse
