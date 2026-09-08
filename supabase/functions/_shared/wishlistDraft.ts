@@ -14,6 +14,11 @@ import { logError } from './log.ts';
 const FN = 'wishlistDraft';
 const DEFAULT_SQUAD_SIZE = 15;
 const DEFAULT_SQUAD_POS_CAPS: Record<string, number> = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+// Matches set_lineup()'s live starting-XI rule (migration 214): exactly 1 GK,
+// at least 1 of each outfield position. This is the floor a manager's squad
+// must clear to be able to field a legal XI at all — protected below so a
+// wishlist round can never trade a manager out of a fieldable squad.
+const DEFAULT_MIN_FORMATION: Record<string, number> = { GK: 1, DEF: 1, MID: 1, FWD: 1 };
 
 export interface WishlistDraftResult {
   leagueId: string;
@@ -34,7 +39,7 @@ export async function processLeagueWishlistDraft(
 
   const { data: leagueRow } = await supabase
     .from('leagues')
-    .select('squad_size, position_limits, tournament_id, budget_total, format, league_mode')
+    .select('squad_size, position_limits, min_formation, tournament_id, budget_total, format, league_mode')
     .eq('id', leagueId)
     .maybeSingle();
 
@@ -120,6 +125,7 @@ export async function processLeagueWishlistDraft(
 async function runAllocation(supabase: any, leagueId: string, roundNumber: number, leagueRow: any, submissions: any[], seed: number) {
   const SQUAD_SIZE     = Number(leagueRow.squad_size ?? DEFAULT_SQUAD_SIZE);
   const SQUAD_POS_CAPS = leagueRow.position_limits   ?? DEFAULT_SQUAD_POS_CAPS;
+  const MIN_FORMATION  = leagueRow.min_formation     ?? DEFAULT_MIN_FORMATION;
   const budget         = Number(leagueRow.budget_total ?? 100);
 
   const { data: clubCapData } = await supabase.rpc('get_club_cap', { p_league_id: leagueId });
@@ -202,7 +208,7 @@ async function runAllocation(supabase: any, leagueId: string, roundNumber: numbe
   const submissionMap: Record<string, string[]> = {};
   for (const sub of submissions) submissionMap[sub.user_id] = sub.target_ids ?? [];
 
-  const { contestedPlayers } = runSnakeDraft({
+  const { contestedPlayers, pickLog } = runSnakeDraft({
     order,
     submissionMap,
     userState,
@@ -212,7 +218,20 @@ async function runAllocation(supabase: any, leagueId: string, roundNumber: numbe
     posCaps:   SQUAD_POS_CAPS,
     budget,
     clubCap:   CLUB_CAP,
+    minFloor:  MIN_FORMATION,
   });
+
+  // Last-resort guarantee: the in-loop reservation guard above stops a
+  // manager's own picks from *creating* a formation deficit, but it can't
+  // conjure a replacement if that manager's ranked wishlist simply never
+  // named an eligible player of the position they're short (e.g. they
+  // dropped their only MID and every MID on their list got taken by someone
+  // else first). Should be rare — logged whenever it fires so it's visible,
+  // not silent.
+  const safetyNetActions = await backfillFormationFloor(
+    supabase, leagueId, roundNumber, leagueRow.tournament_id, userState, playerMap, taken,
+    MIN_FORMATION, SQUAD_SIZE, budget, CLUB_CAP,
+  );
 
   // Commit: players + budget_remaining only, matching process-transfer's
   // existing minimal-touch convention for squad writes (starting_xi is
@@ -237,9 +256,108 @@ async function runAllocation(supabase: any, leagueId: string, roundNumber: numbe
     .eq('round_number', roundNumber)
     .eq('status', 'pending');
 
-  await writeGazetteEntry(supabase, leagueId, roundNumber, submissions, userState, order);
+  await writeGazetteEntry(supabase, leagueId, roundNumber, submissions, userState, order, pickLog, safetyNetActions);
 
   return { contestedPlayers };
+}
+
+// Post-allocation safety net: tops up any manager still below `minFloor` in
+// any position after the snake draft, by pulling the cheapest eligible
+// untaken player of that position from the *full* tournament pool (not just
+// the players named on someone's wishlist), respecting the same budget and
+// club-cap rules as the draft itself. If the squad is already at capacity,
+// frees a slot first by releasing that manager's most expendable player —
+// the priciest player from whichever position sits furthest above its own
+// floor — so the swap can never trade one deficit for another.
+//
+// Mutates userState/taken/playerMap in place, matching runSnakeDraft's
+// convention. Returns a log of every action taken, for gazette transparency
+// (kept separate from pickLog since these aren't wishlist picks).
+// deno-lint-ignore no-explicit-any
+async function backfillFormationFloor(
+  supabase: any,
+  leagueId: string,
+  roundNumber: number,
+  tournamentId: string | null | undefined,
+  // deno-lint-ignore no-explicit-any
+  userState: Record<string, any>,
+  // deno-lint-ignore no-explicit-any
+  playerMap: Record<string, any>,
+  taken: Set<string>,
+  minFloor: Record<string, number>,
+  squadSize: number,
+  budget: number,
+  clubCap: number,
+): Promise<Array<{ user_id: string; position: string; player_id: string; direction: 'added' | 'released' }>> {
+  const actions: Array<{ user_id: string; position: string; player_id: string; direction: 'added' | 'released' }> = [];
+
+  const deficientUserIds = Object.keys(userState).filter((uid) =>
+    Object.keys(minFloor).some((pos) => (userState[uid].posCounts[pos] ?? 0) < (minFloor[pos] ?? 0)),
+  );
+  if (deficientUserIds.length === 0) return actions;
+
+  let poolQuery = supabase
+    .from('players')
+    .select('id, position, price, forza_team_id')
+    .order('price', { ascending: true });
+  if (tournamentId) poolQuery = poolQuery.eq('tournament_id', tournamentId);
+  const { data: poolRows } = await poolQuery;
+  // deno-lint-ignore no-explicit-any
+  const pool: any[] = poolRows ?? [];
+
+  for (const uid of deficientUserIds) {
+    const u = userState[uid];
+    for (const pos of Object.keys(minFloor)) {
+      while ((u.posCounts[pos] ?? 0) < (minFloor[pos] ?? 0)) {
+        const candidate = pool.find((p) => {
+          if (taken.has(p.id)) return false;
+          if (normalisePosition(p.position) !== pos) return false;
+          if (u.budgetUsed + Number(p.price ?? 0) > budget) return false;
+          const teamId = p.forza_team_id;
+          if (teamId && clubCap < 99 && (u.clubCounts[teamId] ?? 0) >= clubCap) return false;
+          return true;
+        });
+        if (!candidate) {
+          await logError(FN, 'critical', 'wishlist formation safety net found no eligible replacement', { leagueId, roundNumber, userId: uid, position: pos });
+          break;
+        }
+
+        if (u.allocated.length >= squadSize) {
+          const donorPos = Object.keys(u.posCounts).find((p2) =>
+            p2 !== pos &&
+            (u.posCounts[p2] ?? 0) > (minFloor[p2] ?? 0) &&
+            u.allocated.some((pid: string) => normalisePosition(playerMap[pid]?.position) === p2),
+          );
+          if (!donorPos) {
+            await logError(FN, 'critical', 'wishlist formation safety net found no expendable slot to free', { leagueId, roundNumber, userId: uid, position: pos });
+            break;
+          }
+          const donorCandidates = u.allocated
+            .filter((pid: string) => normalisePosition(playerMap[pid]?.position) === donorPos)
+            .sort((a: string, b: string) => Number(playerMap[b]?.price ?? 0) - Number(playerMap[a]?.price ?? 0));
+          const donorId = donorCandidates[0];
+          u.allocated = u.allocated.filter((pid: string) => pid !== donorId);
+          u.posCounts[donorPos] = (u.posCounts[donorPos] ?? 0) - 1;
+          const donorTeam = playerMap[donorId]?.forza_team_id;
+          if (donorTeam) u.clubCounts[donorTeam] = (u.clubCounts[donorTeam] ?? 0) - 1;
+          u.budgetUsed -= Number(playerMap[donorId]?.price ?? 0);
+          taken.delete(donorId);
+          actions.push({ user_id: uid, position: donorPos, player_id: donorId, direction: 'released' });
+        }
+
+        u.allocated.push(candidate.id);
+        u.posCounts[pos] = (u.posCounts[pos] ?? 0) + 1;
+        const teamId = candidate.forza_team_id;
+        if (teamId) u.clubCounts[teamId] = (u.clubCounts[teamId] ?? 0) + 1;
+        u.budgetUsed += Number(candidate.price ?? 0);
+        taken.add(candidate.id);
+        playerMap[candidate.id] = candidate;
+        actions.push({ user_id: uid, position: pos, player_id: candidate.id, direction: 'added' });
+      }
+    }
+  }
+
+  return actions;
 }
 
 // Deterministically rotates a sorted base order by `seed + roundNumber`
@@ -258,7 +376,7 @@ function rotateOrder(ids: string[], seed: number, roundNumber: number): string[]
 }
 
 // deno-lint-ignore no-explicit-any
-async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: number, submissions: any[], userState: any, order: string[]) {
+async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: number, submissions: any[], userState: any, order: string[], pickLog: any[], safetyNetActions: any[]) {
   const bullets = order.map((uid, idx) => {
     const sub = submissions.find((s) => s.user_id === uid);
     const u = userState[uid];
@@ -292,6 +410,15 @@ async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: n
       round_number: roundNumber,
       order,
       submissions: submissions.map((s) => ({ user_id: s.user_id, target_ids: s.target_ids, drop_ids: s.drop_ids })),
+      // Per-pick audit trail (round/order_index/user_id/player_id/wishlist_rank),
+      // same shape as run-draft-lottery's — lets a manager verify the pick
+      // order actually rotated and no one manager always picked first.
+      pick_log: pickLog ?? [],
+      // Formation safety-net actions (rare): only present if a manager's own
+      // wishlist left them short of the minimum formation floor even after
+      // the in-loop reservation guard, and a last-resort swap was made from
+      // the full player pool to fix it.
+      formation_safety_net: safetyNetActions ?? [],
     }),
   });
   if (error) {

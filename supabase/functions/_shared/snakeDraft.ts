@@ -32,6 +32,9 @@ export interface SnakeDraftOptions {
   posCaps: Record<string, number>;
   budget: number;
   clubCap: number;                          // >= 99 means uncapped
+  minFloor?: Record<string, number>;        // optional — reserve slots so no position
+                                             // finishes below this count (wishlist draft
+                                             // only; other callers omit it, no behavior change)
 }
 
 export interface DraftPickLogEntry {
@@ -72,7 +75,7 @@ export function shuffleOrder(ids: string[]): string[] {
 // clubCounts/budgetUsed) and `taken`. Returns how many pick attempts hit an
 // already-taken player (informational, used for gazette copy).
 export function runSnakeDraft(opts: SnakeDraftOptions): SnakeDraftResult {
-  const { order, submissionMap, userState, playerMap, taken, squadSize, posCaps, budget, clubCap } = opts;
+  const { order, submissionMap, userState, playerMap, taken, squadSize, posCaps, budget, clubCap, minFloor } = opts;
 
   const pointers: Record<string, number> = {};
   for (const uid of order) pointers[uid] = 0;
@@ -100,6 +103,19 @@ export function runSnakeDraft(opts: SnakeDraftOptions): SnakeDraftResult {
         if ((u.posCounts[pos] ?? 0) >= (posCaps[pos] ?? 0)) continue;
         if (u.budgetUsed + player.price > budget) continue;
         if (teamId && clubCap < 99 && clubCnt >= clubCap) continue;
+        // Reserve remaining slots for positions still below the required
+        // floor (e.g. don't let a manager's last free slot go to a 3rd FWD
+        // while they're still short their only MID) — skip this pick if it
+        // doesn't fill a deficit and there isn't slack beyond what the
+        // deficit needs. Only engaged when a caller opts in via minFloor.
+        if (minFloor) {
+          const deficit = Object.keys(minFloor).reduce(
+            (sum, p) => sum + Math.max(0, (minFloor[p] ?? 0) - (u.posCounts[p] ?? 0)), 0,
+          );
+          const fillsDeficit = (u.posCounts[pos] ?? 0) < (minFloor[pos] ?? 0);
+          const remainingSlots = squadSize - u.allocated.length;
+          if (deficit > 0 && remainingSlots <= deficit && !fillsDeficit) continue;
+        }
         u.allocated.push(pid);
         u.posCounts[pos] = (u.posCounts[pos] ?? 0) + 1;
         if (teamId) u.clubCounts[teamId] = clubCnt + 1;
