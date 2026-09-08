@@ -23,6 +23,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError as _logError } from '../_shared/log.ts';
 import { forzaFetch as forza, POSITION_MAP } from '../_shared/providers/forza.ts';
+import { requireServiceRole } from '../_shared/auth.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
@@ -288,22 +289,11 @@ Deno.serve(async (req) => {
 
   // P1 auth guard: this function does privileged service-role writes and chain-invokes
   // calculate-scores. verify_jwt is false, so guard here (mirrors calculate-scores):
-  // accept the service-role key (cron), a service_role JWT claim, or a valid user JWT
-  // (admin re-ingest button). Reject anon callers — closes the unauthenticated endpoint.
+  // accept the service-role key (cron), a service_role JWT claim, the ADMIN_TRIGGER_KEY
+  // fallback, or a valid user JWT (admin re-ingest button). Reject anon callers.
   const authHeader = req.headers.get('Authorization') ?? '';
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-  let isAuthorized = serviceRoleKey !== '' && authHeader === `Bearer ${serviceRoleKey}`;
-  if (!isAuthorized) {
-    try {
-      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-        isAuthorized = payload.role === 'service_role';
-      }
-    } catch { /* not a service-role JWT */ }
-  }
-  if (!isAuthorized) {
+  const authErr = await requireServiceRole(req);
+  if (authErr) {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (!user) return respond(401, { error: 'Unauthorized' });
   }
