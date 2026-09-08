@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>243</strong><span>closed</span></div>
+      <div class="total-pill"><strong>244</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (162)</span>
+    <span class="chip" data-filter-kind="done">Shipped (163)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">243</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">244</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">162</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">163</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,41 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">162</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">163</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft pick-log transparency + formation-floor safety net (2026-09-08) — pr #987 
+
+extended the pick-log transparency shipped for the season draft (pr #981, below) to the recurring wishlist draft, and closed a formation-safety gap the user flagged: &quot;we don&#x27;t run the risk of subbing out a mid and subbing in a fwd because of the wishlist the manager submitted and other managers[&#x27;] wishlist.&quot;
+
+three changes, all in `_shared/wishlistdraft.ts` and `_shared/snakedraft.ts`:
+1. **pick log**: `runsnakedraft()` already computed a `picklog` (used by the season draft) but `wishlistdraft.ts` discarded it — now captured and written into `gazette_entries.full_data.pick_log`, same shape as the season draft&#x27;s.
+2. **in-loop formation guard**: `runsnakedraft()` gained an opt-in `minfloor` parameter (only `wishlistdraft.ts` passes it — `run-draft-lottery` is unaffected, provably, since it never sets the option). while a manager still has an unmet position deficit against `leagues.min_formation` (live default `{gk:1,def:1,mid:1,fwd:1}`), their last few remaining squad slots are reserved for that deficit rather than spent on whatever their wishlist ranks next — so a manager can no longer end a round unable to field a legal xi because their (or another manager&#x27;s) wishlist happened to be lopsided.
+3. **post-allocation safety net**: `backfillformationfloor()` — a last-resort backstop for the rare case a manager&#x27;s own wishlist contains no eligible replacement even with slot reservation. pulls the cheapest eligible untaken player of the needed position from the full tournament pool (not just wishlist targets), respecting budget and club-cap; if the squad is already at full size, first frees a slot by releasing the manager&#x27;s most expendable player (priciest player from whichever position sits furthest above its own floor). every action is logged into `gazette_entries.full_data.formation_safety_net` (`added`/`released` per player) — nothing happens silently. budget-cap and max-per-clu" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Wishlist Draft pick-log transparency + formation-floor safety net</h3>
+        <p class="card-summary">Extended the pick-log transparency shipped for the season draft (PR #981, below) to the recurring Wishlist Draft, and closed a formation-safety gap the user flagged: "we…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #987</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Wishlist Draft pick-log transparency + formation-floor safety net</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Extended the pick-log transparency shipped for the season draft (PR #981, below) to the recurring Wishlist Draft, and closed a formation-safety gap the user flagged: "we…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #987</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Extended the pick-log transparency shipped for the season draft (PR #981, below) to the recurring Wishlist Draft, and closed a formation-safety gap the user flagged: "we don't run the risk of subbing out a MID and subbing in a FWD because of the wishlist the manager submitted and other managers['] wishlist."</p>
+<p>Three changes, all in <code>_shared/wishlistDraft.ts</code> and <code>_shared/snakeDraft.ts</code>:</p>
+<ol>
+<li><strong>Pick log</strong>: <code>runSnakeDraft()</code> already computed a <code>pickLog</code> (used by the season draft) but <code>wishlistDraft.ts</code> discarded it — now captured and written into <code>gazette_entries.full_data.pick_log</code>, same shape as the season draft's.</li>
+<li><strong>In-loop formation guard</strong>: <code>runSnakeDraft()</code> gained an opt-in <code>minFloor</code> parameter (only <code>wishlistDraft.ts</code> passes it — <code>run-draft-lottery</code> is unaffected, provably, since it never sets the option). While a manager still has an unmet position deficit against <code>leagues.min_formation</code> (live default <code>{GK:1,DEF:1,MID:1,FWD:1}</code>), their last few remaining squad slots are reserved for that deficit rather than spent on whatever their wishlist ranks next — so a manager can no longer end a round unable to field a legal XI because their (or another manager's) wishlist happened to be lopsided.</li>
+<li><strong>Post-allocation safety net</strong>: <code>backfillFormationFloor()</code> — a last-resort backstop for the rare case a manager's own wishlist contains no eligible replacement even with slot reservation. Pulls the cheapest eligible untaken player of the needed position from the full tournament pool (not just wishlist targets), respecting budget and club-cap; if the squad is already at full size, first frees a slot by releasing the manager's most expendable player (priciest player from whichever position sits furthest above its own floor). Every action is logged into <code>gazette_entries.full_data.formation_safety_net</code> (<code>added</code>/<code>released</code> per player) — nothing happens silently. Budget-cap and max-per-club logic were explicitly left untouched per the user's direction ("I leave up to you... what we need to ensure is [the formation-legality risk]").</li>
+</ol>
+<p><code>GazetteDraftReport.jsx</code>'s existing season-draft components (<code>DraftOrderList</code>, <code>DraftPickLogTable</code>) were generalized with optional <code>title</code>/<code>note</code>/<code>firstRoundLabel</code> props (defaults unchanged, so season-draft rendering is byte-identical) and reused inside a rewritten <code>WishlistRoundReport</code>, which now renders pick order, the full pick log, and — only when non-empty — an amber "Formation Safety Net" callout explaining what was swapped and why. Old gazette rows without <code>pick_log</code>/<code>formation_safety_net</code> still render fine (those fields default to empty).</p>
+<p>Same <code>_shared/*.ts</code> drift-check consequence as PR #981: editing <code>snakeDraft.ts</code> and <code>wishlistDraft.ts</code> flagged all 25 functions that bundle <code>_shared</code>. Redeployed all 25 and committed updated <code>.function-checksums.json</code>.</p>
+<p>Verified: <code>npm run lint</code> (0 errors, pre-existing warnings only), <code>npm run build</code> (clean), full CI green before merge. Visual verification of the new report UI is still pending — no wishlist round has run through the new code path in production yet; the deficit reservation and safety-net logic were verified by manual trace instead (no <code>deno</code> CLI available locally to type-check the Edge Function TypeScript).</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft audit trail — round-by-round pick log with wishlist rank (2026-09-08) — pr #981 
 
 the draft order board (pr #979, above) showed the snake-draft *rotation pattern* but not an actual pick-by-pick record — a manager who missed several top wishlist targets had no way to see whether that was because someone else picked first that round, or because the player was gone before their turn came around. user feedback verbatim: &quot;what was the list (by order) of each manager; what was allocated to each manager in each round; what was the picking order in each round... so that i understand why, for example, none of my top 5 picks were assigned to me.&quot;
