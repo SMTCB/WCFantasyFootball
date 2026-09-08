@@ -2280,7 +2280,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
       {/* Special Edition generator */}
       <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 14, marginTop: 4 }}>
         <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)', marginBottom: 8 }}>
-          AI SPECIAL EDITION · FORZA TIMES
+          AI SPECIAL EDITION · THE FRONTROW
         </div>
         <p style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5, marginBottom: 10 }}>
           Generate a fresh AI-written edition now — headline, hot take, wooden spoon, transfer rumour. Shows immediately on the Frontpage. 4h rate limit.
