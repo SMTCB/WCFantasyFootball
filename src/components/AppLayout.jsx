@@ -261,9 +261,13 @@ export default function AppLayout({ children }) {
     location.pathname === '/live' ||
     location.pathname === '/market' ||
     location.pathname === '/recap';
+  // Wishlist Draft is also one level "deeper" than the league frontpage, but
+  // nested under /league/:id/wishlist (path param, not ?leagueId=) — same
+  // "back to league" treatment as the tabs above.
+  const wishlistMatch = location.pathname.match(/^\/league\/([^/]+)\/wishlist$/);
   const backLeagueId = isLeagueScopedScreen
     ? new URLSearchParams(location.search).get('leagueId')
-    : null;
+    : wishlistMatch ? wishlistMatch[1] : null;
 
   const showBackButton = !isMainRoute;
 

@@ -189,6 +189,7 @@ function DesktopStatsRow({ s }) {
       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {s.live && <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
+          <ClubCrest name={s.club} size={16} />
           <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>{name}</span>
           <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{(s.club || '').split(' ').slice(0, 2).join(' ')}</span>
         </div>
@@ -244,6 +245,7 @@ function StatsLogRow({ s }) {
       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {s.live && <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
+          <ClubCrest name={s.club} size={14} />
           <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>{name}</span>
           <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{s.position}</span>
           <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: .6 }}>{(s.club || '').split(' ')[0]}</span>

@@ -370,7 +370,6 @@ export default function WishlistDraftScreen() {
         }}
       >
         <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between gap-3">
-          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--on-shell-dim)] text-[20px] leading-none shrink-0">←</button>
           <div className="flex-1 text-center">
             <div className="fz-label" style={{ color: 'var(--on-shell-dim)' }}>Wishlist Draft</div>
             <div className="flex items-center justify-center gap-2 mt-0.5">
@@ -398,8 +397,8 @@ export default function WishlistDraftScreen() {
           <button
             onClick={handleSave}
             disabled={(targets.length === 0 && dropIds.size === 0) || saving}
-            className="text-[10px] font-black uppercase tracking-widest shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
-            style={{ color: 'var(--cyan)' }}
+            className="text-[10px] font-black uppercase tracking-widest shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer' }}
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
