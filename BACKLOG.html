@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>238</strong><span>closed</span></div>
+      <div class="total-pill"><strong>240</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (157)</span>
+    <span class="chip" data-filter-kind="done">Shipped (159)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">238</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">240</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">157</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">159</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,62 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">157</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">159</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft order board — snake-draft pick-order infographic (2026-09-08) — pr #979 
+
+follow-up to the manager-grouped contested-picks fix below: managers reading the market report draft recap could see the outcome of the draft (who won what) but had no visual for the mechanism itself — that round 1&#x27;s order was set by a random lottery and every round after reverses direction, so no one manager is structurally favored.
+
+fix: added `draftorderboard` to `gazettedraftreport.jsx`&#x27;s `seasondraftreport`, rendered from `fulldata.snake_order` (already stored on the gazette entry, no new data needed). shows round 1 and round 2 as two rows of numbered pick chips, one per manager, with round 2&#x27;s pick numbers and arrow direction mirrored to visually demonstrate the reversal — plus a legend mapping pick-order position to manager name. deliberately scoped to showing the *rotation pattern*, not a full pick-by-pick history — no such log exists server-side to render from.
+
+caught via visual verification (built a static html mock from real production `snake_order` data and screenshotted it locally): an initial version combined a js array `.reverse()` with a css `flex-row-reverse` on round 2, which canceled out and left round 2 rendering ascending (9→16) instead of mirrored (16→9), and also broke manager column-alignment across rounds. fixed by keeping both rounds iterating the same unreversed array and only flipping the displayed pick-number formula and arrow glyph per round — managers now stay in the same visual column between round 1 and round 2, with pick numbers correctly mirrored.
+
+verified: `npm run lint` (0 errors), `npm run build` (clean), and a local static-html visual check against real league data (8-manager league, picks 1-8 then 16-9).
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Draft Order Board — snake-draft pick-order infographic</h3>
+        <p class="card-summary">Follow-up to the manager-grouped contested-picks fix below: managers reading the Market Report draft recap could see the outcome of the draft (who won what) but had no…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #979</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Draft Order Board — snake-draft pick-order infographic</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Follow-up to the manager-grouped contested-picks fix below: managers reading the Market Report draft recap could see the outcome of the draft (who won what) but had no…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #979</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Follow-up to the manager-grouped contested-picks fix below: managers reading the Market Report draft recap could see the outcome of the draft (who won what) but had no visual for the mechanism itself — that round 1's order was set by a random lottery and every round after reverses direction, so no one manager is structurally favored.</p>
+<p>Fix: added <code>DraftOrderBoard</code> to <code>GazetteDraftReport.jsx</code>'s <code>SeasonDraftReport</code>, rendered from <code>fullData.snake_order</code> (already stored on the gazette entry, no new data needed). Shows round 1 and round 2 as two rows of numbered pick chips, one per manager, with round 2's pick numbers and arrow direction mirrored to visually demonstrate the reversal — plus a legend mapping pick-order position to manager name. Deliberately scoped to showing the *rotation pattern*, not a full pick-by-pick history — no such log exists server-side to render from.</p>
+<p>Caught via visual verification (built a static HTML mock from real production <code>snake_order</code> data and screenshotted it locally): an initial version combined a JS array <code>.reverse()</code> with a CSS <code>flex-row-reverse</code> on round 2, which canceled out and left round 2 rendering ascending (9→16) instead of mirrored (16→9), and also broke manager column-alignment across rounds. Fixed by keeping both rounds iterating the same unreversed array and only flipping the displayed pick-number formula and arrow glyph per round — managers now stay in the same visual column between round 1 and round 2, with pick numbers correctly mirrored.</p>
+<p>Verified: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean), and a local static-HTML visual check against real league data (8-manager league, picks 1-8 then 16-9).</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ market report contested-pick bullets grouped by manager (2026-09-08) — pr #978 
+
+the market report draft recap&#x27;s &quot;contested picks&quot; bullets were sorted purely by wanted-by count, which scattered a single manager&#x27;s several wins throughout the list instead of showing them together — made it hard to scan &quot;who won the most contested battles.&quot;
+
+fix: contested-pick bullets are now grouped by winning manager (alphabetical), with the existing wanted-by-count ranking preserved as the sort order within each manager&#x27;s group.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Market Report contested-pick bullets grouped by manager</h3>
+        <p class="card-summary">The Market Report draft recap's "contested picks" bullets were sorted purely by wanted-by count, which scattered a single manager's several wins throughout the list…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #978</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Market Report contested-pick bullets grouped by manager</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>The Market Report draft recap's "contested picks" bullets were sorted purely by wanted-by count, which scattered a single manager's several wins throughout the list…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #978</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>The Market Report draft recap's "contested picks" bullets were sorted purely by wanted-by count, which scattered a single manager's several wins throughout the list instead of showing them together — made it hard to scan "who won the most contested battles."</p>
+<p>Fix: contested-pick bullets are now grouped by winning manager (alphabetical), with the existing wanted-by-count ranking preserved as the sort order within each manager's group.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft window made permanently open — round-rollover fix (2026-09-08) — migration 288 
 
 user reported the wishlist draft screen showing &quot;not available&quot; in `football_draft_wishlist`. root cause: `get_wishlist_draft_status()` (migration 253/278) computed the active round purely from finished fixtures (`max(finished round)+1`), then reported `available: false` the instant that round&#x27;s window was processed (`wishlist_draft_windows.processed_at` set) — leaving the screen dark for the entire gap between &quot;draft just ran&quot; and &quot;next matchday&#x27;s fixtures actually finish,&quot; even though nothing was wrong.
