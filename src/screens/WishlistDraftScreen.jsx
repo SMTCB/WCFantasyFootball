@@ -6,7 +6,10 @@ import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { usePlayerScoreDetail } from '../hooks/usePlayerScoreDetail';
 import ClubCrest from '../components/ClubCrest';
+import PositionChip from '../components/PositionChip';
+import StatusDot from '../components/StatusDot';
 import FormStrip from '../components/FormStrip';
+import PlayerStatsPanel from '../components/PlayerStatsPanel';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import WishlistInfoModal from '../components/WishlistInfoModal';
 import {
@@ -595,52 +598,67 @@ export default function WishlistDraftScreen() {
               const disabled = targets.length >= maxTargets;
               const isExpanded = expandedPlayerId === p.id;
               const detail = playerDetails[p.id];
+              const intel = p.intel;
               return (
                 <div key={p.id}>
                   <div
-                    className={`flex items-center gap-2.5 bg-[var(--card)] rounded-sm px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
+                    className={`flex items-center px-3 py-2.5 gap-2.5 transition-all duration-150 ${disabled ? 'opacity-40' : 'cursor-pointer active:opacity-70'}`}
+                    style={{ borderBottom: isExpanded ? 'none' : '1px solid var(--rule)' }}
                     onClick={() => !disabled && togglePanel(p.id)}
                   >
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
-                      style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}>
-                      {p.position}
-                    </span>
+                    <PositionChip pos={p.position} mobile />
                     <ClubCrest name={p.club} size={22} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[var(--paper)] text-[12px] font-bold truncate">{p.name}</div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[var(--mute)] text-[10px] truncate">{p.club}</span>
-                        <FormStrip rounds={(statsMap[p.id] || []).slice(0, 5)} />
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      {intel && <StatusDot status={intel.status ?? 'fit'} />}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center flex-wrap gap-1.5">
+                          <span
+                            className="text-[12px] font-bold truncate"
+                            style={{ color: isExpanded ? 'var(--cyan)' : 'var(--paper)' }}
+                          >
+                            {p.name}
+                          </span>
+                          {intel?.status && intel.status !== 'fit' && (
+                            <span title={intel?.reason ?? intel.status} style={{ fontSize: 10, flexShrink: 0 }}>⚠️</span>
+                          )}
+                          {!disabled && (
+                            <span className="text-[var(--mute)] text-[10px] shrink-0">{isExpanded ? '▲' : '▼'}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[var(--mute)] text-[10px] truncate">{p.club}</span>
+                          <FormStrip rounds={(statsMap[p.id] || []).slice(0, 5)} />
+                        </div>
                       </div>
                     </div>
                     <span className="text-[var(--mute)] text-[11px] font-bold shrink-0">€{p.price}M</span>
-                    {!disabled && <span className="text-[var(--mute)] text-[11px] shrink-0">{isExpanded ? '▲' : '+'}</span>}
                   </div>
                   {isExpanded && !disabled && (
-                    <div className="border border-[var(--rule)] border-t-0 rounded-b-lg px-3 py-2.5 flex items-center justify-between gap-2" style={{ background: 'var(--elev)' }}>
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="text-[10px] text-[var(--mute)] shrink-0">#{targets.length + 1} priority</div>
-                        {detail?.season && (
-                          <div className="text-[10px] text-[var(--mute)] truncate">
-                            {detail.season.apps} apps · {detail.season.goals}G {detail.season.assists}A · {detail.season.avgPts} avg
-                          </div>
-                        )}
+                    <>
+                      <PlayerStatsPanel
+                        detail={detail}
+                        position={p.position}
+                        isOwned={false}
+                        canBuy={false}
+                        saving={false}
+                        isLocked
+                        onAction={() => {}}
+                        onViewStats={() => setStatsDashboardPlayer(p)}
+                      />
+                      <div
+                        className="border border-[var(--rule)] border-t-0 px-3 py-2.5 flex items-center justify-between gap-2"
+                        style={{ background: 'var(--elev)' }}
+                      >
+                        <div className="text-[10px] text-[var(--mute)]">#{targets.length + 1} priority</div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setStatsDashboardPlayer(p); }}
-                          className="text-[9px] font-black uppercase tracking-widest shrink-0"
-                          style={{ color: 'var(--cyan)' }}
+                          onClick={(e) => { e.stopPropagation(); addTarget(p); }}
+                          className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform shrink-0"
+                          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
                         >
-                          Stats ↗
+                          Add to List
                         </button>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); addTarget(p); }}
-                        className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform shrink-0"
-                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
-                      >
-                        Add to List
-                      </button>
-                    </div>
+                    </>
                   )}
                 </div>
               );
