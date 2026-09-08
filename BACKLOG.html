@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>240</strong><span>closed</span></div>
+      <div class="total-pill"><strong>243</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (159)</span>
+    <span class="chip" data-filter-kind="done">Shipped (162)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">240</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">243</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">159</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">162</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,88 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">159</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">162</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft audit trail — round-by-round pick log with wishlist rank (2026-09-08) — pr #981 
+
+the draft order board (pr #979, above) showed the snake-draft *rotation pattern* but not an actual pick-by-pick record — a manager who missed several top wishlist targets had no way to see whether that was because someone else picked first that round, or because the player was gone before their turn came around. user feedback verbatim: &quot;what was the list (by order) of each manager; what was allocated to each manager in each round; what was the picking order in each round... so that i understand why, for example, none of my top 5 picks were assigned to me.&quot;
+
+fix: `_shared/snakedraft.ts`&#x27;s `runsnakedraft` now returns a `picklog` — one entry per successful pick (`round`, `order_index`, `user_id`, `player_id`, `wishlist_rank`) — threaded through `run-draft-lottery/index.js` into `gazette_entries.full_data.pick_log`. `gazettedraftreport.jsx` renders a new collapsible `draftpicklogtable`, grouped by round with each pick showing the manager, player, and how far down that manager&#x27;s own wishlist the pick came from (`wishlist_rank`) — the direct answer to &quot;why didn&#x27;t i get my top picks.&quot; the old `draftorderboard` illustration remains as a fallback for historical entries that predate this log.
+
+backfilled the existing &quot;draft champions 26/27&quot; gazette entry (id `c7a83e40-a079-4d24-bfca-3717acfcb207`) by deterministically replaying the snake-draft algorithm against the stored `draft_submissions` — verified the replay reproduces the exact stored final rosters letter for letter before writing, confirming the reconstructed 110-entry pick log is a faithful account, not a guess.
+
+editing the shared `_shared/snakedraft.ts` module changed its combined hash and flagged all 25 functions that import from `_shared/` as drift in ci&#x27;s function-drift check (by design — the script can&#x27;t tell which functions actually use the changed file, only that `_shared` changed). redeployed all 25 and committed updated" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Draft audit trail — round-by-round pick log with wishlist rank</h3>
+        <p class="card-summary">The Draft Order Board (PR #979, above) showed the snake-draft *rotation pattern* but not an actual pick-by-pick record — a manager who missed several top wishlist…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #981</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Draft audit trail — round-by-round pick log with wishlist rank</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>The Draft Order Board (PR #979, above) showed the snake-draft *rotation pattern* but not an actual pick-by-pick record — a manager who missed several top wishlist…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #981</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>The Draft Order Board (PR #979, above) showed the snake-draft *rotation pattern* but not an actual pick-by-pick record — a manager who missed several top wishlist targets had no way to see whether that was because someone else picked first that round, or because the player was gone before their turn came around. User feedback verbatim: "what was the list (by order) of each manager; what was allocated to each manager in each round; what was the picking order in each round... so that I understand why, for example, none of my top 5 picks were assigned to me."</p>
+<p>Fix: <code>_shared/snakeDraft.ts</code>'s <code>runSnakeDraft</code> now returns a <code>pickLog</code> — one entry per successful pick (<code>round</code>, <code>order_index</code>, <code>user_id</code>, <code>player_id</code>, <code>wishlist_rank</code>) — threaded through <code>run-draft-lottery/index.js</code> into <code>gazette_entries.full_data.pick_log</code>. <code>GazetteDraftReport.jsx</code> renders a new collapsible <code>DraftPickLogTable</code>, grouped by round with each pick showing the manager, player, and how far down that manager's own wishlist the pick came from (<code>wishlist_rank</code>) — the direct answer to "why didn't I get my top picks." The old <code>DraftOrderBoard</code> illustration remains as a fallback for historical entries that predate this log.</p>
+<p>Backfilled the existing "Draft Champions 26/27" gazette entry (id <code>c7a83e40-a079-4d24-bfca-3717acfcb207</code>) by deterministically replaying the snake-draft algorithm against the stored <code>draft_submissions</code> — verified the replay reproduces the exact stored final rosters letter for letter before writing, confirming the reconstructed 110-entry pick log is a faithful account, not a guess.</p>
+<p>Editing the shared <code>_shared/snakeDraft.ts</code> module changed its combined hash and flagged all 25 functions that import from <code>_shared/</code> as drift in CI's function-drift check (by design — the script can't tell which functions actually use the changed file, only that <code>_shared</code> changed). Redeployed all 25 and committed updated <code>.function-checksums.json</code>.</p>
+<p>Verified: <code>npm run lint</code> (0 errors, pre-existing warnings only), <code>npm run build</code> (clean), full CI green (Security, Lint, Build, Unit Tests, Schema Rehearsal, iOS/Android builds, Tier 3 E2E, E2E Tests all passed) before merge.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft quick-add button + explicit save wishlist button (2026-09-08) — pr #981 
+
+two ux gaps on the wishlist draft screen, per user feedback verbatim: (1) &quot;i need to &#x27;open&#x27; the stats details to add the player to the wishlist... can you but that button - add to list - immediately in the player line? maybe change to a button with a + symbol&quot;; (2) &quot;can you add a button with &#x27;save wishlist&#x27;... it&#x27;s not obvious if it auto-saves or not.&quot;
+
+fix: added a compact &quot;+&quot; quick-add button directly on each target-pool player row (reuses the existing `addtarget` handler with `e.stoppropagation()` so it doesn&#x27;t also open the stats detail sheet) — avoids the &quot;huge list of add-to-cart buttons&quot; the user flagged as the risk of a full-text button per row. relabeled the existing save action to &quot;save wishlist&quot; so it reads as an explicit, necessary action rather than implying autosave.
+
+not fully interactively verified in-browser: the demo account has no joined league with an active wishlist draft to navigate to, so verification was limited to a clean dev-server compile/hmr reload with no console errors — flagged as an open limitation rather than claimed as tested.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Wishlist Draft quick-add button + explicit Save Wishlist button</h3>
+        <p class="card-summary">Two UX gaps on the Wishlist Draft screen, per user feedback verbatim: (1) "i need to 'open' the stats details to add the player to the wishlist... can you but that…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #981</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Wishlist Draft quick-add button + explicit Save Wishlist button</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Two UX gaps on the Wishlist Draft screen, per user feedback verbatim: (1) "i need to 'open' the stats details to add the player to the wishlist... can you but that…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #981</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Two UX gaps on the Wishlist Draft screen, per user feedback verbatim: (1) "i need to 'open' the stats details to add the player to the wishlist... can you but that button - add to list - immediately in the player line? Maybe change to a button with a + symbol"; (2) "can you add a button with 'Save wishlist'... it's not obvious if it auto-saves or not."</p>
+<p>Fix: added a compact "+" quick-add button directly on each target-pool player row (reuses the existing <code>addTarget</code> handler with <code>e.stopPropagation()</code> so it doesn't also open the stats detail sheet) — avoids the "huge list of add-to-cart buttons" the user flagged as the risk of a full-text button per row. Relabeled the existing save action to "Save Wishlist" so it reads as an explicit, necessary action rather than implying autosave.</p>
+<p>Not fully interactively verified in-browser: the demo account has no joined league with an active Wishlist Draft to navigate to, so verification was limited to a clean dev-server compile/HMR reload with no console errors — flagged as an open limitation rather than claimed as tested.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl price sync — new arrivals priced, departed players deactivated (2026-09-08) — no pr (data-only) 
+
+processed the user-supplied uefa champions league price-list extraction (`syncpricesupdated2.xlsx`): (1) filled `price` only for tournament 1593 players that had none set — 0 rows needed it, already handled in a prior session; (2) inserted 60 new ucl arrivals not previously in the `players` table, priced from the user&#x27;s suggested prices; (3) soft-deleted (`is_active = false`) 59 of 60 players present in the db but absent from the latest forza extraction (transferred out) — the 60th, matias fernandez-pardo (`fp-1214193263-1593`), was excluded from deactivation because he&#x27;s rostered on a live squad, per the user&#x27;s explicit instruction to leave squad-held players as-is until a manager subs them out.
+
+followed the pilot select-before-write safeguard throughout: checked all 60 new-arrival ids for collisions (none), checked all 60 deactivation-target ids&#x27; current `is_active` state, and cross-referenced the deactivation list against every squad&#x27;s `players` array — which is what caught the fernandez-pardo case, since the source list only carried two known exclusions (rodrigo becão, jordan lotomba) from a prior session and missed this one. verified post-write: 60/60 new arrivals present, 59/60 target players deactivated, fernandez-pardo confirmed still `is_active = true`.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">UCL price sync — new arrivals priced, departed players deactivated</h3>
+        <p class="card-summary">Processed the user-supplied UEFA Champions League price-list extraction ( SyncPricesUpdated2.xlsx ): (1) filled price only for tournament 1593 players that had none set…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">no PR (data-only)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">UCL price sync — new arrivals priced, departed players deactivated</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Processed the user-supplied UEFA Champions League price-list extraction ( SyncPricesUpdated2.xlsx ): (1) filled price only for tournament 1593 players that had none set…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · no PR (data-only)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Processed the user-supplied UEFA Champions League price-list extraction (<code>SyncPricesUpdated2.xlsx</code>): (1) filled <code>price</code> only for tournament 1593 players that had none set — 0 rows needed it, already handled in a prior session; (2) inserted 60 new UCL arrivals not previously in the <code>players</code> table, priced from the user's suggested prices; (3) soft-deleted (<code>is_active = false</code>) 59 of 60 players present in the DB but absent from the latest Forza extraction (transferred out) — the 60th, Matias Fernandez-Pardo (<code>fp-1214193263-1593</code>), was excluded from deactivation because he's rostered on a live squad, per the user's explicit instruction to leave squad-held players as-is until a manager subs them out.</p>
+<p>Followed the pilot SELECT-before-write safeguard throughout: checked all 60 new-arrival IDs for collisions (none), checked all 60 deactivation-target IDs' current <code>is_active</code> state, and cross-referenced the deactivation list against every squad's <code>players</code> array — which is what caught the Fernandez-Pardo case, since the source list only carried two known exclusions (Rodrigo Becão, Jordan Lotomba) from a prior session and missed this one. Verified post-write: 60/60 new arrivals present, 59/60 target players deactivated, Fernandez-Pardo confirmed still <code>is_active = true</code>.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft order board — snake-draft pick-order infographic (2026-09-08) — pr #979 
 
 follow-up to the manager-grouped contested-picks fix below: managers reading the market report draft recap could see the outcome of the draft (who won what) but had no visual for the mechanism itself — that round 1&#x27;s order was set by a random lottery and every round after reverses direction, so no one manager is structurally favored.
