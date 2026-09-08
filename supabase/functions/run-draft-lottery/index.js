@@ -245,7 +245,7 @@ async function runLottery(leagueId, phase = 'group') {
 
     // Count players skipped because an earlier manager in the snake order
     // already took them — i.e. genuine wishlist conflicts the lottery resolved.
-    const { contestedPlayers: contested } = runSnakeDraft({
+    const { contestedPlayers: contested, pickLog } = runSnakeDraft({
       order:         snakeOrder,
       submissionMap,
       userState,
@@ -257,6 +257,9 @@ async function runLottery(leagueId, phase = 'group') {
       clubCap:       CLUB_CAP,
     });
     contestedPlayers += contested;
+
+    // Capture the pick log for the gazette (round-by-round audit trail).
+    runLottery._lastPickLog = pickLog;
 
     allocations = {};
     for (const [uid, u] of Object.entries(userState)) {
@@ -359,7 +362,8 @@ async function runLottery(leagueId, phase = 'group') {
   if (!isReEntry) {
   // 8. Write gazette entry
   const snakeOrder = runLottery._lastSnakeOrder ?? [];
-  const gazettEntry = buildGazetteEntry(leagueId, snakeOrder, allocations, submissions);
+  const pickLog     = runLottery._lastPickLog ?? [];
+  const gazettEntry = buildGazetteEntry(leagueId, snakeOrder, allocations, submissions, pickLog);
   await supabase.from('gazette_entries').insert(gazettEntry);
 
   // TDD-14: Notify managers who never submitted a draft list — they have no squad.
@@ -426,7 +430,7 @@ async function runLottery(leagueId, phase = 'group') {
 
 // ── Gazette entry builder ────────────────────────────────────────────────────
 
-function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions) {
+function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions, pickLog) {
   const totalManagers   = submissions.length;
   const incompleteCount = Object.values(allocations).filter(d => d.unresolved_slots > 0).length;
 
@@ -471,6 +475,7 @@ function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions) {
     })),
     total_managers:  totalManagers,
     contested_count: contestedBullets.length,
+    pick_log:        pickLog ?? [],   // per-pick audit trail: {round, order_index, user_id, player_id, wishlist_rank}
   };
 
   // JSON.stringify before insert — bullets/full_data are jsonb columns and

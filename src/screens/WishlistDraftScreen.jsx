@@ -632,6 +632,17 @@ export default function WishlistDraftScreen() {
                       </div>
                     </div>
                     <span className="text-[var(--mute)] text-[11px] font-bold shrink-0">€{p.price}M</span>
+                    {!disabled && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); addTarget(p); }}
+                        title="Add to wishlist"
+                        aria-label={`Add ${p.name} to wishlist`}
+                        className="shrink-0 flex items-center justify-center rounded-full font-black active:scale-90 transition-transform"
+                        style={{ width: 22, height: 22, fontSize: 14, lineHeight: 1, backgroundColor: 'var(--accent)', color: '#fff' }}
+                      >
+                        +
+                      </button>
+                    )}
                   </div>
                   {isExpanded && !disabled && (
                     <>
@@ -684,7 +695,7 @@ export default function WishlistDraftScreen() {
             color: 'var(--paper)',
           }}
         >
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? 'Saving...' : 'Save Wishlist'}
         </button>
         <button
           onClick={handleSubmit}
