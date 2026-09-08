@@ -11,6 +11,19 @@
 
 ---
 
+## ✅ Game-aware Forza Times cron editions — recap + preview modes (2026-09-08) — PR #971
+
+The "Forza Times" cron job (`generate-frontpage-editions`, jobid 89) had been sitting inactive since it was built — activating it as-is would have generated a newspaper edition for every league/circle every single day, regardless of whether their tournament had any games. Also raised: capture pre-round transfers/auctions by generating a same-day edition on the morning of the first day a new round of fixtures kicks off, not just a recap the day after.
+
+Fix: added `edition_type: 'recap' | 'preview'` to the CRON mode of `generate-frontpage-edition` (defaults to `'recap'` — the existing job's `{"mode":"cron"}` body needed no change). Both modes gate on actual fixture existence in the `fixtures` table before generating:
+- **recap** (existing job, 05:00 UTC) — only generates if the league/circle's tournament had fixtures *yesterday*.
+- **preview** (new job, `generate-frontpage-editions-preview`, jobid 100, 08:00 UTC) — only generates on the *first* day of a new fixture block (games today, none in the preceding 3-day lookback), ahead of typical kickoff times.
+- Circles with no linked football leagues (e.g. F1-only Clubhouses) fall back to the old always-eligible behavior since there's nothing to gate on.
+
+Deployed `generate-frontpage-edition`, activated jobid 89 (`cron.alter_job`), and created jobid 100 (`cron.schedule`) — all three actions named and confirmed with the user before executing, per the session DB/deploy approval rule. LEAGUE/CIRCLE manual-trigger modes are unchanged.
+
+Note: PR CI showed 7 pre-existing failures in `tests/unit/scoring-logic.test.js`, unrelated to this change (same family already flagged as a follow-up in the PR #968 entry below, task in progress in a separate session) — did not block this merge.
+
 ## ✅ Mobile draft submission tracker missing on CommissionerPanel (2026-09-08) — PR #968
 
 A commissioner reported the draft submit-status tracker (who has/hasn't submitted their pick list) was visible on desktop but not on mobile. Root cause: `CommissionerPanel.jsx` renders two entirely separate sibling components depending on viewport (`LifecycleOps` for desktop, an inline mobile branch inside `CommissionerPanel` itself) — the tracker's `draftMembers`/`draftSubmissions` state lived only inside `LifecycleOps`, so the mobile DRAFT card had no data to render it with.
