@@ -88,7 +88,7 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
       {/* Masthead — single combined meta line with inline regenerate control, double-rule close */}
       <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 18, borderBottom: `3px double ${FT_INK}` }}>
         <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-title)', letterSpacing: '-0.01em', color: FT_INK, lineHeight: 1, marginBottom: 6 }}>
-          FORZA TIMES
+          THE FRONTROW
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_MUTE, textTransform: 'uppercase' }}>
           <span>EDITION #{edition.edition_number} · {dateLabel.toUpperCase()} · {circleName}</span>
@@ -134,7 +134,7 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
             </p>
           )}
           <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: FT_MUTE, marginTop: 10 }}>
-            By the Forza Times Desk
+            By the Frontrow Desk
           </div>
           <ReactionStrip
             sectionKey="lead"
@@ -177,11 +177,11 @@ function EmptyState({ isOwner, onGenerate, generating, genError }) {
   return (
     <div style={{ background: FT_PAPER, color: FT_INK, padding: '48px 20px', textAlign: 'center' }}>
       <div style={{ fontFamily: FT_SLAB, fontSize: 'var(--fs-title)', letterSpacing: '.04em', color: FT_INK, marginBottom: 4 }}>
-        FORZA TIMES
+        THE FRONTROW
       </div>
       <div style={{ height: 2, background: FT_INK, maxWidth: 200, margin: '0 auto 20px' }} />
       <p style={{ fontFamily: FT_SERIF, fontSize: 'var(--fs-body)', color: FT_MUTE, fontStyle: 'italic', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
-        No edition published yet today. The Forza Times will come to life once your leagues kick off.
+        No edition published yet today. The Frontrow will come to life once your leagues kick off.
       </p>
       {isOwner && (
         <div>
@@ -244,7 +244,7 @@ export default function ClubhouseFrontpage({ circleId, circleName, isOwner }) {
     return (
       <div style={{ background: FT_PAPER, padding: '48px 20px', textAlign: 'center' }}>
         <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_MUTE }}>
-          LOADING FORZA TIMES…
+          LOADING THE FRONTROW…
         </div>
       </div>
     );
