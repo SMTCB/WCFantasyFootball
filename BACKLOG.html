@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>235</strong><span>closed</span></div>
+      <div class="total-pill"><strong>236</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (154)</span>
+    <span class="chip" data-filter-kind="done">Shipped (155)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">235</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">236</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">154</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">155</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,46 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">154</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">155</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ game-aware forza times cron editions — recap + preview modes (2026-09-08) — pr #971 
+
+the &quot;forza times&quot; cron job (`generate-frontpage-editions`, jobid 89) had been sitting inactive since it was built — activating it as-is would have generated a newspaper edition for every league/circle every single day, regardless of whether their tournament had any games. also raised: capture pre-round transfers/auctions by generating a same-day edition on the morning of the first day a new round of fixtures kicks off, not just a recap the day after.
+
+fix: added `edition_type: &#x27;recap&#x27; | &#x27;preview&#x27;` to the cron mode of `generate-frontpage-edition` (defaults to `&#x27;recap&#x27;` — the existing job&#x27;s `{&quot;mode&quot;:&quot;cron&quot;}` body needed no change). both modes gate on actual fixture existence in the `fixtures` table before generating:
+- **recap** (existing job, 05:00 utc) — only generates if the league/circle&#x27;s tournament had fixtures *yesterday*.
+- **preview** (new job, `generate-frontpage-editions-preview`, jobid 100, 08:00 utc) — only generates on the *first* day of a new fixture block (games today, none in the preceding 3-day lookback), ahead of typical kickoff times.
+- circles with no linked football leagues (e.g. f1-only clubhouses) fall back to the old always-eligible behavior since there&#x27;s nothing to gate on.
+
+deployed `generate-frontpage-edition`, activated jobid 89 (`cron.alter_job`), and created jobid 100 (`cron.schedule`) — all three actions named and confirmed with the user before executing, per the session db/deploy approval rule. league/circle manual-trigger modes are unchanged.
+
+note: pr ci showed 7 pre-existing failures in `tests/unit/scoring-logic.test.js`, unrelated to this change (same family already flagged as a follow-up in the pr #968 entry below, task in progress in a separate session) — did not block this merge.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Game-aware Forza Times cron editions — recap + preview modes</h3>
+        <p class="card-summary">The "Forza Times" cron job ( generate-frontpage-editions , jobid 89) had been sitting inactive since it was built — activating it as-is would have generated a newspaper…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #971</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Game-aware Forza Times cron editions — recap + preview modes</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>The "Forza Times" cron job ( generate-frontpage-editions , jobid 89) had been sitting inactive since it was built — activating it as-is would have generated a newspaper…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #971</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>The "Forza Times" cron job (<code>generate-frontpage-editions</code>, jobid 89) had been sitting inactive since it was built — activating it as-is would have generated a newspaper edition for every league/circle every single day, regardless of whether their tournament had any games. Also raised: capture pre-round transfers/auctions by generating a same-day edition on the morning of the first day a new round of fixtures kicks off, not just a recap the day after.</p>
+<p>Fix: added <code>edition_type: 'recap' | 'preview'</code> to the CRON mode of <code>generate-frontpage-edition</code> (defaults to <code>'recap'</code> — the existing job's <code>{"mode":"cron"}</code> body needed no change). Both modes gate on actual fixture existence in the <code>fixtures</code> table before generating:</p>
+<ul>
+<li><strong>recap</strong> (existing job, 05:00 UTC) — only generates if the league/circle's tournament had fixtures *yesterday*.</li>
+<li><strong>preview</strong> (new job, <code>generate-frontpage-editions-preview</code>, jobid 100, 08:00 UTC) — only generates on the *first* day of a new fixture block (games today, none in the preceding 3-day lookback), ahead of typical kickoff times.</li>
+<li>Circles with no linked football leagues (e.g. F1-only Clubhouses) fall back to the old always-eligible behavior since there's nothing to gate on.</li>
+</ul>
+<p>Deployed <code>generate-frontpage-edition</code>, activated jobid 89 (<code>cron.alter_job</code>), and created jobid 100 (<code>cron.schedule</code>) — all three actions named and confirmed with the user before executing, per the session DB/deploy approval rule. LEAGUE/CIRCLE manual-trigger modes are unchanged.</p>
+<p>Note: PR CI showed 7 pre-existing failures in <code>tests/unit/scoring-logic.test.js</code>, unrelated to this change (same family already flagged as a follow-up in the PR #968 entry below, task in progress in a separate session) — did not block this merge.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ mobile draft submission tracker missing on commissionerpanel (2026-09-08) — pr #968 
 
 a commissioner reported the draft submit-status tracker (who has/hasn&#x27;t submitted their pick list) was visible on desktop but not on mobile. root cause: `commissionerpanel.jsx` renders two entirely separate sibling components depending on viewport (`lifecycleops` for desktop, an inline mobile branch inside `commissionerpanel` itself) — the tracker&#x27;s `draftmembers`/`draftsubmissions` state lived only inside `lifecycleops`, so the mobile draft card had no data to render it with.
