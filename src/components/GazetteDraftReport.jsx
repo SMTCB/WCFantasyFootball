@@ -152,6 +152,10 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
         </ul>
       )}
 
+      {fullData?.snake_order?.length > 0 && (
+        <DraftOrderBoard snakeOrder={fullData.snake_order} members={members} />
+      )}
+
       {managerGroups.length > 0 && (
         <div className="space-y-3 mb-4">
           {managerGroups.map(([winnerId, picks]) => (
@@ -220,6 +224,71 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Illustrates the snake-draft pick order set by the pre-draft lottery: the
+// same rotation reverses every round, so no manager sits first every time.
+// Shown alongside the contested-picks list to make the fairness of the
+// mechanism itself visible, not just its outcome. Uses `snake_order` alone
+// (already stored in every draft_report's full_data) — no pick-by-pick log
+// exists server-side, so this shows the rotation pattern rather than a full
+// pick-by-pick history.
+function DraftOrderBoard({ snakeOrder, members }) {
+  const n = snakeOrder.length;
+  // Both rows walk `snakeOrder` in the SAME order so each manager lines up
+  // in the same column across rounds — that alignment is what makes the
+  // zigzag (reversed pick numbers, same columns) read as a snake pattern.
+  const rows = [
+    { label: 'Round 1', reversed: false },
+    { label: 'Round 2', reversed: true },
+  ];
+
+  return (
+    <div className="mb-4 border border-black/10 rounded p-3">
+      <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-1">
+        Pick Order — Snake Draft
+      </div>
+      <p className="text-[10px] text-black/50 italic mb-3">
+        Round 1 order was set by random lottery. Every round after reverses direction, so no manager always picks first.
+      </p>
+
+      <div className="space-y-2">
+        {rows.map(({ label, reversed }) => (
+          <div key={label} className="flex items-center gap-2">
+            <span className="text-[9px] font-black uppercase tracking-widest text-black/40 w-14 shrink-0">
+              {label}
+            </span>
+            <div className="flex items-center gap-1 flex-wrap">
+              {snakeOrder.map((uid, i) => {
+                const pickNumber = reversed ? n * 2 - i : i + 1;
+                return (
+                  <span key={uid + i} className="flex items-center" title={`Pick ${pickNumber} — ${members[uid] ?? 'Manager'}`}>
+                    <span className="w-6 h-6 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center shrink-0">
+                      {pickNumber}
+                    </span>
+                    {i < snakeOrder.length - 1 && (
+                      <span className="text-black/20 text-[10px] px-0.5">{reversed ? '←' : '→'}</span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        <div className="text-[9px] text-black/30 italic pl-16">
+          …continues alternating every round until squads are full
+        </div>
+      </div>
+
+      <div className="mt-3 pt-2 border-t border-black/10 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-black/60">
+        {snakeOrder.map((uid, i) => (
+          <span key={uid}>
+            <span className="font-black text-black/40">{i + 1}.</span> {members[uid] ?? 'Manager'}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
