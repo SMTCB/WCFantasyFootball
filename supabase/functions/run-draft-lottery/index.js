@@ -357,14 +357,29 @@ async function runLottery(leagueId, phase = 'group') {
     .eq('phase', phase)
     .eq('status', 'pending');
 
-  // Gazette, notifications, and transfer window are side effects written after the
-  // commit marker. On a re-entry run these are skipped to avoid duplicates.
-  if (!isReEntry) {
+  // Gazette, notifications, and transfer window are side effects written once per
+  // league+phase. isReEntry only tells us the lottery itself already committed — a
+  // crash between that commit and this block (or between this insert and the DB ack)
+  // would otherwise permanently suppress the report. Gate on whether the report was
+  // actually written instead, so a recovery run can still complete it.
+  const { data: existingReport } = await supabase
+    .from('gazette_entries')
+    .select('id')
+    .eq('league_id', leagueId)
+    .eq('entry_type', 'draft_report')
+    .filter('full_data->>phase', 'eq', phase)
+    .limit(1)
+    .maybeSingle();
+
+  if (!existingReport) {
   // 8. Write gazette entry
   const snakeOrder = runLottery._lastSnakeOrder ?? [];
   const pickLog     = runLottery._lastPickLog ?? [];
-  const gazettEntry = buildGazetteEntry(leagueId, snakeOrder, allocations, submissions, pickLog);
-  await supabase.from('gazette_entries').insert(gazettEntry);
+  const gazettEntry = buildGazetteEntry(leagueId, phase, snakeOrder, allocations, submissions, pickLog);
+  const { error: gazetteErr } = await supabase.from('gazette_entries').insert(gazettEntry);
+  if (gazetteErr) {
+    await logError(FN, 'critical', 'gazette_entries insert failed', { leagueId, phase, error: gazetteErr.message });
+  }
 
   // TDD-14: Notify managers who never submitted a draft list — they have no squad.
   const { data: allMembers } = await supabase
@@ -412,7 +427,7 @@ async function runLottery(leagueId, phase = 'group') {
   // manual transfer_windows row. Creating that row overrides the matchday deadline system
   // (get_transfer_window_status checks manual windows first), producing incorrect "15
   // transfers left" and wrong close times for managers.
-  } // end if (!isReEntry)
+  } // end if (!existingReport)
 
   // 9. Summary for caller
   const incomplete = Object.entries(allocations)
@@ -430,7 +445,7 @@ async function runLottery(leagueId, phase = 'group') {
 
 // ── Gazette entry builder ────────────────────────────────────────────────────
 
-function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions, pickLog) {
+function buildGazetteEntry(leagueId, phase, snakeOrder, allocations, submissions, pickLog) {
   const totalManagers   = submissions.length;
   const incompleteCount = Object.values(allocations).filter(d => d.unresolved_slots > 0).length;
 
@@ -466,6 +481,7 @@ function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions, pickL
   bullets.push(...contestedBullets);
 
   const fullData = {
+    phase,          // lets a recovery run check "has this league+phase's report already been written?"
     snake_order:     snakeOrder,   // round-1 pick order; reverses every round
     allocations:     Object.entries(allocations).map(([userId, data]) => ({
       user_id:     userId,
