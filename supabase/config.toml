@@ -97,9 +97,19 @@ enabled = false
 
 [functions.auto-open-transfer-window]
 entrypoint = "./functions/auto-open-transfer-window/index.js"
+verify_jwt = false
 
 [functions.calculate-relaxation]
 entrypoint = "./functions/calculate-relaxation/index.js"
+verify_jwt = false
+
+[functions.sync-f1-race-results]
+entrypoint = "./functions/sync-f1-race-results/index.ts"
+verify_jwt = false
+
+[functions.generate-frontpage-edition]
+entrypoint = "./functions/generate-frontpage-edition/index.ts"
+verify_jwt = false
 
 [functions.calculate-scores]
 entrypoint = "./functions/calculate-scores/index.js"
@@ -132,6 +142,7 @@ verify_jwt = false
 
 [functions.eliminate-cup-club]
 entrypoint = "./functions/eliminate-cup-club/index.js"
+verify_jwt = false
 
 [functions.ingest-match-events]
 entrypoint = "./functions/ingest-match-events/index.js"
@@ -151,6 +162,7 @@ verify_jwt = false
 
 [functions.run-reverse-standings-draft]
 entrypoint = "./functions/run-reverse-standings-draft/index.js"
+verify_jwt = false
 
 [functions.run-wishlist-draft]
 entrypoint = "./functions/run-wishlist-draft/index.js"
