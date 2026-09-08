@@ -22,11 +22,12 @@ const POINTS = {
 };
 
 const UNIVERSAL = {
-  minute_per_90:   1,
+  appearance:       1,
+  minutes_60_bonus: 1,
   own_goal:        -2,
   yellow_card:     -1,
   red_card:        -3,
-  penalty_missed:  -1,
+  penalty_missed:  -2,
   shootout_scored: 1,
   shootout_missed: -1,
   shootout_saved:  0.5,
@@ -80,23 +81,23 @@ describe('assignBonus', () => {
 describe('scorePlayer', () => {
   it('scores a DEF clean sheet at 45+ minutes', () => {
     const pts = scorePlayer({ minutes_played: 45, clean_sheet: true }, 'DEF', POINTS, UNIVERSAL);
-    assert.equal(pts, 0.75 + 4); // 45/60 minute credit + clean sheet
+    assert.equal(pts, 1 + 4); // appearance (no 60-min bonus below 60) + clean sheet
   });
 
   it('withholds DEF clean sheet bonus below the 45-minute threshold', () => {
     const pts = scorePlayer({ minutes_played: 44, clean_sheet: true }, 'DEF', POINTS, UNIVERSAL);
-    assert.equal(pts, Math.round((44 / 60) * 100) / 100);
+    assert.equal(pts, 1); // appearance only — below both the 45-min CS gate and the 60-min bonus
   });
 
   it('requires 60+ minutes for a MID clean sheet (no clean_sheet points configured anyway)', () => {
     const pts = scorePlayer({ minutes_played: 60, clean_sheet: true, goals: 1 }, 'MID', POINTS, UNIVERSAL);
-    assert.equal(pts, 1 + 4); // minute credit (60/60) + goal, no clean_sheet rule for MID
+    assert.equal(pts, 1 + 1 + 4); // appearance + 60-min bonus + goal, no clean_sheet rule for MID
   });
 
   it('penalizes goals conceded beyond the first for an outfield player who appeared', () => {
     const pts = scorePlayer({ minutes_played: 90, goals_conceded: 3 }, 'DEF', POINTS, UNIVERSAL);
-    // minute credit 90/60=1.5 + (3-1)*-1 conceded penalty
-    assert.equal(pts, 1.5 + 2 * -1);
+    // appearance + 60-min bonus + (3-1)*-1 conceded penalty
+    assert.equal(pts, 1 + 1 + 2 * -1);
   });
 
   it('applies no conceded penalty for a player with 0 minutes (did not play)', () => {
@@ -109,7 +110,8 @@ describe('scorePlayer', () => {
       { minutes_played: 90, yellow_cards: 1, red_cards: 1, own_goals: 1, penalty_missed: 1 },
       'MID', POINTS, UNIVERSAL,
     );
-    assert.equal(pts, 1.5 + (-1) + (-3) + (-2) + (-1));
+    // appearance + 60-min bonus + red card (supersedes yellow) + own goal + penalty missed
+    assert.equal(pts, 1 + 1 + (-3) + (-2) + (-2));
   });
 
   it('scores penalty shootout events independently of in-match penalties', () => {
@@ -117,12 +119,19 @@ describe('scorePlayer', () => {
       { minutes_played: 90, shootout_scored: 1, shootout_missed: 1 },
       'FWD', POINTS, UNIVERSAL,
     );
-    assert.equal(pts, 1.5 + 1 + (-1));
+    assert.equal(pts, 1 + 1 + 1 + (-1)); // appearance + 60-min bonus + shootout scored/missed
   });
 
   it('rounds to 2 decimal places', () => {
-    const pts = scorePlayer({ minutes_played: 37 }, 'MID', POINTS, UNIVERSAL);
-    assert.equal(pts, Math.round((37 / 60) * 100) / 100);
+    // key_pass at 0.1 (not a real rule value, chosen to force float imprecision:
+    // 3 * 0.1 === 0.30000000000000004 in raw JS arithmetic) exercises the
+    // Math.round(pts * 100) / 100 step in scorePlayer.
+    const pointsWithFraction = { MID: { ...POINTS.MID, key_pass: 0.1 } };
+    const pts = scorePlayer(
+      { minutes_played: 90, key_passes: 3 },
+      'MID', pointsWithFraction, UNIVERSAL,
+    );
+    assert.equal(pts, 2.3); // appearance(1) + 60-min bonus(1) + 3*0.1
   });
 });
 
