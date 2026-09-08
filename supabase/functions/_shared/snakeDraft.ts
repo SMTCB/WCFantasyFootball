@@ -34,8 +34,17 @@ export interface SnakeDraftOptions {
   clubCap: number;                          // >= 99 means uncapped
 }
 
+export interface DraftPickLogEntry {
+  round: number;          // 1-indexed
+  order_index: number;    // 1-indexed turn position within the round
+  user_id: string;
+  player_id: string;
+  wishlist_rank: number;  // 1-indexed position in that manager's submitted list
+}
+
 export interface SnakeDraftResult {
   contestedPlayers: number;
+  pickLog: DraftPickLogEntry[];
 }
 
 export function normalisePosition(pos: string | null | undefined): string {
@@ -70,15 +79,17 @@ export function runSnakeDraft(opts: SnakeDraftOptions): SnakeDraftResult {
 
   const maxRounds = Math.max(0, ...order.map(uid => (submissionMap[uid] || []).length));
   let contestedPlayers = 0;
+  const pickLog: DraftPickLogEntry[] = [];
 
   for (let round = 0; round < maxRounds; round++) {
     const roundOrder = round % 2 === 0 ? [...order] : [...order].reverse();
-    for (const uid of roundOrder) {
+    roundOrder.forEach((uid, orderIdx) => {
       const u = userState[uid];
-      if (!u || u.allocated.length >= squadSize) continue;
+      if (!u || u.allocated.length >= squadSize) return;
       const list = submissionMap[uid] || [];
       while (pointers[uid] < list.length) {
         const pid = list[pointers[uid]];
+        const wishlistRank = pointers[uid] + 1;
         pointers[uid]++;
         if (taken.has(pid)) { contestedPlayers++; continue; }
         const player = playerMap[pid];
@@ -94,12 +105,13 @@ export function runSnakeDraft(opts: SnakeDraftOptions): SnakeDraftResult {
         if (teamId) u.clubCounts[teamId] = clubCnt + 1;
         u.budgetUsed += player.price;
         taken.add(pid);
+        pickLog.push({ round: round + 1, order_index: orderIdx + 1, user_id: uid, player_id: pid, wishlist_rank: wishlistRank });
         break;
       }
-    }
+    });
     if (Object.values(userState).every(u => u.allocated.length >= squadSize)) break;
     if (order.every(uid => pointers[uid] >= (submissionMap[uid]?.length ?? 0))) break;
   }
 
-  return { contestedPlayers };
+  return { contestedPlayers, pickLog };
 }

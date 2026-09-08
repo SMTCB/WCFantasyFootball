@@ -49,10 +49,14 @@ export default function GazetteDraftReport({ leagueId }) {
         const draftBullets  = draftRow ? parseJson(draftRow.bullets, []) : [];
         const draftFullData = draftRow ? parseJson(draftRow.full_data, null) : null;
 
-        const playerIds = draftBullets.filter(b => b.player_id).map(b => b.player_id);
+        const playerIds = [
+          ...draftBullets.filter(b => b.player_id).map(b => b.player_id),
+          ...(draftFullData?.pick_log ?? []).map(p => p.player_id),
+        ];
         const userIds   = [
           ...draftBullets.filter(b => b.winner_id).map(b => b.winner_id),
           ...(draftFullData?.allocations ?? []).map(a => a.user_id),
+          ...(draftFullData?.pick_log ?? []).map(p => p.user_id),
           ...(wishlistRows ?? []).flatMap(row => parseJson(row.bullets, []).map(b => b.user_id)).filter(Boolean),
         ];
 
@@ -112,6 +116,8 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
   const date     = new Date(entry.published_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
+  const [pickLogExpanded, setPickLogExpanded] = useState(false);
+  const hasPickLog = fullData?.pick_log?.length > 0;
 
   // The backend orders contested-pick bullets purely by how many managers
   // wanted each player (most-contested first) — one manager's wins can end
@@ -153,7 +159,19 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
       )}
 
       {fullData?.snake_order?.length > 0 && (
-        <DraftOrderBoard snakeOrder={fullData.snake_order} members={members} />
+        hasPickLog
+          ? <DraftOrderList snakeOrder={fullData.snake_order} members={members} />
+          : <DraftOrderBoard snakeOrder={fullData.snake_order} members={members} />
+      )}
+
+      {hasPickLog && (
+        <DraftPickLogTable
+          pickLog={fullData.pick_log}
+          members={members}
+          players={players}
+          expanded={pickLogExpanded}
+          setExpanded={setPickLogExpanded}
+        />
       )}
 
       {managerGroups.length > 0 && (
@@ -289,6 +307,85 @@ function DraftOrderBoard({ snakeOrder, members }) {
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Compact companion to DraftPickLogTable: just the round-1 lottery order,
+// since the full round-by-round direction/detail lives in the log below.
+function DraftOrderList({ snakeOrder, members }) {
+  return (
+    <div className="mb-4 border border-black/10 rounded p-3">
+      <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-2">
+        Draft Order — Round 1 (set by lottery)
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-black/60">
+        {snakeOrder.map((uid, i) => (
+          <span key={uid}>
+            <span className="font-black text-black/40">{i + 1}.</span> {members[uid] ?? 'Manager'}
+          </span>
+        ))}
+      </div>
+      <p className="text-[9px] text-black/40 italic mt-2">
+        Round 2 reverses this order, round 3 restores it, and so on — see the full log below for exactly who picked what, and when.
+      </p>
+    </div>
+  );
+}
+
+// The actual audit trail: every pick, in the order it happened, grouped by
+// round. wishlist_rank shows how far down that manager's own list the pick
+// came from — the answer to "why didn't I get my top picks" is usually
+// "someone with an earlier turn that round took them first" (visible via
+// order_index) or "they were gone by the time your turn came" (visible via
+// the wishlist_rank gap between consecutive picks).
+function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded }) {
+  const totalRounds = pickLog.length ? Math.max(...pickLog.map(p => p.round)) : 0;
+  const byRound = {};
+  for (const p of pickLog) (byRound[p.round] ??= []).push(p);
+  for (const round of Object.values(byRound)) round.sort((a, b) => a.order_index - b.order_index);
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
+      >
+        Round-by-Round Draft Log {expanded ? '▲' : '▼'}
+      </button>
+
+      {expanded && (
+        <div className="border border-black/10 rounded overflow-hidden text-[10px] max-h-[480px] overflow-y-auto">
+          {Array.from({ length: totalRounds }, (_, i) => i + 1).map(round => {
+            const picks = byRound[round] ?? [];
+            const reversed = round % 2 === 0;
+            return (
+              <div key={round} className="border-b border-black/10 last:border-b-0">
+                <div className="flex items-center justify-between bg-black text-white px-3 py-1.5 font-black uppercase tracking-widest sticky top-0">
+                  <span>Round {round}</span>
+                  <span className="opacity-60 font-normal normal-case">{reversed ? '← reversed order' : 'lottery order'}</span>
+                </div>
+                {picks.map((p, i) => (
+                  <div
+                    key={`${round}-${p.order_index}`}
+                    className={`grid grid-cols-[auto_1fr_1fr_auto] px-3 py-1.5 gap-3 items-center ${i % 2 === 0 ? 'bg-white' : 'bg-black/5'}`}
+                  >
+                    <span className="font-black text-black/40 w-5 text-right shrink-0">{p.order_index}.</span>
+                    <span className="font-bold text-[#1a1a1a] truncate">{members[p.user_id] ?? 'Manager'}</span>
+                    <span className="inline-flex items-center gap-1.5 truncate min-w-0">
+                      <ClubCrest name={players[p.player_id]?.club} size={12} />
+                      <span className="truncate">{players[p.player_id]?.name ?? p.player_id}</span>
+                    </span>
+                    <span className="text-black/40 text-right shrink-0" title="Position in this manager's own wishlist">
+                      #{p.wishlist_rank}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
