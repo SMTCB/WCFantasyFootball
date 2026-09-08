@@ -113,6 +113,24 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
     day: 'numeric', month: 'long', year: 'numeric',
   });
 
+  // The backend orders contested-pick bullets purely by how many managers
+  // wanted each player (most-contested first) — one manager's wins can end
+  // up scattered throughout that list ahead of another manager's single
+  // win, reading as if the same name keeps "jumping the queue". Regroup by
+  // winning manager here so each manager's contested picks read together;
+  // the wanted-by ranking is preserved within each manager's own group.
+  const infoBullets = bullets.filter(b => b.text);
+  const pickBullets = bullets.filter(b => !b.text && b.player_id);
+
+  const picksByManager = {};
+  for (const b of pickBullets) {
+    const key = b.winner_id ?? 'unknown';
+    (picksByManager[key] ??= []).push(b);
+  }
+  const managerGroups = Object.entries(picksByManager).sort(([aId], [bId]) =>
+    (members[aId] ?? '').localeCompare(members[bId] ?? '')
+  );
+
   return (
     <div>
       <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-2">
@@ -123,24 +141,42 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
         {entry.headline}
       </h2>
 
-      {bullets.length > 0 && (
+      {infoBullets.length > 0 && (
         <ul className="space-y-2 mb-4">
-          {bullets.map((b, i) => (
+          {infoBullets.map((b, i) => (
             <li key={i} className="flex gap-2 text-[12px] text-[#1a1a1a]">
               <span className="text-black/30 font-black shrink-0">•</span>
-              {b.text ? (
-                <span className="italic opacity-70">{b.text}</span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 flex-wrap">
-                  <ClubCrest name={players[b.player_id]?.club} size={14} />
-                  <span className="font-bold">{players[b.player_id]?.name ?? b.player_id}</span>
-                  <span className="opacity-60"> — wanted by {b.wanted_by} manager{b.wanted_by > 1 ? 's' : ''} — goes to </span>
-                  <span className="font-bold">{members[b.winner_id] ?? 'Unknown'}</span>
-                </span>
-              )}
+              <span className="italic opacity-70">{b.text}</span>
             </li>
           ))}
         </ul>
+      )}
+
+      {managerGroups.length > 0 && (
+        <div className="space-y-3 mb-4">
+          {managerGroups.map(([winnerId, picks]) => (
+            <div key={winnerId}>
+              <div className="text-[10px] font-black uppercase tracking-widest text-black/50 mb-1">
+                {members[winnerId] ?? 'Unknown'}
+                <span className="opacity-50 font-normal normal-case">
+                  {' '}— {picks.length} contested pick{picks.length > 1 ? 's' : ''} won
+                </span>
+              </div>
+              <ul className="space-y-1.5">
+                {picks.map((b, i) => (
+                  <li key={i} className="flex gap-2 text-[12px] text-[#1a1a1a] pl-1">
+                    <span className="text-black/30 font-black shrink-0">•</span>
+                    <span className="inline-flex items-center gap-1.5 flex-wrap">
+                      <ClubCrest name={players[b.player_id]?.club} size={14} />
+                      <span className="font-bold">{players[b.player_id]?.name ?? b.player_id}</span>
+                      <span className="opacity-60"> — wanted by {b.wanted_by} manager{b.wanted_by > 1 ? 's' : ''}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       )}
 
       {fullData?.allocations?.length > 0 && (
