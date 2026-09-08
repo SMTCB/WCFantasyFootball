@@ -11,6 +11,16 @@
 
 ---
 
+## ✅ Mobile draft submission tracker missing on CommissionerPanel (2026-09-08) — PR #968
+
+A commissioner reported the draft submit-status tracker (who has/hasn't submitted their pick list) was visible on desktop but not on mobile. Root cause: `CommissionerPanel.jsx` renders two entirely separate sibling components depending on viewport (`LifecycleOps` for desktop, an inline mobile branch inside `CommissionerPanel` itself) — the tracker's `draftMembers`/`draftSubmissions` state lived only inside `LifecycleOps`, so the mobile DRAFT card had no data to render it with.
+
+Fix: extracted `useDraftSubmissionTracker(leagueId, league)` as a standalone hook, following this file's existing cross-layout pattern (`useFreeTransferWindow`, `useFreeTransfersConfig`, `useRelaxationFormulaConfig`). Called once in `CommissionerPanel`, results passed as props into `<LifecycleOps>` and used directly in the mobile branch. Both layouts now show the same live submitted/not-submitted list.
+
+Verified: `npm run lint` clean (0 errors), `npm run build` clean. Note: `npm run test:unit` failed on `main` at merge time — 6 pre-existing `tests/unit/scoring-logic.test.js` assertion failures unrelated to this change (confirmed by reproducing on `main` before this PR existed); flagged separately as a follow-up task, not fixed here.
+
+Known follow-up gap (not fixed, out of scope): the Wishlist Draft commissioner card (the recurring per-round tracker, distinct from this one-time season draft tracker) has no mobile equivalent at all — will surface as the same bug class once "Draft Champions 26/27" reaches its wishlist-draft phase.
+
 ## ✅ Draft submit-status tracker + Transfer Basket colors fixed (2026-09-07) — PR #966
 
 Two live pilot bugs reported by a commissioner and surfaced via user testing on "Draft Champions 26/27":

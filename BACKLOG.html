@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-07. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-08. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>234</strong><span>closed</span></div>
+      <div class="total-pill"><strong>235</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (153)</span>
+    <span class="chip" data-filter-kind="done">Shipped (154)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">234</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">235</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">153</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">154</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">153</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">154</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ mobile draft submission tracker missing on commissionerpanel (2026-09-08) — pr #968 
+
+a commissioner reported the draft submit-status tracker (who has/hasn&#x27;t submitted their pick list) was visible on desktop but not on mobile. root cause: `commissionerpanel.jsx` renders two entirely separate sibling components depending on viewport (`lifecycleops` for desktop, an inline mobile branch inside `commissionerpanel` itself) — the tracker&#x27;s `draftmembers`/`draftsubmissions` state lived only inside `lifecycleops`, so the mobile draft card had no data to render it with.
+
+fix: extracted `usedraftsubmissiontracker(leagueid, league)` as a standalone hook, following this file&#x27;s existing cross-layout pattern (`usefreetransferwindow`, `usefreetransfersconfig`, `userelaxationformulaconfig`). called once in `commissionerpanel`, results passed as props into `&lt;lifecycleops&gt;` and used directly in the mobile branch. both layouts now show the same live submitted/not-submitted list.
+
+verified: `npm run lint` clean (0 errors), `npm run build` clean. note: `npm run test:unit` failed on `main` at merge time — 6 pre-existing `tests/unit/scoring-logic.test.js` assertion failures unrelated to this change (confirmed by reproducing on `main` before this pr existed); flagged separately as a follow-up task, not fixed here.
+
+known follow-up gap (not fixed, out of scope): the wishlist draft commissioner card (the recurring per-round tracker, distinct from this one-time season draft tracker) has no mobile equivalent at all — will surface as the same bug class once &quot;draft champions 26/27&quot; reaches its wishlist-draft phase.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Mobile draft submission tracker missing on CommissionerPanel</h3>
+        <p class="card-summary">A commissioner reported the draft submit-status tracker (who has/hasn't submitted their pick list) was visible on desktop but not on mobile. Root cause:…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #968</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Mobile draft submission tracker missing on CommissionerPanel</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>A commissioner reported the draft submit-status tracker (who has/hasn't submitted their pick list) was visible on desktop but not on mobile. Root cause:…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #968</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>A commissioner reported the draft submit-status tracker (who has/hasn't submitted their pick list) was visible on desktop but not on mobile. Root cause: <code>CommissionerPanel.jsx</code> renders two entirely separate sibling components depending on viewport (<code>LifecycleOps</code> for desktop, an inline mobile branch inside <code>CommissionerPanel</code> itself) — the tracker's <code>draftMembers</code>/<code>draftSubmissions</code> state lived only inside <code>LifecycleOps</code>, so the mobile DRAFT card had no data to render it with.</p>
+<p>Fix: extracted <code>useDraftSubmissionTracker(leagueId, league)</code> as a standalone hook, following this file's existing cross-layout pattern (<code>useFreeTransferWindow</code>, <code>useFreeTransfersConfig</code>, <code>useRelaxationFormulaConfig</code>). Called once in <code>CommissionerPanel</code>, results passed as props into <code>&lt;LifecycleOps&gt;</code> and used directly in the mobile branch. Both layouts now show the same live submitted/not-submitted list.</p>
+<p>Verified: <code>npm run lint</code> clean (0 errors), <code>npm run build</code> clean. Note: <code>npm run test:unit</code> failed on <code>main</code> at merge time — 6 pre-existing <code>tests/unit/scoring-logic.test.js</code> assertion failures unrelated to this change (confirmed by reproducing on <code>main</code> before this PR existed); flagged separately as a follow-up task, not fixed here.</p>
+<p>Known follow-up gap (not fixed, out of scope): the Wishlist Draft commissioner card (the recurring per-round tracker, distinct from this one-time season draft tracker) has no mobile equivalent at all — will surface as the same bug class once "Draft Champions 26/27" reaches its wishlist-draft phase.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft submit-status tracker + transfer basket colors fixed (2026-09-07) — pr #966 
 
 two live pilot bugs reported by a commissioner and surfaced via user testing on &quot;draft champions 26/27&quot;:
