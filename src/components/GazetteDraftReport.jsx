@@ -48,16 +48,23 @@ export default function GazetteDraftReport({ leagueId }) {
 
         const draftBullets  = draftRow ? parseJson(draftRow.bullets, []) : [];
         const draftFullData = draftRow ? parseJson(draftRow.full_data, null) : null;
+        const wishlistFullDatas = (wishlistRows ?? [])
+          .map(row => parseJson(row.full_data, null))
+          .filter(Boolean);
 
         const playerIds = [
           ...draftBullets.filter(b => b.player_id).map(b => b.player_id),
           ...(draftFullData?.pick_log ?? []).map(p => p.player_id),
+          ...wishlistFullDatas.flatMap(fd => fd.pick_log ?? []).map(p => p.player_id),
+          ...wishlistFullDatas.flatMap(fd => fd.formation_safety_net ?? []).map(a => a.player_id),
         ];
         const userIds   = [
           ...draftBullets.filter(b => b.winner_id).map(b => b.winner_id),
           ...(draftFullData?.allocations ?? []).map(a => a.user_id),
           ...(draftFullData?.pick_log ?? []).map(p => p.user_id),
           ...(wishlistRows ?? []).flatMap(row => parseJson(row.bullets, []).map(b => b.user_id)).filter(Boolean),
+          ...wishlistFullDatas.flatMap(fd => fd.pick_log ?? []).map(p => p.user_id),
+          ...wishlistFullDatas.flatMap(fd => fd.formation_safety_net ?? []).map(a => a.user_id),
         ];
 
         const [{ data: pRows }, { data: uRows }] = await Promise.all([
@@ -101,7 +108,7 @@ export default function GazetteDraftReport({ leagueId }) {
           </div>
           <div className="space-y-3">
             {wishlistEntries.map(entry => (
-              <WishlistRoundReport key={entry.id} entry={entry} members={members} />
+              <WishlistRoundReport key={entry.id} entry={entry} members={members} players={players} />
             ))}
           </div>
         </div>
@@ -313,11 +320,16 @@ function DraftOrderBoard({ snakeOrder, members }) {
 
 // Compact companion to DraftPickLogTable: just the round-1 lottery order,
 // since the full round-by-round direction/detail lives in the log below.
-function DraftOrderList({ snakeOrder, members }) {
+function DraftOrderList({
+  snakeOrder,
+  members,
+  title = 'Draft Order — Round 1 (set by lottery)',
+  note = 'Round 2 reverses this order, round 3 restores it, and so on — see the full log below for exactly who picked what, and when.',
+}) {
   return (
     <div className="mb-4 border border-black/10 rounded p-3">
       <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-2">
-        Draft Order — Round 1 (set by lottery)
+        {title}
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-black/60">
         {snakeOrder.map((uid, i) => (
@@ -327,7 +339,7 @@ function DraftOrderList({ snakeOrder, members }) {
         ))}
       </div>
       <p className="text-[9px] text-black/40 italic mt-2">
-        Round 2 reverses this order, round 3 restores it, and so on — see the full log below for exactly who picked what, and when.
+        {note}
       </p>
     </div>
   );
@@ -339,7 +351,7 @@ function DraftOrderList({ snakeOrder, members }) {
 // "someone with an earlier turn that round took them first" (visible via
 // order_index) or "they were gone by the time your turn came" (visible via
 // the wishlist_rank gap between consecutive picks).
-function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded }) {
+function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded, title = 'Round-by-Round Draft Log', firstRoundLabel = 'lottery order' }) {
   const totalRounds = pickLog.length ? Math.max(...pickLog.map(p => p.round)) : 0;
   const byRound = {};
   for (const p of pickLog) (byRound[p.round] ??= []).push(p);
@@ -351,7 +363,7 @@ function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded })
         onClick={() => setExpanded(e => !e)}
         className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
       >
-        Round-by-Round Draft Log {expanded ? '▲' : '▼'}
+        {title} {expanded ? '▲' : '▼'}
       </button>
 
       {expanded && (
@@ -363,7 +375,7 @@ function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded })
               <div key={round} className="border-b border-black/10 last:border-b-0">
                 <div className="flex items-center justify-between bg-black text-white px-3 py-1.5 font-black uppercase tracking-widest sticky top-0">
                   <span>Round {round}</span>
-                  <span className="opacity-60 font-normal normal-case">{reversed ? '← reversed order' : 'lottery order'}</span>
+                  <span className="opacity-60 font-normal normal-case">{reversed ? '← reversed order' : firstRoundLabel}</span>
                 </div>
                 {picks.map((p, i) => (
                   <div
@@ -390,10 +402,17 @@ function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded })
   );
 }
 
-function WishlistRoundReport({ entry, members }) {
+function WishlistRoundReport({ entry, members, players }) {
   const bullets  = parseJson(entry.bullets, []);
   const fullData = parseJson(entry.full_data, null);
   const date     = new Date(entry.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const [pickLogExpanded, setPickLogExpanded] = useState(false);
+
+  const order          = fullData?.order ?? [];
+  const pickLog         = fullData?.pick_log ?? [];
+  const safetyNet       = fullData?.formation_safety_net ?? [];
+  const hasPickLog       = pickLog.length > 0;
+  const hasSafetyNet     = safetyNet.length > 0;
 
   return (
     <div className="border border-black/10 rounded overflow-hidden text-[10px]">
@@ -403,6 +422,56 @@ function WishlistRoundReport({ entry, members }) {
         </span>
         <span className="opacity-60">{date}</span>
       </div>
+
+      {order.length > 0 && (
+        <div className="p-3">
+          <DraftOrderList
+            snakeOrder={order}
+            members={members}
+            title="Pick Order — This Round"
+            note="This round's order is the league's base pick order rotated by one seat each round, so no manager sits in the same slot every time — see the log below for exactly who picked what."
+          />
+        </div>
+      )}
+
+      {hasPickLog && (
+        <div className="px-3">
+          <DraftPickLogTable
+            pickLog={pickLog}
+            members={members}
+            players={players}
+            expanded={pickLogExpanded}
+            setExpanded={setPickLogExpanded}
+            title="Round-by-Round Pick Log"
+            firstRoundLabel="this round's order"
+          />
+        </div>
+      )}
+
+      {hasSafetyNet && (
+        <div className="mx-3 mb-3 border border-amber-600/30 bg-amber-50 rounded p-2">
+          <div className="text-[9px] font-black uppercase tracking-widest text-amber-800 mb-1">
+            ⚠ Formation Safety Net
+          </div>
+          <p className="text-[9px] text-amber-900/80 italic mb-1.5">
+            One or more managers' wishlists would have left their squad short of a fielding-legal formation. The system auto-corrected it — full swap below.
+          </p>
+          <ul className="space-y-0.5">
+            {safetyNet.map((a, i) => (
+              <li key={i} className="flex gap-1.5 text-amber-900">
+                <span className="font-bold">{members[a.user_id] ?? 'Manager'}</span>
+                <span className="opacity-70">{a.direction === 'released' ? 'released' : 'gained'}</span>
+                <span className="inline-flex items-center gap-1">
+                  <ClubCrest name={players?.[a.player_id]?.club} size={12} />
+                  {players?.[a.player_id]?.name ?? a.player_id}
+                </span>
+                <span className="opacity-50">({a.position})</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {bullets.length > 0 ? (
         <div>
           <div className="grid grid-cols-[1fr_auto_auto_auto] bg-black/5 text-black/50 px-3 py-1 font-black uppercase tracking-widest gap-3">
