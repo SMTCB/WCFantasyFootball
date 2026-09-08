@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>236</strong><span>closed</span></div>
+      <div class="total-pill"><strong>237</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (155)</span>
+    <span class="chip" data-filter-kind="done">Shipped (156)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">236</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">237</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">155</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">156</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,35 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">155</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">156</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft target-list ui parity with market screen (2026-09-08) — pr #975 
+
+the wishlist draft screen&#x27;s target-pool player list looked noticeably more basic than the market tab&#x27;s — inline hand-rolled position badges instead of the shared `positionchip`, no availability/injury indicator, and expanding a player showed only a plain-text season summary line instead of a real stats table.
+
+fix: target-pool rows now reuse `positionchip`, `statusdot`, and the same `playerstatspanel` component market uses for its expand-in-place last-5-gw stats table + season totals + &quot;stats ↗&quot; button — passed `islocked` to suppress `playerstatspanel`&#x27;s own buy/sell action, since wishlist&#x27;s action is &quot;add to list,&quot; not buy/sell. `usewishlistdraft` now attaches fitness intel to the player pool via the same `players` + `player_status` join market uses, so the availability dot has data to render. deliberately scoped out: fixture-timing display (needs nationality + active-fixtures data not yet available to the wishlist hook) and the four other dense drag/drop/checklist rows elsewhere on the screen that also use inline position badges (`sortablerow`, squad-release list, finalized-submission summary, drag overlay) — those aren&#x27;t the &quot;browsable player list&quot; being compared to market.
+
+verified: `npm run lint` (0 errors) and `npm run build` (clean, no rolldown tdz error — screen is a standalone lazy route, not nested under `leaguescreen`, so no cross-depth-import risk). live-account visual verification not done this session (requires the real pilot login, not the local demo session).
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Wishlist Draft target-list UI parity with Market screen</h3>
+        <p class="card-summary">The Wishlist Draft screen's target-pool player list looked noticeably more basic than the Market tab's — inline hand-rolled position badges instead of the shared…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-08</span><span class="foot-refs">PR #975</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Wishlist Draft target-list UI parity with Market screen</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>The Wishlist Draft screen's target-pool player list looked noticeably more basic than the Market tab's — inline hand-rolled position badges instead of the shared…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #975</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-08</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>The Wishlist Draft screen's target-pool player list looked noticeably more basic than the Market tab's — inline hand-rolled position badges instead of the shared <code>PositionChip</code>, no availability/injury indicator, and expanding a player showed only a plain-text season summary line instead of a real stats table.</p>
+<p>Fix: target-pool rows now reuse <code>PositionChip</code>, <code>StatusDot</code>, and the same <code>PlayerStatsPanel</code> component Market uses for its expand-in-place last-5-GW stats table + season totals + "STATS ↗" button — passed <code>isLocked</code> to suppress <code>PlayerStatsPanel</code>'s own buy/sell action, since Wishlist's action is "Add to List," not buy/sell. <code>useWishlistDraft</code> now attaches fitness intel to the player pool via the same <code>players</code> + <code>player_status</code> join Market uses, so the availability dot has data to render. Deliberately scoped out: fixture-timing display (needs nationality + active-fixtures data not yet available to the wishlist hook) and the four other dense drag/drop/checklist rows elsewhere on the screen that also use inline position badges (<code>SortableRow</code>, squad-release list, finalized-submission summary, drag overlay) — those aren't the "browsable player list" being compared to Market.</p>
+<p>Verified: <code>npm run lint</code> (0 errors) and <code>npm run build</code> (clean, no Rolldown TDZ error — screen is a standalone lazy route, not nested under <code>LeagueScreen</code>, so no cross-depth-import risk). Live-account visual verification not done this session (requires the real pilot login, not the local demo session).</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ game-aware forza times cron editions — recap + preview modes (2026-09-08) — pr #971 
 
 the &quot;forza times&quot; cron job (`generate-frontpage-editions`, jobid 89) had been sitting inactive since it was built — activating it as-is would have generated a newspaper edition for every league/circle every single day, regardless of whether their tournament had any games. also raised: capture pre-round transfers/auctions by generating a same-day edition on the morning of the first day a new round of fixtures kicks off, not just a recap the day after.
