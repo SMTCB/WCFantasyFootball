@@ -395,7 +395,14 @@ export default function WishlistDraftScreen() {
               >?</button>
             </div>
           </div>
-          <div className="w-5 shrink-0" />
+          <button
+            onClick={handleSave}
+            disabled={(targets.length === 0 && dropIds.size === 0) || saving}
+            className="text-[10px] font-black uppercase tracking-widest shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ color: 'var(--cyan)' }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
         </div>
         <div className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest text-center pb-2.5">
           No fixed deadline — resolves automatically before the market opens
@@ -657,17 +664,10 @@ export default function WishlistDraftScreen() {
                         onViewStats={() => setStatsDashboardPlayer(p)}
                       />
                       <div
-                        className="border border-[var(--rule)] border-t-0 px-3 py-2.5 flex items-center justify-between gap-2"
+                        className="border border-[var(--rule)] border-t-0 px-3 py-2.5"
                         style={{ background: 'var(--elev)' }}
                       >
-                        <div className="text-[10px] text-[var(--mute)]">#{targets.length + 1} priority</div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); addTarget(p); }}
-                          className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform shrink-0"
-                          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
-                        >
-                          Add to List
-                        </button>
+                        <div className="text-[10px] text-[var(--mute)]">#{targets.length + 1} priority if added</div>
                       </div>
                     </>
                   )}
@@ -686,21 +686,9 @@ export default function WishlistDraftScreen() {
 
       <div className="bg-[var(--shell)] border-t border-[var(--rule)] px-4 py-4 flex gap-2">
         <button
-          onClick={handleSave}
-          disabled={(targets.length === 0 && dropIds.size === 0) || saving}
-          className="flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-          style={{
-            background: 'var(--elev)',
-            border: '1px solid var(--rule)',
-            color: 'var(--paper)',
-          }}
-        >
-          {saving ? 'Saving...' : 'Save Wishlist'}
-        </button>
-        <button
           onClick={handleSubmit}
           disabled={(targets.length === 0 && dropIds.size === 0) || saving}
-          className="flex-[2] py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+          className="flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
             background:      (targets.length > 0 || dropIds.size > 0) ? 'var(--positive)' : undefined,
             color:           (targets.length > 0 || dropIds.size > 0) ? '#fff'            : 'var(--on-shell-dim)',
