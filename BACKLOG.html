@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-08. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-09. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>245</strong><span>closed</span></div>
+      <div class="total-pill"><strong>246</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (164)</span>
+    <span class="chip" data-filter-kind="done">Shipped (165)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">245</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">246</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">164</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">165</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,36 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">164</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">165</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ gk/def conceded-goals penalty fix (tournament 1593) + recap points-breakdown ui (2026-09-09) — pr #991, migration 289 
+
+two-part session bundled in one pr: a scoring bug fix and a new recap feature.
+
+**bug fix**: kobel (gk) conceded 2 goals in a gw1 match with no penalty applied, and the same was true for defenders (e.g. waldemar anton) — traced to tournament 1593&#x27;s gk/def `scoring_rules` rows still carrying the legacy unused `conceded_per_goal: 0` key instead of `conceded_2plus_penalty`, so [scoring-logic.js](supabase/functions/calculate-scores/scoring-logic.js)&#x27;s `rules.conceded_2plus_penalty ?? 0` silently applied no penalty regardless of scoreline. migration `289_scoring_v3_conceded_penalty_1593.sql` brought tournament 1593 into parity with tournament 429 (fixed there by migration 175) via surgical `jsonb_set`/`-` operator, applied live; gw1 scores recalculated and confirmed correct against real data.
+
+**feature**: added a points-breakdown detail panel to the league recap screen — the recap already had the player &quot;timeline&quot; mini-infograph (cards, goals, etc.) but was missing the full points breakdown already available in the squad screen&#x27;s mini-dashboard. implemented in [recapview.jsx](src/components/league/recapview.jsx): each player row in an expanded manager&#x27;s squad is now click-to-expand, revealing the same color-coded label/points breakdown as `playerstatsdashboard.jsx`&#x27;s mini-dashboard (reusing `buildbreakdownitems()` from [useplayerfullstats.js](src/hooks/useplayerfullstats.js) as-is), plus a captain/triple-captain multiplier row when applicable. chose click-to-expand-per-player over always-visible breakdowns for all ~15 squad players, to keep the already-dense recap view uncluttered — user explicitly invited a better layout than their mockup.
+
+**verification**: `npm run lint`, `npx eslint` on the touched file, and `npm run build` all passed clean; full ci green (build, lint, security, schema rehearsal, unit, e2e, tier 3 full-stack, android/ios builds)." style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">GK/DEF conceded-goals penalty fix (tournament 1593) + Recap points-breakdown UI</h3>
+        <p class="card-summary">Two-part session bundled in one PR: a scoring bug fix and a new Recap feature. Bug fix : Kobel (GK) conceded 2 goals in a GW1 match with no penalty applied, and the same…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-09</span><span class="foot-refs">PR #991, migration 289</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">GK/DEF conceded-goals penalty fix (tournament 1593) + Recap points-breakdown UI</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Two-part session bundled in one PR: a scoring bug fix and a new Recap feature. Bug fix : Kobel (GK) conceded 2 goals in a GW1 match with no penalty applied, and the same…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #991, migration 289</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-09</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Two-part session bundled in one PR: a scoring bug fix and a new Recap feature.</p>
+<p><strong>Bug fix</strong>: Kobel (GK) conceded 2 goals in a GW1 match with no penalty applied, and the same was true for defenders (e.g. Waldemar Anton) — traced to tournament 1593's GK/DEF <code>scoring_rules</code> rows still carrying the legacy unused <code>conceded_per_goal: 0</code> key instead of <code>conceded_2plus_penalty</code>, so <a href="supabase/functions/calculate-scores/scoring-logic.js" target="_blank" rel="noopener">scoring-logic.js</a>'s <code>rules.conceded_2plus_penalty ?? 0</code> silently applied no penalty regardless of scoreline. Migration <code>289_scoring_v3_conceded_penalty_1593.sql</code> brought tournament 1593 into parity with tournament 429 (fixed there by migration 175) via surgical <code>jsonb_set</code>/<code>-</code> operator, applied live; GW1 scores recalculated and confirmed correct against real data.</p>
+<p><strong>Feature</strong>: added a points-breakdown detail panel to the League Recap screen — the recap already had the player "timeline" mini-infograph (cards, goals, etc.) but was missing the full points breakdown already available in the Squad screen's mini-dashboard. Implemented in <a href="src/components/league/RecapView.jsx" target="_blank" rel="noopener">RecapView.jsx</a>: each player row in an expanded manager's squad is now click-to-expand, revealing the same color-coded label/points breakdown as <code>PlayerStatsDashboard.jsx</code>'s mini-dashboard (reusing <code>buildBreakdownItems()</code> from <a href="src/hooks/usePlayerFullStats.js" target="_blank" rel="noopener">usePlayerFullStats.js</a> as-is), plus a captain/triple-captain multiplier row when applicable. Chose click-to-expand-per-player over always-visible breakdowns for all ~15 squad players, to keep the already-dense Recap view uncluttered — user explicitly invited a better layout than their mockup.</p>
+<p><strong>Verification</strong>: <code>npm run lint</code>, <code>npx eslint</code> on the touched file, and <code>npm run build</code> all passed clean; full CI green (build, lint, security, schema rehearsal, unit, E2E, Tier 3 full-stack, Android/iOS builds). Full browser click-through against real league data wasn't possible this session — local dev only has an unauthenticated demo account with no leagues — so data-plumbing was instead verified via a read-only <code>db query --linked</code> cross-check against Kobel's real <code>player_match_stats.breakdown</code>/<code>bonus_points</code> row, confirming the shape matches what <code>buildBreakdownItems()</code> expects and the summed values match the stored <code>fantasy_points</code> exactly. Worth a quick manual check in a live league's Recap tab post-deploy.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft back-nav, disappearing tab, save contrast, live club crests (2026-09-08) — pr #989 
 
 four small ux fixes reported by a pilot user in one session, all frontend-only:
