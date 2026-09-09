@@ -2,11 +2,28 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
+import { buildBreakdownItems } from '../../hooks/usePlayerFullStats';
 
 // ── All helpers are module-level so React never sees new function references ──
 
 const POSITION_ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
 const positionSortIndex = (pos) => POSITION_ORDER[(pos ?? '').toUpperCase().replace('FW', 'FWD')] ?? 99;
+
+function fmtPts(pts) {
+  const n = Math.round(pts * 100) / 100;
+  return `${n > 0 ? '+' : ''}${n}`;
+}
+
+// Sums matching keys across multiple player_match_stats rows for the same
+// player (double-fixture gameweeks) — mirrors the scalar-field accumulation
+// pattern already used for goals/assists/etc. below.
+function mergeBreakdown(a, b) {
+  if (!b) return a;
+  if (!a) return { ...b };
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) out[k] = (out[k] ?? 0) + (v ?? 0);
+  return out;
+}
 
 function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
   if (allMatchdays.length <= 1) return null;
@@ -63,6 +80,8 @@ function FixtureRow({ f }) {
 }
 
 function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
+  const [expandedPid, setExpandedPid] = useState(null);
+
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -106,21 +125,50 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
         if (p.goalsConceded > 1)  badges.push({ s: `GA×${p.goalsConceded}`,    c: 'var(--danger)' });
         if (p.yellow)        badges.push({ s: '🟨',                c: 'var(--warn)' });
         if (p.red)           badges.push({ s: '🟥',                c: 'var(--danger)' });
+        const isExpanded = expandedPid === p.id;
+        const mult = p.triple ? 3 : p.captain ? 2 : 1;
+        const items = isExpanded ? buildBreakdownItems({ breakdown: p.breakdown, bonusPts: p.bonusPts }) : [];
         return (
-          <div key={p.id} style={{
-            display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
-            padding: '7px 24px', borderBottom: '1px solid var(--shell-rule)',
-            background: i % 2 === 0 ? 'transparent' : 'var(--shell-fill)',
-          }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: posColor, letterSpacing: '.1em' }}>{p.position}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-              {badges.map((b, bi) => <span key={bi} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: b.c, flexShrink: 0 }}>{b.s}</span>)}
+          <div key={p.id}>
+            <div
+              onClick={() => p.hasStats && setExpandedPid(isExpanded ? null : p.id)}
+              style={{
+                display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
+                padding: '7px 24px', borderBottom: isExpanded ? 'none' : '1px solid var(--shell-rule)',
+                background: isExpanded ? 'var(--shell-fill)' : i % 2 === 0 ? 'transparent' : 'var(--shell-fill)',
+                cursor: p.hasStats ? 'pointer' : 'default',
+              }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: posColor, letterSpacing: '.1em' }}>{p.position}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                {badges.map((b, bi) => <span key={bi} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: b.c, flexShrink: 0 }}>{b.s}</span>)}
+              </div>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: p.pts > 0 ? 'var(--positive)' : p.pts < 0 ? 'var(--danger)' : 'var(--mute)' }}>
+                {displayPts[i] !== null ? displayPts[i] : (p.hasStats ? '0' : '—')}
+              </span>
             </div>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: p.pts > 0 ? 'var(--positive)' : p.pts < 0 ? 'var(--danger)' : 'var(--mute)' }}>
-              {displayPts[i] !== null ? displayPts[i] : (p.hasStats ? '0' : '—')}
-            </span>
+            {isExpanded && (
+              <div style={{ padding: '4px 24px 10px 56px', borderBottom: '1px solid var(--shell-rule)', background: 'var(--shell-fill)' }}>
+                {items.map((item, ii) => (
+                  <div key={ii} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0' }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{item.label}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: item.kind === 'pos' ? 'var(--positive)' : item.kind === 'bonus' ? 'var(--gold)' : 'var(--danger)' }}>
+                      {fmtPts(item.pts)}
+                    </span>
+                  </div>
+                ))}
+                {!items.length && (
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '4px 0', letterSpacing: '.1em' }}>NO SCORING DATA</div>
+                )}
+                {mult > 1 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0 0', marginTop: 2, borderTop: '1px solid var(--shell-rule)' }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.1em' }}>{p.triple ? 'TRIPLE CAPTAIN ×3' : 'CAPTAIN ×2'}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>{displayPts[i]}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
@@ -554,14 +602,14 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       const [{ data: playerRows }, { data: statRows }] = await Promise.all([
         supabase.from('players').select('id, name, position').in('id', idList),
         supabase.from('player_match_stats')
-          .select('player_id, fantasy_points, goals, assists, minutes_played, yellow_cards, red_cards, saves, key_passes, shots_on_target, big_chances_created, shootout_scored, shootout_missed, shootout_saved, goals_conceded')
+          .select('player_id, fantasy_points, goals, assists, minutes_played, yellow_cards, red_cards, saves, key_passes, shots_on_target, big_chances_created, shootout_scored, shootout_missed, shootout_saved, goals_conceded, breakdown, bonus_points')
           .in('player_id', idList).in('fixture_id', fixtureIds),
       ]);
 
       const playerMeta = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
       const statsByPlayer = {};
       for (const r of statRows || []) {
-        if (!statsByPlayer[r.player_id]) statsByPlayer[r.player_id] = { pts: 0, goals: 0, assists: 0, minutes: 0, yellow: 0, red: 0, saves: 0, keyPasses: 0, sot: 0, bigChances: 0, shootoutScored: 0, shootoutMissed: 0, shootoutSaved: 0, goalsConceded: 0 };
+        if (!statsByPlayer[r.player_id]) statsByPlayer[r.player_id] = { pts: 0, goals: 0, assists: 0, minutes: 0, yellow: 0, red: 0, saves: 0, keyPasses: 0, sot: 0, bigChances: 0, shootoutScored: 0, shootoutMissed: 0, shootoutSaved: 0, goalsConceded: 0, breakdown: null, bonusPts: 0 };
         const s = statsByPlayer[r.player_id];
         s.pts       += r.fantasy_points      ?? 0;
         s.goals     += r.goals               ?? 0;
@@ -577,6 +625,8 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         s.shootoutMissed += r.shootout_missed ?? 0;
         s.shootoutSaved  += r.shootout_saved  ?? 0;
         s.goalsConceded  += r.goals_conceded  ?? 0;
+        s.breakdown = mergeBreakdown(s.breakdown, r.breakdown);
+        s.bonusPts += r.bonus_points ?? 0;
       }
 
       // For an in-progress round, mirror calculate-scores' live captain
@@ -617,6 +667,8 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           shootoutMissed: stats?.shootoutMissed ?? 0,
           shootoutSaved:  stats?.shootoutSaved  ?? 0,
           goalsConceded:  stats?.goalsConceded  ?? 0,
+          breakdown: stats?.breakdown ?? null,
+          bonusPts:  stats?.bonusPts  ?? 0,
           captain: isCaptain,
           triple:  isTriple,
           joker:   isJoker,
