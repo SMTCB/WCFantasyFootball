@@ -586,10 +586,20 @@ Deno.serve(async (req) => {
     // ── CRON mode ─────────────────────────────────────────────────────────────
     if (isCronMode) {
       const cronLeagueId = body.league_id as string | undefined;
+      const cronCircleId = body.circle_id as string | undefined;
       const results = { processed: 0, skipped: 0, errors: 0 };
       const DELAY_MS = 15_000;
 
+      // A call scoped to a single league or circle (via league_id/circle_id) only
+      // runs that one loop — otherwise every scoped call would still pay the full
+      // 14-circle (or 12-league) sweep afterward, which is what made single-item
+      // calls just as likely to hit the platform's ~150s idle-connection timeout
+      // as the unscoped run.
+      const runLeagues = !cronCircleId;
+      const runCircles = !cronLeagueId;
+
       // ── Per-league editions ──
+      if (runLeagues) {
       const { data: memberRows } = await sb.from('league_members').select('league_id, leagues(id, name, tournament_id, league_mode)');
       const leagueMap: Record<string, { info: { id: string; name: string; tournament_id: string; league_mode: string }; count: number }> = {};
       for (const row of (memberRows ?? []) as { league_id: string; leagues: { id: string; name: string; tournament_id: string; league_mode: string } }[]) {
@@ -617,9 +627,13 @@ Deno.serve(async (req) => {
           await logError(FN, 'error', `League ${league.id}: ${(err as Error).message}`, { league_id: league.id });
         }
       }
+      }
 
       // ── Per-circle editions ──
-      const { data: circleRows } = await sb.from('circles').select('id, name');
+      if (runCircles) {
+      const { data: circleRows } = cronCircleId
+        ? await sb.from('circles').select('id, name').eq('id', cronCircleId)
+        : await sb.from('circles').select('id, name');
       for (const circle of (circleRows ?? []) as { id: string; name: string }[]) {
         await new Promise(resolve => setTimeout(resolve, DELAY_MS));
         try {
@@ -641,6 +655,7 @@ Deno.serve(async (req) => {
           results.errors++;
           await logError(FN, 'error', `Circle ${circle.id}: ${(err as Error).message}`, { circle_id: circle.id });
         }
+      }
       }
 
       return json({ ok: true, ...results }, 200, corsHeaders);
