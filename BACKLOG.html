@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>247</strong><span>closed</span></div>
+      <div class="total-pill"><strong>248</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (166)</span>
+    <span class="chip" data-filter-kind="done">Shipped (167)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">247</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">248</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">166</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">167</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,45 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">166</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">167</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse activity ux + frontrow classification &amp; market data (2026-09-10) — pr #1000 
+
+user reported three issues from a live clubhouse screenshot (&quot;mundial do eder&quot;): the home tab&#x27;s activity feed was cluttered with 52–60 day-old events pushing chat off-screen, it lacked the league screen&#x27;s expand/collapse affordance, and the generated frontrow &quot;newspaper&quot; edition was thin — no standings, a test account in the wooden spoon slot, and no transfer/market content at all.
+
+**activity feed — 30-day filter**: [useclubhouse.js](src/hooks/useclubhouse.js) filters `get_circle_feed` results to entries under 30 days old immediately after the rpc response lands in state.
+
+**activity feed — expand/collapse**: added per-entry local `usestate` to `feedentry` in [clubhousescreen.jsx](src/screens/clubhousescreen.jsx), matching the show/hide-details pattern already used on the league screen&#x27;s activity rail.
+
+**frontrow classification section**: new `classificationsection` component in [clubhousefrontpage.jsx](src/components/clubhousefrontpage.jsx) renders per-league standings (top 3) from `edition.raw_input.leagues`, inserted above the existing hot take/wooden spoon/transfer desk grid.
+
+**frontrow test-user exclusion**: no `is_test` db flag exists, so all 5 known test accounts (`testcomm`, `testmgr2/3/4`, `test_qa_manager`) are matched by a `/^test/i` username-prefix filter. applied in [generate-frontpage-edition/index.ts](supabase/functions/generate-frontpage-edition/index.ts)&#x27;s `collectleaguedata` (members/transfers/chat/squads) and `collectcircledata` (per-league standings) — query limits widened (league members 7→15, circle standings 3→10) so filtering still leaves enough real managers to display.
+
+**frontrow market/transfer content**: `collectcircledata` previously collected zero transfer data — circle-level editions structurally could never reference the market regardless of actual activity. added a `squad_events`-based transfer collection block (last 7 days, all linked leagu" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Clubhouse activity UX + Frontrow classification &amp; market data</h3>
+        <p class="card-summary">User reported three issues from a live Clubhouse screenshot ("Mundial do Eder"): the Home tab's Activity feed was cluttered with 52–60 day-old events pushing chat…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-10</span><span class="foot-refs">PR #1000</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Clubhouse activity UX + Frontrow classification &amp; market data</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User reported three issues from a live Clubhouse screenshot ("Mundial do Eder"): the Home tab's Activity feed was cluttered with 52–60 day-old events pushing chat…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1000</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-10</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>User reported three issues from a live Clubhouse screenshot ("Mundial do Eder"): the Home tab's Activity feed was cluttered with 52–60 day-old events pushing chat off-screen, it lacked the League screen's expand/collapse affordance, and the generated Frontrow "newspaper" edition was thin — no standings, a test account in the Wooden Spoon slot, and no transfer/market content at all.</p>
+<p><strong>Activity feed — 30-day filter</strong>: <a href="src/hooks/useClubhouse.js" target="_blank" rel="noopener">useClubhouse.js</a> filters <code>get_circle_feed</code> results to entries under 30 days old immediately after the RPC response lands in state.</p>
+<p><strong>Activity feed — expand/collapse</strong>: added per-entry local <code>useState</code> to <code>FeedEntry</code> in <a href="src/screens/ClubhouseScreen.jsx" target="_blank" rel="noopener">ClubhouseScreen.jsx</a>, matching the show/hide-details pattern already used on the League screen's activity rail.</p>
+<p><strong>Frontrow classification section</strong>: new <code>ClassificationSection</code> component in <a href="src/components/ClubhouseFrontpage.jsx" target="_blank" rel="noopener">ClubhouseFrontpage.jsx</a> renders per-league standings (top 3) from <code>edition.raw_input.leagues</code>, inserted above the existing Hot Take/Wooden Spoon/Transfer Desk grid.</p>
+<p><strong>Frontrow test-user exclusion</strong>: no <code>is_test</code> DB flag exists, so all 5 known test accounts (<code>TestComm</code>, <code>TestMgr2/3/4</code>, <code>test_qa_manager</code>) are matched by a <code>/^test/i</code> username-prefix filter. Applied in <a href="supabase/functions/generate-frontpage-edition/index.ts" target="_blank" rel="noopener">generate-frontpage-edition/index.ts</a>'s <code>collectLeagueData</code> (members/transfers/chat/squads) and <code>collectCircleData</code> (per-league standings) — query limits widened (league members 7→15, circle standings 3→10) so filtering still leaves enough real managers to display.</p>
+<p><strong>Frontrow market/transfer content</strong>: <code>collectCircleData</code> previously collected zero transfer data — circle-level editions structurally could never reference the market regardless of actual activity. Added a <code>squad_events</code>-based transfer collection block (last 7 days, all linked leagues, test-users excluded) mirroring the existing league-level pipeline, and wired the result through <code>buildCirclePrompt</code> as a new "MARKET ACTIVITY" prompt section feeding <code>transfer_rumour</code>.</p>
+<p><strong>Verification</strong>: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ issues), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed). Real-circle UI verification wasn't possible locally (dev server runs with <code>VITE_AUTH_ENABLED=false</code> demo mode, no real Supabase session) — instead deployed <code>generate-frontpage-edition</code> and invoked it in cron mode scoped to just <code>circle_id=c987f174-9ed1-47a1-80b6-4c2b2949950b</code> (Mundial do Eder), per the user's explicit "no need to regenerate all leagues" instruction. Confirmed in the resulting row: <code>test_qa_manager</code> no longer appears anywhere, <code>transfer_rumour</code>/<code>raw_input.transfers</code> contain 25 real transfer lines, and <code>raw_input.leagues[].standings</code> is populated for both linked leagues (feeds the new classification section).</p>
+<p><strong>CI note</strong>: PR #1000's "Security" check (a function-drift audit, not a vulnerability scan) also caught <code>auto-open-transfer-window</code> as undeployed since PR #993 merged — a pre-existing gap unrelated to this session's changes. Deployed it alongside <code>generate-frontpage-edition</code> and committed updated <code>.function-checksums.json</code> to clear CI.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ transfer-window phantom-round bug fix + cleanup, transfers-per-round correction, frontrow cron/data fixes (2026-09-10) — pr #993, pr #994 
 
 four-part session, all supabase-side plus one edge function fix:
