@@ -169,7 +169,7 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
     { data: configRows },
   ] = await Promise.all([
     sb.from('league_members').select('user_id, total_points, rank').eq('league_id', league.id).order('rank', { ascending: true }).limit(7),
-    sb.from('transfers').select('user_id, player_in, player_out, transferred_at').eq('league_id', league.id).gte('transferred_at', since24h).order('transferred_at', { ascending: false }).limit(5),
+    sb.from('squad_events').select('user_id, player_in, player_out, event_at').eq('league_id', league.id).in('event_type', ['transfer_buy', 'transfer_sell']).gte('event_at', since24h).order('event_at', { ascending: false }).limit(5),
     sb.from('chat_messages').select('message, user_id').eq('league_id', league.id).or('is_deleted.eq.false,is_deleted.is.null').order('created_at', { ascending: false }).limit(3),
     sb.from('fixtures').select('home_team, away_team, kickoff_at').eq('tournament_id', league.tournament_id).eq('status', 'scheduled').lte('kickoff_at', next48h).gte('kickoff_at', new Date().toISOString()).order('kickoff_at').limit(4),
     sb.from('gazette_entries').select('entry_type, headline').eq('league_id', league.id).in('entry_type', ['breaking_news', 'classified', 'activity']).order('published_at', { ascending: false }).limit(9),
