@@ -12,6 +12,20 @@
 
 ---
 
+## ✅ Transfer-window phantom-round bug fix + cleanup, transfers-per-round correction, Frontrow cron/data fixes (2026-09-10) — PR #993, PR #994
+
+Four-part session, all Supabase-side plus one Edge Function fix:
+
+**Transfer-window bug (root cause + fix)**: `auto-open-transfer-window` opened a next-round window the moment *any* fixture in the current round finished, instead of waiting for the whole round — producing phantom windows (e.g. a round 9 window for an 8-round tournament) and premature windows for rounds still in progress. [index.js](supabase/functions/auto-open-transfer-window/index.js) rewritten to require every fixture in a round `finished` (grouped via a round-number map) before opening the next round's window, and to require the next round to actually have scheduled fixtures (guards against dormant/short tournaments). Also changed `transfers_remaining` to be written as `NULL` instead of a hardcoded `5` — the real allowance/penalty logic lives in `league_config.transfers_per_round` + client-side computation in `MarketScreen.jsx`, so the fixed `5` was a display-only lie; `NULL` correctly triggers the "unlimited/extra buys cost points" banner state. PR #993, deployed live.
+
+**Data cleanup**: deleted 11 erroneous `transfer_windows` rows created by the old buggy logic before the fix deployed — 6 phantom round-9 rows for tournament 429 (World Cup, only 8 rounds exist) and 5 round-2 rows for tournament 1593 (Champions League, round 1 was still only 12/18 fixtures finished). No surviving rows needed `transfers_remaining` nulled separately — all stale-valued rows were covered by the deletions. One genuine mid-bug-window transfer on Draft Champions 26/27 was left untouched per explicit decision not to chase it.
+
+**Transfers-per-round correction**: confirmed via code inspection ([MarketScreen.jsx](src/screens/MarketScreen.jsx) `isDraftLeague` bypass, lines 143-153/806) that draft-mode leagues have genuinely unlimited transfers regardless of the `transfers_per_round` config value (which is dead for them) — so the 6→4 free-transfer change only applies to classic-mode leagues. Updated `league_config.transfers_per_round` from 6 to 4 for Champignon '26/'27 and Champions Eder 26/27 (both tournament 1593, classic mode); draft-mode leagues (CHAMPS_2627_TEST, Draft Champions 26/27, test 1) untouched.
+
+**Frontrow (frontpage generation) fixes**: two independent bugs found while investigating why no new `frontpage_editions` rows had been written since 2026-07-31 despite crons showing `succeeded`. (1) Both `generate-frontpage-editions` and `generate-frontpage-editions-preview` cron jobs called `net.http_post` with no explicit `timeout_milliseconds`, defaulting to pg_net's 5000ms — the function's serial per-league loop (15s delay + Groq LLM call per league) routinely exceeds that, so every run was silently marked timed-out before it could write anything; the `succeeded` status only reflected the trivial call-queuing step. Fixed by setting `timeout_milliseconds := 300000` on both cron jobs (jobid 89, 100) directly via `cron.alter_job`. (2) The "recent transfers" section of [generate-frontpage-edition/index.ts](supabase/functions/generate-frontpage-edition/index.ts) was querying the legacy `transfers` table, which has had zero writes since `execute_transfer_atomic` replaced it — repointed to `squad_events` (the actively-populated audit log), filtered to `transfer_buy`/`transfer_sell` event types. PR #994, deployed live.
+
+---
+
 ## ✅ GK/DEF conceded-goals penalty fix (tournament 1593) + Recap points-breakdown UI (2026-09-09) — PR #991, migration 289
 
 Two-part session bundled in one PR: a scoring bug fix and a new Recap feature.

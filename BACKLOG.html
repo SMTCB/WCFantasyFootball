@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-09. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-10. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>246</strong><span>closed</span></div>
+      <div class="total-pill"><strong>247</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (165)</span>
+    <span class="chip" data-filter-kind="done">Shipped (166)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">246</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">247</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">165</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">166</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">165</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">166</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ transfer-window phantom-round bug fix + cleanup, transfers-per-round correction, frontrow cron/data fixes (2026-09-10) — pr #993, pr #994 
+
+four-part session, all supabase-side plus one edge function fix:
+
+**transfer-window bug (root cause + fix)**: `auto-open-transfer-window` opened a next-round window the moment *any* fixture in the current round finished, instead of waiting for the whole round — producing phantom windows (e.g. a round 9 window for an 8-round tournament) and premature windows for rounds still in progress. [index.js](supabase/functions/auto-open-transfer-window/index.js) rewritten to require every fixture in a round `finished` (grouped via a round-number map) before opening the next round&#x27;s window, and to require the next round to actually have scheduled fixtures (guards against dormant/short tournaments). also changed `transfers_remaining` to be written as `null` instead of a hardcoded `5` — the real allowance/penalty logic lives in `league_config.transfers_per_round` + client-side computation in `marketscreen.jsx`, so the fixed `5` was a display-only lie; `null` correctly triggers the &quot;unlimited/extra buys cost points&quot; banner state. pr #993, deployed live.
+
+**data cleanup**: deleted 11 erroneous `transfer_windows` rows created by the old buggy logic before the fix deployed — 6 phantom round-9 rows for tournament 429 (world cup, only 8 rounds exist) and 5 round-2 rows for tournament 1593 (champions league, round 1 was still only 12/18 fixtures finished). no surviving rows needed `transfers_remaining` nulled separately — all stale-valued rows were covered by the deletions. one genuine mid-bug-window transfer on draft champions 26/27 was left untouched per explicit decision not to chase it.
+
+**transfers-per-round correction**: confirmed via code inspection ([marketscreen.jsx](src/screens/marketscreen.jsx) `isdraftleague` bypass, lines 143-153/806) that draft-mode leagues have genuinely unlimited transfers regardless of the `transfers_per_round` co" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Transfer-window phantom-round bug fix + cleanup, transfers-per-round correction, Frontrow cron/data fixes</h3>
+        <p class="card-summary">Four-part session, all Supabase-side plus one Edge Function fix: Transfer-window bug (root cause + fix) : auto-open-transfer-window opened a next-round window the moment…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-10</span><span class="foot-refs">PR #993, PR #994</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Transfer-window phantom-round bug fix + cleanup, transfers-per-round correction, Frontrow cron/data fixes</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Four-part session, all Supabase-side plus one Edge Function fix: Transfer-window bug (root cause + fix) : auto-open-transfer-window opened a next-round window the moment…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #993, PR #994</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-10</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Four-part session, all Supabase-side plus one Edge Function fix:</p>
+<p><strong>Transfer-window bug (root cause + fix)</strong>: <code>auto-open-transfer-window</code> opened a next-round window the moment *any* fixture in the current round finished, instead of waiting for the whole round — producing phantom windows (e.g. a round 9 window for an 8-round tournament) and premature windows for rounds still in progress. <a href="supabase/functions/auto-open-transfer-window/index.js" target="_blank" rel="noopener">index.js</a> rewritten to require every fixture in a round <code>finished</code> (grouped via a round-number map) before opening the next round's window, and to require the next round to actually have scheduled fixtures (guards against dormant/short tournaments). Also changed <code>transfers_remaining</code> to be written as <code>NULL</code> instead of a hardcoded <code>5</code> — the real allowance/penalty logic lives in <code>league_config.transfers_per_round</code> + client-side computation in <code>MarketScreen.jsx</code>, so the fixed <code>5</code> was a display-only lie; <code>NULL</code> correctly triggers the "unlimited/extra buys cost points" banner state. PR #993, deployed live.</p>
+<p><strong>Data cleanup</strong>: deleted 11 erroneous <code>transfer_windows</code> rows created by the old buggy logic before the fix deployed — 6 phantom round-9 rows for tournament 429 (World Cup, only 8 rounds exist) and 5 round-2 rows for tournament 1593 (Champions League, round 1 was still only 12/18 fixtures finished). No surviving rows needed <code>transfers_remaining</code> nulled separately — all stale-valued rows were covered by the deletions. One genuine mid-bug-window transfer on Draft Champions 26/27 was left untouched per explicit decision not to chase it.</p>
+<p><strong>Transfers-per-round correction</strong>: confirmed via code inspection (<a href="src/screens/MarketScreen.jsx" target="_blank" rel="noopener">MarketScreen.jsx</a> <code>isDraftLeague</code> bypass, lines 143-153/806) that draft-mode leagues have genuinely unlimited transfers regardless of the <code>transfers_per_round</code> config value (which is dead for them) — so the 6→4 free-transfer change only applies to classic-mode leagues. Updated <code>league_config.transfers_per_round</code> from 6 to 4 for Champignon '26/'27 and Champions Eder 26/27 (both tournament 1593, classic mode); draft-mode leagues (CHAMPS_2627_TEST, Draft Champions 26/27, test 1) untouched.</p>
+<p><strong>Frontrow (frontpage generation) fixes</strong>: two independent bugs found while investigating why no new <code>frontpage_editions</code> rows had been written since 2026-07-31 despite crons showing <code>succeeded</code>. (1) Both <code>generate-frontpage-editions</code> and <code>generate-frontpage-editions-preview</code> cron jobs called <code>net.http_post</code> with no explicit <code>timeout_milliseconds</code>, defaulting to pg_net's 5000ms — the function's serial per-league loop (15s delay + Groq LLM call per league) routinely exceeds that, so every run was silently marked timed-out before it could write anything; the <code>succeeded</code> status only reflected the trivial call-queuing step. Fixed by setting <code>timeout_milliseconds := 300000</code> on both cron jobs (jobid 89, 100) directly via <code>cron.alter_job</code>. (2) The "recent transfers" section of <a href="supabase/functions/generate-frontpage-edition/index.ts" target="_blank" rel="noopener">generate-frontpage-edition/index.ts</a> was querying the legacy <code>transfers</code> table, which has had zero writes since <code>execute_transfer_atomic</code> replaced it — repointed to <code>squad_events</code> (the actively-populated audit log), filtered to <code>transfer_buy</code>/<code>transfer_sell</code> event types. PR #994, deployed live.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ gk/def conceded-goals penalty fix (tournament 1593) + recap points-breakdown ui (2026-09-09) — pr #991, migration 289 
 
 two-part session bundled in one pr: a scoring bug fix and a new recap feature.
