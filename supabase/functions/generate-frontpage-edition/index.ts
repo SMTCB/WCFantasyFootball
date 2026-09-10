@@ -156,9 +156,10 @@ async function callGroq(userPrompt: string): Promise<Record<string, string | nul
 
 // ── League data collection ────────────────────────────────────────────────────
 
-async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { id: string; name: string; tournament_id: string }) {
-  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { id: string; name: string; tournament_id: string; league_mode: string }) {
+  const since7d  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const next48h  = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+  const isDraft  = league.league_mode === 'draft';
 
   const [
     { data: members },
@@ -167,20 +168,50 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
     { data: fixtures },
     { data: gazetteRows },
     { data: configRows },
+    { data: rawSquads },
+    { data: draftRows },
   ] = await Promise.all([
     sb.from('league_members').select('user_id, total_points, rank').eq('league_id', league.id).order('rank', { ascending: true }).limit(7),
-    sb.from('squad_events').select('user_id, player_in, player_out, event_at').eq('league_id', league.id).in('event_type', ['transfer_buy', 'transfer_sell']).gte('event_at', since24h).order('event_at', { ascending: false }).limit(5),
+    // Widened to a 7-day window / 25 rows so the edition reflects the full recent
+    // market, not just a 24h/5-row slice.
+    sb.from('squad_events').select('user_id, player_in, player_out, event_at').eq('league_id', league.id).in('event_type', ['transfer_buy', 'transfer_sell']).gte('event_at', since7d).order('event_at', { ascending: false }).limit(25),
     sb.from('chat_messages').select('message, user_id').eq('league_id', league.id).or('is_deleted.eq.false,is_deleted.is.null').order('created_at', { ascending: false }).limit(3),
     sb.from('fixtures').select('home_team, away_team, kickoff_at').eq('tournament_id', league.tournament_id).eq('status', 'scheduled').lte('kickoff_at', next48h).gte('kickoff_at', new Date().toISOString()).order('kickoff_at').limit(4),
-    sb.from('gazette_entries').select('entry_type, headline').eq('league_id', league.id).in('entry_type', ['breaking_news', 'classified', 'activity']).order('published_at', { ascending: false }).limit(9),
+    // bullets carries the actual scorelines (activity) / contested-pick data (draft_report) —
+    // headline alone was never enough to report real results.
+    sb.from('gazette_entries').select('entry_type, headline, bullets, full_data').eq('league_id', league.id).in('entry_type', ['breaking_news', 'classified', 'activity']).order('published_at', { ascending: false }).limit(9),
     sb.from('league_config').select('config_key, config_value').eq('league_id', league.id).in('config_key', ['frontpage_pinned_quote', 'frontpage_pinned_quote_author']),
+    // Roster arrays — "teams created by the managers".
+    sb.from('squads').select('user_id, players, created_at').eq('league_id', league.id).order('created_at', { ascending: false }),
+    // Draft-overlap data (draft-mode leagues only).
+    isDraft
+      ? sb.from('gazette_entries').select('entry_type, bullets, full_data').eq('league_id', league.id).in('entry_type', ['draft_report', 'wishlist_draft_report']).order('published_at', { ascending: false }).limit(1)
+      : Promise.resolve({ data: [] }),
   ]);
+
+  // One squad per manager — most recent by created_at.
+  const latestSquadByUser = new Map<string, { user_id: string; players: string[] }>();
+  for (const s of (rawSquads ?? []) as { user_id: string; players: string[]; created_at: string }[]) {
+    if (!latestSquadByUser.has(s.user_id)) latestSquadByUser.set(s.user_id, s);
+  }
+  const squads = [...latestSquadByUser.values()];
+
+  const draftEntry = (draftRows ?? [])[0] as
+    | { entry_type: 'draft_report'; bullets: Array<{ text?: string; player_id?: string; wanted_by?: number; winner_id?: string }> }
+    | { entry_type: 'wishlist_draft_report'; bullets: unknown; full_data: { submissions?: Array<{ user_id: string; target_ids?: string[] }> } }
+    | undefined;
 
   const userIdSet = new Set<string>([
     ...(members ?? []).map((m: { user_id: string }) => m.user_id),
     ...(rawTransfers ?? []).map((t: { user_id: string }) => t.user_id),
     ...(chatRows ?? []).map((c: { user_id: string }) => c.user_id),
+    ...squads.map(s => s.user_id),
   ]);
+  if (draftEntry?.entry_type === 'draft_report') {
+    for (const b of draftEntry.bullets) if (b.winner_id) userIdSet.add(b.winner_id);
+  } else if (draftEntry?.entry_type === 'wishlist_draft_report') {
+    for (const sub of draftEntry.full_data?.submissions ?? []) userIdSet.add(sub.user_id);
+  }
   const { data: userRows } = await sb.from('users').select('id, username').in('id', [...userIdSet]);
   const userMap: Record<string, string> = Object.fromEntries(
     (userRows ?? []).map((u: { id: string; username: string }) => [u.id, u.username])
@@ -191,11 +222,17 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
     if (t.player_in)  playerIdSet.add(t.player_in);
     if (t.player_out) playerIdSet.add(t.player_out);
   }
-  let playerMap: Record<string, { name: string; position: string }> = {};
+  for (const s of squads) for (const pid of s.players ?? []) playerIdSet.add(pid);
+  if (draftEntry?.entry_type === 'draft_report') {
+    for (const b of draftEntry.bullets) if (b.player_id) playerIdSet.add(b.player_id);
+  } else if (draftEntry?.entry_type === 'wishlist_draft_report') {
+    for (const sub of draftEntry.full_data?.submissions ?? []) for (const pid of sub.target_ids ?? []) playerIdSet.add(pid);
+  }
+  let playerMap: Record<string, { name: string; position: string; price: number }> = {};
   if (playerIdSet.size > 0) {
-    const { data: playerRows } = await sb.from('players').select('id, name, position').in('id', [...playerIdSet]);
+    const { data: playerRows } = await sb.from('players').select('id, name, position, price').in('id', [...playerIdSet]);
     playerMap = Object.fromEntries(
-      (playerRows ?? []).map((p: { id: string; name: string; position: string }) => [p.id, p])
+      (playerRows ?? []).map((p: { id: string; name: string; position: string; price: number }) => [p.id, p])
     );
   }
 
@@ -203,7 +240,7 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
     (configRows ?? []).map((r: { config_key: string; config_value: unknown }) => [r.config_key, String(r.config_value)])
   );
 
-  return { members, rawTransfers, chatRows, fixtures, gazetteRows, configMap, userMap, playerMap };
+  return { members, rawTransfers, chatRows, fixtures, gazetteRows, configMap, userMap, playerMap, squads, draftEntry, isDraft };
 }
 
 // ── League prompt builder ─────────────────────────────────────────────────────
@@ -212,7 +249,7 @@ function buildLeaguePrompt(
   league: { id: string; name: string },
   data: Awaited<ReturnType<typeof collectLeagueData>>
 ): { prompt: string; rawInput: Record<string, unknown> } {
-  const { members, rawTransfers, chatRows, fixtures, gazetteRows, configMap, userMap, playerMap } = data;
+  const { members, rawTransfers, chatRows, fixtures, gazetteRows, configMap, userMap, playerMap, squads, draftEntry, isDraft } = data;
 
   const sortedMembers = (members ?? []) as { user_id: string; total_points: number; rank: number }[];
   const top5 = sortedMembers.slice(0, 5);
@@ -246,10 +283,54 @@ function buildLeaguePrompt(
     return `${f.home_team} vs ${f.away_team} — ${label}`;
   });
 
-  const gazette = (gazetteRows ?? []) as { entry_type: string; headline: string }[];
+  const gazette = (gazetteRows ?? []) as { entry_type: string; headline: string; bullets: unknown }[];
   const newsLines       = gazette.filter(e => e.entry_type === 'breaking_news').slice(0, 3).map(e => `• ${e.headline}`);
   const classifiedLines = gazette.filter(e => e.entry_type === 'classified').slice(0, 3).map(e => `• ${e.headline}`);
   const lastScores      = gazette.find(e => e.entry_type === 'activity');
+  // bullets holds the actual scorelines (e.g. "BernasLima 28 pts beat Fonzinho 19 pts  +5");
+  // headline alone is just a section title like "Matchday 8 H2H Results".
+  const resultLines = Array.isArray(lastScores?.bullets)
+    ? (lastScores!.bullets as string[]).slice(0, 6)
+    : [];
+
+  // "Teams created by the managers" — roster headline names per squad, cheapest-first
+  // filtered out, top 2 by price as the flavour names.
+  const squadLines = squads.map(s => {
+    const names = (s.players ?? [])
+      .map(pid => playerMap[pid])
+      .filter(Boolean)
+      .sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
+      .slice(0, 2)
+      .map(p => p.name);
+    if (!names.length) return null;
+    return `${userMap[s.user_id] ?? 'A manager'} built their squad around ${names.join(' & ')}`;
+  }).filter(Boolean) as string[];
+
+  // Draft-overlap — contested picks, draft-mode leagues only.
+  let draftLines: string[] = [];
+  if (isDraft && draftEntry) {
+    if (draftEntry.entry_type === 'draft_report') {
+      draftLines = draftEntry.bullets
+        .filter(b => b.player_id && (b.wanted_by ?? 0) > 1)
+        .sort((a, b) => (b.wanted_by ?? 0) - (a.wanted_by ?? 0))
+        .slice(0, 5)
+        .map(b => {
+          const name = playerMap[b.player_id!]?.name ?? 'A player';
+          const winner = b.winner_id ? (userMap[b.winner_id] ?? 'someone') : 'someone';
+          return `${name} was wanted by ${b.wanted_by} managers — won by ${winner}`;
+        });
+    } else if (draftEntry.entry_type === 'wishlist_draft_report') {
+      const overlapCount = new Map<string, number>();
+      for (const sub of draftEntry.full_data?.submissions ?? []) {
+        for (const pid of sub.target_ids ?? []) overlapCount.set(pid, (overlapCount.get(pid) ?? 0) + 1);
+      }
+      draftLines = [...overlapCount.entries()]
+        .filter(([, count]) => count > 1)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([pid, count]) => `${playerMap[pid]?.name ?? 'A player'} was targeted by ${count} managers this round`);
+    }
+  }
 
   const pinnedQuote  = configMap['frontpage_pinned_quote'];
   const pinnedAuthor = configMap['frontpage_pinned_quote_author'];
@@ -257,7 +338,8 @@ function buildLeaguePrompt(
   const rawInput = {
     standings: standingsLines, transfers: transferLines, chat: chatLines,
     fixtures: fixtureLines, news: newsLines, classifieds: classifiedLines,
-    lastScores: lastScores?.headline ?? null, pinnedQuote: pinnedQuote ?? null,
+    lastScores: lastScores?.headline ?? null, resultLines, squads: squadLines,
+    draftOverlap: draftLines, pinnedQuote: pinnedQuote ?? null,
     memberCount: sortedMembers.length,
   };
 
@@ -266,11 +348,15 @@ function buildLeaguePrompt(
 OVERALL STANDINGS:
 ${standingsLines.join('\n') || 'Season not yet started.'}
 
-LAST 24H TRANSFERS:
-${transferLines.length ? transferLines.join('\n') : 'No transfers in the last 24 hours.'}
+MARKET ACTIVITY (last 7 days):
+${transferLines.length ? transferLines.join('\n') : 'No transfers in the last 7 days.'}
 
-LAST COMPLETED GAMEWEEK:
-${lastScores?.headline ?? 'No completed rounds yet.'}
+TEAMS BUILT BY MANAGERS:
+${squadLines.length ? squadLines.join('\n') : 'No squads built yet.'}
+
+LAST COMPLETED GAMEWEEK — ${lastScores?.headline ?? 'No completed rounds yet.'}
+${resultLines.length ? resultLines.join('\n') : ''}
+${draftLines.length ? '\nDRAFT OVERLAP — CONTESTED PICKS:\n' + draftLines.join('\n') : ''}
 
 UPCOMING FIXTURES (next 48h):
 ${fixtureLines.length ? fixtureLines.join('\n') : 'No fixtures in the next 48 hours.'}
@@ -283,7 +369,7 @@ ${newsLines.length ? newsLines.join('\n') : 'None.'}
 ${classifiedLines.length ? '\nCLASSIFIEDS:\n' + classifiedLines.join('\n') : ''}
 ${pinnedQuote ? `\nPINNED QUOTE: "${pinnedQuote}" — ${pinnedAuthor ?? 'The Commissioner'}` : ''}
 
-Base headline/hot_take on overall standings. wooden_spoon = the LAST-PLACED manager.
+Base headline/hot_take on overall standings. wooden_spoon = the LAST-PLACED manager. Weave in real scorelines from LAST COMPLETED GAMEWEEK and, when present, a contested draft pick from DRAFT OVERLAP.
 
 Respond ONLY with valid JSON:
 {
@@ -291,7 +377,7 @@ Respond ONLY with valid JSON:
   "deck": "2-3 sentence article intro. Mention the overall leader by name. Snarky but fair. Weave in a chat quote or banter if there are recent messages. Max 220 chars.",
   "hot_take": "One provocative observation — riff on the recent league chat or current standings form. Max 90 chars.",
   "wooden_spoon": "Gentle roast of the BOTTOM-TABLE manager (last in standings) by name. Max 90 chars.",
-  "transfer_rumour": "Tabloid spin on any transfer from the last 24h. Max 110 chars. Use null if no transfers."
+  "transfer_rumour": "Tabloid spin on any transfer from the last 7 days. Max 110 chars. Use null if no transfers."
 }`;
 
   return { prompt, rawInput };
@@ -452,7 +538,7 @@ async function writeCircleEdition(
 
 async function generateForLeague(
   sb: ReturnType<typeof createClient>,
-  league: { id: string; name: string; tournament_id: string },
+  league: { id: string; name: string; tournament_id: string; league_mode: string },
   isManual: boolean
 ) {
   const data = await collectLeagueData(sb, league);
@@ -504,9 +590,9 @@ Deno.serve(async (req) => {
       const DELAY_MS = 15_000;
 
       // ── Per-league editions ──
-      const { data: memberRows } = await sb.from('league_members').select('league_id, leagues(id, name, tournament_id)');
-      const leagueMap: Record<string, { info: { id: string; name: string; tournament_id: string }; count: number }> = {};
-      for (const row of (memberRows ?? []) as { league_id: string; leagues: { id: string; name: string; tournament_id: string } }[]) {
+      const { data: memberRows } = await sb.from('league_members').select('league_id, leagues(id, name, tournament_id, league_mode)');
+      const leagueMap: Record<string, { info: { id: string; name: string; tournament_id: string; league_mode: string }; count: number }> = {};
+      for (const row of (memberRows ?? []) as { league_id: string; leagues: { id: string; name: string; tournament_id: string; league_mode: string } }[]) {
         if (!row.leagues) continue;
         if (!leagueMap[row.league_id]) leagueMap[row.league_id] = { info: row.leagues, count: 0 };
         leagueMap[row.league_id].count++;
@@ -598,10 +684,10 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: `Special edition already published ${hoursSince.toFixed(1)}h ago. Next in ${(4 - hoursSince).toFixed(1)}h.` }, 429, corsHeaders);
     }
 
-    const { data: leagueRow } = await sb.from('leagues').select('id, name, tournament_id').eq('id', leagueId).maybeSingle();
+    const { data: leagueRow } = await sb.from('leagues').select('id, name, tournament_id, league_mode').eq('id', leagueId).maybeSingle();
     if (!leagueRow) return json({ ok: false, error: 'League not found' }, 404, corsHeaders);
 
-    await generateForLeague(sb, leagueRow as { id: string; name: string; tournament_id: string }, true);
+    await generateForLeague(sb, leagueRow as { id: string; name: string; tournament_id: string; league_mode: string }, true);
     return json({ ok: true, message: 'Special edition published' }, 200, corsHeaders);
 
   } catch (err) {
