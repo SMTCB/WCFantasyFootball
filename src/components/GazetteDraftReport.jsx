@@ -11,6 +11,7 @@ import ClubCrest from './ClubCrest';
 export default function GazetteDraftReport({ leagueId }) {
   const [draftEntry,    setDraftEntry]    = useState(null);
   const [wishlistEntries, setWishlistEntries] = useState([]);
+  const [draftSubmissions, setDraftSubmissions] = useState([]); // each manager's full originally-submitted priority list
   const [players,   setPlayers]   = useState({});   // id → name lookup
   const [members,   setMembers]   = useState({});   // id → username lookup
   const [expanded,  setExpanded]  = useState(false);
@@ -22,7 +23,7 @@ export default function GazetteDraftReport({ leagueId }) {
 
     const fetchReports = async () => {
       try {
-        const [{ data: draftRow }, { data: wishlistRows }] = await Promise.all([
+        const [{ data: draftRow }, { data: wishlistRows }, { data: submissionRows }] = await Promise.all([
           supabase
             .from('gazette_entries')
             .select('*')
@@ -31,32 +32,45 @@ export default function GazetteDraftReport({ leagueId }) {
             .order('published_at', { ascending: false })
             .limit(1)
             .maybeSingle(),
+          // No .limit() here — every resolved round must stay visible for the
+          // life of the league, not just the most recent ones, so this reads
+          // as permanent audit history rather than a rotating news feed.
           supabase
             .from('gazette_entries')
             .select('*')
             .eq('league_id', leagueId)
             .eq('entry_type', 'wishlist_draft_report')
-            .order('published_at', { ascending: false })
-            .limit(12),
+            .order('published_at', { ascending: false }),
+          // Each manager's complete originally-submitted priority list for the
+          // season draft — the audit trail's "point 1": what they asked for,
+          // not just what they ended up with.
+          supabase
+            .from('draft_submissions')
+            .select('user_id, player_ids')
+            .eq('league_id', leagueId),
         ]);
         if (cancelled) return;
 
         setDraftEntry(draftRow ?? null);
         setWishlistEntries(wishlistRows ?? []);
+        setDraftSubmissions(submissionRows ?? []);
 
-        if (!draftRow && !(wishlistRows?.length)) return;
+        if (!draftRow && !(wishlistRows?.length) && !(submissionRows?.length)) return;
 
         const draftBullets  = draftRow ? parseJson(draftRow.bullets, []) : [];
         const draftFullData = draftRow ? parseJson(draftRow.full_data, null) : null;
         const wishlistFullDatas = (wishlistRows ?? [])
           .map(row => parseJson(row.full_data, null))
           .filter(Boolean);
+        const wishlistSubmissions = wishlistFullDatas.flatMap(fd => fd.submissions ?? []);
 
         const playerIds = [
           ...draftBullets.filter(b => b.player_id).map(b => b.player_id),
           ...(draftFullData?.pick_log ?? []).map(p => p.player_id),
           ...wishlistFullDatas.flatMap(fd => fd.pick_log ?? []).map(p => p.player_id),
           ...wishlistFullDatas.flatMap(fd => fd.formation_safety_net ?? []).map(a => a.player_id),
+          ...(submissionRows ?? []).flatMap(s => s.player_ids ?? []),
+          ...wishlistSubmissions.flatMap(s => [...(s.target_ids ?? []), ...(s.drop_ids ?? [])]),
         ];
         const userIds   = [
           ...draftBullets.filter(b => b.winner_id).map(b => b.winner_id),
@@ -65,11 +79,13 @@ export default function GazetteDraftReport({ leagueId }) {
           ...(wishlistRows ?? []).flatMap(row => parseJson(row.bullets, []).map(b => b.user_id)).filter(Boolean),
           ...wishlistFullDatas.flatMap(fd => fd.pick_log ?? []).map(p => p.user_id),
           ...wishlistFullDatas.flatMap(fd => fd.formation_safety_net ?? []).map(a => a.user_id),
+          ...(submissionRows ?? []).map(s => s.user_id),
+          ...wishlistSubmissions.map(s => s.user_id),
         ];
 
         const [{ data: pRows }, { data: uRows }] = await Promise.all([
           playerIds.length
-            ? supabase.from('players').select('id, name, club').in('id', playerIds)
+            ? supabase.from('players').select('id, name, club').in('id', [...new Set(playerIds)])
             : Promise.resolve({ data: [] }),
           userIds.length
             ? supabase.from('users').select('id, username').in('id', [...new Set(userIds)])
@@ -88,13 +104,14 @@ export default function GazetteDraftReport({ leagueId }) {
     return () => { cancelled = true; };
   }, [leagueId]);
 
-  if (loading || (!draftEntry && wishlistEntries.length === 0)) return null;
+  if (loading || (!draftEntry && wishlistEntries.length === 0 && draftSubmissions.length === 0)) return null;
 
   return (
     <div className="border-t-2 border-black/20 pt-6 mt-6">
       {draftEntry && (
         <SeasonDraftReport
           entry={draftEntry}
+          submissions={draftSubmissions}
           players={players}
           members={members}
           expanded={expanded}
@@ -117,13 +134,14 @@ export default function GazetteDraftReport({ leagueId }) {
   );
 }
 
-function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
+function SeasonDraftReport({ entry, submissions, players, members, expanded, setExpanded }) {
   const bullets  = parseJson(entry.bullets, []);
   const fullData = parseJson(entry.full_data, null);
   const date     = new Date(entry.published_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
   const [pickLogExpanded, setPickLogExpanded] = useState(false);
+  const [listsExpanded, setListsExpanded] = useState(false);
   const hasPickLog = fullData?.pick_log?.length > 0;
 
   // The backend orders contested-pick bullets purely by how many managers
@@ -178,6 +196,17 @@ function SeasonDraftReport({ entry, players, members, expanded, setExpanded }) {
           players={players}
           expanded={pickLogExpanded}
           setExpanded={setPickLogExpanded}
+        />
+      )}
+
+      {submissions?.length > 0 && (
+        <InitialListsTable
+          submissions={submissions}
+          members={members}
+          players={players}
+          pickLog={fullData?.pick_log}
+          expanded={listsExpanded}
+          setExpanded={setListsExpanded}
         />
       )}
 
@@ -407,11 +436,14 @@ function WishlistRoundReport({ entry, members, players }) {
   const fullData = parseJson(entry.full_data, null);
   const date     = new Date(entry.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   const [pickLogExpanded, setPickLogExpanded] = useState(false);
+  const [listsExpanded, setListsExpanded] = useState(false);
 
   const order          = fullData?.order ?? [];
   const pickLog         = fullData?.pick_log ?? [];
+  const submissions      = fullData?.submissions ?? [];
   const safetyNet       = fullData?.formation_safety_net ?? [];
   const hasPickLog       = pickLog.length > 0;
+  const hasSubmissions    = submissions.length > 0;
   const hasSafetyNet     = safetyNet.length > 0;
 
   return (
@@ -444,6 +476,19 @@ function WishlistRoundReport({ entry, members, players }) {
             setExpanded={setPickLogExpanded}
             title="Round-by-Round Pick Log"
             firstRoundLabel="this round's order"
+          />
+        </div>
+      )}
+
+      {hasSubmissions && (
+        <div className="px-3">
+          <WishlistListsTable
+            submissions={submissions}
+            members={members}
+            players={players}
+            pickLog={pickLog}
+            expanded={listsExpanded}
+            setExpanded={setListsExpanded}
           />
         </div>
       )}
@@ -496,6 +541,150 @@ function WishlistRoundReport({ entry, members, players }) {
         </div>
       ) : (
         <div className="px-3 py-2 text-black/40 italic">No participants this round.</div>
+      )}
+    </div>
+  );
+}
+
+// The other half of the audit trail: not just what each manager ended up
+// with, but what they actually asked for — their full ranked priority list
+// as originally submitted before the lottery. Cross-referenced against the
+// pick log so each entry reads as won (they got it), lost (someone else's
+// earlier turn took it), or still open (never reached / no contest).
+function InitialListsTable({ submissions, members, players, pickLog, expanded, setExpanded }) {
+  if (!submissions?.length) return null;
+
+  const pickByPlayer = {};
+  for (const p of (pickLog ?? [])) pickByPlayer[p.player_id] = p;
+
+  const sorted = [...submissions].sort((a, b) =>
+    (members[a.user_id] ?? '').localeCompare(members[b.user_id] ?? '')
+  );
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
+      >
+        Initial Priority Lists — As Submitted {expanded ? '▲' : '▼'}
+      </button>
+
+      {expanded && (
+        <div className="border border-black/10 rounded overflow-hidden text-[10px] max-h-[480px] overflow-y-auto">
+          {sorted.map((sub, si) => {
+            const ids = sub.player_ids ?? [];
+            if (!ids.length) return null;
+            return (
+              <div key={sub.user_id ?? si} className="border-b border-black/10 last:border-b-0">
+                <div className="flex items-center justify-between bg-black text-white px-3 py-1.5 font-black uppercase tracking-widest sticky top-0">
+                  <span>{members[sub.user_id] ?? 'Manager'}</span>
+                  <span className="opacity-60 font-normal normal-case">{ids.length} ranked</span>
+                </div>
+                {ids.map((pid, i) => {
+                  const pick = pickByPlayer[pid];
+                  const won  = pick && pick.user_id === sub.user_id;
+                  const lost = pick && pick.user_id !== sub.user_id;
+                  return (
+                    <div
+                      key={`${sub.user_id}-${pid}-${i}`}
+                      className={`grid grid-cols-[auto_1fr_auto] px-3 py-1 gap-3 items-center ${i % 2 === 0 ? 'bg-white' : 'bg-black/5'}`}
+                    >
+                      <span className="font-black text-black/40 w-6 text-right shrink-0">{i + 1}.</span>
+                      <span className={`inline-flex items-center gap-1.5 truncate min-w-0 ${lost ? 'line-through opacity-50' : ''}`}>
+                        <ClubCrest name={players[pid]?.club} size={12} />
+                        <span className="truncate">{players[pid]?.name ?? pid}</span>
+                      </span>
+                      <span className={`text-right shrink-0 text-[9px] font-bold ${won ? 'text-green-700' : lost ? 'text-red-600' : 'text-black/30'}`}>
+                        {won ? '✓ won' : lost ? `→ ${members[pick.user_id] ?? 'other'}` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Wishlist-round counterpart: each manager's full submitted target list
+// (players wanted, ranked) and drop list (players offered up), not just the
+// requested/released/gained tallies shown in the summary table above.
+function WishlistListsTable({ submissions, members, players, pickLog, expanded, setExpanded }) {
+  if (!submissions?.length) return null;
+
+  const pickByPlayer = {};
+  for (const p of (pickLog ?? [])) pickByPlayer[p.player_id] = p;
+
+  const sorted = [...submissions].sort((a, b) =>
+    (members[a.user_id] ?? '').localeCompare(members[b.user_id] ?? '')
+  );
+
+  return (
+    <div className="mb-3">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
+      >
+        Manager Wishlists — Full Submissions {expanded ? '▲' : '▼'}
+      </button>
+
+      {expanded && (
+        <div className="border border-black/10 rounded overflow-hidden text-[10px] max-h-[480px] overflow-y-auto">
+          {sorted.map((sub, si) => {
+            const targets = sub.target_ids ?? [];
+            const drops   = sub.drop_ids ?? [];
+            if (!targets.length && !drops.length) return null;
+            return (
+              <div key={sub.user_id ?? si} className="border-b border-black/10 last:border-b-0">
+                <div className="flex items-center justify-between bg-black text-white px-3 py-1.5 font-black uppercase tracking-widest sticky top-0">
+                  <span>{members[sub.user_id] ?? 'Manager'}</span>
+                  <span className="opacity-60 font-normal normal-case">
+                    {targets.length} target{targets.length !== 1 ? 's' : ''} · {drops.length} drop{drops.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                {targets.map((pid, i) => {
+                  const pick = pickByPlayer[pid];
+                  const won  = pick && pick.user_id === sub.user_id;
+                  const lost = pick && pick.user_id !== sub.user_id;
+                  return (
+                    <div
+                      key={`t-${sub.user_id}-${pid}-${i}`}
+                      className={`grid grid-cols-[auto_auto_1fr_auto] px-3 py-1 gap-3 items-center ${i % 2 === 0 ? 'bg-white' : 'bg-black/5'}`}
+                    >
+                      <span className="font-black text-black/40 w-6 text-right shrink-0">{i + 1}.</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-cyan-700 w-10 shrink-0">Target</span>
+                      <span className={`inline-flex items-center gap-1.5 truncate min-w-0 ${lost ? 'line-through opacity-50' : ''}`}>
+                        <ClubCrest name={players[pid]?.club} size={12} />
+                        <span className="truncate">{players[pid]?.name ?? pid}</span>
+                      </span>
+                      <span className={`text-right shrink-0 text-[9px] font-bold ${won ? 'text-green-700' : lost ? 'text-red-600' : 'text-black/30'}`}>
+                        {won ? '✓ gained' : lost ? `→ ${members[pick.user_id] ?? 'other'}` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+                {drops.map((pid, i) => (
+                  <div
+                    key={`d-${sub.user_id}-${pid}-${i}`}
+                    className={`grid grid-cols-[auto_auto_1fr_auto] px-3 py-1 gap-3 items-center ${(targets.length + i) % 2 === 0 ? 'bg-white' : 'bg-black/5'}`}
+                  >
+                    <span className="w-6 shrink-0" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-red-700 w-10 shrink-0">Drop</span>
+                    <span className="inline-flex items-center gap-1.5 truncate min-w-0">
+                      <ClubCrest name={players[pid]?.club} size={12} />
+                      <span className="truncate">{players[pid]?.name ?? pid}</span>
+                    </span>
+                    <span className="text-right shrink-0 text-[9px] text-black/30">offered</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
