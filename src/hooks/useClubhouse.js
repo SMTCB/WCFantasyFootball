@@ -103,7 +103,8 @@ export function useClubhouse() {
       console.error('fetchCircleData: get_clubhouse_competitions failed', compRes.error);
     }
     if (!feedRes.error) {
-      setFeed(feedRes.data ?? []);
+      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      setFeed((feedRes.data ?? []).filter(e => new Date(e.created_at).getTime() >= cutoff));
     } else {
       console.error('fetchCircleData: get_circle_feed failed', feedRes.error);
     }

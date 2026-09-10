@@ -195,7 +195,9 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
     { data: rawSquads },
     { data: draftRows },
   ] = await Promise.all([
-    sb.from('league_members').select('user_id, total_points, rank').eq('league_id', league.id).order('rank', { ascending: true }).limit(7),
+    // Limit widened to 15 (from 7) so filtering out test accounts below still
+    // leaves enough real managers for the top-5 + bottom standings slice.
+    sb.from('league_members').select('user_id, total_points, rank').eq('league_id', league.id).order('rank', { ascending: true }).limit(15),
     // Widened to a 7-day window / 25 rows so the edition reflects the full recent
     // market, not just a 24h/5-row slice.
     sb.from('squad_events').select('user_id, player_in, player_out, event_at').eq('league_id', league.id).in('event_type', ['transfer_buy', 'transfer_sell']).gte('event_at', since7d).order('event_at', { ascending: false }).limit(25),
@@ -264,7 +266,17 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
     (configRows ?? []).map((r: { config_key: string; config_value: unknown }) => [r.config_key, String(r.config_value)])
   );
 
-  return { members, rawTransfers, chatRows, fixtures, gazetteRows, configMap, userMap, playerMap, squads, draftEntry, isDraft };
+  // Test/QA accounts (username prefix "test", case-insensitive) should never surface
+  // in generated content — standings, transfers, chat, or squads.
+  const testUserIds = new Set(
+    Object.entries(userMap).filter(([, name]) => /^test/i.test(name)).map(([id]) => id)
+  );
+  const realMembers   = (members ?? []).filter((m: { user_id: string }) => !testUserIds.has(m.user_id));
+  const realTransfers = (rawTransfers ?? []).filter((t: { user_id: string }) => !testUserIds.has(t.user_id));
+  const realChatRows  = (chatRows ?? []).filter((c: { user_id: string }) => !testUserIds.has(c.user_id));
+  const realSquads    = squads.filter(s => !testUserIds.has(s.user_id));
+
+  return { members: realMembers, rawTransfers: realTransfers, chatRows: realChatRows, fixtures, gazetteRows, configMap, userMap, playerMap, squads: realSquads, draftEntry, isDraft };
 }
 
 // ── League prompt builder ─────────────────────────────────────────────────────
@@ -422,10 +434,11 @@ async function collectCircleData(sb: ReturnType<typeof createClient>, circleId: 
   const paddocks = ((cpRows ?? []) as { paddocks: { id: string; name: string } }[])
     .map(r => r.paddocks).filter(Boolean);
 
-  // Per-league: top 3 standings + recent gazette
+  // Per-league: top 3 standings + recent gazette. Limit widened to 10 (from 3) so
+  // filtering out test accounts below still leaves 3 real managers to display.
   const leagueDataSections = await Promise.all(leagues.map(async (league) => {
     const [{ data: members }, { data: gazette }] = await Promise.all([
-      sb.from('league_members').select('user_id, total_points, rank').eq('league_id', league.id).order('rank', { ascending: true }).limit(3),
+      sb.from('league_members').select('user_id, total_points, rank').eq('league_id', league.id).order('rank', { ascending: true }).limit(10),
       sb.from('gazette_entries').select('headline, entry_type').eq('league_id', league.id)
         .in('entry_type', ['activity', 'breaking_news']).order('published_at', { ascending: false }).limit(2),
     ]);
@@ -434,9 +447,12 @@ async function collectCircleData(sb: ReturnType<typeof createClient>, circleId: 
       ? await sb.from('users').select('id, username').in('id', userIds)
       : { data: [] };
     const userMap = Object.fromEntries((users ?? []).map((u: { id: string; username: string }) => [u.id, u.username]));
+    const realMembers = (members ?? [])
+      .filter((m: { user_id: string }) => !/^test/i.test(userMap[m.user_id] ?? ''))
+      .slice(0, 3);
     return {
       name: league.name,
-      standings: (members ?? []).map((m: { user_id: string; total_points: number }, i: number) =>
+      standings: realMembers.map((m: { user_id: string; total_points: number }, i: number) =>
         `${i + 1}. ${userMap[m.user_id] ?? '?'} — ${Math.round(m.total_points ?? 0)} pts`
       ),
       news: (gazette ?? []).map((g: { headline: string }) => g.headline).filter(Boolean),
@@ -462,7 +478,54 @@ async function collectCircleData(sb: ReturnType<typeof createClient>, circleId: 
     });
   }
 
-  return { leagueDataSections, paddocks, fixtureLines };
+  // Market activity across all linked leagues, last 7 days — mirrors the league-level
+  // pipeline (collectLeagueData) so Clubhouse editions can reference real transfers too;
+  // previously this was never collected at all, so circle editions had no market content.
+  const leagueIds = leagues.map(l => l.id);
+  const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  let transferLines: string[] = [];
+  if (leagueIds.length > 0) {
+    const { data: rawTransfers } = await sb.from('squad_events')
+      .select('user_id, player_in, player_out, event_at')
+      .in('league_id', leagueIds)
+      .in('event_type', ['transfer_buy', 'transfer_sell'])
+      .gte('event_at', since7d)
+      .order('event_at', { ascending: false })
+      .limit(25);
+
+    const transferUserIds = [...new Set((rawTransfers ?? []).map((t: { user_id: string }) => t.user_id))];
+    const { data: transferUsers } = transferUserIds.length > 0
+      ? await sb.from('users').select('id, username').in('id', transferUserIds)
+      : { data: [] };
+    const transferUserMap: Record<string, string> = Object.fromEntries(
+      (transferUsers ?? []).map((u: { id: string; username: string }) => [u.id, u.username])
+    );
+
+    const playerIds = [...new Set(
+      (rawTransfers ?? []).flatMap((t: { player_in?: string; player_out?: string }) => [t.player_in, t.player_out].filter(Boolean))
+    )] as string[];
+    const { data: transferPlayers } = playerIds.length > 0
+      ? await sb.from('players').select('id, name').in('id', playerIds)
+      : { data: [] };
+    const transferPlayerMap: Record<string, string> = Object.fromEntries(
+      (transferPlayers ?? []).map((p: { id: string; name: string }) => [p.id, p.name])
+    );
+
+    transferLines = (rawTransfers ?? [])
+      .filter((t: { user_id: string }) => !/^test/i.test(transferUserMap[t.user_id] ?? ''))
+      .map((t: { user_id: string; player_in?: string; player_out?: string }) => {
+        const mgr  = transferUserMap[t.user_id] ?? 'A manager';
+        const pIn  = t.player_in  ? transferPlayerMap[t.player_in]  : null;
+        const pOut = t.player_out ? transferPlayerMap[t.player_out] : null;
+        if (pIn && pOut) return `${mgr} swapped out ${pOut} and brought in ${pIn}`;
+        if (pIn)         return `${mgr} signed ${pIn}`;
+        if (pOut)        return `${mgr} sold ${pOut}`;
+        return null;
+      })
+      .filter(Boolean) as string[];
+  }
+
+  return { leagueDataSections, paddocks, fixtureLines, transferLines };
 }
 
 // ── Circle prompt builder ─────────────────────────────────────────────────────
@@ -471,7 +534,7 @@ function buildCirclePrompt(
   circleName: string,
   data: Awaited<ReturnType<typeof collectCircleData>>
 ): { prompt: string; rawInput: Record<string, unknown> } {
-  const { leagueDataSections, paddocks, fixtureLines } = data;
+  const { leagueDataSections, paddocks, fixtureLines, transferLines } = data;
 
   const sportBlocks = leagueDataSections.map(s => {
     const lines = [`FOOTBALL LEAGUE "${s.name}"`];
@@ -482,13 +545,16 @@ function buildCirclePrompt(
 
   const paddockLines = paddocks.map(p => `F1 PADDOCK: "${p.name}"`);
 
-  const rawInput = { clubhouse: circleName, leagues: leagueDataSections, paddocks: paddocks.map(p => p.name), fixtures: fixtureLines };
+  const rawInput = { clubhouse: circleName, leagues: leagueDataSections, paddocks: paddocks.map(p => p.name), fixtures: fixtureLines, transfers: transferLines };
 
   const prompt = `Generate a multi-sport Forza Times edition for "${circleName}" Clubhouse.
 
 ${sportBlocks.join('\n\n') || 'No linked leagues yet.'}
 ${paddockLines.length ? '\n' + paddockLines.join('\n') : ''}
 ${fixtureLines.length ? '\nUPCOMING FIXTURES (next 48h):\n' + fixtureLines.join('\n') : ''}
+
+MARKET ACTIVITY (last 7 days, all leagues):
+${transferLines.length ? transferLines.join('\n') : 'No transfers in the last 7 days.'}
 
 This is a cross-sport Clubhouse edition — reference all sports and competitions where relevant. British tabloid voice.
 
@@ -498,7 +564,7 @@ Respond ONLY with valid JSON:
   "deck": "2-3 sentences on the biggest story across all sports in this Clubhouse. Max 220 chars.",
   "hot_take": "Provocative take on any league/paddock standings. Max 90 chars.",
   "wooden_spoon": "Gentle roast of the lowest-placed manager across all leagues. Max 90 chars.",
-  "transfer_rumour": "Transfer gossip or paddock rumour. null if nothing to report. Max 110 chars."
+  "transfer_rumour": "Tabloid spin on a transfer from MARKET ACTIVITY. Use null only if there are none. Max 110 chars."
 }`;
 
   return { prompt, rawInput };
