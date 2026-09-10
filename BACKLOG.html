@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>249</strong><span>closed</span></div>
+      <div class="total-pill"><strong>250</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (168)</span>
+    <span class="chip" data-filter-kind="done">Shipped (169)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">249</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">250</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">168</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">169</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,34 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">168</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">169</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft audit trail made permanent + initial priority lists surfaced (2026-09-10) — pr #1008 
+
+user audit request: does the market report tab&#x27;s draft audit already cover (1) each manager&#x27;s full originally-submitted list, (2) the picking order, and (3) complete picking-order/pick-log detail? investigation found (2) and (3) were already built in `gazettedraftreport.jsx` but presented as an ephemeral-feeling &quot;draft edition — {date}&quot; news card wrapped in a conditional render — plus a real durability bug: the `wishlist_draft_report` query was capped at `.limit(12)`, so older rounds could silently drop out of view as a league accumulated rounds. (1) — each manager&#x27;s full submitted list — was a genuine gap: the data existed (`draft_submissions.player_ids` for the season draft; `full_data.submissions[]` on each wishlist gazette entry) but nothing rendered it.
+
+**fix**: [marketreportview.jsx](src/components/league/marketreportview.jsx) now renders a permanent &quot;draft audit&quot; header (always visible whenever any draft data exists for the league) with a show/hide toggle — the picking order + full pick log content only mounts when expanded, so it doesn&#x27;t crowd the screen by default but is never gone. [gazettedraftreport.jsx](src/components/gazettedraftreport.jsx): removed the `.limit(12)` cap on wishlist-round history; added `initialliststable` (season draft — each manager&#x27;s full ranked `player_ids` list, cross-referenced against `pick_log` to mark each entry won / lost-to-another-manager / still-open) and `wishlistliststable` (per wishlist round — each manager&#x27;s full `target_ids`/`drop_ids` submission, same won/lost/open cross-reference for targets). both fetch and render as their own collapsible sub-sections inside the existing draft/wishlist report cards.
+
+verified via `npm run lint` (0 errors, pre-existing style warnings only) and `npm run build` (clean, no rolldown tdz errors). could not visually verify against the real &quot;draft champions 26/27&quot; league this session — no pilot l" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Draft audit trail made permanent + initial priority lists surfaced</h3>
+        <p class="card-summary">User audit request: does the Market Report tab's draft audit already cover (1) each manager's full originally-submitted list, (2) the picking order, and (3) complete…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-10</span><span class="foot-refs">PR #1008</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Draft audit trail made permanent + initial priority lists surfaced</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User audit request: does the Market Report tab's draft audit already cover (1) each manager's full originally-submitted list, (2) the picking order, and (3) complete…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1008</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-10</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>User audit request: does the Market Report tab's draft audit already cover (1) each manager's full originally-submitted list, (2) the picking order, and (3) complete picking-order/pick-log detail? Investigation found (2) and (3) were already built in <code>GazetteDraftReport.jsx</code> but presented as an ephemeral-feeling "Draft Edition — {date}" news card wrapped in a conditional render — plus a real durability bug: the <code>wishlist_draft_report</code> query was capped at <code>.limit(12)</code>, so older rounds could silently drop out of view as a league accumulated rounds. (1) — each manager's full submitted list — was a genuine gap: the data existed (<code>draft_submissions.player_ids</code> for the season draft; <code>full_data.submissions[]</code> on each wishlist gazette entry) but nothing rendered it.</p>
+<p><strong>Fix</strong>: <a href="src/components/league/MarketReportView.jsx" target="_blank" rel="noopener">MarketReportView.jsx</a> now renders a permanent "DRAFT AUDIT" header (always visible whenever any draft data exists for the league) with a SHOW/HIDE toggle — the picking order + full pick log content only mounts when expanded, so it doesn't crowd the screen by default but is never gone. <a href="src/components/GazetteDraftReport.jsx" target="_blank" rel="noopener">GazetteDraftReport.jsx</a>: removed the <code>.limit(12)</code> cap on wishlist-round history; added <code>InitialListsTable</code> (season draft — each manager's full ranked <code>player_ids</code> list, cross-referenced against <code>pick_log</code> to mark each entry won / lost-to-another-manager / still-open) and <code>WishlistListsTable</code> (per wishlist round — each manager's full <code>target_ids</code>/<code>drop_ids</code> submission, same won/lost/open cross-reference for targets). Both fetch and render as their own collapsible sub-sections inside the existing draft/wishlist report cards.</p>
+<p>Verified via <code>npm run lint</code> (0 errors, pre-existing style warnings only) and <code>npm run build</code> (clean, no Rolldown TDZ errors). Could not visually verify against the real "Draft Champions 26/27" league this session — no pilot login credentials available, only an unauthenticated demo account with no leagues joined.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl scoring parity fix (mid goals were 4, should be 5) + transfer-window 48h cap removed (2026-09-10) — pr #1006, migration 290 
 
 two independent fixes in one session.
