@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
-import { normalisePlayers, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
+import { normalisePlayers, buildFixtureInfo, formatFixtureStatus, matchesPlayerSearch } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
@@ -648,7 +648,7 @@ export default function MarketScreen() {
     const owned = mySquad?.players ?? [];
     const filtered = players.filter(p => {
       const matchesPos    = filterPos === 'ALL' || p.position === filterPos;
-      const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = matchesPlayerSearch(p.name, searchQuery);
       const matchesTeam   = selectedTeams.size === 0 || selectedTeams.has(p.club);
       const price         = p.price ?? 0;
       const matchesPrice  = price >= priceMin && price <= priceMax;

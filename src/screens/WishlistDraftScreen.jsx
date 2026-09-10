@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWishlistDraft } from '../hooks/useWishlistDraft';
+import { matchesPlayerSearch } from '../lib/players';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { usePlayerStats } from '../hooks/usePlayerStats';
@@ -157,7 +158,7 @@ export default function WishlistDraftScreen() {
       if (ownershipMap[p.id] > 0) return false;
       if (filterPos !== 'ALL' && p.position !== filterPos) return false;
       if (filterClubs.size > 0 && !filterClubs.has(p.club)) return false;
-      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !matchesPlayerSearch(p.name, search)) return false;
       return true;
     });
   }, [playerPool, listedIds, ownedIds, ownershipMap, filterPos, filterClubs, search]);
