@@ -40,7 +40,10 @@ export function scorePlayer(stats, position, POINTS, UNIVERSAL) {
   // Appearance + 60-minute bonus (replaces the old per-90-minute rate)
   if (mins > 0)   pts += UNIVERSAL.appearance ?? 0;
   if (mins >= 60) pts += UNIVERSAL.minutes_60_bonus ?? 0;
-  pts += (stats.goals   ?? 0) * rules.goal;
+  // stats.goals includes penalty conversions (Forza convention); those score via
+  // penalty_scored (flat rate) below, so exclude them here to avoid double-counting.
+  const nonPenaltyGoals = Math.max(0, (stats.goals ?? 0) - (stats.penalty_scored ?? 0));
+  pts += nonPenaltyGoals * rules.goal;
   pts += (stats.assists ?? 0) * rules.assist;
 
   // GK and DEF clean sheet require 45+ min; MID keeps the 60-min gate
@@ -93,7 +96,9 @@ export function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
   return {
     appearance:        mins > 0 ? (UNIVERSAL.appearance ?? 0) : 0,
     minutes_bonus:     mins >= 60 ? (UNIVERSAL.minutes_60_bonus ?? 0) : 0,
-    goals:             (stats.goals              ?? 0) * rules.goal,
+    // See scorePlayer(): stats.goals includes penalty conversions, which score
+    // separately via penalty_scored below — excluded here to avoid double-counting.
+    goals:             Math.max(0, (stats.goals ?? 0) - (stats.penalty_scored ?? 0)) * rules.goal,
     assists:           (stats.assists            ?? 0) * rules.assist,
     clean_sheet:       (stats.clean_sheet && mins >= ((p === 'DEF' || p === 'GK') ? 45 : 60) && rules.clean_sheet > 0) ? rules.clean_sheet : 0,
     goals_conceded:    mins > 0 ? Math.max(0, (stats.goals_conceded ?? 0) - 1) * (rules.conceded_2plus_penalty ?? 0) : 0,
