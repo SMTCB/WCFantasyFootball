@@ -138,10 +138,16 @@ async function callGroq(userPrompt: string): Promise<Record<string, string | nul
       'Content-Type':  'application/json',
     },
     body: JSON.stringify({
-      model:           GROQ_MODEL,
-      temperature:     0.85,
-      max_tokens:      500,
-      response_format: { type: 'json_object' },
+      model:            GROQ_MODEL,
+      temperature:      0.85,
+      // gpt-oss-20b is a reasoning model — it spends tokens on a hidden reasoning
+      // pass before the final JSON answer, so max_tokens must cover both. 500 was
+      // sized for the old non-reasoning llama model and left zero room for the
+      // final answer, producing an empty completion that failed JSON validation.
+      max_tokens:       1200,
+      reasoning_effort: 'low',
+      reasoning_format: 'hidden',
+      response_format:  { type: 'json_object' },
       messages: [
         {
           role: 'system',
