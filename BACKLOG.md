@@ -12,6 +12,18 @@
 
 ---
 
+## ✅ UCL scoring parity fix (MID goals were 4, should be 5) + transfer-window 48h cap removed (2026-09-10) — PR #1006, migration 290
+
+Two independent fixes in one session.
+
+**UCL scoring parity (goal MID-4-vs-5 bug)**: user reported Bruno Fernandes and Zalazar (both MID) were awarded 4 pts for a goal instead of 5. Root cause: migration 175 ("Scoring v2 Bucket A", 2026-06-13) raised goal points (GK 5→8, DEF 5→6, MID 4→5) and turned on tackle/interception/key_pass/shot_on_target/big_chance_created scoring — but scoped it to `tournament_id = '429'` (World Cup) only, because UCL (`1593`) didn't exist yet at the time. UCL launched later on the pre-Bucket-A defaults and never got backfilled, even though the later Scoring v3 phases (migrations 285, 287) *were* applied to both tournaments as one shared ruleset. User confirmed scope via follow-up ("Bring all") to bring UCL's full GK/DEF/MID/FWD `scoring_rules` into parity with WC's current values, not just `goal`. [290_ucl_scoring_v2_parity.sql](supabase/migrations/290_ucl_scoring_v2_parity.sql) wholesale-replaces UCL's 4 position rows to match WC exactly — as a side effect this also fixed the pre-existing P3 bug (legacy `conceded_per_goal` key vs current `conceded_2plus_penalty`) since a full replace doesn't carry forward stale keys. Backed up first (`backups/pre_migration_20260910_211347.sql`), SELECT-previewed before the UPDATE, applied after explicit "Run it" approval.
+
+**MD1 retroactive recompute**: round 1 had already finished for most UCL fixtures by the time the fix landed, so their stored `player_match_stats`/`fantasy_points` still reflected the old (wrong) rules. Re-invoked `calculate-scores` for all 14 `finished` round-1 fixtures (the 4 still-`live` fixtures, including Bruno Fernandes' Man Utd vs Sabah, self-corrected automatically via the `calculate-scores-live` cron on its next tick — confirmed). Auth note: `calculate-scores` has no reachable credential from a fresh CLI session (`supabase functions` has no `invoke` subcommand; no service-role key in `.env.local` or shell env; `supabase secrets list` only returns hashed digests, not real values) — the working path was reading the *live* value of `ADMIN_TRIGGER_KEY` straight out of `cron.job.command` (e.g. the `calculate-scores-live` job), since that column stores the real bearer token even though it's redacted as `<ADMIN_TRIGGER_KEY>` in the committed migration files (see migration 277's note on this pattern). Verified after: Bruno Fernandes and Zalazar both now show `goal_pts: 5`, up from 4.
+
+**Transfer-window 48h cap removed**: `auto-open-transfer-window` capped every window's close time at `opens_at + 48h` unconditionally, cutting UCL's ~monthly league-phase gaps short instead of leaving the market open until close to the next round. [index.js](supabase/functions/auto-open-transfer-window/index.js) now looks up the next round's earliest `kickoff_at` and closes 1h before it — the 48h cap now only applies as a fallback when no next-round fixture data exists yet. PR #1006, deployed.
+
+---
+
 ## ✅ Clubhouse activity UX + Frontrow classification & market data (2026-09-10) — PR #1000
 
 User reported three issues from a live Clubhouse screenshot ("Mundial do Eder"): the Home tab's Activity feed was cluttered with 52–60 day-old events pushing chat off-screen, it lacked the League screen's expand/collapse affordance, and the generated Frontrow "newspaper" edition was thin — no standings, a test account in the Wooden Spoon slot, and no transfer/market content at all.
