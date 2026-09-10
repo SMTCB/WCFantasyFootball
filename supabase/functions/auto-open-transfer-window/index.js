@@ -53,22 +53,47 @@ Deno.serve(async (req) => {
     // ── 2. For each league, check if we need to open a new window ───────────
     for (const league of leagues) {
       try {
-        // Find the highest round_number from finished fixtures in this league
-        const { data: finishedFixtures } = await supabase
+        // A round only counts as "finished" once EVERY fixture in it is
+        // finished — not just the highest round_number with any finished
+        // fixture. The old query used the latter, which opened next-round
+        // windows the moment a handful of a round's games wrapped up.
+        const { data: allFixtures } = await supabase
           .from('fixtures')
-          .select('round_number')
-          .eq('status', 'finished')
-          .eq('tournament_id', league.tournament_id)
-          .order('round_number', { ascending: false })
-          .limit(1);
+          .select('round_number, status')
+          .eq('tournament_id', league.tournament_id);
 
-        if (!finishedFixtures?.length) {
-          // No finished fixtures yet, skip
+        if (!allFixtures?.length) {
           continue;
         }
 
-        const lastFinishedRound = finishedFixtures[0].round_number;
+        const roundsByNumber = new Map();
+        for (const f of allFixtures) {
+          const r = roundsByNumber.get(f.round_number) ?? { total: 0, finished: 0 };
+          r.total++;
+          if (f.status === 'finished') r.finished++;
+          roundsByNumber.set(f.round_number, r);
+        }
+
+        let lastFinishedRound = null;
+        for (const [roundNum, counts] of roundsByNumber) {
+          if (counts.finished === counts.total && (lastFinishedRound === null || roundNum > lastFinishedRound)) {
+            lastFinishedRound = roundNum;
+          }
+        }
+
+        if (lastFinishedRound === null) {
+          // No round is fully finished yet, skip
+          continue;
+        }
+
         const nextRound = lastFinishedRound + 1;
+
+        // Don't open a window for a round with no scheduled fixtures at all —
+        // guards against dormant/short tournaments (fewer rounds than the
+        // highest finished round + 1) producing a phantom window.
+        if (!roundsByNumber.has(nextRound)) {
+          continue;
+        }
 
         // Check if a window already exists for the next round
         const { data: existingWindow } = await supabase
@@ -130,7 +155,14 @@ Deno.serve(async (req) => {
               opens_at,
               closes_at,
               window_type: 'standard',
-              transfers_remaining: 5,
+              // NULL, not a fixed count: the real free-transfer allowance/penalty
+              // system lives in league_config.transfers_per_round + squads.round_transfers
+              // (computed client-side in MarketScreen). transfers_remaining is only
+              // enforced for legacy non-tournament leagues via enforce_transfer_window()
+              // on the `transfers` table; tournament leagues (which this function serves)
+              // never touch that path, so a fixed 5 here was always a display-only lie —
+              // NULL makes the banner correctly show the real allowance instead.
+              transfers_remaining: null,
             },
             { onConflict: 'league_id,round_number', ignoreDuplicates: true }
           );
