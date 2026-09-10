@@ -76,6 +76,34 @@ function FtSection({ label, content, sectionKey, ft }) {
   );
 }
 
+function ClassificationSection({ leagues }) {
+  const withStandings = (leagues ?? []).filter(l => l?.standings?.length > 0);
+  if (withStandings.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 20, borderTop: `1px solid ${FT_RULE}`, paddingTop: 18 }}>
+      <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: FT_MUTE, textTransform: 'uppercase', marginBottom: 10 }}>
+        📊 Classification
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
+        {withStandings.map((l, i) => (
+          <div key={i}>
+            <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-body)', color: FT_INK, marginBottom: 6 }}>
+              {l.name}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {l.standings.map((line, j) => (
+                <div key={j} style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: FT_SECTION_TEXT, lineHeight: 1.6 }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating, genError }) {
   const dateLabel = new Date(edition.edition_date).toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -156,6 +184,9 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
           />
         </div>
       )}
+
+      {/* Classification — per-league standings pulled from raw_input */}
+      <ClassificationSection leagues={edition.raw_input?.leagues} />
 
       {/* Hot Take / Wooden Spoon / Transfer Desk — 3-column grid on wide, stacked on narrow */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, borderTop: `1px solid ${FT_RULE}`, paddingTop: 18 }}>

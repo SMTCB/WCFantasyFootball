@@ -31,6 +31,22 @@ function timeAgo(isoString) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+// bullets can be: string | {text} | other object — same shapes as LeagueDetailView's feed
+function bulletText(b) {
+  if (typeof b === 'string') return b;
+  if (b && typeof b === 'object' && b.text) return b.text;
+  return null;
+}
+
+function parseBullets(raw) {
+  if (!raw) return [];
+  let arr = raw;
+  if (typeof arr === 'string') {
+    try { arr = JSON.parse(arr); } catch { return []; }
+  }
+  return Array.isArray(arr) ? arr : [];
+}
+
 // ── Empty / no-circles state ──────────────────────────────────────────────────
 function ClubhouseLobby({ createCircle, joinCircleByCode }) {
   const [creating, setCreating] = useState(false);
@@ -251,28 +267,58 @@ function FeedEntry({ entry, onEnter }) {
   const ago = timeAgo(entry.created_at);
   const clickable = onEnter && entry.league_id;
   const enter = () => onEnter({ id: entry.league_id });
+  const bullets = parseBullets(entry.bullets);
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div
-      role={clickable ? 'button' : undefined}
-      tabIndex={clickable ? 0 : undefined}
-      onClick={clickable ? enter : undefined}
-      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') enter(); } : undefined}
-      style={{ padding: '12px 0', borderBottom: '1px solid var(--rule)', cursor: clickable ? 'pointer' : 'default' }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', color: typeColor }}>{typeLabel}</span>
-          {entry.league_name && (
-            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>{entry.league_name}</span>
-          )}
+    <div style={{ padding: '12px 0', borderBottom: '1px solid var(--rule)' }}>
+      <div
+        role={clickable ? 'button' : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        onClick={clickable ? enter : undefined}
+        onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') enter(); } : undefined}
+        style={{ cursor: clickable ? 'pointer' : 'default' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', color: typeColor }}>{typeLabel}</span>
+            {entry.league_name && (
+              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>{entry.league_name}</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>{ago}</span>
+            {clickable && <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '0.08em' }}>→</span>}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>{ago}</span>
-          {clickable && <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '0.08em' }}>→</span>}
-        </div>
+        <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4 }}>{entry.headline}</div>
       </div>
-      <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4 }}>{entry.headline}</div>
+      {bullets.length > 0 && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, padding: 0,
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em',
+          }}
+        >
+          <span>{expanded ? '−' : '+'}</span>
+          <span>{expanded ? 'Hide details' : 'Show details'}</span>
+        </button>
+      )}
+      {expanded && bullets.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 6 }}>
+          {bullets.map((b, i) => {
+            const text = bulletText(b);
+            if (!text) return null;
+            return (
+              <div key={i} style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                {text}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
