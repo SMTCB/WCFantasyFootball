@@ -88,7 +88,8 @@ export function useWishlistDraft(leagueId) {
           supabase
             .from('players')
             .select('id, name, position, club, price, forza_team_id')
-            .eq('tournament_id', leagueRow.tournament_id),
+            .eq('tournament_id', leagueRow.tournament_id)
+            .eq('is_active', true),
           supabase.from('player_status').select('*'),
         ]);
         const poolWithIntel = (pool ?? []).map(p => ({
