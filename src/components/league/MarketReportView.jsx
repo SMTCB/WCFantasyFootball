@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, BODY, mgrHue, mgrMono } from './HubConstants';
-import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
+import { MgrTag, HubSectionLabel, MobSection, miniBtnStyle } from './HubShared';
 import GazetteDraftReport from '../GazetteDraftReport';
 import ClubCrest from '../ClubCrest';
 
@@ -142,6 +142,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
   const [loading,   setLoading]   = useState(true);
   const [selectedRound, setSelectedRound] = useState('all');
   const [hasDraftReport, setHasDraftReport] = useState(false);
+  const [draftAuditOpen, setDraftAuditOpen] = useState(false);
   const [wantedCounts, setWantedCounts] = useState([]); // [{player_id, count}], draft-mode leagues only
 
   useEffect(() => {
@@ -339,13 +340,31 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
         ))
       )}
 
-      {/* GazetteDraftReport renders newspaper-style (black text, paper aesthetic) by
-          design — wrap it in a light card so it stays legible on the dark hub theme.
-          Only rendered when a draft_report entry actually exists, else it's an empty box. */}
+      {/* Permanent fixture of this tab, not a rotating news item — the header
+          stays visible for the life of the league whenever draft data exists,
+          independent of the matchday filter above. Collapsed by default since
+          the full picking order + round-by-round pick log can run long;
+          GazetteDraftReport renders newspaper-style (black text, paper
+          aesthetic) by design, so it's wrapped in a light card to stay
+          legible on the dark hub theme. */}
       {hasDraftReport && (
-        <div style={{ margin: '4px 20px 0', padding: '16px 18px', background: '#f4f1ea', borderRadius: 4 }}>
-          <GazetteDraftReport leagueId={leagueId} />
-        </div>
+        <>
+          <HubSectionLabel
+            label="DRAFT AUDIT"
+            sub="PICKING ORDER & FULL LOG"
+            tone="var(--gold)"
+            right={
+              <button onClick={() => setDraftAuditOpen(o => !o)} style={miniBtnStyle('var(--gold)')}>
+                {draftAuditOpen ? 'HIDE ▲' : 'SHOW ▼'}
+              </button>
+            }
+          />
+          {draftAuditOpen && (
+            <div style={{ margin: '4px 20px 16px', padding: '16px 18px', background: '#f4f1ea', borderRadius: 4 }}>
+              <GazetteDraftReport leagueId={leagueId} />
+            </div>
+          )}
+        </>
       )}
       <div style={{ height: 32 }} />
     </div>
