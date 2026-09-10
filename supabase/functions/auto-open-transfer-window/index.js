@@ -124,8 +124,14 @@ Deno.serve(async (req) => {
         const now = new Date();
         const opens_at = now.toISOString();
 
-        // Close 1h before the next round's first kickoff (fallback: now + 48h).
-        // Capped so the window never stays open into a live matchday.
+        // Close 1h before the next round's first kickoff, however far off that
+        // is — a competition with short weekly-ish gaps (EPL, World Cup) ends
+        // up with a shortish window this way; one with long gaps between
+        // rounds (e.g. UCL league-phase, ~monthly) stays open for the whole
+        // gap instead of being cut short by an arbitrary cap. 48h is only a
+        // fallback for the rare case where we have no next-round kickoff data
+        // at all (e.g. that round's fixtures haven't been synced yet) — it
+        // must never stay open indefinitely in that case.
         const { data: nextKickoff } = await supabase
           .from('fixtures')
           .select('kickoff_at')
@@ -135,13 +141,11 @@ Deno.serve(async (req) => {
           .limit(1)
           .maybeSingle();
 
-        const fortyEightH = new Date(now.getTime() + 48 * 60 * 60 * 1000);
         let closes_at;
         if (nextKickoff?.kickoff_at) {
-          const oneHourBefore = new Date(new Date(nextKickoff.kickoff_at).getTime() - 60 * 60 * 1000);
-          closes_at = (oneHourBefore < fortyEightH ? oneHourBefore : fortyEightH).toISOString();
+          closes_at = new Date(new Date(nextKickoff.kickoff_at).getTime() - 60 * 60 * 1000).toISOString();
         } else {
-          closes_at = fortyEightH.toISOString();
+          closes_at = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
         }
 
         // Idempotent: the UNIQUE (league_id, round_number) constraint (migration 26)
