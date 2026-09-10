@@ -20,7 +20,9 @@ import { logError } from '../_shared/log.ts';
 
 const FN                     = 'generate-frontpage-edition';
 const GROQ_URL               = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL             = 'llama-3.1-8b-instant';
+// llama-3.1-8b-instant was retired by Groq on 2026-08-16; openai/gpt-oss-20b is
+// Groq's documented recommended replacement for it.
+const GROQ_MODEL             = 'openai/gpt-oss-20b';
 const RATE_LIMIT_MS          = 4 * 60 * 60 * 1000;
 const CRON_SKIP_MS           = 12 * 60 * 60 * 1000;
 const PREVIEW_LOOKBACK_DAYS  = 3;
@@ -36,6 +38,22 @@ function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
 
 function today(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+// Some gazette_entries rows have `bullets` double-encoded (a jsonb *string*
+// containing JSON text, instead of a jsonb array) — tolerate that shape so a
+// single bad row can't throw and skip the whole edition.
+function asArray<T>(v: unknown): T[] {
+  if (Array.isArray(v)) return v as T[];
+  if (typeof v === 'string') {
+    try {
+      const parsed = JSON.parse(v);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
 }
 
 function addDays(dateStr: string, delta: number): string {
@@ -208,7 +226,7 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
     ...squads.map(s => s.user_id),
   ]);
   if (draftEntry?.entry_type === 'draft_report') {
-    for (const b of draftEntry.bullets) if (b.winner_id) userIdSet.add(b.winner_id);
+    for (const b of asArray<{ winner_id?: string }>(draftEntry.bullets)) if (b.winner_id) userIdSet.add(b.winner_id);
   } else if (draftEntry?.entry_type === 'wishlist_draft_report') {
     for (const sub of draftEntry.full_data?.submissions ?? []) userIdSet.add(sub.user_id);
   }
@@ -224,7 +242,7 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
   }
   for (const s of squads) for (const pid of s.players ?? []) playerIdSet.add(pid);
   if (draftEntry?.entry_type === 'draft_report') {
-    for (const b of draftEntry.bullets) if (b.player_id) playerIdSet.add(b.player_id);
+    for (const b of asArray<{ player_id?: string }>(draftEntry.bullets)) if (b.player_id) playerIdSet.add(b.player_id);
   } else if (draftEntry?.entry_type === 'wishlist_draft_report') {
     for (const sub of draftEntry.full_data?.submissions ?? []) for (const pid of sub.target_ids ?? []) playerIdSet.add(pid);
   }
@@ -310,7 +328,7 @@ function buildLeaguePrompt(
   let draftLines: string[] = [];
   if (isDraft && draftEntry) {
     if (draftEntry.entry_type === 'draft_report') {
-      draftLines = draftEntry.bullets
+      draftLines = asArray<{ player_id?: string; wanted_by?: number; winner_id?: string }>(draftEntry.bullets)
         .filter(b => b.player_id && (b.wanted_by ?? 0) > 1)
         .sort((a, b) => (b.wanted_by ?? 0) - (a.wanted_by ?? 0))
         .slice(0, 5)
