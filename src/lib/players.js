@@ -76,6 +76,26 @@ export function normalisePlayers(rawArray = []) {
 }
 
 /**
+ * Lowercase + strip diacritics, so player-name search matches regardless of
+ * accents — "alvarez" must match "Álvarez", "muller" must match "Müller".
+ * Plain `.toLowerCase()` alone doesn't fold accented characters.
+ */
+const COMBINING_MARKS = new RegExp('[̀-ͯ]', 'g');
+
+export function foldAccents(str = '') {
+  return str.normalize('NFD').replace(COMBINING_MARKS, '').toLowerCase();
+}
+
+/**
+ * True if `name` matches `query` under accent-insensitive, case-insensitive
+ * substring search.
+ */
+export function matchesPlayerSearch(name, query) {
+  if (!query) return true;
+  return foldAccents(name ?? '').includes(foldAccents(query));
+}
+
+/**
  * Match a raw player (club and/or nationality) against a list of fixtures
  * for the squad's CURRENT active matchday only — never searches other rounds.
  * Returns { state: 'none' | 'live' | 'finished' | 'scheduled', ... } describing
