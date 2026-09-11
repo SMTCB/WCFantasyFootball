@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-10. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-11. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>250</strong><span>closed</span></div>
+      <div class="total-pill"><strong>251</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (169)</span>
+    <span class="chip" data-filter-kind="done">Shipped (170)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">250</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">251</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">169</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">170</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,44 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">169</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">170</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ scoring-integrity incident: suárez goal/penalty double-subtract + code-race-1 undercount — root-caused, corrected, and closed against recurrence (2026-09-11) — pr #1009, pr #1010, pr #1011, pr #1012, migrations 291–292 
+
+a user-reported score discrepancy traced back to two independent bugs, both now fixed at the source, deployed to production, and backed by an ongoing automated detector — not just merged to `main`.
+
+**bug 1 — suárez/tresoldi/guirassy goal+penalty double-subtract** (`scoring-logic.js`): a scoring bug caused certain goal+penalty combinations to be double-subtracted for these three players&#x27; `player_match_stats` rows. root cause fixed and covered by `tests/unit/scoring-logic.test.js` in pr #1009 (merged this session).
+
+**bug 2 — code-race-1** (migration 291, pr #1010, merged this session): a race condition where a round-freeze pass (`rollupsquads()` in `calculate-scores/index.js`) could read `player_match_stats` before every fixture in the round had finished writing, permanently undercounting `total` for any squad caught mid-write. verified via merge-base diff analysis (not just github&#x27;s &quot;clean merge&quot; status) that merging #1010 could not silently revert #1009&#x27;s fix — #1010&#x27;s own branch never touched `scoring-logic.js` or its test file, so the 3-way merge was provably conflict-free on those files.
+
+**full-db audit + correction**: ran a generic (non-hardcoded) discrepancy check across every frozen squad+matchday in the database, not just champions league. result: 18 ucl squads across 3 real leagues (tournament 1593, round r1) had code-race-1 undercounts — corrected via select-then-update per pilot safeguards (backup taken first). `champs_2627_test` was excluded from the correction per explicit user instruction (test league, not a real one) — its 1 known residual discrepancy is expected and unchanged.
+
+**world cup (tournament 429) discrepancies found, left untouched per explicit user instruction** (&quot;leave the world cup&quot;): 44 squad-matchday rows across 7 " style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Scoring-integrity incident: Suárez goal/penalty double-subtract + CODE-RACE-1 undercount — root-caused, corrected, and closed against recurrence</h3>
+        <p class="card-summary">A user-reported score discrepancy traced back to two independent bugs, both now fixed at the source, deployed to production, and backed by an ongoing automated detector…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-11</span><span class="foot-refs">PR #1009, PR #1010, PR #1011, PR #1012, migrations 291–292</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Scoring-integrity incident: Suárez goal/penalty double-subtract + CODE-RACE-1 undercount — root-caused, corrected, and closed against recurrence</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>A user-reported score discrepancy traced back to two independent bugs, both now fixed at the source, deployed to production, and backed by an ongoing automated detector…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1009, PR #1010, PR #1011, PR #1012, migrations 291–292</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-11</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>A user-reported score discrepancy traced back to two independent bugs, both now fixed at the source, deployed to production, and backed by an ongoing automated detector — not just merged to <code>main</code>.</p>
+<p><strong>Bug 1 — Suárez/Tresoldi/Guirassy goal+penalty double-subtract</strong> (<code>scoring-logic.js</code>): a scoring bug caused certain goal+penalty combinations to be double-subtracted for these three players' <code>player_match_stats</code> rows. Root cause fixed and covered by <code>tests/unit/scoring-logic.test.js</code> in PR #1009 (merged this session).</p>
+<p><strong>Bug 2 — CODE-RACE-1</strong> (migration 291, PR #1010, merged this session): a race condition where a round-freeze pass (<code>rollupSquads()</code> in <code>calculate-scores/index.js</code>) could read <code>player_match_stats</code> before every fixture in the round had finished writing, permanently undercounting <code>total</code> for any squad caught mid-write. Verified via merge-base diff analysis (not just GitHub's "clean merge" status) that merging #1010 could not silently revert #1009's fix — #1010's own branch never touched <code>scoring-logic.js</code> or its test file, so the 3-way merge was provably conflict-free on those files.</p>
+<p><strong>Full-DB audit + correction</strong>: ran a generic (non-hardcoded) discrepancy check across every frozen squad+matchday in the database, not just Champions League. Result: 18 UCL squads across 3 real leagues (tournament 1593, round r1) had CODE-RACE-1 undercounts — corrected via SELECT-then-UPDATE per Pilot Safeguards (backup taken first). <code>CHAMPS_2627_TEST</code> was excluded from the correction per explicit user instruction (test league, not a real one) — its 1 known residual discrepancy is expected and unchanged.</p>
+<p><strong>World Cup (tournament 429) discrepancies found, left untouched per explicit user instruction</strong> ("Leave the World Cup"): 44 squad-matchday rows across 7 leagues, rounds r1 and r3–r8, showing two patterns — round r3 has CODE-RACE-1-shaped undercounts (−14 to −1); rounds r1/r4–r8 show small ±1/±2 diffs consistent with late <code>player_match_stats</code> corrections that were never reconciled. Not corrected this session — revisit only if the user raises it again.</p>
+<p><strong>Closing the gap between "merged" and "actually protects against recurrence"</strong>: discovered via <code>scripts/check-function-drift.js</code> that production's <code>calculate-scores</code> Edge Function was still running stale code — neither #1009's nor #1010's fix was actually live, despite both being merged to <code>main</code> (Edge Functions are not auto-deployed by Vercel). Deployed <code>calculate-scores</code> and independently reconstructed its checksum at several recent commits to confirm production now exactly matches <code>main</code>.</p>
+<p><strong>New standing safety net — migration 292 + <code>reconcile-scores</code> (PR #1011, merged and deployed this session)</strong>: <code>get_score_discrepancies()</code> (migration 292, applied to live DB) recomputes each frozen squad+matchday's <code>total</code> from its frozen <code>effective_xi</code>/captain/joker/penalty metadata against *current* <code>player_match_stats</code>, and returns any row that disagrees with the stored total — catching both this bug class (a late stats correction never reaching an already-frozen <code>total</code>) and future CODE-RACE-1-shaped undercounts automatically instead of relying on a user bug report. <code>reconcile-scores</code> Edge Function (deployed) calls it and logs any discrepancy via the existing <code>edge_function_errors</code>/Sentry path (same as <code>check-cron-health</code>); read-only, never writes to <code>fantasy_points</code>/<code>league_members</code> — a human still reviews and corrects manually per Pilot Safeguards. Not yet wired to a schedule (code-only, same as <code>check-cron-health</code> before its cron was approved) — needs a separate cron-creation approval if the user wants it running automatically.</p>
+<p><strong>Verification</strong>: <code>.function-checksums.json</code> regenerated and committed (PR #1012, merged) — <code>node scripts/check-function-drift.js</code> reports all 26 Edge Functions match deployed code. Fresh DB backups taken before both the correction UPDATE and the migration 292 apply.</p>
+<p><strong>Still open / deferred</strong>: World Cup (tournament 429) discrepancies, left alone per user instruction above. Whether Tresoldi's fix should be revisited was never explicitly re-confirmed with the user this session (PR #1009's description states it was already corrected directly in a prior session alongside Guirassy/Suárez).</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ draft audit trail made permanent + initial priority lists surfaced (2026-09-10) — pr #1008 
 
 user audit request: does the market report tab&#x27;s draft audit already cover (1) each manager&#x27;s full originally-submitted list, (2) the picking order, and (3) complete picking-order/pick-log detail? investigation found (2) and (3) were already built in `gazettedraftreport.jsx` but presented as an ephemeral-feeling &quot;draft edition — {date}&quot; news card wrapped in a conditional render — plus a real durability bug: the `wishlist_draft_report` query was capped at `.limit(12)`, so older rounds could silently drop out of view as a league accumulated rounds. (1) — each manager&#x27;s full submitted list — was a genuine gap: the data existed (`draft_submissions.player_ids` for the season draft; `full_data.submissions[]` on each wishlist gazette entry) but nothing rendered it.
