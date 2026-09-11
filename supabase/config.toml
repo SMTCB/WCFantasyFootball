@@ -179,3 +179,7 @@ verify_jwt = false
 [functions.sync-players]
 entrypoint = "./functions/sync-players/index.js"
 verify_jwt = false
+
+[functions.reconcile-scores]
+entrypoint = "./functions/reconcile-scores/index.ts"
+verify_jwt = false
