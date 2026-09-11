@@ -357,6 +357,24 @@ Deno.serve(async (req) => {
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 // isValidFormation, applyAutoSubs moved to ./scoring-logic.js (CODE-7)
 
+// CODE-RACE-1 (migration 291): best-effort release of a round_freeze_locks claim
+// taken by this invocation, used only on paths where the freeze pass was aborted
+// AFTER acquiring the lock but BEFORE actually writing frozen data — so a transient
+// failure (no squads yet, upsert error) doesn't permanently block every future
+// attempt to score this round. Deliberately does not throw: a failed release just
+// means the round stays locked until manually cleared, which is safe (if annoying)
+// since no incorrect data was written on these paths.
+async function releaseRoundLock(matchdayId) {
+  const { error } = await supabase
+    .from('round_freeze_locks')
+    .delete()
+    .eq('matchday_id', matchdayId);
+  if (error) {
+    console.error('round_freeze_locks release failed:', JSON.stringify(error));
+    await logError('error', 'round_freeze_locks release failed', { matchday_id: matchdayId, error });
+  }
+}
+
 async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   const fullRoundLookup = { ...pointsLookup };
 
@@ -371,16 +389,73 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   const roundMatchdayId = `${tournament_id}-r${fix.round_number}`;
 
-  // Merge already-stored fantasy_points from other fixtures in the same round
-  const { data: roundFixtures } = await supabase
+  // Load every fixture in this round (including the one that triggered this call),
+  // with status, in one query. Used for (a) the "other fixtures" fantasy_points
+  // lookup just below, and (b) roundComplete. Computing roundComplete here — before
+  // any of the racy per-round reads — lets the freeze-lock acquisition (CODE-RACE-1,
+  // migration 291) run first, ahead of anything that could be skewed by a concurrent
+  // invocation's writes.
+  const { data: allRoundFixtures } = await supabase
     .from('fixtures')
-    .select('id')
+    .select('id, status')
     .eq('round_number', fix.round_number)
-    .eq('tournament_id', tournament_id)
-    .neq('id', fixture_id);
+    .eq('tournament_id', tournament_id);
 
-  const roundFixtureIds = (roundFixtures ?? []).map(f => f.id);
+  const allRoundFixtureIds = (allRoundFixtures ?? []).map(f => f.id);
+  const roundFixtureIds = allRoundFixtureIds.filter(id => id !== fixture_id);
+  const roundComplete = allRoundFixtureIds.length > 0
+    && allRoundFixtures.every(f => f.status === 'finished');
 
+  // v31 INTEGRITY GUARD — "written in stone" rule.
+  // Once the roundComplete pass has run and written effective_xi into points_breakdown,
+  // that matchday's results are frozen. Any subsequent call for a fixture in the same
+  // round is a no-op: we log a warning and return without touching fantasy_points.
+  // This prevents manual re-triggers, stuck crons, or late-finisher passes from
+  // overwriting settled historical data.
+  if (roundComplete) {
+    const { data: settledRows } = await supabase
+      .from('fantasy_points')
+      .select('squad_id')
+      .eq('matchday_id', roundMatchdayId)
+      .not('points_breakdown->effective_xi', 'is', null)
+      .limit(1);
+
+    if (settledRows?.length) {
+      await logError('warning', 'Rescore of settled round blocked — matchday is frozen', {
+        fixture_id, roundMatchdayId,
+      });
+      return 0;
+    }
+
+    // CODE-RACE-1 (migration 291): claim an exclusive lock on this round's freeze
+    // pass before doing any further reads. If two or more fixtures in the round
+    // finish within milliseconds of each other, more than one invocation can reach
+    // this point with roundComplete=true simultaneously — each of their reads below
+    // (fullRoundLookup from player_match_stats, existingBD from fantasy_points) are
+    // several round-trips apart, not atomic, so a concurrent invocation's writes can
+    // land in the gap and silently drop a fixture's contribution from `total` (proven
+    // 2026-09-11, Champions Eder squad 23741f29-a94e-4ff1-ad4d-4bf288c0d330: stored
+    // total 45 vs recomputed 63). The INSERT is atomic regardless of connection
+    // pooling — only the first invocation to land it proceeds; any other hits the
+    // PRIMARY KEY unique-violation and backs off, exactly like the guard above.
+    const { error: lockErr } = await supabase
+      .from('round_freeze_locks')
+      .insert({ matchday_id: roundMatchdayId, locked_by_fixture_id: fixture_id });
+
+    if (lockErr) {
+      if (lockErr.code === '23505') {
+        await logError('warning', 'Round freeze already claimed by a concurrent invocation — backing off', {
+          fixture_id, roundMatchdayId,
+        });
+        return 0;
+      }
+      console.error('round_freeze_locks insert error:', JSON.stringify(lockErr));
+      await logError('error', 'round_freeze_locks insert failed', { fixture_id, roundMatchdayId, error: lockErr });
+      return 0; // fail safe — never freeze without a confirmed lock
+    }
+  }
+
+  // Merge already-stored fantasy_points from other fixtures in the same round
   if (roundFixtureIds.length > 0) {
     const { data: otherStats } = await supabase
       .from('player_match_stats')
@@ -406,7 +481,13 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     .eq('leagues.archived', false)
     .order('created_at', { ascending: false });
 
-  if (!allSquadRows?.length) return 0;
+  if (!allSquadRows?.length) {
+    // No squads to freeze — release the lock (if we took one) so a legitimate future
+    // call for this round (e.g. once a league is created) isn't blocked forever by a
+    // claim that never actually produced a freeze.
+    if (roundComplete) await releaseRoundLock(roundMatchdayId);
+    return 0;
+  }
 
   // C3: score exactly one squad row per (league_id, user_id). The schema permits
   // multiple rows (one per gameweek); scoring every row would multi-count a manager
@@ -499,33 +580,8 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   // starter who simply hasn't kicked off yet, subs are applied ONLY once EVERY fixture
   // in the round is finished (FPL-style end-of-gameweek auto-subs). During live scoring
   // the XI is scored as-is (DNP starters transiently score 0; corrected at round end).
-  const allRoundFixtureIds = [fixture_id, ...roundFixtureIds];
-  const { data: roundFixStatus } = await supabase
-    .from('fixtures').select('id, status').in('id', allRoundFixtureIds);
-  const roundComplete = (roundFixStatus?.length ?? 0) > 0
-    && roundFixStatus.every(f => f.status === 'finished');
-
-  // v31 INTEGRITY GUARD — "written in stone" rule.
-  // Once the roundComplete pass has run and written effective_xi into points_breakdown,
-  // that matchday's results are frozen. Any subsequent call for a fixture in the same
-  // round is a no-op: we log a warning and return without touching fantasy_points.
-  // This prevents manual re-triggers, stuck crons, or late-finisher passes from
-  // overwriting settled historical data.
-  if (roundComplete) {
-    const { data: settledRows } = await supabase
-      .from('fantasy_points')
-      .select('squad_id')
-      .eq('matchday_id', roundMatchdayId)
-      .not('points_breakdown->effective_xi', 'is', null)
-      .limit(1);
-
-    if (settledRows?.length) {
-      await logError('warning', 'Rescore of settled round blocked — matchday is frozen', {
-        fixture_id, roundMatchdayId,
-      });
-      return 0;
-    }
-  }
+  // roundComplete / allRoundFixtureIds / the v31 guard + freeze-lock acquisition are
+  // computed earlier in this function now (CODE-RACE-1, migration 291) — see above.
 
   // minutes played per player this round (max across the round's fixtures)
   const minutesLookup = {};
@@ -796,6 +852,9 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   if (fpErr) {
     console.error('fantasy_points upsert error:', JSON.stringify(fpErr));
     await logError('critical', 'fantasy_points upsert failed — scores not saved', { fixture_id, error: fpErr });
+    // The freeze never actually landed — release the lock so a retry isn't blocked
+    // forever by a claim that never produced a result.
+    if (roundComplete) await releaseRoundLock(roundMatchdayId);
     return 0; // IMP-04: don't report success if points weren't saved
   }
 
