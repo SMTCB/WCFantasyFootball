@@ -122,6 +122,15 @@ describe('scorePlayer', () => {
     assert.equal(pts, 1 + 1 + 1 + (-1)); // appearance + 60-min bonus + shootout scored/missed
   });
 
+  it('does not subtract penalty_scored from goals — stats.goals already excludes penalty conversions (regression for the MD1 Guirassy/Suárez/Tresoldi bug)', () => {
+    const pts = scorePlayer(
+      { minutes_played: 90, goals: 1, penalty_scored: 1 },
+      'FWD', POINTS, UNIVERSAL,
+    );
+    // appearance + 60-min bonus + goal (full rate, not zeroed by the penalty) + penalty_scored (rule value 0 in this fixture)
+    assert.equal(pts, 1 + 1 + 4 + 0);
+  });
+
   it('rounds to 2 decimal places', () => {
     // key_pass at 0.1 (not a real rule value, chosen to force float imprecision:
     // 3 * 0.1 === 0.30000000000000004 in raw JS arithmetic) exercises the
@@ -142,6 +151,11 @@ describe('buildBreakdown', () => {
     const breakdown = buildBreakdown(stats, 'FWD', POINTS, UNIVERSAL);
     const summed = Object.values(breakdown).reduce((a, b) => a + b, 0);
     assert.equal(Math.round(summed * 100) / 100, total);
+  });
+
+  it('credits full goal points in the breakdown even when penalty_scored is also present', () => {
+    const breakdown = buildBreakdown({ minutes_played: 90, goals: 1, penalty_scored: 1 }, 'FWD', POINTS, UNIVERSAL);
+    assert.equal(breakdown.goals, 4);
   });
 
   it('omits shootout keys entirely when no shootout stats are present', () => {
