@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
 import { supabase } from '../lib/supabase';
 import { ArchivedBadge } from '../components/league/LeagueBadges';
 import { useShowArchived } from '../hooks/useShowArchived';
+import usePullToRefresh from '../hooks/usePullToRefresh';
+import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -282,7 +284,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function HomeDashboardScreen() {
-  const { myCircles, setActiveCircleId, searchClubhouses, joinCircleByCode, createCircle, loading } = useClubhouseContext();
+  const { myCircles, setActiveCircleId, searchClubhouses, joinCircleByCode, createCircle, loading, refresh } = useClubhouseContext();
   const { setActivePaddockId, setActivePlayerBoxId } = useSport();
   const navigate = useNavigate();
 
@@ -299,22 +301,35 @@ export default function HomeDashboardScreen() {
     findOrCreateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  useEffect(() => {
-    if (!circleIdsKey) { setCompsByCircle({}); return; }
-    let cancelled = false;
-    const ids = circleIdsKey.split(',');
-    Promise.all(ids.map(id => supabase.rpc('get_clubhouse_competitions', { p_circle_id: id }))).then(results => {
-      if (cancelled) return;
-      const next = {};
-      ids.forEach((id, i) => {
-        const res = results[i];
-        if (!res.error && !res.data?.error) next[id] = res.data ?? { football: [], f1: [], tennis: [] };
-        else next[id] = { football: [], f1: [], tennis: [] };
-      });
-      setCompsByCircle(next);
+  const fetchCompetitions = useCallback(async (ids) => {
+    if (!ids.length) { setCompsByCircle({}); return; }
+    const results = await Promise.all(ids.map(id => supabase.rpc('get_clubhouse_competitions', { p_circle_id: id })));
+    const next = {};
+    ids.forEach((id, i) => {
+      const res = results[i];
+      if (!res.error && !res.data?.error) next[id] = res.data ?? { football: [], f1: [], tennis: [] };
+      else next[id] = { football: [], f1: [], tennis: [] };
     });
-    return () => { cancelled = true; };
-  }, [circleIdsKey]);
+    setCompsByCircle(next);
+  }, []);
+
+  useEffect(() => {
+    fetchCompetitions(circleIdsKey ? circleIdsKey.split(',') : []);
+  }, [circleIdsKey, fetchCompetitions]);
+
+  // Pull-to-refresh reads/writes the shared #main-content scroll container
+  // (AppLayout's mainRef) — this screen renders no scroll pane of its own.
+  // The ref-population effect must commit before usePullToRefresh's effect
+  // runs, so it's declared first.
+  const mainContentRef = useRef(null);
+  useEffect(() => { mainContentRef.current = document.getElementById('main-content'); }, []);
+
+  const refreshDashboard = useCallback(async () => {
+    await refresh();
+    await fetchCompetitions(circleIdsKey ? circleIdsKey.split(',') : []);
+  }, [refresh, fetchCompetitions, circleIdsKey]);
+
+  const pullToRefresh = usePullToRefresh(mainContentRef, refreshDashboard);
 
   function enterClubhouse(circle) {
     setActiveCircleId(circle.id);
@@ -338,6 +353,7 @@ export default function HomeDashboardScreen() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 40 }}>
+      <PullToRefreshIndicator progress={pullToRefresh.progress} refreshing={pullToRefresh.refreshing} />
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '22px 20px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>

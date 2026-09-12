@@ -1,4 +1,5 @@
 import { buildPitchTokens, STATUS_COLOR } from '../lib/pitchLayout';
+import NumberFlow from './motion/NumberFlow';
 
 /**
  * MobilePitchField — Concept A ("Tap-to-Expand Pitch") mobile field view.
@@ -118,7 +119,10 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
                   fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)',
                   color: pts > 0 ? 'var(--positive)' : 'var(--mute)', letterSpacing: '.06em',
                 }}>
-                  {pts > 0 ? `+${pts}` : '—'}
+                  <NumberFlow
+                    value={player.points ?? 0}
+                    format={(n) => { const r = Math.round(n); return r > 0 ? `+${r}` : '—'; }}
+                  />
                 </div>
               </div>
             </div>
