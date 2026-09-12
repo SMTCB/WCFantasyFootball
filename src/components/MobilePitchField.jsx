@@ -10,8 +10,12 @@ import NumberFlow from './motion/NumberFlow';
  * footprint, so it never needs a width-triggered fallback. Tapping a token
  * calls onPlayerClick, which SquadScreen wires to the same player action
  * bottom sheet used everywhere else in the squad screen.
+ *
+ * `ClubCrest` is passed in as a prop (rather than imported directly) because
+ * SquadScreen already imports it at depth 1 — importing the same module again
+ * here, at depth 2, is the Rolldown TDZ crash pattern documented in CLAUDE.md.
  */
-export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerId, matchdayLabel = '' }) {
+export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerId, matchdayLabel = '', ClubCrest }) {
   const { tokens, formation } = buildPitchTokens(squad.players, squad.captainId);
 
   return (
@@ -101,6 +105,15 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '1.5px solid var(--ink)',
                   }}>C</div>
+                )}
+                {ClubCrest && (
+                  <div style={{
+                    position: 'absolute', top: -5, right: -5,
+                    borderRadius: '50%', background: 'var(--ink)',
+                    border: '1.5px solid var(--ink)', lineHeight: 0,
+                  }}>
+                    <ClubCrest name={player.club} size={13} />
+                  </div>
                 )}
               </div>
               <div style={{
