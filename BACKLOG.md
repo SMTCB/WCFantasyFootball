@@ -12,6 +12,22 @@
 
 ---
 
+## ✅ UI motion kit — Number Flow, Shimmer Skeleton, Slide to Confirm, Pull to Refresh, Icon Morph (2026-09-12) — PR #1015
+
+Implemented the top-5 Motion Kit Shortlist items as dependency-free React/CSS primitives under `src/components/motion/`, so common interactions read as deliberate motion instead of instant snaps. All respect `prefers-reduced-motion`.
+
+- **Number Flow**: animated eased counter for live points totals. Wired into `LeagueScreen.jsx` (My Leagues list), `LiveScreen.jsx` (4 points displays), and `PlayerCard.jsx` (covers `SquadScreen.jsx` + `MarketScreen.jsx` via the shared component).
+- **Shimmer Skeleton**: loading-state placeholder (`Skeleton.jsx`).
+- **Slide to Confirm**: drag-to-confirm control wired into the Sell Player flow (`ConfirmModal.jsx`), for irreversible actions that shouldn't be fat-fingerable.
+- **Pull to Refresh**: touch-driven refresh gesture (`usePullToRefresh` hook + `PullToRefreshIndicator`), wired into `LiveScreen.jsx`'s mobile scroll pane and `LeagueScreen.jsx`'s My Leagues list (attaches to the shared `#main-content` container, since that screen has no scroll pane of its own).
+- **Icon Morph**: `AvailabilityBadge`'s trade-listing padlock now swaps an inline SVG open/closed state (replacing the emoji labels), with a CSS scale-bounce transition on toggle.
+
+**Deliberate scope decisions**: Slide to Confirm's original "chip/trade confirmation" target only partially existed — no live chip-activation UI was found, so it's applied only to Sell Player. `HomeDashboardScreen.jsx` was skipped for Pull to Refresh (no confirmed refetch function to wire to). `MobilePitchField.jsx` (an original Number Flow target) doesn't exist on this branch — it belongs to the still-unmerged mobile pitch concept branch (PR #1014) and can be wired up once that merges.
+
+Also fixed a pre-existing `react-hooks/refs` lint error in `SlideToConfirm.jsx` (reading a ref's `.current` during render) by moving that value into state, since it drives rendered output (`pct`, `aria-valuenow`).
+
+Verified: `npm run lint` (0 errors), `npm run build` (clean, no Rolldown TDZ crash), `npx playwright test e2e/platform.spec.js` (84/84 passed, desktop + mobile Chrome).
+
 ## ✅ Scoring-integrity incident: Suárez goal/penalty double-subtract + CODE-RACE-1 undercount — root-caused, corrected, and closed against recurrence (2026-09-11) — PR #1009, PR #1010, PR #1011, PR #1012, migrations 291–292
 
 A user-reported score discrepancy traced back to two independent bugs, both now fixed at the source, deployed to production, and backed by an ongoing automated detector — not just merged to `main`.

@@ -632,6 +632,54 @@ button, a {
   .ffl-skeleton { animation: none; opacity: 0.6; }
 }
 
+/* Shimmer variant — gradient sweep instead of pulse, same shape classes */
+.ffl-skeleton--shimmer {
+  background: linear-gradient(90deg, var(--ink-2) 25%, var(--ink-3) 50%, var(--ink-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+.ffl-skeleton--row.ffl-skeleton--shimmer::before,
+.ffl-skeleton--row.ffl-skeleton--shimmer::after {
+  background: linear-gradient(90deg, var(--ink-2) 25%, var(--ink-3) 50%, var(--ink-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ffl-skeleton--shimmer,
+  .ffl-skeleton--row.ffl-skeleton--shimmer::before,
+  .ffl-skeleton--row.ffl-skeleton--shimmer::after {
+    animation: none;
+    background-position: 0 0;
+  }
+}
+
+/* ── Pull to refresh ─────────────────────────────────────────────── */
+.ffl-ptr-spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--cyan);
+  border-top-color: transparent;
+}
+.ffl-ptr-spinner--spin {
+  animation: ffl-btn-spin 0.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ffl-ptr-spinner--spin { animation: none; opacity: 0.7; }
+}
+
+/* ── Icon morph (toggle transitions) ─────────────────────────────── */
+.ffl-icon-morph svg {
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
+.ffl-icon-morph[data-active="true"] svg {
+  transform: scale(1.08);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ffl-icon-morph svg { transition: opacity 0.15s ease; }
+  .ffl-icon-morph[data-active="true"] svg { transform: none; }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════ */
 /* FORZAKIT Message Components — see docs/brand/MESSAGES                   */
 /* Inline banners, toasts, system banners, mobile action sheets.           */

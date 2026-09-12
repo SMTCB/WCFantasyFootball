@@ -3,6 +3,7 @@ import PlayerRow    from './PlayerRow';
 import PositionChip from './PositionChip';
 import StatusDot    from './StatusDot';
 import CaptainPill  from './CaptainPill';
+import NumberFlow   from './motion/NumberFlow';
 
 import { POS_TONE } from '../lib/formations';
 
@@ -163,7 +164,7 @@ export default function PlayerCard({
           letterSpacing:  '-0.02em',
         }}
       >
-        {Math.round(player.points ?? 0)}
+        <NumberFlow value={player.points ?? 0} />
       </div>
 
       {/* Two-line block: name + metadata */}
@@ -194,7 +195,7 @@ export default function PlayerCard({
             letterSpacing: '0.1em',
           }}
         >
-          {player.club} · {Math.round(player.points ?? 0)} PTS
+          {player.club} · <NumberFlow value={player.points ?? 0} /> PTS
         </div>
       </div>
 

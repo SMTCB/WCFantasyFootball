@@ -14,11 +14,16 @@
  *   });
  *
  *   {confirm && <ConfirmModal {...confirm} onCancel={() => setConfirm(null)} />}
+ *
+ * Pass `slideToConfirm: true` for actions where a stray tap is costly (selling
+ * a player, cancelling a listing) — swaps the confirm button for a drag
+ * gesture, so confirming takes deliberate motion instead of a single tap.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Button from './Button';
+import SlideToConfirm from './motion/SlideToConfirm';
 import { MessageIcon } from './messages/icons';
 
 const TITLE_ID = 'confirm-modal-title';
@@ -30,6 +35,7 @@ export default function ConfirmModal({
   confirmLabel  = 'Confirm',
   cancelLabel   = 'Cancel',
   danger        = false,
+  slideToConfirm = false,
   onConfirm,
   onCancel,
 }) {
@@ -158,29 +164,52 @@ export default function ConfirmModal({
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <Button
-            ref={cancelRef}
-            variant="secondary"
-            size="md"
-            fullWidth
-            onClick={onCancel}
-            disabled={loading}
-          >
-            {cancelLabel}
-          </Button>
+        {slideToConfirm ? (
+          <div>
+            <SlideToConfirm
+              label={confirmLabel}
+              confirmingLabel="Release to confirm"
+              danger={danger}
+              disabled={loading}
+              onConfirm={handleConfirm}
+            />
+            <Button
+              ref={cancelRef}
+              variant="secondary"
+              size="md"
+              fullWidth
+              onClick={onCancel}
+              disabled={loading}
+              style={{ marginTop: '10px' }}
+            >
+              {cancelLabel}
+            </Button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Button
+              ref={cancelRef}
+              variant="secondary"
+              size="md"
+              fullWidth
+              onClick={onCancel}
+              disabled={loading}
+            >
+              {cancelLabel}
+            </Button>
 
-          <Button
-            variant={confirmVariant}
-            size="md"
-            fullWidth
-            onClick={handleConfirm}
-            disabled={loading}
-            style={{ whiteSpace: 'normal', lineHeight: 1.25, textAlign: 'center' }}
-          >
-            {loading ? '…' : confirmLabel}
-          </Button>
-        </div>
+            <Button
+              variant={confirmVariant}
+              size="md"
+              fullWidth
+              onClick={handleConfirm}
+              disabled={loading}
+              style={{ whiteSpace: 'normal', lineHeight: 1.25, textAlign: 'center' }}
+            >
+              {loading ? '…' : confirmLabel}
+            </Button>
+          </div>
+        )}
       </div>
     </div>,
     document.body

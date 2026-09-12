@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-11. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-12. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>251</strong><span>closed</span></div>
+      <div class="total-pill"><strong>252</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (170)</span>
+    <span class="chip" data-filter-kind="done">Shipped (171)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">251</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">252</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">170</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">171</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,47 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">170</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">171</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui motion kit — number flow, shimmer skeleton, slide to confirm, pull to refresh, icon morph (2026-09-12) — pr #1015 
+
+implemented the top-5 motion kit shortlist items as dependency-free react/css primitives under `src/components/motion/`, so common interactions read as deliberate motion instead of instant snaps. all respect `prefers-reduced-motion`.
+
+- **number flow**: animated eased counter for live points totals. wired into `leaguescreen.jsx` (my leagues list), `livescreen.jsx` (4 points displays), and `playercard.jsx` (covers `squadscreen.jsx` + `marketscreen.jsx` via the shared component).
+- **shimmer skeleton**: loading-state placeholder (`skeleton.jsx`).
+- **slide to confirm**: drag-to-confirm control wired into the sell player flow (`confirmmodal.jsx`), for irreversible actions that shouldn&#x27;t be fat-fingerable.
+- **pull to refresh**: touch-driven refresh gesture (`usepulltorefresh` hook + `pulltorefreshindicator`), wired into `livescreen.jsx`&#x27;s mobile scroll pane and `leaguescreen.jsx`&#x27;s my leagues list (attaches to the shared `#main-content` container, since that screen has no scroll pane of its own).
+- **icon morph**: `availabilitybadge`&#x27;s trade-listing padlock now swaps an inline svg open/closed state (replacing the emoji labels), with a css scale-bounce transition on toggle.
+
+**deliberate scope decisions**: slide to confirm&#x27;s original &quot;chip/trade confirmation&quot; target only partially existed — no live chip-activation ui was found, so it&#x27;s applied only to sell player. `homedashboardscreen.jsx` was skipped for pull to refresh (no confirmed refetch function to wire to). `mobilepitchfield.jsx` (an original number flow target) doesn&#x27;t exist on this branch — it belongs to the still-unmerged mobile pitch concept branch (pr #1014) and can be wired up once that merges.
+
+also fixed a pre-existing `react-hooks/refs` lint error in `slidetoconfirm.jsx` (reading a ref&#x27;s `.current` during render) by moving that value into state, since it drives rendered output (`pct`, " style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">UI motion kit — Number Flow, Shimmer Skeleton, Slide to Confirm, Pull to Refresh, Icon Morph</h3>
+        <p class="card-summary">Implemented the top-5 Motion Kit Shortlist items as dependency-free React/CSS primitives under src/components/motion/ , so common interactions read as deliberate motion…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-12</span><span class="foot-refs">PR #1015</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">UI motion kit — Number Flow, Shimmer Skeleton, Slide to Confirm, Pull to Refresh, Icon Morph</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Implemented the top-5 Motion Kit Shortlist items as dependency-free React/CSS primitives under src/components/motion/ , so common interactions read as deliberate motion…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1015</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-12</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Implemented the top-5 Motion Kit Shortlist items as dependency-free React/CSS primitives under <code>src/components/motion/</code>, so common interactions read as deliberate motion instead of instant snaps. All respect <code>prefers-reduced-motion</code>.</p>
+<ul>
+<li><strong>Number Flow</strong>: animated eased counter for live points totals. Wired into <code>LeagueScreen.jsx</code> (My Leagues list), <code>LiveScreen.jsx</code> (4 points displays), and <code>PlayerCard.jsx</code> (covers <code>SquadScreen.jsx</code> + <code>MarketScreen.jsx</code> via the shared component).</li>
+<li><strong>Shimmer Skeleton</strong>: loading-state placeholder (<code>Skeleton.jsx</code>).</li>
+<li><strong>Slide to Confirm</strong>: drag-to-confirm control wired into the Sell Player flow (<code>ConfirmModal.jsx</code>), for irreversible actions that shouldn't be fat-fingerable.</li>
+<li><strong>Pull to Refresh</strong>: touch-driven refresh gesture (<code>usePullToRefresh</code> hook + <code>PullToRefreshIndicator</code>), wired into <code>LiveScreen.jsx</code>'s mobile scroll pane and <code>LeagueScreen.jsx</code>'s My Leagues list (attaches to the shared <code>#main-content</code> container, since that screen has no scroll pane of its own).</li>
+<li><strong>Icon Morph</strong>: <code>AvailabilityBadge</code>'s trade-listing padlock now swaps an inline SVG open/closed state (replacing the emoji labels), with a CSS scale-bounce transition on toggle.</li>
+</ul>
+<p><strong>Deliberate scope decisions</strong>: Slide to Confirm's original "chip/trade confirmation" target only partially existed — no live chip-activation UI was found, so it's applied only to Sell Player. <code>HomeDashboardScreen.jsx</code> was skipped for Pull to Refresh (no confirmed refetch function to wire to). <code>MobilePitchField.jsx</code> (an original Number Flow target) doesn't exist on this branch — it belongs to the still-unmerged mobile pitch concept branch (PR #1014) and can be wired up once that merges.</p>
+<p>Also fixed a pre-existing <code>react-hooks/refs</code> lint error in <code>SlideToConfirm.jsx</code> (reading a ref's <code>.current</code> during render) by moving that value into state, since it drives rendered output (<code>pct</code>, <code>aria-valuenow</code>).</p>
+<p>Verified: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ crash), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed, desktop + mobile Chrome).</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ scoring-integrity incident: suárez goal/penalty double-subtract + code-race-1 undercount — root-caused, corrected, and closed against recurrence (2026-09-11) — pr #1009, pr #1010, pr #1011, pr #1012, migrations 291–292 
 
 a user-reported score discrepancy traced back to two independent bugs, both now fixed at the source, deployed to production, and backed by an ongoing automated detector — not just merged to `main`.

@@ -1,3 +1,19 @@
+// Padlock — open (unlocked shackle) vs closed (locked shackle). The two
+// states swap on toggle rather than tracing a single morphing path; the
+// `.ffl-icon-morph` bounce (see index.css) sells the transition instead.
+function PadlockIcon({ open }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="10" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      {open ? (
+        <path d="M8 10V7a4 4 0 0 1 7.6-1.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      ) : (
+        <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      )}
+    </svg>
+  );
+}
+
 /**
  * AvailabilityBadge
  * Displays trade-availability status on player cards.
@@ -25,7 +41,10 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
         onClick={isOwn ? handleClick : undefined}
         title={isOwn ? 'Listed for trade — click to remove' : 'Open for trade proposals'}
       >
-        <span>🔓 OPEN FOR TRADE</span>
+        <span key="open" className="ffl-icon-morph" data-active="true">
+          <PadlockIcon open />
+        </span>
+        OPEN FOR TRADE
       </div>
     );
   }
@@ -43,7 +62,10 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
         }`}
         title="Tap to list this player as open for trade proposals"
       >
-        <span>📋 LIST FOR TRADE</span>
+        <span key="closed" className="ffl-icon-morph" data-active="true">
+          <PadlockIcon open={false} />
+        </span>
+        LIST FOR TRADE
       </button>
     );
   }
