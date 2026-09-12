@@ -25,6 +25,7 @@ import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 import Button from '../components/Button';
 import PitchView from '../components/PitchView';
+import MobilePitchField from '../components/MobilePitchField';
 import PlayerCard from '../components/PlayerCard';
 import ClubCrest from '../components/ClubCrest';
 import PlayerPickerSheet from '../components/PlayerPickerSheet';
@@ -59,6 +60,8 @@ export default function SquadScreen() {
   const [saving,             setSaving]            = useState(false);
   // Mobile tab: 'pitch' | 'squad' | 'tools'
   const [mobileTab,          setMobileTab]         = useState('pitch');
+  // Mobile Pitch tab sub-view: 'field' (graphical, Concept A) | 'list' (fallback)
+  const [mobilePitchMode,    setMobilePitchMode]   = useState('field');
   // Desktop sub-tab: 'pitch' | 'list' | 'chips' | 'status'
   const [desktopTab,         setDesktopTab]        = useState('pitch');
   // Danger banner dismissed on mobile
@@ -1498,8 +1501,42 @@ export default function SquadScreen() {
                 </div>
               </div>
 
-              {/* Starting XI — grouped by position */}
-              {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
+              {/* Field / List toggle — Field (tap-to-expand pitch) is the default; List stays as a fallback */}
+              <div style={{ display: 'flex', gap: 6, padding: '10px 16px 0' }}>
+                {[
+                  { id: 'field', label: 'FIELD' },
+                  { id: 'list',  label: 'LIST'  },
+                ].map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setMobilePitchMode(opt.id)}
+                    style={{
+                      flex: 1, padding: '7px 0',
+                      fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase',
+                      background: mobilePitchMode === opt.id ? 'var(--accent-bg)' : 'transparent',
+                      color: mobilePitchMode === opt.id ? 'var(--cyan)' : 'var(--mute)',
+                      border: `1px solid ${mobilePitchMode === opt.id ? 'var(--cyan)' : 'var(--rule)'}`,
+                      borderRadius: 3, cursor: 'pointer',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {mobilePitchMode === 'field' && (
+                <div style={{ padding: '12px 16px 4px' }}>
+                  <MobilePitchField
+                    squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain }}
+                    onPlayerClick={handlePlayerClick}
+                    selectedPlayerId={selectedPlayer?.id}
+                    matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
+                  />
+                </div>
+              )}
+
+              {/* Starting XI — grouped by position (list fallback) */}
+              {mobilePitchMode === 'list' && ['GK', 'DEF', 'MID', 'FWD'].map(pos => {
                 const posPlayers = players.filter(p => p.position === pos);
                 if (!posPlayers.length) return null;
                 const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
