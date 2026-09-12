@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>253</strong><span>closed</span></div>
+      <div class="total-pill"><strong>254</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (172)</span>
+    <span class="chip" data-filter-kind="done">Shipped (173)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">253</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">254</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">172</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">173</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,41 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">172</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">173</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ squad pitch polish: club crests + fill-button consolidation to market only (2026-09-12) — pr #1018 
+
+user feedback on the mobile pitch view (concept a): add club crests to player tokens, remove the confusing duplicate fill controls, and drop the field/list toggle now that the pitch is the only view.
+
+- **club crest badges**: added to `mobilepitchfield.jsx` player tokens (top-right corner, next to the captain armband) and to `squadscreen.jsx`&#x27;s player-detail bottom sheet (next to the club name). `clubcrest` is passed into `mobilepitchfield` as a **prop**, not imported directly — `squadscreen.jsx` already imports it at depth 1, so a second import at depth 2 would trip the rolldown tdz crash pattern documented above (see vite v8/rolldown section).
+- **fill-button consolidation**: removed the `useautofill` hook and all three of its call-sites from `squadscreen.jsx` — mobile pitch tab&#x27;s &quot;quick fill&quot;, mobile list sub-view&#x27;s &quot;fill&quot;, and desktop list tab&#x27;s &quot;quick fill&quot;. `marketscreen.jsx` keeps its own independent `useautofill` call/button — now the only fill control in the app, exactly where the user wanted it.
+- **removed the field/list toggle**: deleted `mobilepitchmode` state and the list-fallback rendering block from `squadscreen.jsx`; `&lt;mobilepitchfield&gt;` now renders unconditionally. this also killed the confusing double-list problem (list view + toggle, on top of the top nav&#x27;s own list) the user called out.
+
+verified: `npm run lint` (0 new errors), `npm run build` (clean, zero rolldown tdz errors — confirms the `clubcrest`-as-prop fix), `npx playwright test e2e/platform.spec.js` (84/84 passed, desktop + mobile chrome). full manual browser verification with live squad data was not possible in demo mode (`vite_auth_enabled=false` — no real supabase auth session, so rls blocks the writes needed to seed a test squad) and was correctly not pushed further once it required entering credentials into a signup form; ci&#x27;s e2e suite was the verification path instead.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Squad pitch polish: club crests + Fill-button consolidation to Market only</h3>
+        <p class="card-summary">User feedback on the mobile pitch view (Concept A): add club crests to player tokens, remove the confusing duplicate Fill controls, and drop the Field/List toggle now…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-12</span><span class="foot-refs">PR #1018</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Squad pitch polish: club crests + Fill-button consolidation to Market only</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User feedback on the mobile pitch view (Concept A): add club crests to player tokens, remove the confusing duplicate Fill controls, and drop the Field/List toggle now…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1018</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-12</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>User feedback on the mobile pitch view (Concept A): add club crests to player tokens, remove the confusing duplicate Fill controls, and drop the Field/List toggle now that the pitch is the only view.</p>
+<ul>
+<li><strong>Club crest badges</strong>: added to <code>MobilePitchField.jsx</code> player tokens (top-right corner, next to the captain armband) and to <code>SquadScreen.jsx</code>'s player-detail bottom sheet (next to the club name). <code>ClubCrest</code> is passed into <code>MobilePitchField</code> as a <strong>prop</strong>, not imported directly — <code>SquadScreen.jsx</code> already imports it at depth 1, so a second import at depth 2 would trip the Rolldown TDZ crash pattern documented above (see Vite v8/Rolldown section).</li>
+<li><strong>Fill-button consolidation</strong>: removed the <code>useAutoFill</code> hook and all three of its call-sites from <code>SquadScreen.jsx</code> — mobile Pitch tab's "Quick Fill", mobile List sub-view's "Fill", and desktop List tab's "Quick Fill". <code>MarketScreen.jsx</code> keeps its own independent <code>useAutoFill</code> call/button — now the only Fill control in the app, exactly where the user wanted it.</li>
+<li><strong>Removed the Field/List toggle</strong>: deleted <code>mobilePitchMode</code> state and the list-fallback rendering block from <code>SquadScreen.jsx</code>; <code>&lt;MobilePitchField&gt;</code> now renders unconditionally. This also killed the confusing double-list problem (list view + toggle, on top of the top nav's own list) the user called out.</li>
+</ul>
+<p>Verified: <code>npm run lint</code> (0 new errors), <code>npm run build</code> (clean, zero Rolldown TDZ errors — confirms the <code>ClubCrest</code>-as-prop fix), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed, desktop + mobile Chrome). Full manual browser verification with live squad data was not possible in demo mode (<code>VITE_AUTH_ENABLED=false</code> — no real Supabase Auth session, so RLS blocks the writes needed to seed a test squad) and was correctly not pushed further once it required entering credentials into a signup form; CI's E2E suite was the verification path instead.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ motion kit follow-ups: mobilepitchfield number flow + homedashboardscreen pull to refresh (2026-09-12) — pr #1016 
 
 closed the two items the ui motion kit (pr #1015, below) deliberately deferred, once their blockers cleared.
