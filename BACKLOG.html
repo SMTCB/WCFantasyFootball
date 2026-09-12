@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>252</strong><span>closed</span></div>
+      <div class="total-pill"><strong>253</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (171)</span>
+    <span class="chip" data-filter-kind="done">Shipped (172)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">252</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">253</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">171</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">172</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,44 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">171</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">172</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ motion kit follow-ups: mobilepitchfield number flow + homedashboardscreen pull to refresh (2026-09-12) — pr #1016 
+
+closed the two items the ui motion kit (pr #1015, below) deliberately deferred, once their blockers cleared.
+
+- **number flow → `mobilepitchfield.jsx`**: pr #1015 skipped this because the mobile pitch concept (pr #1014) hadn&#x27;t merged yet on that branch. with #1014 now on `main`, wired `numberflow` into the points display the same way `playercard.jsx` already does.
+- **pull to refresh → `homedashboardscreen.jsx`**: pr #1015 skipped this for lack of a confirmed refetch function. found `useclubhouse.js` already exposes `refresh: fetchmycircles`; wired `usepulltorefresh` to it (plus a re-fetch of each circle&#x27;s competitions) via the same shared `#main-content` scroll-container pattern used by `leaguescreen.jsx` (this screen also has no scroll pane of its own).
+- **`docs_index.html`**: updated the `src/components/` card (54 components — adds `mobilepitchfield` + the `motion/` subfolder: `numberflow`, `pulltorefreshindicator`, `slidetoconfirm`), `src/lib/` card (`pitchlayout.js`), and `src/hooks/` card (41 hooks, adds `usepulltorefresh`).
+
+**branch sequencing note**: this branch (`claude/motion-kit-followups`) was created off `main` before pr #1015 merged, so `src/components/motion/` and `usepulltorefresh.js` didn&#x27;t exist on it yet when these edits were written. verification (`lint`/`build`/e2e) was deliberately deferred until after #1015 merged and the branch was rebased onto the updated `main` — at which point all three passed clean.
+
+verified: `npm run lint` (0 errors), `npm run build` (clean, no rolldown tdz crash), `npx playwright test e2e/platform.spec.js` (84/84 passed, desktop + mobile chrome).
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Motion kit follow-ups: MobilePitchField Number Flow + HomeDashboardScreen Pull to Refresh</h3>
+        <p class="card-summary">Closed the two items the UI motion kit (PR #1015, below) deliberately deferred, once their blockers cleared. Number Flow → MobilePitchField.jsx : PR #1015 skipped this…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-12</span><span class="foot-refs">PR #1016</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Motion kit follow-ups: MobilePitchField Number Flow + HomeDashboardScreen Pull to Refresh</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Closed the two items the UI motion kit (PR #1015, below) deliberately deferred, once their blockers cleared. Number Flow → MobilePitchField.jsx : PR #1015 skipped this…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1016</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-12</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Closed the two items the UI motion kit (PR #1015, below) deliberately deferred, once their blockers cleared.</p>
+<ul>
+<li><strong>Number Flow → <code>MobilePitchField.jsx</code></strong>: PR #1015 skipped this because the mobile pitch concept (PR #1014) hadn't merged yet on that branch. With #1014 now on <code>main</code>, wired <code>NumberFlow</code> into the points display the same way <code>PlayerCard.jsx</code> already does.</li>
+<li><strong>Pull to Refresh → <code>HomeDashboardScreen.jsx</code></strong>: PR #1015 skipped this for lack of a confirmed refetch function. Found <code>useClubhouse.js</code> already exposes <code>refresh: fetchMyCircles</code>; wired <code>usePullToRefresh</code> to it (plus a re-fetch of each circle's competitions) via the same shared <code>#main-content</code> scroll-container pattern used by <code>LeagueScreen.jsx</code> (this screen also has no scroll pane of its own).</li>
+<li><strong><code>DOCS_INDEX.html</code></strong>: updated the <code>src/components/</code> card (54 components — adds <code>MobilePitchField</code> + the <code>motion/</code> subfolder: <code>NumberFlow</code>, <code>PullToRefreshIndicator</code>, <code>SlideToConfirm</code>), <code>src/lib/</code> card (<code>pitchLayout.js</code>), and <code>src/hooks/</code> card (41 hooks, adds <code>usePullToRefresh</code>).</li>
+</ul>
+<p><strong>Branch sequencing note</strong>: this branch (<code>claude/motion-kit-followups</code>) was created off <code>main</code> before PR #1015 merged, so <code>src/components/motion/</code> and <code>usePullToRefresh.js</code> didn't exist on it yet when these edits were written. Verification (<code>lint</code>/<code>build</code>/E2E) was deliberately deferred until after #1015 merged and the branch was rebased onto the updated <code>main</code> — at which point all three passed clean.</p>
+<p>Verified: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ crash), <code>npx playwright test e2e/platform.spec.js</code> (84/84 passed, desktop + mobile Chrome).</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui motion kit — number flow, shimmer skeleton, slide to confirm, pull to refresh, icon morph (2026-09-12) — pr #1015 
 
 implemented the top-5 motion kit shortlist items as dependency-free react/css primitives under `src/components/motion/`, so common interactions read as deliberate motion instead of instant snaps. all respect `prefers-reduced-motion`.
