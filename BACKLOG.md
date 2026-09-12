@@ -12,6 +12,18 @@
 
 ---
 
+## ✅ Motion kit follow-ups: MobilePitchField Number Flow + HomeDashboardScreen Pull to Refresh (2026-09-12) — PR #1016
+
+Closed the two items the UI motion kit (PR #1015, below) deliberately deferred, once their blockers cleared.
+
+- **Number Flow → `MobilePitchField.jsx`**: PR #1015 skipped this because the mobile pitch concept (PR #1014) hadn't merged yet on that branch. With #1014 now on `main`, wired `NumberFlow` into the points display the same way `PlayerCard.jsx` already does.
+- **Pull to Refresh → `HomeDashboardScreen.jsx`**: PR #1015 skipped this for lack of a confirmed refetch function. Found `useClubhouse.js` already exposes `refresh: fetchMyCircles`; wired `usePullToRefresh` to it (plus a re-fetch of each circle's competitions) via the same shared `#main-content` scroll-container pattern used by `LeagueScreen.jsx` (this screen also has no scroll pane of its own).
+- **`DOCS_INDEX.html`**: updated the `src/components/` card (54 components — adds `MobilePitchField` + the `motion/` subfolder: `NumberFlow`, `PullToRefreshIndicator`, `SlideToConfirm`), `src/lib/` card (`pitchLayout.js`), and `src/hooks/` card (41 hooks, adds `usePullToRefresh`).
+
+**Branch sequencing note**: this branch (`claude/motion-kit-followups`) was created off `main` before PR #1015 merged, so `src/components/motion/` and `usePullToRefresh.js` didn't exist on it yet when these edits were written. Verification (`lint`/`build`/E2E) was deliberately deferred until after #1015 merged and the branch was rebased onto the updated `main` — at which point all three passed clean.
+
+Verified: `npm run lint` (0 errors), `npm run build` (clean, no Rolldown TDZ crash), `npx playwright test e2e/platform.spec.js` (84/84 passed, desktop + mobile Chrome).
+
 ## ✅ UI motion kit — Number Flow, Shimmer Skeleton, Slide to Confirm, Pull to Refresh, Icon Morph (2026-09-12) — PR #1015
 
 Implemented the top-5 Motion Kit Shortlist items as dependency-free React/CSS primitives under `src/components/motion/`, so common interactions read as deliberate motion instead of instant snaps. All respect `prefers-reduced-motion`.
