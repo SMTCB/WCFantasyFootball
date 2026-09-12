@@ -19,7 +19,6 @@ import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAvailabilityFlag } from '../hooks/useAvailabilityFlag';
 import { useAuctions } from '../hooks/useAuctions';
-import { useAutoFill } from '../hooks/useAutoFill';
 import { useToast } from '../hooks/useToast';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
@@ -61,8 +60,6 @@ export default function SquadScreen() {
   const [saving,             setSaving]            = useState(false);
   // Mobile tab: 'pitch' | 'squad' | 'tools'
   const [mobileTab,          setMobileTab]         = useState('pitch');
-  // Mobile Pitch tab sub-view: 'field' (graphical, Concept A) | 'list' (fallback)
-  const [mobilePitchMode,    setMobilePitchMode]   = useState('field');
   // Desktop sub-tab: 'pitch' | 'list' | 'chips' | 'status'
   const [desktopTab,         setDesktopTab]        = useState('pitch');
   // Danger banner dismissed on mobile
@@ -468,9 +465,6 @@ export default function SquadScreen() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, activeLeague, tournamentId, eliminatedClubs]);
-
-  // Auto-fill hook — reusable across Squad, Market, League screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy, cfg);
 
   // Transfer window status for the sticky banner (open / upcoming / no_window).
   const transferWindow = useTransferWindow(activeLeague);
@@ -1468,140 +1462,42 @@ export default function SquadScreen() {
           const mid = players.filter(p => p.position === 'MID').length;
           const fwd = players.filter(p => p.position === 'FWD').length;
           const formation = [def, mid, fwd].filter(n => n > 0).join('-') || '—';
-          const POS_LABEL_PITCH = { GK: 'Goalkeeper', DEF: 'Defence', MID: 'Midfield', FWD: 'Attack' };
           const statusColor = p => {
             const s = p.intel?.status;
             return s === 'out' || s === 'injured' || s === 'suspended' ? 'var(--danger)'
               : s === 'doubt' || s === 'doubtful' ? 'var(--gold)'
               : 'var(--positive)';
           };
-          let no = 0;
           return (
             <div style={{ paddingBottom: swapMode ? '120px' : '96px' }}>
               {/* Section header */}
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                    <div>
-                      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
-                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
-                    </div>
-                    <button
-                      onClick={() => setShowScoringModal(true)}
-                      title="Scoring & game rules"
-                      style={{ marginTop: 2, background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                    >?</button>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                  <div>
+                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
                   </div>
                   <button
-                    onClick={handleAutoFill}
-                    disabled={autoFilling}
-                    style={{ marginTop: 4, padding: '6px 10px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
-                  >
-                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
-                  </button>
+                    onClick={() => setShowScoringModal(true)}
+                    title="Scoring & game rules"
+                    style={{ marginTop: 2, background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  >?</button>
                 </div>
-                {autoFillMsg && (
-                  <div style={{ marginTop: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)' }}>{autoFillMsg}</div>
-                )}
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
                   {squadData.matchdayId ? ` · GW${squadData.matchdayId.split('-r')[1] ?? squadData.matchdayId} PTS` : ''}
                 </div>
               </div>
 
-              {/* Field / List toggle — Field (tap-to-expand pitch) is the default; List stays as a fallback */}
-              <div style={{ display: 'flex', gap: 6, padding: '10px 16px 0' }}>
-                {[
-                  { id: 'field', label: 'FIELD' },
-                  { id: 'list',  label: 'LIST'  },
-                ].map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => setMobilePitchMode(opt.id)}
-                    style={{
-                      flex: 1, padding: '7px 0',
-                      fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase',
-                      background: mobilePitchMode === opt.id ? 'var(--accent-bg)' : 'transparent',
-                      color: mobilePitchMode === opt.id ? 'var(--cyan)' : 'var(--mute)',
-                      border: `1px solid ${mobilePitchMode === opt.id ? 'var(--cyan)' : 'var(--rule)'}`,
-                      borderRadius: 3, cursor: 'pointer',
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              <div style={{ padding: '12px 16px 4px' }}>
+                <MobilePitchField
+                  squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain }}
+                  onPlayerClick={handlePlayerClick}
+                  selectedPlayerId={selectedPlayer?.id}
+                  matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
+                  ClubCrest={ClubCrest}
+                />
               </div>
-
-              {mobilePitchMode === 'field' && (
-                <div style={{ padding: '12px 16px 4px' }}>
-                  <MobilePitchField
-                    squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain }}
-                    onPlayerClick={handlePlayerClick}
-                    selectedPlayerId={selectedPlayer?.id}
-                    matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
-                  />
-                </div>
-              )}
-
-              {/* Starting XI — grouped by position (list fallback) */}
-              {mobilePitchMode === 'list' && ['GK', 'DEF', 'MID', 'FWD'].map(pos => {
-                const posPlayers = players.filter(p => p.position === pos);
-                if (!posPlayers.length) return null;
-                const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
-                return (
-                  <div key={pos}>
-                    <div style={{ padding: '8px 16px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{POS_LABEL_PITCH[pos]}</span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{posPlayers.length}</span>
-                    </div>
-                    {posPlayers.map(player => {
-                      no++;
-                      const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? '?';
-                      const isSelected = selectedPlayer?.id === player.id;
-                      const isSwapTarget = swapMode && !isSelected;
-                      return (
-                        <button
-                          key={player.id}
-                          onClick={() => handlePlayerClick(player)}
-                          style={{
-                            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                            padding: '9px 16px',
-                            background: isSelected ? 'var(--accent-bg)' : isSwapTarget ? 'rgba(26,111,168,0.04)' : 'transparent',
-                            borderBottom: '1px solid var(--rule)',
-                            borderLeft: isSelected ? '2px solid var(--cyan)' : isSwapTarget ? '2px solid rgba(26,111,168,0.3)' : '2px solid transparent',
-                            cursor: 'pointer', textAlign: 'left',
-                          }}
-                        >
-                          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>#{String(no).padStart(2, '0')}</div>
-                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(player), flexShrink: 0 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
-                              {player.intel?.status !== 'fit' && (
-                                <span title={`${player.intel?.reason ?? player.intel?.status} — check ⚠️ STATUS tab`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}>⚠️</span>
-                              )}
-                              {player.id === captainId && (
-                                <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>
-                              )}
-                              {isSwapTarget && (
-                                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--cyan)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
-                              )}
-                            </div>
-                            {player.fixtureStatus && (
-                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, minWidth: 40, justifyContent: 'flex-end' }}>
-                            <ClubCrest name={player.club} size={16} />
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</span>
-                          </div>
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{Math.round(player.points ?? 0)}</div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
 
               {/* Bench strip — always visible so sub-in/out can be completed */}
               {bench.length > 0 && (
@@ -1682,23 +1578,10 @@ export default function SquadScreen() {
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <div />
-                  <button
-                    onClick={handleAutoFill}
-                    disabled={autoFilling}
-                    style={{ padding: '6px 10px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
-                  >
-                    {autoFilling ? 'FILLING…' : '⚡ FILL'}
-                  </button>
-                </div>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {totalSigned}/{squadSize} SIGNED{emptySlots > 0 ? ` · ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
                 </div>
               </div>
-              {autoFillMsg && (
-                <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
-              )}
               {/* Starters + bench grouped by position */}
               {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
                 const limit       = POS_LIMITS[pos] ?? 0;
@@ -2011,22 +1894,10 @@ export default function SquadScreen() {
           {desktopTab === 'list' && (
             <>
               <div className="flex-1 min-w-0 overflow-y-auto">
-                <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--rule)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '0.02em' }}>Squad List</div>
-                    <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
-                  </div>
-                  <button
-                    onClick={handleAutoFill}
-                    disabled={autoFilling}
-                    style={{ padding: '8px 12px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0 }}
-                  >
-                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
-                  </button>
+                <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--rule)' }}>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '0.02em' }}>Squad List</div>
+                  <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
                 </div>
-                {autoFillMsg && (
-                  <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
-                )}
                 {PlayerList()}
               </div>
             </>
@@ -2120,6 +1991,7 @@ export default function SquadScreen() {
                     )}
                   </div>
                   <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ClubCrest name={selectedPlayer.club} size={16} />
                     {selectedPlayer.club}
                     {selectedPlayer.id === captainId && (
                       <span style={{ color: 'var(--gold-text)', background: 'rgba(184,114,14,0.12)', border: '1px solid rgba(184,114,14,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
