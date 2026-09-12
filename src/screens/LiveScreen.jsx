@@ -13,6 +13,9 @@ import { POS_ORDER, POS_PITCH_Y as POS_Y, POS_TONE } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
 import { teamCode } from '../lib/fixtures';
 import ClubCrest from '../components/ClubCrest';
+import usePullToRefresh from '../hooks/usePullToRefresh';
+import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
+import NumberFlow from '../components/motion/NumberFlow';
 
 // ── Shared primitives ────────────────────────────────────────────────────────
 
@@ -145,7 +148,7 @@ function MiniTok({ p, activeLeague }) {
             </>
           )}
           <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: (p.points ?? 0) >= 0 ? 'var(--paper)' : 'var(--danger)', flexShrink: 0 }}>
-            {(() => { const pts = p.displayPoints ?? Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
+            <NumberFlow value={p.displayPoints ?? p.points ?? 0} format={n => { const r = Math.round(n); return r >= 0 ? String(r) : `−${Math.abs(r)}`; }} />
           </span>
         </div>
       </div>
@@ -302,7 +305,7 @@ function MobSquadRow({ p, activeLeague }) {
         <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 'auto' }}>{p.club || '—'}</span>
       </div>
       <div style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', letterSpacing: '-0.02em', color: (p.points ?? 0) >= 0 ? 'var(--cyan)' : 'var(--danger)' }}>
-        {(() => { const pts = p.displayPoints ?? Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
+        <NumberFlow value={p.displayPoints ?? p.points ?? 0} format={n => { const r = Math.round(n); return r >= 0 ? String(r) : `−${Math.abs(r)}`; }} />
       </div>
     </div>
   );
@@ -825,6 +828,9 @@ export default function LiveScreen() {
   const fetchAllRef = useRef(fetchAll);
   useEffect(() => { fetchAllRef.current = fetchAll; }, [fetchAll]);
 
+  const mobileScrollRef = useRef(null);
+  const pullToRefresh = usePullToRefresh(mobileScrollRef, fetchAll);
+
   useEffect(() => {
     if (!liveFixtureIdList) return;
 
@@ -1067,7 +1073,7 @@ export default function LiveScreen() {
                         {(p.name || '').split(' ').pop().toUpperCase()}
                       </div>
                       <div style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: (p.points ?? 0) >= 0 ? 'var(--mute)' : 'var(--danger)', marginTop: 2 }}>
-                        {(() => { const pts = p.displayPoints ?? Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
+                        <NumberFlow value={p.displayPoints ?? p.points ?? 0} format={n => { const r = Math.round(n); return r >= 0 ? String(r) : `−${Math.abs(r)}`; }} />
                       </div>
                     </div>
                   ))}
@@ -1134,7 +1140,8 @@ export default function LiveScreen() {
       </div>
 
       {/* ── MOBILE ──────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:hidden" style={{ flex: 1, overflowY: 'auto' }}>
+      <div ref={mobileScrollRef} className="flex flex-col lg:hidden" style={{ flex: 1, overflowY: 'auto' }}>
+        <PullToRefreshIndicator progress={pullToRefresh.progress} refreshing={pullToRefresh.refreshing} />
 
         {/* Hero header */}
         <div style={{ padding: '14px 18px 10px' }}>
@@ -1335,7 +1342,7 @@ export default function LiveScreen() {
                             <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-label)', letterSpacing: '-0.01em' }}>{(p.name || '').split(' ').pop().toUpperCase()}</span>
                             <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{p.position}</span>
                           </div>
-                          <div style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>{p.displayPoints ?? Math.round(p.points ?? 0)}</div>
+                          <div style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}><NumberFlow value={p.displayPoints ?? p.points ?? 0} /></div>
                         </div>
                       ))}
                     </div>

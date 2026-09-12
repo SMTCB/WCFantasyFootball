@@ -16,6 +16,7 @@
  *   <Skeleton shape="circle" className="w-12 h-12" />         // sm avatar
  *   <Skeleton shape="block" className="h-96" />                // custom height
  *   <Skeleton shape="row" />                                   // table row (4 cols)
+ *   <Skeleton shape="block" variant="shimmer" />                // gradient sweep instead of pulse
  *
  *   // Loading state with semantic structure:
  *   {loading ? (
@@ -29,17 +30,21 @@
  */
 
 const SHAPES = new Set(['line', 'circle', 'block', 'row']);
+const VARIANTS = new Set(['pulse', 'shimmer']);
 
 export default function Skeleton({
   shape = 'line',
+  variant = 'pulse',
   className = '',
   ...rest
 }) {
   const s = SHAPES.has(shape) ? shape : 'line';
+  const v = VARIANTS.has(variant) ? variant : 'pulse';
 
   const baseClasses = [
     'ffl-skeleton',
     `ffl-skeleton--${s}`,
+    v === 'shimmer' ? 'ffl-skeleton--shimmer' : '',
     className,
   ].filter(Boolean).join(' ');
 

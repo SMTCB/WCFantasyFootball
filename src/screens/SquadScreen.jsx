@@ -24,6 +24,7 @@ import { useToast } from '../hooks/useToast';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 import Button from '../components/Button';
+import Skeleton from '../components/Skeleton';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import ClubCrest from '../components/ClubCrest';
@@ -766,8 +767,9 @@ export default function SquadScreen() {
       title:        `Remove ${selectedPlayer.name}?`,
       body:         `${selectedPlayer.name} will be removed from your squad. Their slot opens up for a new signing.`,
       warning:      warnings.length ? warnings.join(' ') : null,
-      confirmLabel: 'Remove',
+      confirmLabel: 'Slide to remove',
       danger:       true,
+      slideToConfirm: true,
       onConfirm:    doSellPlayer,
     });
   };
@@ -865,10 +867,16 @@ export default function SquadScreen() {
   // â"€â"€ Loading â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   if (loading || !squadData) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="fz-display text-[32px] text-cyan mb-2">MY SQUAD</div>
-          <div className="fz-label text-text-tertiary animate-scan">Loading Tactical Sheet…</div>
+      <div className="min-h-screen bg-bg" style={{ padding: '16px 20px' }}>
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton shape="line" variant="shimmer" className="w-32" style={{ height: 20, marginBottom: 0 }} />
+          <Skeleton shape="line" variant="shimmer" className="w-16" style={{ height: 20, marginBottom: 0 }} />
+        </div>
+        <Skeleton shape="block" variant="shimmer" className="mb-4" style={{ height: 320 }} />
+        <div className="space-y-2">
+          <Skeleton shape="row" variant="shimmer" />
+          <Skeleton shape="row" variant="shimmer" />
+          <Skeleton shape="row" variant="shimmer" />
         </div>
       </div>
     );

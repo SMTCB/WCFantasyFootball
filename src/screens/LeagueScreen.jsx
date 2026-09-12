@@ -28,6 +28,9 @@ import {
 import { MONO, DISPLAY } from '../components/league/HubConstants';
 import { TypeChip, RankBadge, ArchivedBadge } from '../components/league/LeagueBadges';
 import { useShowArchived } from '../hooks/useShowArchived';
+import usePullToRefresh from '../hooks/usePullToRefresh';
+import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
+import NumberFlow from '../components/motion/NumberFlow';
 import { deriveLeagueType, TYPE_COLOR } from '../components/league/LeagueBadgeHelpers';
 import BetsTabHub             from '../components/league/BetsTabHub';
 import LeagueDetailView       from '../components/league/LeagueDetailView';
@@ -419,6 +422,13 @@ export default function LeagueScreen() {
     }
   }, []);
 
+  // Pull-to-refresh reads/writes the shared #main-content scroll container
+  // (AppLayout's mainRef) — this screen renders no scroll pane of its own for
+  // the leagues list. The ref-population effect must commit before
+  // usePullToRefresh's effect runs, so it's declared first.
+  const mainContentRef = useRef(null);
+  useEffect(() => { mainContentRef.current = document.getElementById('main-content'); }, []);
+
   const fetchLeagues = useCallback(async () => {
     try {
       setLoading(true);
@@ -474,6 +484,8 @@ export default function LeagueScreen() {
       setLoading(false);
     }
   }, [user?.id, activeCircleId]);
+
+  const pullToRefresh = usePullToRefresh(mainContentRef, fetchLeagues);
 
   useEffect(() => {
     if (user?.id) {
@@ -2016,7 +2028,7 @@ export default function LeagueScreen() {
                     {l.leagues?.archived && <ArchivedBadge />}
                   </div>
                   <div style={{ textAlign: 'right', padding: '20px 0' }}>
-                    <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', color: 'var(--positive)' }}>{Math.round(l.total_points || 0)}</span>
+                    <NumberFlow value={l.total_points || 0} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', color: 'var(--positive)' }} />
                     <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', marginLeft: 5 }}>Pts</span>
                   </div>
                 </div>
@@ -2042,6 +2054,7 @@ export default function LeagueScreen() {
 
       {/* Mobile */}
       <div className="lg:hidden pb-24">
+        <PullToRefreshIndicator progress={pullToRefresh.progress} refreshing={pullToRefresh.refreshing} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px 12px', borderBottom: '1px solid var(--rule)' }}>
           <div>
             <div className="fk-eyebrow" style={{ marginBottom: 3 }}>Season</div>
@@ -2086,7 +2099,7 @@ export default function LeagueScreen() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-heading)', color: 'var(--positive)', lineHeight: 1 }}>{Math.round(l.total_points || 0)}</div>
+                  <NumberFlow value={l.total_points || 0} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-heading)', color: 'var(--positive)', lineHeight: 1 }} />
                   <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase', marginTop: 2 }}>Pts Total</div>
                 </div>
               </div>
