@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ClubCrest from './ClubCrest';
+import { xPositions, buildPitchTokens, STATUS_COLOR } from '../lib/pitchLayout';
 
 /**
  * PitchView — renders the squad on a pitch surface.
@@ -18,31 +19,6 @@ import ClubCrest from './ClubCrest';
  *   5. Fixture context strip — top:14px, mono 10px
  *   6. Player HybridToken pills
  */
-
-// X positions for each row count (spec values, wider spacing)
-const X_BY_COUNT = {
-  1: [50],
-  2: [33, 67],
-  3: [22, 50, 78],
-  4: [14, 38, 62, 86],
-  5: [12, 28, 50, 72, 88],
-};
-
-// Y position (% from top) for each position band
-const POS_Y = { FWD: 22, MID: 46, DEF: 70, GK: 92 };
-
-const STATUS_COLOR = {
-  fit:        'var(--positive)',
-  doubt:      'var(--gold)',
-  out:        'var(--danger)',
-  doubtful:   'var(--gold)',
-  injured:    'var(--danger)',
-  suspended:  'var(--danger)',
-};
-
-function xPositions(n) {
-  return X_BY_COUNT[n] ?? Array.from({ length: n }, (_, i) => ((i + 1) * 100) / (n + 1));
-}
 
 // ── HybridToken — the only token style (spec §Token spec) ─────────────────────
 function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact }) {
@@ -269,33 +245,8 @@ export default function PitchView({
     return () => ro.disconnect();
   }, []);
 
-  // Group players by position
-  const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
-  for (const p of (squad.players ?? [])) {
-    if (byPos[p.position]) byPos[p.position].push(p);
-  }
-
-  // Build token list with absolute x/y + sequential number
-  const tokens = [];
-  let no = 1;
-  for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
-    const posPlayers = byPos[pos];
-    const y  = POS_Y[pos];
-    const xs = xPositions(posPlayers.length);
-    posPlayers.forEach((p, i) => {
-      tokens.push({
-        player:    p,
-        no:        no++,
-        x:         xs[i],
-        y,
-        isCaptain: p.id === squad.captainId,
-      });
-    });
-  }
-
-  // Formation string (e.g. "4-3-3")
-  const def = byPos.DEF.length, mid = byPos.MID.length, fwd = byPos.FWD.length;
-  const formation = [def, mid, fwd].filter(n => n > 0).join('-') || '—';
+  // Group players by position, build token list with absolute x/y + sequential number
+  const { tokens, byPos, formation } = buildPitchTokens(squad.players, squad.captainId);
 
   // Tightest gap (in % of pitch width) between neighbouring tokens across all rows.
   const rowCounts = [byPos.GK.length, byPos.DEF.length, byPos.MID.length, byPos.FWD.length].filter(n => n > 1);
