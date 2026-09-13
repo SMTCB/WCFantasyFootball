@@ -332,6 +332,35 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                 </div>
               </InfoBox>
             </Section>
+
+            <Section title="PLAYER STATUS DOT">
+              <InfoBox>
+                <div style={{ marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--positive)', display: 'inline-block', marginTop: 4, flexShrink: 0 }} />
+                  <div>
+                    <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>FIT</span>
+                    {' — '}No current injury or suspension reported for this player.
+                  </div>
+                </div>
+                <div style={{ marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block', marginTop: 4, flexShrink: 0 }} />
+                  <div>
+                    <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>DOUBTFUL</span>
+                    {' — '}Knock or illness with an uncertain return — could play, could be rested.
+                  </div>
+                </div>
+                <div style={{ marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', display: 'inline-block', marginTop: 4, flexShrink: 0 }} />
+                  <div>
+                    <span style={{ color: 'var(--danger)', fontFamily: DISPLAY }}>OUT</span>
+                    {' — '}Confirmed injury or suspension — not expected to feature.
+                  </div>
+                </div>
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+                  Pulled automatically from Forza Football's injury/suspension feed and refreshed every few hours ahead of each matchday — not something you or your league set manually.
+                </div>
+              </InfoBox>
+            </Section>
           </>
         )}
     </BottomSheet>
