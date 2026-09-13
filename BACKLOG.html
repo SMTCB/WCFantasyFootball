@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-12. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-09-13. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>254</strong><span>closed</span></div>
+      <div class="total-pill"><strong>256</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,12 +174,12 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (173)</span>
+    <span class="chip" data-filter-kind="done">Shipped (174)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (3)</span>
-<span class="chip" data-filter-kind="other">Notes (2)</span>
+<span class="chip" data-filter-kind="other">Notes (3)</span>
   </div>
   <span id="result-count"></span>
 </div>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">254</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">256</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,12 +199,12 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">173</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">174</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">3</span></div>
-<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">2</span></div>
+<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">3</span></div>
     </div>
   </nav>
   <main class="main">
@@ -1396,8 +1396,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">173</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">174</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ clubhouse housekeeping: finished tag for completed tournaments + get_clubhouse_competitions archived-flag parity fix (2026-09-13) — pr #1022, migration 293 
+
+prompted by a &quot;let&#x27;s do some house cleaning&quot; request: world cup 2026 fixtures had all finished with no visual change anywhere in the clubhouse ui, and the user separately asked how a `status=&#x27;completed&#x27;` flag would even work for a *recurring* competition like ucl, where forza reuses the same `forza_id` every season.
+
+- **investigated the recurring-tournament question first, before building anything**: confirmed via `docs/deployment/adding_a_new_tournament.md` and live db inspection that ucl (`forza_id 1593`) genuinely reuses one `tournaments` row across seasons with no season/edition column anywhere in the schema — this is the same gap already tracked below as &quot;🟡 p2 — forza tournament ids are reused every season.&quot; **conclusion: automating `tournaments.status` transitions (active→completed once all fixtures finish) is unsafe** — a recurring tournament&#x27;s season-end fixtures legitimately all go `finished`, which would falsely flip status to `completed` with no signal to flip back once the next season&#x27;s fixtures sync into the same row. `status` stays a manual, one-off field — safe for non-recurring tournaments (world cup) but not something to auto-derive until the season-boundary gap itself has a real fix.
+- **executed the two already-approved wc backfills**: `tournaments.ends_at = &#x27;2026-07-20&#x27;` and `status = &#x27;completed&#x27;` for `forza_id = &#x27;429&#x27;` (backed up first as `backups/wc429_tournament_row_*.json` — `supabase db dump --linked` failed with docker down, used the documented select-and-save fallback instead).
+- **fixed a real rpc bug found along the way**: `get_clubhouse_competitions`&#x27;s football branch was missing `l.archived` (migration 251 added it to the f1/tennis branches but explicitly skipped football), so the existing `{item.archived &amp;&amp; &lt;archivedbadge /&gt;}` frontend logic could never fire for football compe" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Clubhouse housekeeping: FINISHED tag for completed tournaments + get_clubhouse_competitions archived-flag parity fix</h3>
+        <p class="card-summary">Prompted by a "let's do some house cleaning" request: World Cup 2026 fixtures had all finished with no visual change anywhere in the Clubhouse UI, and the user…</p>
+        <div class="card-foot"><span class="foot-date">2026-09-13</span><span class="foot-refs">PR #1022, migration 293</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Clubhouse housekeeping: FINISHED tag for completed tournaments + get_clubhouse_competitions archived-flag parity fix</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Prompted by a "let's do some house cleaning" request: World Cup 2026 fixtures had all finished with no visual change anywhere in the Clubhouse UI, and the user…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1022, migration 293</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-09-13</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Prompted by a "let's do some house cleaning" request: World Cup 2026 fixtures had all finished with no visual change anywhere in the Clubhouse UI, and the user separately asked how a <code>status='completed'</code> flag would even work for a *recurring* competition like UCL, where Forza reuses the same <code>forza_id</code> every season.</p>
+<ul>
+<li><strong>Investigated the recurring-tournament question first, before building anything</strong>: confirmed via <code>docs/deployment/ADDING_A_NEW_TOURNAMENT.md</code> and live DB inspection that UCL (<code>forza_id 1593</code>) genuinely reuses one <code>tournaments</code> row across seasons with no season/edition column anywhere in the schema — this is the same gap already tracked below as "🟡 P2 — Forza tournament IDs are reused every season." <strong>Conclusion: automating <code>tournaments.status</code> transitions (active→completed once all fixtures finish) is unsafe</strong> — a recurring tournament's season-end fixtures legitimately all go <code>finished</code>, which would falsely flip status to <code>completed</code> with no signal to flip back once the next season's fixtures sync into the same row. <code>status</code> stays a manual, one-off field — safe for non-recurring tournaments (World Cup) but not something to auto-derive until the season-boundary gap itself has a real fix.</li>
+<li><strong>Executed the two already-approved WC backfills</strong>: <code>tournaments.ends_at = '2026-07-20'</code> and <code>status = 'completed'</code> for <code>forza_id = '429'</code> (backed up first as <code>backups/wc429_tournament_row_*.json</code> — <code>supabase db dump --linked</code> failed with Docker down, used the documented SELECT-and-save fallback instead).</li>
+<li><strong>Fixed a real RPC bug found along the way</strong>: <code>get_clubhouse_competitions</code>'s football branch was missing <code>l.archived</code> (migration 251 added it to the f1/tennis branches but explicitly skipped football), so the existing <code>{item.archived &amp;&amp; &lt;ArchivedBadge /&gt;}</code> frontend logic could never fire for football competitions. Migration 293 (fresh per-item approval) re-issues the function fixing that parity gap and adds a new <code>finished</code> boolean (<code>tournaments.status = 'completed'</code>, joined via <code>leagues.tournament_id = tournaments.forza_id</code>) — football-only for now, since f1/tennis have no equivalent tournament-status concept wired up.</li>
+<li><strong>Frontend</strong>: new <code>FinishedBadge</code> (<code>src/components/league/LeagueBadges.jsx</code>) rendered in <code>ClubhouseScreen.jsx</code>'s <code>AllCompetitions</code> card grid alongside the (now-working) <code>ArchivedBadge</code>.</li>
+<li><strong>Verified</strong>: direct SQL against the RPC's join logic (not the RPC itself — the CLI has no real <code>auth.uid()</code> session, so it always returns <code>NOT_MEMBER</code>) confirmed <code>"Munaial '26"</code> (WC) → <code>finished: true</code> while <code>"Champignon '26/'27"</code> (UCL) → <code>finished: false</code> in the same Clubhouse. <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean, no Rolldown TDZ crash).</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ squad pitch polish: club crests + fill-button consolidation to market only (2026-09-12) — pr #1018 
 
 user feedback on the mobile pitch view (concept a): add club crests to player tokens, remove the confusing duplicate fill controls, and drop the field/list toggle now that the pitch is the only view.
@@ -13959,7 +13989,7 @@ ORDER BY ge.published_at DESC</code></pre>
     </section>
 
     <section class="item-group" id="group-other" data-group="other">
-      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">2</span></h2>
+      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">3</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 p3 — fallback conceded-penalty is silently always 0 due to a field-name mismatch — open, no pr yet (2026-09-06, found during scoring v3 phase 1) 
 
@@ -14004,6 +14034,37 @@ ORDER BY ge.published_at DESC</code></pre>
 <p><strong>The open problem</strong>: this was done by hand, tournament-by-tournament, and nothing prevents the same collision from recurring — for UCL next season, and for any other tournament that reuses its forza_id year over year (continental/knockout competitions are the likely repeat offenders; single-season domestic leagues like a given EPL season may or may not follow the same pattern — not yet confirmed either way). There is no season-aware cleanup step in <a href="docs/deployment/ADDING_A_NEW_TOURNAMENT.md" target="_blank" rel="noopener">docs/deployment/ADDING_A_NEW_TOURNAMENT.md</a>'s onboarding cookbook, and no code path detects "this forza_id's fixtures just changed season out from under us."</p>
 <p><strong>Suggested direction (not scoped/estimated yet)</strong>: either (a) detect a season rollover automatically — e.g. <code>sync-fixtures</code> compares the API's <code>current_season</code>/season-start date against the DB's last-known value for that <code>forza_id</code> and, on mismatch, purges/archives the prior season's fixtures+players+deadlines before upserting the new batch, or (b) make season part of the schema's identity for recurring tournaments (e.g. a <code>season</code> column feeding into <code>matchday_id</code> instead of relying on <code>tournament_id</code> alone) so old and new season data can coexist without collision instead of requiring deletion. Either approach needs to happen without ever touching a different tournament's rows (this session's <code>429</code>-must-stay-untouched constraint should generalize: any season-rollover logic must be scoped tightly to the one <code>forza_id</code> being rolled over).</p>
 <p><strong>Priority</strong>: P2 — not urgent (this season's UCL data is now correct and playable), but will recur automatically next season unless addressed, and would then block onboarding for whichever tournament hits it, the same way this session's prep work was blocked until manually fixed.</p>
+<p><strong>Cross-reference (2026-09-13, PR #1022)</strong>: this same gap is exactly why <code>tournaments.status</code> auto-completion was explicitly *not* built when adding a Clubhouse "finished" indicator — see the completed-work entry above. A recurring tournament's season-end fixtures all legitimately go <code>finished</code>, which would falsely trigger <code>status='completed'</code> with no signal to flip back once the next season's fixtures land in the same row. <code>status</code> remains a manual, one-off field until this P2 item has a real fix; any future work on this item should also revisit whether <code>status</code> can then be safely automated.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 p2 — `award-season-trophies` cron will never see a completed world cup once turned on (2026-09-13, open, no pr yet) 
+
+**context**: found while marking the wc 2026 tournament `status=&#x27;completed&#x27;` this session (see the completed-work entry above). `award-season-trophies`&#x27;s football branch filters on `status=&#x27;active&#x27; and ends_at &lt; now()` — a tournament that&#x27;s already flipped to `status=&#x27;completed&#x27;` (like wc now) permanently falls outside that filter. the cron itself is currently `active=false` (frozen, per prior session notes), so this hasn&#x27;t caused a missed award yet — but the moment it&#x27;s turned on, it will never award wc&#x27;s season-champion trophies, because wc no longer matches its own filter.
+
+**suggested direction (not scoped/estimated yet)**: update the football branch&#x27;s filter to `status in (&#x27;active&#x27;, &#x27;completed&#x27;)` (or equivalent), so a manually-completed tournament still gets picked up for one-time trophy awarding. needs a guard against re-awarding on every run once a tournament&#x27;s trophies are already granted (check whatever existing idempotency the cron uses for `active` tournaments, e.g. a `trophy_ledger` existence check, still applies here).
+
+**priority**: p2 — not urgent while the cron stays frozen, but must be fixed before `award-season-trophies` is turned back on, or wc 2026 (and any other tournament marked `completed` by hand) will silently never get its trophies awarded.
+
+---
+
+" style="--tab-color:#5b7285" tabindex="0" data-stamp="NOTE">
+        <div class="card-top"><span class="badge-mini k-other">NOTE</span></div>
+        <h3 class="card-title">P2</h3>
+        <p class="card-summary">Context : found while marking the WC 2026 tournament status='completed' this session (see the completed-work entry above). award-season-trophies 's football branch…</p>
+        <div class="card-foot"><span class="foot-refs"><code>award-season-trophies</code> cron will never see a completed World Cup once turned on (2026-09-13, open, no PR yet)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-other">NOTE</span></div>
+      <h2 class="drawer-title">P2</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Context : found while marking the WC 2026 tournament status='completed' this session (see the completed-work entry above). award-season-trophies 's football branch…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>NOTE · <code>award-season-trophies</code> cron will never see a completed World Cup once turned on (2026-09-13, open, no PR yet)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Context</strong>: found while marking the WC 2026 tournament <code>status='completed'</code> this session (see the completed-work entry above). <code>award-season-trophies</code>'s football branch filters on <code>status='active' AND ends_at &lt; now()</code> — a tournament that's already flipped to <code>status='completed'</code> (like WC now) permanently falls outside that filter. The cron itself is currently <code>active=false</code> (frozen, per prior session notes), so this hasn't caused a missed award yet — but the moment it's turned on, it will never award WC's season-champion trophies, because WC no longer matches its own filter.</p>
+<p><strong>Suggested direction (not scoped/estimated yet)</strong>: update the football branch's filter to <code>status IN ('active', 'completed')</code> (or equivalent), so a manually-completed tournament still gets picked up for one-time trophy awarding. Needs a guard against re-awarding on every run once a tournament's trophies are already granted (check whatever existing idempotency the cron uses for <code>active</code> tournaments, e.g. a <code>trophy_ledger</code> existence check, still applies here).</p>
+<p><strong>Priority</strong>: P2 — not urgent while the cron stays frozen, but must be fixed before <code>award-season-trophies</code> is turned back on, or WC 2026 (and any other tournament marked <code>completed</code> by hand) will silently never get its trophies awarded.</p>
 <hr></dd></div>
       </dl></template>
       </article></div>

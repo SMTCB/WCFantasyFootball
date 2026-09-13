@@ -12,6 +12,16 @@
 
 ---
 
+## ✅ Clubhouse housekeeping: FINISHED tag for completed tournaments + get_clubhouse_competitions archived-flag parity fix (2026-09-13) — PR #1022, migration 293
+
+Prompted by a "let's do some house cleaning" request: World Cup 2026 fixtures had all finished with no visual change anywhere in the Clubhouse UI, and the user separately asked how a `status='completed'` flag would even work for a *recurring* competition like UCL, where Forza reuses the same `forza_id` every season.
+
+- **Investigated the recurring-tournament question first, before building anything**: confirmed via `docs/deployment/ADDING_A_NEW_TOURNAMENT.md` and live DB inspection that UCL (`forza_id 1593`) genuinely reuses one `tournaments` row across seasons with no season/edition column anywhere in the schema — this is the same gap already tracked below as "🟡 P2 — Forza tournament IDs are reused every season." **Conclusion: automating `tournaments.status` transitions (active→completed once all fixtures finish) is unsafe** — a recurring tournament's season-end fixtures legitimately all go `finished`, which would falsely flip status to `completed` with no signal to flip back once the next season's fixtures sync into the same row. `status` stays a manual, one-off field — safe for non-recurring tournaments (World Cup) but not something to auto-derive until the season-boundary gap itself has a real fix.
+- **Executed the two already-approved WC backfills**: `tournaments.ends_at = '2026-07-20'` and `status = 'completed'` for `forza_id = '429'` (backed up first as `backups/wc429_tournament_row_*.json` — `supabase db dump --linked` failed with Docker down, used the documented SELECT-and-save fallback instead).
+- **Fixed a real RPC bug found along the way**: `get_clubhouse_competitions`'s football branch was missing `l.archived` (migration 251 added it to the f1/tennis branches but explicitly skipped football), so the existing `{item.archived && <ArchivedBadge />}` frontend logic could never fire for football competitions. Migration 293 (fresh per-item approval) re-issues the function fixing that parity gap and adds a new `finished` boolean (`tournaments.status = 'completed'`, joined via `leagues.tournament_id = tournaments.forza_id`) — football-only for now, since f1/tennis have no equivalent tournament-status concept wired up.
+- **Frontend**: new `FinishedBadge` (`src/components/league/LeagueBadges.jsx`) rendered in `ClubhouseScreen.jsx`'s `AllCompetitions` card grid alongside the (now-working) `ArchivedBadge`.
+- **Verified**: direct SQL against the RPC's join logic (not the RPC itself — the CLI has no real `auth.uid()` session, so it always returns `NOT_MEMBER`) confirmed `"Munaial '26"` (WC) → `finished: true` while `"Champignon '26/'27"` (UCL) → `finished: false` in the same Clubhouse. `npm run lint` (0 errors), `npm run build` (clean, no Rolldown TDZ crash).
+
 ## ✅ Squad pitch polish: club crests + Fill-button consolidation to Market only (2026-09-12) — PR #1018
 
 User feedback on the mobile pitch view (Concept A): add club crests to player tokens, remove the confusing duplicate Fill controls, and drop the Field/List toggle now that the pitch is the only view.
@@ -513,6 +523,18 @@ Phase 1 of the Sept 2026 scoring revision (audited against `Forza Fantasy Points
 **Suggested direction (not scoped/estimated yet)**: either (a) detect a season rollover automatically — e.g. `sync-fixtures` compares the API's `current_season`/season-start date against the DB's last-known value for that `forza_id` and, on mismatch, purges/archives the prior season's fixtures+players+deadlines before upserting the new batch, or (b) make season part of the schema's identity for recurring tournaments (e.g. a `season` column feeding into `matchday_id` instead of relying on `tournament_id` alone) so old and new season data can coexist without collision instead of requiring deletion. Either approach needs to happen without ever touching a different tournament's rows (this session's `429`-must-stay-untouched constraint should generalize: any season-rollover logic must be scoped tightly to the one `forza_id` being rolled over).
 
 **Priority**: P2 — not urgent (this season's UCL data is now correct and playable), but will recur automatically next season unless addressed, and would then block onboarding for whichever tournament hits it, the same way this session's prep work was blocked until manually fixed.
+
+**Cross-reference (2026-09-13, PR #1022)**: this same gap is exactly why `tournaments.status` auto-completion was explicitly *not* built when adding a Clubhouse "finished" indicator — see the completed-work entry above. A recurring tournament's season-end fixtures all legitimately go `finished`, which would falsely trigger `status='completed'` with no signal to flip back once the next season's fixtures land in the same row. `status` remains a manual, one-off field until this P2 item has a real fix; any future work on this item should also revisit whether `status` can then be safely automated.
+
+---
+
+## 🟡 P2 — `award-season-trophies` cron will never see a completed World Cup once turned on (2026-09-13, open, no PR yet)
+
+**Context**: found while marking the WC 2026 tournament `status='completed'` this session (see the completed-work entry above). `award-season-trophies`'s football branch filters on `status='active' AND ends_at < now()` — a tournament that's already flipped to `status='completed'` (like WC now) permanently falls outside that filter. The cron itself is currently `active=false` (frozen, per prior session notes), so this hasn't caused a missed award yet — but the moment it's turned on, it will never award WC's season-champion trophies, because WC no longer matches its own filter.
+
+**Suggested direction (not scoped/estimated yet)**: update the football branch's filter to `status IN ('active', 'completed')` (or equivalent), so a manually-completed tournament still gets picked up for one-time trophy awarding. Needs a guard against re-awarding on every run once a tournament's trophies are already granted (check whatever existing idempotency the cron uses for `active` tournaments, e.g. a `trophy_ledger` existence check, still applies here).
+
+**Priority**: P2 — not urgent while the cron stays frozen, but must be fixed before `award-season-trophies` is turned back on, or WC 2026 (and any other tournament marked `completed` by hand) will silently never get its trophies awarded.
 
 ---
 
