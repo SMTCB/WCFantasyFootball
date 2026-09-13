@@ -38,6 +38,24 @@ export function ArchivedBadge() {
   );
 }
 
+export function FinishedBadge() {
+  return (
+    <span
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        padding: '2px 7px',
+        border: '1px solid color-mix(in srgb, var(--gold) 40%, transparent)',
+        background: 'color-mix(in srgb, var(--gold) 12%, transparent)',
+        color: 'var(--gold)',
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
+        textTransform: 'uppercase', whiteSpace: 'nowrap',
+      }}
+    >
+      Finished
+    </span>
+  );
+}
+
 export function RankBadge({ rank, size = 'sm' }) {
   const medal = rank === 1 ? 'var(--gold)' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : 'var(--mute)';
   const big = size === 'lg';

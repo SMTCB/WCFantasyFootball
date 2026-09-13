@@ -9,7 +9,7 @@ import { useClubhouseFrontpage } from '../hooks/useClubhouseFrontpage';
 import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 import TabStrip from '../components/shared/TabStrip';
-import { ArchivedBadge } from '../components/league/LeagueBadges';
+import { ArchivedBadge, FinishedBadge } from '../components/league/LeagueBadges';
 import NotificationBell from '../components/NotificationBell';
 import ClubhouseInviteModal from '../components/ClubhouseInviteModal';
 
@@ -215,6 +215,7 @@ function AllCompetitions({ competitions, onEnter }) {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                     <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.25, minWidth: 0, overflowWrap: 'anywhere' }}>{item.name}</div>
+                    {item.finished && <FinishedBadge />}
                     {item.archived && <ArchivedBadge />}
                   </div>
                   <span style={{
