@@ -59,7 +59,7 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
         </div>
 
         {/* Player tokens */}
-        {tokens.map(({ player, no, x, y, isCaptain }) => {
+        {tokens.map(({ player, x, y, isCaptain }) => {
           const surname   = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? player.name?.toUpperCase() ?? '?';
           const pts       = Math.round(player.points ?? 0);
           const sc        = STATUS_COLOR[player.intel?.status] ?? 'var(--positive)';
@@ -68,6 +68,7 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
             : player.position === 'DEF' ? 'var(--pos-def)'
             : player.position === 'MID' ? 'var(--pos-mid)'
             : 'var(--pos-fwd)';
+          const ringColor = isSelected ? 'var(--cyan)' : posColor;
 
           return (
             <div
@@ -82,14 +83,15 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
             >
               <div style={{ position: 'relative' }}>
                 <div style={{
-                  width: 34, height: 34, borderRadius: 9,
+                  width: 34, height: 34, borderRadius: '50%',
                   background: 'var(--card)',
-                  border: `2px solid ${isSelected ? 'var(--cyan)' : posColor}`,
+                  border: `2.5px solid ${ringColor}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Archivo Black, sans-serif', fontSize: 13,
-                  color: isSelected ? 'var(--cyan)' : posColor,
+                  padding: 2,
                 }}>
-                  {no}
+                  {ClubCrest
+                    ? <ClubCrest name={player.club} size={26} />
+                    : <div style={{ width: 26, height: 26, borderRadius: '50%', border: '1.5px dashed var(--rule)' }} />}
                 </div>
                 <div style={{
                   position: 'absolute', bottom: -2, right: -2,
@@ -105,15 +107,6 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '1.5px solid var(--ink)',
                   }}>C</div>
-                )}
-                {ClubCrest && (
-                  <div style={{
-                    position: 'absolute', top: -5, right: -5,
-                    borderRadius: '50%', background: 'var(--ink)',
-                    border: '1.5px solid var(--ink)', lineHeight: 0,
-                  }}>
-                    <ClubCrest name={player.club} size={13} />
-                  </div>
                 )}
               </div>
               <div style={{
