@@ -12,7 +12,7 @@
 
 ---
 
-## 🟡 Wishlist Draft modes — Manual / Auto / Disabled per matchday (2026-10-03) — PR #1024, migration 294 (⚠️ NOT YET APPLIED / DEPLOYED)
+## ✅ Wishlist Draft modes — Manual / Auto / Disabled per matchday (2026-10-03) — PR #1024, migration 294
 
 User feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. Commissioners now choose the draft mode for each league, as a default, and can override it for each round:
 
@@ -42,11 +42,16 @@ User feedback: the between-matchday wishlist draft ran the moment the previous r
 
 **Verified**: `npm run lint` (0 errors), `npm run build` (clean), unit tests 23/23 (new `tests/unit/wishlistDraft.test.js` covers the STALE → re-run → skip path, the claim race, release-on-error and the retry cap).
 
-**Still to do, each needing explicit approval**:
-- Back up and apply migration 294.
-- Deploy `run-wishlist-draft`, `auto-open-transfer-window` and `run-draft-lottery`, plus every other function bundling `_shared`, and refresh `.function-checksums.json`.
-- Run a live check of the commissioner card. The UI needs migration 294 (the old RPC has no `phase` field).
-- The backend and frontend must go live together, ideally before UCL round 2 ends.
+**Shipped 2026-10-03**:
+- Backed up and applied migration 294, then verified it: the new columns, audit table, 5 RPCs and the `*/15` cron are all in place. Backups: a schema dump plus data from the wishlist tables and the cron jobs.
+- Redeployed all 26 `_shared`-bundling Edge Functions, with 0 failures, and refreshed `.function-checksums.json`.
+- Merged PR #1024. The Vercel production deploy is Ready, and the new strings are present in the live bundle.
+
+**Pending**:
+- A logged-in check of the commissioner card on a real draft league.
+- Notion card (the connector is unauthenticated).
+
+**Docs** (PR #1025): `TRANSFER_WINDOW_SYSTEM.md` (wishlist draft gate), `DRAFT_SYSTEM_DESIGN.md` §13 + decision 12, `TRANSFERS_AND_LINEUP_GUIDE.md` and `DRAFT_MECHANICS_FOR_DUMMIES.md`.
 
 ## ✅ Clubhouse housekeeping: FINISHED tag for completed tournaments + get_clubhouse_competitions archived-flag parity fix (2026-09-13) — PR #1022, migration 293
 
