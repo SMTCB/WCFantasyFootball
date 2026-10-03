@@ -146,6 +146,21 @@ The transfer **window timing** (open/closed schedule, live-game locks) works **i
 | Before lottery runs | Submit a wish list of up to 30 players (no constraints during submission). Conflicts resolved by lottery. |
 | After allocation | Normal transfer market. Buy = no-repeat rule applies. Sell = player returns to unallocated pool, anyone can buy. |
 
+### Draft mode: between rounds (Wishlist Draft)
+
+Between rounds, draft leagues hold a short wishlist draft before the market reopens. Your commissioner picks one of three modes for each round:
+
+| Mode | What you see | When the market opens |
+|---|---|---|
+| **Manual** | "Commissioner runs the draft — latest <time>" | After the commissioner runs it, or automatically 8h before the first kickoff at the latest |
+| **Auto** | "Draft runs <time>" (always at least 6h notice) | Right after the draft runs |
+| **Disabled** | "No draft — free market" | Immediately, first come first served |
+
+- **Before the draft runs**, you can rank targets and drops on the Wishlist screen and still make player-for-player trades. Buying and selling wait for the draft.
+- **While it runs** (a minute or so), everything is frozen.
+- **If a player you wanted was bought first**, for example while the round was disabled, the draft simply skips them and moves on to your next target. The league report lists every skipped target and why.
+- **Unfinished wishlists carry over** to the next round. Players someone else now owns stay greyed out as "Owned by X".
+
 ---
 
 ## Tournament vs Season Format Differences
@@ -285,4 +300,4 @@ The POINTS LOG sub-screen is your **personal scoring tracker**, not a full match
 
 ---
 
-Last Updated: **2026-06-10** (Draft leagues — incl. Draft+H2H — now have unlimited transfers; per-round limit applies to Classic only; see [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md). Previously: 2026-06-08, migration 157 — sells are now free (only BUYs count); penalty transfers beyond free limit; exempt operations table added; `TRANSFER_LIMIT_REACHED` retired)
+Last Updated: **2026-10-03** (Draft mode: between-round Wishlist Draft — manual/auto/disabled)

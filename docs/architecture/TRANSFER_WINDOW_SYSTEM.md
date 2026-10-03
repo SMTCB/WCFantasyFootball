@@ -43,6 +43,34 @@ Both use the same `get_transfer_window_status(p_league_id)` function which reads
 
 ---
 
+## Draft Leagues — Wishlist Draft Gate (migration 294)
+
+In draft leagues (`format='noduplicate'` OR `league_mode='draft'`), the between-round market does **not** open the moment the previous round finishes. Instead, `auto-open-transfer-window` calls `create_wishlist_draft_round`. That creates a `wishlist_draft_windows` row for the next round, using the league's default mode (`league_config.wishlist_draft_mode`; the legacy `wishlist_draft_enabled='false'` maps to `disabled`), and no `transfer_windows` row is created yet.
+
+| Round mode / phase | `get_transfer_window_status` | Buys / sells | Trades | Wishlist edits |
+|---|---|---|---|---|
+| `manual` / `auto`, draft pending | `window_type='wishlist'`, closed (`draft_mode`, `scheduled_at`, `hard_deadline_at` included) | ❌ | ✅ | ✅ |
+| draft running (claimed, `status='running'`) | `window_type='wishlist_running'` | ❌ | ❌ | ❌ |
+| draft committed (`status='done'`) | normal `standard` window, open until first kickoff − 1h | ✅ | ✅ | next round's list |
+| `disabled` | normal `standard` window, opened immediately by `_wishlist_open_market` | ✅ | ✅ | ✅ (kept for later) |
+| round finished, row not created yet | `status='upcoming'`, `window_type='wishlist_pending'` | ❌ | — | — |
+
+**When the draft runs:**
+- `manual`: the commissioner presses "Run now" (`run-wishlist-draft` invoked with `{league_id}`).
+- `auto`: at `scheduled_at` (≥ 6h notice; suggested first kickoff − 48h).
+- Both: always by `hard_deadline_at` = first kickoff − 8h.
+
+The scheduler is the `run-wishlist-draft` cron (`*/15`). Claiming is atomic (`status scheduled→running` + `run_token`), so the commissioner and the cron can never both run it.
+
+**Mode changes mid-window** (`set_wishlist_draft_mode`, audited in `wishlist_draft_mode_changes`, members notified):
+- → `disabled`: the market opens now.
+- → `manual`/`auto`: the market closes again. Refused with `TOO_LATE` after kickoff − 8h and with `DRAFT_RUNNING` during a run.
+- Transfers made while the round was disabled stand. `commit_wishlist_draft` locks squads and returns `STALE` if anything moved since the allocator's snapshot. The Edge Function then re-allocates (up to 3 tries), skipping players who are now owned ("player taken → next").
+
+Dry-run leagues are not gated. Classic leagues are unaffected.
+
+---
+
 ## Transfer Limits
 
 ```
@@ -236,4 +264,4 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 ---
 
-Last Updated: **2026-06-10** (Draft leagues — incl. Draft+H2H — now have unlimited transfers via `process-transfer` passing `p_matchday_id=null` when `league_mode='draft'`; Classic leagues unaffected; see [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md). Previously: 2026-06-08, migration 157 — sells are free; penalty transfers replace hard block; enforcement flow updated; transfer_penalty config key added)
+Last Updated: **2026-10-03** (Draft leagues: wishlist draft gate — manual/auto/disabled per round, migration 294)

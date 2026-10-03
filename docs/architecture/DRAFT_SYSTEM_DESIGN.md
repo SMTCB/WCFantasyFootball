@@ -1,6 +1,6 @@
 # Draft System Design
 **Status**: Current — aligned with migrations 141–143, 156 and sessions 55–present  
-**Last Updated**: 2026-06-09  
+**Last Updated**: 2026-10-03  
 **Scope**: Per-league only. All mechanics described here are strictly isolated to a single fantasy league.
 
 ---
@@ -363,6 +363,65 @@ BULLETS:
 | 9 | Keep window opens when knockout_draft_deadline is set | Separate "open window" admin action | Single control point; admin setting the deadline implies the window is open |
 | 10 | All draft league formats stored as `noduplicate` | Separate `cup` format value | Simpler data model; `cup_phase` tracks the competition stage instead |
 | 11 | Snake draft replaces flat lottery | Flat lottery (rank ignored) | Rank in wish list now gives genuine priority — higher-ranked picks are tried in earlier rounds; only remaining luck is the initial random order assignment |
+| 12 | Wishlist draft mode per round: manual / auto / disabled (migration 294) | Draft runs immediately when the round ends | Managers had no time to pick targets. Commissioner control + kickoff − 8h safety net; atomic commit with STALE re-run so players bought while disabled are skipped ("taken → next"); owned carry-over targets kept greyed (§13) |
+
+---
+
+## 13. Recurring Wishlist Draft — Modes per Round (migration 294, PR #1024)
+
+After the season/group draft, draft leagues re-run the snake allocation between rounds from each manager's wishlist (`target_ids`) and drop list (`drop_ids`) in `wishlist_draft_submissions`.
+
+### Modes
+
+| Mode | Runs | Notes |
+|---|---|---|
+| `manual` | Commissioner "Run now" → `run-wishlist-draft` `{league_id}` (403 if not commissioner, 409 on other errors, `{running_elsewhere:true}` if already claimed) | Safety net: runs at `hard_deadline_at` (first kickoff − 8h) |
+| `auto` | At `scheduled_at` | ≥ 6h notice (`TOO_SOON`), ≤ kickoff − 8h (`AFTER_DEADLINE`); suggested kickoff − 48h (`_wishlist_suggested_draft_at`) |
+| `disabled` | Never | Market opens immediately; wishlists kept |
+
+There is a league default (`league_config.wishlist_draft_mode`, scope `default`) and a per-round override (scope `round` on the pending `wishlist_draft_windows` row). Both are set via `set_wishlist_draft_mode(p_league_id, p_scope, p_mode, p_scheduled_at)`.
+
+### Lifecycle
+
+1. **Round N finishes.** `auto-open-transfer-window` calls `create_wishlist_draft_round`, which:
+   - creates the round N+1 window, copying the default mode;
+   - sets `round_ended_at`, `first_kickoff_at` and `hard_deadline_at`, plus `scheduled_at` for auto;
+   - carries unfinished wishlists over (`carried_over_from`).
+2. **`sync_wishlist_draft_kickoffs`** keeps kickoff and deadline in sync if fixtures move.
+3. **`run-wishlist-draft` cron (`*/15`)** claims due windows: auto at `scheduled_at`, manual run requests, and everything still pending at `hard_deadline_at`. It records `run_trigger` = `manual` | `auto` | `deadline`.
+4. **`_shared/wishlistDraft.ts`** snapshots squads, runs `runSnakeDraft` (with the formation-floor reserve) and calls `commit_wishlist_draft`. That call is atomic: it locks the league's squads and verifies each `expected_players`.
+   - `STALE`: re-snapshot and re-run, up to 3 attempts, then release the claim back to `scheduled` for the next tick.
+   - `NOT_RUNNING`: the claim was lost, so give up.
+5. **On success:**
+   - the market opens until first kickoff − 1h;
+   - a gazette entry is written with `pick_log`, `skip_log` and `trigger`;
+   - members get a `wishlist_draft_done` notification.
+
+### Skip log reasons
+
+| Reason | Meaning |
+|---|---|
+| `taken` | Already gone. `detail` is `picked_this_round` (with `picked_by`) or `owned` (with `owner_user_id`, e.g. bought while the round was disabled) |
+| `position_full` / `budget` / `club_cap` / `formation_reserve` | Allocation constraint |
+| `not_reached` | The manager's slots filled before the pointer got there |
+| `unknown_player` | Not in the player pool (hidden in the UI) |
+
+### Carry-over
+
+Carry-over keeps targets that are now owned by someone else (decision "option a"). The wishlist screen shows them greyed out as "Owned by X". They are skipped as `taken` if they are still owned when the draft runs.
+
+### UI
+
+- **CommissionerPanel → WISHLIST DRAFT** (desktop and mobile):
+  - this round's mode;
+  - the auto time picker;
+  - Run now, with a two-step confirm;
+  - the submissions tracker;
+  - the league default.
+
+  It imports the leaf module `src/lib/wishlistDraft.js`, not `useWishlistDraft`, to respect the Rolldown TDZ rule.
+- **Banners:** `WishlistDraftBanner` and `TransferWindowBanner` show "Draft runs <time>" or "Commissioner runs the draft — latest <time>".
+- **Gazette:** `GazetteDraftReport` lists skipped targets and the trigger.
 
 ---
 
@@ -375,4 +434,4 @@ BULLETS:
 
 ---
 
-Last Updated: **2026-06-09** (snake draft replaces flat lottery — rank now gives genuine pick priority; decision log row 11 added)
+Last Updated: **2026-10-03** (§13 recurring Wishlist Draft modes — manual/auto/disabled, migration 294)
