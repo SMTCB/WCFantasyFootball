@@ -12,7 +12,7 @@
 
 ---
 
-## 🟡 Wishlist Draft modes — Manual / Auto / Disabled per matchday (2026-10-03) — PR __PR__, migration 294 (⚠️ NOT YET APPLIED / DEPLOYED)
+## 🟡 Wishlist Draft modes — Manual / Auto / Disabled per matchday (2026-10-03) — PR #1024, migration 294 (⚠️ NOT YET APPLIED / DEPLOYED)
 
 User feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. Commissioners now choose the draft mode for each league, as a default, and can override it for each round:
 
