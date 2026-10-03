@@ -1279,6 +1279,7 @@ export default function SquadScreen() {
         transfersRemaining={transferWindow.transfersRemaining}
         isUnlimited={transferWindow.isUnlimited}
         windowType={transferWindow.windowType}
+        draftMode={transferWindow.draftMode}
         isDraftLeague={cfg.format === 'noduplicate'}
       />
 

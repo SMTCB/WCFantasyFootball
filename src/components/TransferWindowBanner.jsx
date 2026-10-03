@@ -25,7 +25,7 @@ function useCountdown(target) {
   return label;
 }
 
-export default function TransferWindowBanner({ status, closesAt, opensAt, transfersRemaining, isUnlimited, windowType, isDraftLeague, noPenaltyReason }) {
+export default function TransferWindowBanner({ status, closesAt, opensAt, transfersRemaining, isUnlimited, windowType, draftMode, isDraftLeague, noPenaltyReason }) {
   const closesIn = useCountdown(status === 'open'     ? closesAt : null);
   const opensIn  = useCountdown(status === 'upcoming' ? opensAt  : null);
 
@@ -60,6 +60,27 @@ export default function TransferWindowBanner({ status, closesAt, opensAt, transf
           {transferLabel}
           {closesIn && <span>· Closes in {closesIn}</span>}
         </span>
+      </div>
+    );
+  }
+
+  // Draft leagues: market closed for the between-rounds wishlist draft.
+  if (status === 'upcoming' && windowType?.startsWith('wishlist')) {
+    let msg;
+    if (windowType === 'wishlist_running') {
+      msg = 'Wishlist draft running — market opens in a moment';
+    } else if (windowType === 'wishlist_pending') {
+      msg = 'Wishlist draft being scheduled for the next round';
+    } else if (draftMode === 'manual') {
+      msg = <>Commissioner runs the wishlist draft{opensIn && <span>· latest in {opensIn}</span>} · trades allowed</>;
+    } else {
+      msg = <>Wishlist draft{opensIn && <span>· runs in {opensIn}</span>} · trades allowed</>;
+    }
+    return (
+      <div className="fk-sysbar warning">
+        <span className="fk-sysbar-dot" />
+        <span className="fk-sysbar-tag">Market Locked</span>
+        <span className="fk-sysbar-msg">{msg}</span>
       </div>
     );
   }

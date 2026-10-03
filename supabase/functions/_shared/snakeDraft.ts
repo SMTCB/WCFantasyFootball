@@ -35,6 +35,20 @@ export interface SnakeDraftOptions {
   minFloor?: Record<string, number>;        // optional — reserve slots so no position
                                              // finishes below this count (wishlist draft
                                              // only; other callers omit it, no behavior change)
+  skipLog?: DraftSkipLogEntry[];            // optional — appended with every skipped wishlist
+                                             // entry and why (wishlist draft report only)
+}
+
+export type DraftSkipReason =
+  'taken' | 'unknown_player' | 'position_full' | 'budget' | 'club_cap' | 'formation_reserve';
+
+export interface DraftSkipLogEntry {
+  round: number;
+  order_index: number;
+  user_id: string;
+  player_id: string;
+  wishlist_rank: number;
+  reason: DraftSkipReason;
 }
 
 export interface DraftPickLogEntry {
@@ -75,7 +89,7 @@ export function shuffleOrder(ids: string[]): string[] {
 // clubCounts/budgetUsed) and `taken`. Returns how many pick attempts hit an
 // already-taken player (informational, used for gazette copy).
 export function runSnakeDraft(opts: SnakeDraftOptions): SnakeDraftResult {
-  const { order, submissionMap, userState, playerMap, taken, squadSize, posCaps, budget, clubCap, minFloor } = opts;
+  const { order, submissionMap, userState, playerMap, taken, squadSize, posCaps, budget, clubCap, minFloor, skipLog } = opts;
 
   const pointers: Record<string, number> = {};
   for (const uid of order) pointers[uid] = 0;
@@ -94,15 +108,18 @@ export function runSnakeDraft(opts: SnakeDraftOptions): SnakeDraftResult {
         const pid = list[pointers[uid]];
         const wishlistRank = pointers[uid] + 1;
         pointers[uid]++;
-        if (taken.has(pid)) { contestedPlayers++; continue; }
+        const skip = (reason: DraftSkipReason) => {
+          skipLog?.push({ round: round + 1, order_index: orderIdx + 1, user_id: uid, player_id: pid, wishlist_rank: wishlistRank, reason });
+        };
+        if (taken.has(pid)) { contestedPlayers++; skip('taken'); continue; }
         const player = playerMap[pid];
-        if (!player) continue;
+        if (!player) { skip('unknown_player'); continue; }
         const pos = normalisePosition(player.position);
         const teamId = player.forza_team_id;
         const clubCnt = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
-        if ((u.posCounts[pos] ?? 0) >= (posCaps[pos] ?? 0)) continue;
-        if (u.budgetUsed + player.price > budget) continue;
-        if (teamId && clubCap < 99 && clubCnt >= clubCap) continue;
+        if ((u.posCounts[pos] ?? 0) >= (posCaps[pos] ?? 0)) { skip('position_full'); continue; }
+        if (u.budgetUsed + player.price > budget) { skip('budget'); continue; }
+        if (teamId && clubCap < 99 && clubCnt >= clubCap) { skip('club_cap'); continue; }
         // Reserve remaining slots for positions still below the required
         // floor (e.g. don't let a manager's last free slot go to a 3rd FWD
         // while they're still short their only MID) — skip this pick if it
@@ -114,7 +131,7 @@ export function runSnakeDraft(opts: SnakeDraftOptions): SnakeDraftResult {
           );
           const fillsDeficit = (u.posCounts[pos] ?? 0) < (minFloor[pos] ?? 0);
           const remainingSlots = squadSize - u.allocated.length;
-          if (deficit > 0 && remainingSlots <= deficit && !fillsDeficit) continue;
+          if (deficit > 0 && remainingSlots <= deficit && !fillsDeficit) { skip('formation_reserve'); continue; }
         }
         u.allocated.push(pid);
         u.posCounts[pos] = (u.posCounts[pos] ?? 0) + 1;

@@ -13,6 +13,7 @@ import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import WishlistInfoModal from '../components/WishlistInfoModal';
+import { fmtDraftTime } from '../lib/wishlistDraft';
 import {
   DndContext,
   closestCenter,
@@ -40,13 +41,13 @@ const POS_CONFIG = {
 const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
 // ─── Sortable target row ─────────────────────────────────────────────────────
-function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
+function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove, ownedBy }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity:   isDragging ? 0.4 : 1,
+    opacity:   isDragging ? 0.4 : ownedBy ? 0.5 : 1,
     zIndex:    isDragging ? 1 : 'auto',
   };
 
@@ -81,7 +82,16 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
       >
         {p.position}
       </span>
-      <span className="text-[var(--paper)] text-[11px] font-bold flex-1 truncate">{p.name}</span>
+      <span className="flex-1 min-w-0">
+        <span className={`block text-[var(--paper)] text-[11px] font-bold truncate ${ownedBy ? 'line-through' : ''}`}>{p.name}</span>
+        {ownedBy && (
+          // Carried over from an earlier round (or bought in a free-market
+          // round) — the draft will skip them; kept so the manager decides.
+          <span className="block text-[9px] font-black uppercase tracking-widest truncate" style={{ color: 'var(--mute)' }}>
+            Owned by {ownedBy} — will be skipped
+          </span>
+        )}
+      </span>
       <span className="text-[var(--mute)] text-[10px] shrink-0">€{p.price}M</span>
       <div className="flex flex-col shrink-0">
         <button onClick={() => onMoveUp(idx)} disabled={idx === 0}
@@ -105,6 +115,7 @@ export default function WishlistDraftScreen() {
     shouldShow, roundNumber, squadPlayers, playerPool,
     existingTargets, existingDrops, maxTargets, maxDrops,
     submissionStatus, submit, loading, saving, error,
+    draft, otherOwners,
   } = useWishlistDraft(leagueId);
 
   const [targets,     setTargets]     = useState([]);   // ordered player objects
@@ -127,7 +138,25 @@ export default function WishlistDraftScreen() {
   const { statsMap } = usePlayerStats(cfg.tournamentId);
   const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
 
-  const isLocked = submissionStatus === 'processed';
+  // 'running': allocation in progress — submit_wishlist_draft rejects edits
+  // (DRAFT_RUNNING), so stop auto-saving until the screen reloads.
+  const isRunning = draft.phase === 'running';
+  const isLocked  = submissionStatus === 'processed' || isRunning;
+
+  const deadlineCopy = (() => {
+    switch (draft.phase) {
+      case 'pre_draft':
+        return draft.mode === 'auto'
+          ? (draft.scheduledAt ? `Draft runs ${fmtDraftTime(draft.scheduledAt)} — edit until then` : 'Draft time being set by the commissioner')
+          : `Commissioner runs the draft${draft.hardDeadlineAt ? ` — latest ${fmtDraftTime(draft.hardDeadlineAt)}` : ''}`;
+      case 'free_market':
+        return 'No draft this round — free market. Your list is kept for when the draft returns';
+      case 'running':
+        return 'Draft running now';
+      default:
+        return 'Preparing for the next round — the draft time is announced when the round opens';
+    }
+  })();
 
   // Hydrate local editing state from the manager's existing submission once
   // the hook finishes loading — playerPool carries full player objects for
@@ -155,13 +184,13 @@ export default function WishlistDraftScreen() {
   const filteredPool = useMemo(() => {
     return playerPool.filter(p => {
       if (listedIds.has(p.id) || ownedIds.has(p.id)) return false;
-      if (ownershipMap[p.id] > 0) return false;
+      if (ownershipMap[p.id] > 0 || otherOwners[p.id]) return false;
       if (filterPos !== 'ALL' && p.position !== filterPos) return false;
       if (filterClubs.size > 0 && !filterClubs.has(p.club)) return false;
       if (search && !matchesPlayerSearch(p.name, search)) return false;
       return true;
     });
-  }, [playerPool, listedIds, ownedIds, ownershipMap, filterPos, filterClubs, search]);
+  }, [playerPool, listedIds, ownedIds, ownershipMap, otherOwners, filterPos, filterClubs, search]);
 
   const addTarget = (player) => {
     if (targets.length >= maxTargets) return;
@@ -240,7 +269,7 @@ export default function WishlistDraftScreen() {
       setSaveError(null);
       dirtyRef.current = false;
     } else {
-      setSaveError('Auto-save failed — check your connection.');
+      setSaveError(result.code ? result.error : 'Auto-save failed — check your connection.');
     }
     return result;
   };
@@ -321,11 +350,11 @@ export default function WishlistDraftScreen() {
         <div className="text-[40px]">✅</div>
         <div className="text-center">
           <div className="text-[var(--paper)] font-black text-xl uppercase tracking-widest mb-2">
-            Wishlist Submitted
+            {isRunning ? 'Draft Running' : 'Wishlist Submitted'}
           </div>
           <div className="text-[var(--mute)] text-[12px]">
             {targets.length} target{targets.length !== 1 ? 's' : ''} ranked, {dropIds.size} player{dropIds.size !== 1 ? 's' : ''} released for round {roundNumber}.
-            Resolves automatically before the transfer window opens.
+            {isRunning ? ' Results land in a moment.' : ` ${deadlineCopy}.`}
           </div>
         </div>
         <div className="w-full max-w-sm space-y-2">
@@ -343,7 +372,7 @@ export default function WishlistDraftScreen() {
         </div>
         {isLocked ? (
           <div className="text-[var(--mute)] text-[11px] uppercase tracking-widest">
-            Round resolved — list locked
+            {isRunning ? 'Draft running — list locked' : 'Round resolved — list locked'}
           </div>
         ) : (
           <button onClick={() => setFinalized(false)} className="text-[var(--mute)] text-[11px] uppercase tracking-widest underline">
@@ -405,9 +434,15 @@ export default function WishlistDraftScreen() {
           </button>
         </div>
         <div className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest text-center pb-2.5">
-          No fixed deadline — resolves automatically before the market opens
+          {deadlineCopy}
         </div>
       </div>
+
+      {draft.carriedOverFrom && (
+        <div className="px-4 py-2 text-[10px] font-bold border-b border-[var(--rule)]" style={{ background: 'var(--accent-bg)', color: 'var(--cyan)' }}>
+          Carried over from round {draft.carriedOverFrom} — players you already own were removed. Review it and save to make it yours.
+        </div>
+      )}
 
       <div className="flex flex-col flex-1 overflow-hidden">
 
@@ -484,6 +519,7 @@ export default function WishlistDraftScreen() {
                       onMoveUp={moveUp}
                       onMoveDown={moveDown}
                       onRemove={removeTarget}
+                      ownedBy={otherOwners[p.id]?.join(', ')}
                     />
                   ))}
                 </div>

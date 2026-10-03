@@ -12,6 +12,42 @@
 
 ---
 
+## 🟡 Wishlist Draft modes — Manual / Auto / Disabled per matchday (2026-10-03) — PR __PR__, migration 294 (⚠️ NOT YET APPLIED / DEPLOYED)
+
+User feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. Commissioners now choose the draft mode for each league, as a default, and can override it for each round:
+
+- **Manual**: the commissioner runs the draft from the admin panel ("Run now", with a two-step confirm). **Safety net**: it always runs automatically at first kickoff − 8h if nobody pressed the button.
+- **Auto**: the draft runs at a time the commissioner chooses. The minimum notice is 6h, the suggested time is kickoff − 48h, and the latest allowed time is kickoff − 8h. The league banner shows "Draft runs <time>".
+- **Disabled**: no draft that round. The market opens immediately, first come first served. Wishlists are kept.
+
+**Flip-flop flow** (`set_wishlist_draft_mode`):
+- Every change is audited in `wishlist_draft_mode_changes` and notifies members.
+- Disabling opens the market immediately.
+- Re-enabling closes it again. This is refused within kickoff − 8h (`TOO_LATE`) or while a run is in progress (`DRAFT_RUNNING`).
+- Transfers made while the draft was disabled stand. The UI warns the commissioner how many there were.
+
+**"Player taken → next one"**: `commit_wishlist_draft` locks the league's squads and returns `STALE` if anything moved since the allocator's snapshot. The Edge Function then re-runs the allocation (up to 3 attempts, then releases the claim to the next cron tick).
+- Targets that are already owned are skipped with reason `taken` / `owned` (owner recorded).
+- The gazette report now lists every skipped target with its reason, and shows how the draft was triggered (commissioner / scheduled time / 8h safety net).
+- Unfinished wishlists carry over to the next round. Targets now owned by someone else stay in the list, greyed "Owned by X" (option a).
+
+**Pieces**:
+- **Migration 294**: new `wishlist_draft_windows` columns; `wishlist_draft_submissions.carried_over_from`; the audit table; RPCs `set_wishlist_draft_mode`, `request_wishlist_draft_run`, `create_wishlist_draft_round`, `commit_wishlist_draft` and `sync_wishlist_draft_kickoffs`; phase-aware `get_wishlist_draft_status` / `get_transfer_window_status` / `submit_wishlist_draft` / `accept_trade_proposal`; the `run-wishlist-draft` cron changes from hourly to `*/15`.
+- **Edge Functions**: `_shared/wishlistDraft.ts` (claim + run + retry), `_shared/snakeDraft.ts` (skip log), `run-wishlist-draft` (scheduler + commissioner "run now"), `auto-open-transfer-window` (creates the next round's window instead of drafting inline).
+- **Frontend**:
+  - CommissionerPanel WISHLIST DRAFT card, desktop and mobile: this-round mode, auto time picker, run now, submission tracker, league default. It uses the leaf module `src/lib/wishlistDraft.js` (Rolldown TDZ safe, no `useAuth` import).
+  - Phase-aware `WishlistDraftBanner` / `TransferWindowBanner` / Market locked message.
+  - Greyed owned targets in `WishlistDraftScreen`.
+  - Skipped-targets list in `GazetteDraftReport`.
+
+**Verified**: `npm run lint` (0 errors), `npm run build` (clean), unit tests 23/23 (new `tests/unit/wishlistDraft.test.js` covers the STALE → re-run → skip path, the claim race, release-on-error and the retry cap).
+
+**Still to do, each needing explicit approval**:
+- Back up and apply migration 294.
+- Deploy `run-wishlist-draft`, `auto-open-transfer-window` and `run-draft-lottery`, plus every other function bundling `_shared`, and refresh `.function-checksums.json`.
+- Run a live check of the commissioner card. The UI needs migration 294 (the old RPC has no `phase` field).
+- The backend and frontend must go live together, ideally before UCL round 2 ends.
+
 ## ✅ Clubhouse housekeeping: FINISHED tag for completed tournaments + get_clubhouse_competitions archived-flag parity fix (2026-09-13) — PR #1022, migration 293
 
 Prompted by a "let's do some house cleaning" request: World Cup 2026 fixtures had all finished with no visual change anywhere in the Clubhouse UI, and the user separately asked how a `status='completed'` flag would even work for a *recurring* competition like UCL, where Forza reuses the same `forza_id` every season.

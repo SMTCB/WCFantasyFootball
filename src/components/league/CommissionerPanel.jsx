@@ -1,6 +1,9 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
+import {
+  MODE_LABEL, MODE_HELP, MIN_NOTICE_MS, fmtDraftTime, toLocalInput, suggestDraftTime, draftErrorMessage,
+} from '../../lib/wishlistDraft';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
 // the production bundle. All four exports are inlined below instead.
@@ -1431,6 +1434,310 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Wishlist Draft (migration 294) — per-round mode (manual | auto | disabled),
+// league default, "Run draft now" and the per-round submission tracker.
+// Talks to supabase directly: useWishlistDraft pulls in useAuth, which
+// LeagueScreen imports directly (Rolldown TDZ rule).
+// ─────────────────────────────────────────────────────────────────────────────
+const isWishlistDraftLeague = (league) =>
+  !league || league.format === 'noduplicate' || league.league_mode === 'draft';
+
+function useWishlistDraftAdmin(leagueId, league) {
+  const [status, setStatus]       = useState(null); // get_wishlist_draft_status, null = n/a
+  const [members, setMembers]     = useState([]);
+  const [submitted, setSubmitted] = useState(null); // Set<user_id>, null = not loaded
+  const enabled = !!leagueId && !!league && isWishlistDraftLeague(league);
+
+  const reload = useCallback(async () => {
+    if (!enabled) return;
+    const { data: st } = await supabase.rpc('get_wishlist_draft_status', { p_league_id: leagueId });
+    if (!st?.available || !st?.round_number) {
+      setStatus(null);
+      setSubmitted(null);
+      return;
+    }
+    setStatus(st);
+    const [{ data: mem }, { data: subs }] = await Promise.all([
+      supabase
+        .from('league_members')
+        .select('user_id, users(username)')
+        .eq('league_id', leagueId)
+        .order('total_points', { ascending: false }),
+      supabase
+        .from('wishlist_draft_submissions')
+        .select('user_id')
+        .eq('league_id', leagueId)
+        .eq('round_number', st.round_number),
+    ]);
+    setMembers(mem || []);
+    setSubmitted(new Set((subs || []).map(s => s.user_id)));
+  }, [leagueId, enabled]);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  return { wishlistStatus: status, wishlistMembers: members, wishlistSubmitted: submitted, reloadWishlist: reload };
+}
+
+function wishlistCardStatus(st) {
+  if (!st) return { label: 'N/A', tone: 'var(--mute)' };
+  const r = `R${st.round_number}`;
+  switch (st.phase) {
+    case 'running':     return { label: `${r} · RUNNING`, tone: 'var(--gold)' };
+    case 'free_market': return { label: `${r} · DISABLED`, tone: 'var(--mute)' };
+    case 'pre_draft':
+      return st.mode === 'auto'
+        ? { label: `${r} · AUTO`, tone: 'var(--positive)' }
+        : { label: `${r} · MANUAL`, tone: 'var(--cyan)' };
+    default:            return { label: `${r} · NEXT ROUND`, tone: 'var(--mute)' };
+  }
+}
+
+const wlNote = (color = 'var(--mute)') => ({
+  padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)',
+  fontFamily: BODY, fontSize: 'var(--fs-micro)', color, lineHeight: 1.5,
+});
+const wlLabel = { fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' };
+
+function ModeSegment({ value, onPick, disabled }) {
+  return (
+    <div style={{ display: 'flex', gap: 4 }}>
+      {['manual', 'auto', 'disabled'].map(m => {
+        const active = value === m;
+        return (
+          <button
+            key={m}
+            type="button"
+            onClick={() => onPick(m)}
+            disabled={disabled}
+            aria-pressed={active}
+            style={{
+              ...ghostBtn, flex: 1, padding: '8px 6px',
+              fontSize: 'var(--fs-micro)', letterSpacing: '.16em',
+              background: active ? 'var(--paper)' : 'transparent',
+              color: active ? 'var(--ink)' : 'var(--mute)',
+              borderColor: active ? 'var(--paper)' : 'var(--rule)',
+              cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
+            }}
+          >{MODE_LABEL[m].toUpperCase()}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+function WishlistDraftControls({ leagueId, status, members, submitted, reload, commissioner }) {
+  const [busy, setBusy]             = useState(false);
+  const [picked, setPicked]         = useState(null); // mode chosen but not yet applied
+  const [autoAt, setAutoAt]         = useState('');
+  const [confirmRun, setConfirmRun] = useState(false);
+
+  if (!status) {
+    return (
+      <div style={wlNote()}>
+        No completed round yet — the wishlist draft starts after the first matchday.
+      </div>
+    );
+  }
+
+  const { phase, mode, default_mode: defaultMode, round_number: round } = status;
+  const hasPendingRound = phase === 'pre_draft' || phase === 'free_market';
+  const lock            = busy || commissioner.commLoading;
+  const shown           = picked ?? mode;
+  const reEnabling      = mode === 'disabled' && picked && picked !== 'disabled';
+
+  const say = (type, text) => commissioner.setCommMsg({ type, text });
+
+  const apply = async (scope, nextMode, scheduledAt = null) => {
+    setBusy(true);
+    commissioner.setCommMsg(null);
+    try {
+      const { data, error } = await supabase.rpc('set_wishlist_draft_mode', {
+        p_league_id: leagueId,
+        p_scope: scope,
+        p_mode: nextMode,
+        p_scheduled_at: scheduledAt,
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.ok) { say('err', draftErrorMessage(data)); return; }
+      setPicked(null);
+      if (data.changed === false) { say('ok', 'No change.'); return; }
+      if (scope === 'default') {
+        say('ok', `League default set to ${MODE_LABEL[nextMode]} — applies from the next round.`);
+      } else if (nextMode === 'auto') {
+        say('ok', `Round ${round}: draft runs ${fmtDraftTime(data.scheduled_at)}. Managers have been notified.`);
+      } else if (nextMode === 'manual') {
+        say('ok', `Round ${round}: you run the draft from here${status.hard_deadline_at ? ` — it runs automatically ${fmtDraftTime(status.hard_deadline_at)} if you don't` : ''}.`);
+      } else {
+        say('ok', `Round ${round}: draft disabled — the market is open, first come, first served.`);
+      }
+      await reload();
+    } catch (e) {
+      say('err', e.message || 'Could not change the draft setting');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const pickRoundMode = (m) => {
+    setConfirmRun(false);
+    if (m === mode && m !== 'auto') { setPicked(null); return; }
+    if (m === 'auto') {
+      setAutoAt(toLocalInput(status.scheduled_at ?? suggestDraftTime({
+        firstKickoffAt: status.first_kickoff_at, hardDeadlineAt: status.hard_deadline_at,
+      })));
+    }
+    setPicked(m);
+  };
+
+  const runNow = async () => {
+    setBusy(true);
+    setConfirmRun(false);
+    commissioner.setCommMsg(null);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('run-wishlist-draft', {
+        body: { league_id: leagueId },
+      });
+      let res = data;
+      if (fnErr) res = (await fnErr.context?.json?.().catch(() => null)) ?? { error: fnErr.message };
+      if (res?.ok) {
+        say('ok', res.running_elsewhere
+          ? `Round ${round} draft is already running — the market opens when it finishes.`
+          : `Round ${round} draft done — squads updated and the market is open.`);
+      } else {
+        say('err', draftErrorMessage(res));
+      }
+      await reload();
+    } catch (e) {
+      say('err', e.message || 'Could not run the draft');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const minLocal = toLocalInput(new Date(Date.now() + MIN_NOTICE_MS).toISOString());
+  const maxLocal = status.hard_deadline_at ? toLocalInput(status.hard_deadline_at) : undefined;
+  const submittedCount = submitted ? members.filter(m => submitted.has(m.user_id)).length : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* ── This round ─────────────────────────────────────────────── */}
+      <span style={wlLabel}>ROUND {round} · THIS ROUND</span>
+
+      {phase === 'running' && (
+        <div style={wlNote('var(--gold)')}>⏳ The draft is running — the market opens as soon as it finishes.</div>
+      )}
+
+      {phase === 'awaiting_round' && (
+        <div style={wlNote()}>
+          The last draft has run and round {round} isn&apos;t set up yet — it opens once the current round
+          finishes, as <strong style={{ color: 'var(--paper)' }}>{MODE_LABEL[defaultMode]}</strong>. Change the league default below to alter that.
+        </div>
+      )}
+
+      {hasPendingRound && (
+        <>
+          <ModeSegment value={shown} onPick={pickRoundMode} disabled={lock} />
+          <div style={wlNote()}>{MODE_HELP[shown]}</div>
+
+          {status.first_kickoff_at ? (
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--mute)', lineHeight: 1.7 }}>
+              KICKOFF · {fmtDraftTime(status.first_kickoff_at)}
+              {status.hard_deadline_at && <><br />SAFETY NET · {fmtDraftTime(status.hard_deadline_at)} (KICKOFF − 8H)</>}
+            </div>
+          ) : (
+            <div style={wlNote('var(--warn)')}>
+              No kickoff date for round {round} yet, so the 8h safety net isn&apos;t set. Run the draft yourself or schedule it.
+            </div>
+          )}
+
+          {reEnabling && status.transfers_in_window > 0 && (
+            <div style={wlNote('var(--warn)')}>
+              {status.transfers_in_window} transfer(s) were already made in the free market — they stand. Wishlist
+              targets that are now owned get skipped and the draft moves to each manager&apos;s next pick. The market
+              locks again until the draft runs (trades stay allowed).
+            </div>
+          )}
+          {picked === 'disabled' && (
+            <div style={wlNote('var(--warn)')}>
+              Disabling opens the market right away — first come, first served. Wishlists are kept.
+            </div>
+          )}
+
+          {shown === 'auto' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={wlLabel}>
+                DRAFT RUNS AT{status.scheduled_at && picked !== 'auto' ? ` · ${fmtDraftTime(status.scheduled_at)}` : ''}
+              </span>
+              {picked === 'auto' && (
+                <input
+                  type="datetime-local"
+                  value={autoAt}
+                  min={minLocal}
+                  max={maxLocal}
+                  onChange={e => setAutoAt(e.target.value)}
+                  style={inputStyle}
+                />
+              )}
+            </div>
+          )}
+
+          {picked ? (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                type="button"
+                disabled={lock || (picked === 'auto' && !autoAt)}
+                onClick={() => apply('round', picked, picked === 'auto' ? new Date(autoAt).toISOString() : null)}
+                style={{ ...btnBase, flex: 1, background: 'var(--paper)', color: 'var(--ink)', opacity: lock ? 0.5 : 1 }}
+              >
+                {picked === 'auto' ? (mode === 'auto' ? 'UPDATE TIME' : 'SET AUTO') : `CONFIRM ${MODE_LABEL[picked].toUpperCase()}`}
+              </button>
+              <button type="button" disabled={lock} onClick={() => setPicked(null)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CANCEL</button>
+            </div>
+          ) : mode === 'auto' && (
+            <button type="button" disabled={lock} onClick={() => pickRoundMode('auto')} style={{ ...ghostBtn, width: '100%' }}>CHANGE TIME</button>
+          )}
+        </>
+      )}
+
+      {/* ── Run now ─────────────────────────────────────────────────── */}
+      {phase === 'pre_draft' && !picked && (
+        status.run_requested_at ? (
+          <div style={wlNote('var(--gold)')}>Run requested — it will finish within a few minutes.</div>
+        ) : confirmRun ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={wlNote('var(--warn)')}>
+              Runs the draft now with the wishlists submitted so far
+              {submittedCount !== null && members.length > 0 ? ` (${submittedCount}/${members.length})` : ''}, then
+              opens the market. This can&apos;t be undone.
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button" disabled={lock} onClick={runNow} style={{ ...btnBase, flex: 1, background: 'var(--gold)', color: 'var(--ink)' }}>CONFIRM — RUN NOW ↯</button>
+              <button type="button" disabled={lock} onClick={() => setConfirmRun(false)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CANCEL</button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={lock}
+            onClick={() => setConfirmRun(true)}
+            style={{ ...btnBase, width: '100%', background: 'var(--gold)', color: 'var(--ink)', opacity: lock ? 0.5 : 1 }}
+          >{busy ? 'RUNNING…' : 'RUN DRAFT NOW ↯'}</button>
+        )
+      )}
+
+      {/* ── Submissions ─────────────────────────────────────────────── */}
+      {phase !== 'free_market' && members.length > 0 && submitted !== null && (
+        <DraftSubmissionTracker members={members} submitted={submitted} />
+      )}
+
+      {/* ── League default ──────────────────────────────────────────── */}
+      <span style={{ ...wlLabel, marginTop: 4 }}>LEAGUE DEFAULT · FROM NEXT ROUND</span>
+      <ModeSegment value={defaultMode} onPick={(m) => { if (m !== defaultMode) apply('default', m); }} disabled={lock} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp, draftMembers = [], draftSubmissions = null }) {
@@ -1446,44 +1753,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     archiveLeague, unarchiveLeague,
   } = commissioner;
 
-  // Wishlist Draft submission tracker — recurring, per-round (unlike the one-time
-  // season draft above). Resolves the currently-open round via get_wishlist_draft_status,
-  // then reads who has a submitted row for that round.
-  const [wishlistRound, setWishlistRound]             = useState(null); // null = no round currently open
-  const [wishlistSubmissions, setWishlistSubmissions] = useState(null); // null = not yet loaded
-  const [wishlistMembers, setWishlistMembers]         = useState([]);
-
-  useEffect(() => {
-    if (!leagueId || !league || league.format !== 'noduplicate') return;
-    let cancelled = false;
-    (async () => {
-      const { data: status } = await supabase.rpc('get_wishlist_draft_status', { p_league_id: leagueId });
-      if (cancelled) return;
-      if (!status?.available || !status?.round_number) {
-        setWishlistRound(null);
-        setWishlistSubmissions(null);
-        return;
-      }
-      setWishlistRound(status.round_number);
-      const [{ data: members }, { data: subs }] = await Promise.all([
-        supabase
-          .from('league_members')
-          .select('user_id, users(username)')
-          .eq('league_id', leagueId)
-          .order('total_points', { ascending: false }),
-        supabase
-          .from('wishlist_draft_submissions')
-          .select('user_id')
-          .eq('league_id', leagueId)
-          .eq('round_number', status.round_number),
-      ]);
-      if (cancelled) return;
-      setWishlistMembers(members || []);
-      setWishlistSubmissions(new Set((subs || []).map(s => s.user_id)));
-    })();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, league?.format]);
+  const { wishlistStatus, wishlistMembers, wishlistSubmitted, reloadWishlist } = useWishlistDraftAdmin(leagueId, league);
+  const wlCard = wishlistCardStatus(wishlistStatus);
 
   // Deadline-controlled = league belongs to a tournament with matchday_deadlines
   // (WC/cup leagues). Manual-controlled = EPL/season leagues with no tournamentId,
@@ -1733,30 +2004,25 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           </div>
           )}
 
-          {/* Wishlist Draft — draft mode only. Recurring per-round submission tracker,
-              separate from the one-time season DRAFT above. */}
-          {(!league || league.format === 'noduplicate') && (
+          {/* Wishlist Draft — draft leagues only. Recurring per-round draft (migration
+              294): mode for this round, league default, run now, submissions. */}
+          {isWishlistDraftLeague(league) && (
           <div data-tour="comm-wishlist-draft">
           <LifecycleOp
             title="WISHLIST DRAFT"
-            status={wishlistRound ? `ROUND ${wishlistRound} · OPEN` : 'CLOSED'}
-            statusTone={wishlistRound ? 'var(--positive)' : 'var(--mute)'}
-            sub="Recurring pick list — managers rank incoming targets and release candidates each round. No fixed deadline; resolves automatically before the market opens."
-            when="Check before each round's market opens to see who still needs to submit."
+            status={wlCard.label}
+            statusTone={wlCard.tone}
+            sub="Between rounds, managers rank the players they want and the draft hands them out fairly before the market opens. Manual: you run it (safety net 8h before kickoff). Auto: runs at the time you set. Disabled: free market."
+            when="Set the mode once the previous round ends. Auto needs at least 6h notice; unless disabled, the draft always runs by kickoff − 8h."
             primary={
-              wishlistRound ? (
-                wishlistMembers.length > 0 && wishlistSubmissions !== null ? (
-                  <DraftSubmissionTracker members={wishlistMembers} submitted={wishlistSubmissions} />
-                ) : (
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
-                    Loading submissions…
-                  </div>
-                )
-              ) : (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
-                  No wishlist round is currently open for submissions — either it already resolved for this round, or no completed round yet exists to base one on.
-                </div>
-              )
+              <WishlistDraftControls
+                leagueId={leagueId}
+                status={wishlistStatus}
+                members={wishlistMembers}
+                submitted={wishlistSubmitted}
+                reload={reloadWishlist}
+                commissioner={commissioner}
+              />
             }
           />
           </div>
@@ -2367,6 +2633,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const { relaxationEnabled: mobRelaxationEnabled, relaxationLocked: mobRelaxationLocked, relaxationTier: mobRelaxationTier, toggleRelaxation: mobToggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
   // Draft submission tracker — same dual-call pattern, shared by desktop LifecycleOps and the mobile DRAFT card.
   const { draftMembers, draftSubmissions } = useDraftSubmissionTracker(leagueId, league);
+  // Wishlist draft — mobile card only (desktop LifecycleOps loads its own copy).
+  const { wishlistStatus: mobWlStatus, wishlistMembers: mobWlMembers, wishlistSubmitted: mobWlSubmitted, reloadWishlist: mobReloadWishlist } = useWishlistDraftAdmin(isMobile ? leagueId : null, league);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -2553,6 +2821,26 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                 >RUN ALLOCATION ↯</button>
               </>
             )}
+          </MobLifecycleCard>
+          </div>
+          )}
+
+          {isWishlistDraftLeague(league) && (
+          <div data-tour="comm-wishlist-draft">
+          <MobLifecycleCard
+            title="WISHLIST DRAFT"
+            status={wishlistCardStatus(mobWlStatus).label}
+            tone={wishlistCardStatus(mobWlStatus).tone}
+            when="Set the mode once the previous round ends. Auto needs at least 6h notice; unless disabled, the draft always runs by kickoff − 8h."
+          >
+            <WishlistDraftControls
+              leagueId={leagueId}
+              status={mobWlStatus}
+              members={mobWlMembers}
+              submitted={mobWlSubmitted}
+              reload={mobReloadWishlist}
+              commissioner={commissioner}
+            />
           </MobLifecycleCard>
           </div>
           )}

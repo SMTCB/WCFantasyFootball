@@ -120,6 +120,11 @@ export default function MarketScreen() {
     && mySquad !== null
     && mySquad?.id !== null
     && mySquad?.initial_build_complete !== false;
+  const lockedMessage = transferWindow.windowType === 'wishlist_running'
+    ? 'The wishlist draft is running — the market opens in a moment.'
+    : transferWindow.windowType?.startsWith('wishlist')
+    ? 'Market locked for the wishlist draft — it opens right after the draft runs. Trades are still allowed.'
+    : 'Transfers are locked until after the match.';
 
   // Basket-simulated squad state — applies pending buys/sells on top of the actual squad.
   // Used for all validation (canBuy, position/club caps) and display (budget, squad count,
@@ -551,7 +556,7 @@ export default function MarketScreen() {
 
   const handleBuy = (player) => {
     if (confirming) return;
-    if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
+    if (isLocked) { showToast(lockedMessage, 'warning'); return; }
     if (!activeLeague) { showToast('Select a league first.', 'warning'); return; }
 
     // Already in basket
@@ -570,7 +575,7 @@ export default function MarketScreen() {
 
   const handleSell = (player) => {
     if (confirming) return;
-    if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
+    if (isLocked) { showToast(lockedMessage, 'warning'); return; }
 
     // Already in basket
     if (basket.some(b => b.player.id === player.id)) {

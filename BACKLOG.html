@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-09-13. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-10-03. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>256</strong><span>closed</span></div>
+      <div class="total-pill"><strong>257</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -179,7 +179,7 @@
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (3)</span>
-<span class="chip" data-filter-kind="other">Notes (3)</span>
+<span class="chip" data-filter-kind="other">Notes (4)</span>
   </div>
   <span id="result-count"></span>
 </div>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">256</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">257</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -204,7 +204,7 @@
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">3</span></div>
-<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">3</span></div>
+<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">4</span></div>
     </div>
   </nav>
   <main class="main">
@@ -13989,8 +13989,83 @@ ORDER BY ge.published_at DESC</code></pre>
     </section>
 
     <section class="item-group" id="group-other" data-group="other">
-      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">3</span></h2>
+      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">4</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 wishlist draft modes — manual / auto / disabled per matchday (2026-10-03) — pr __pr__, migration 294 (⚠️ not yet applied / deployed) 
+
+user feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. commissioners now choose the draft mode for each league, as a default, and can override it for each round:
+
+- **manual**: the commissioner runs the draft from the admin panel (&quot;run now&quot;, with a two-step confirm). **safety net**: it always runs automatically at first kickoff − 8h if nobody pressed the button.
+- **auto**: the draft runs at a time the commissioner chooses. the minimum notice is 6h, the suggested time is kickoff − 48h, and the latest allowed time is kickoff − 8h. the league banner shows &quot;draft runs &lt;time&gt;&quot;.
+- **disabled**: no draft that round. the market opens immediately, first come first served. wishlists are kept.
+
+**flip-flop flow** (`set_wishlist_draft_mode`):
+- every change is audited in `wishlist_draft_mode_changes` and notifies members.
+- disabling opens the market immediately.
+- re-enabling closes it again. this is refused within kickoff − 8h (`too_late`) or while a run is in progress (`draft_running`).
+- transfers made while the draft was disabled stand. the ui warns the commissioner how many there were.
+
+**&quot;player taken → next one&quot;**: `commit_wishlist_draft` locks the league&#x27;s squads and returns `stale` if anything moved since the allocator&#x27;s snapshot. the edge function then re-runs the allocation (up to 3 attempts, then releases the claim to the next cron tick).
+- targets that are already owned are skipped with reason `taken` / `owned` (owner recorded).
+- the gazette report now lists every skipped target with its reason, and shows how the draft was triggered (commissioner / scheduled time / 8h safety net).
+- unfinished wishlists carry over to the next round. targets now owned by someone else stay in the list, greyed &quot;owned by x&quot; (option a).
+
+**pieces**:
+- **m" style="--tab-color:#5b7285" tabindex="0" data-stamp="NOTE">
+        <div class="card-top"><span class="badge-mini k-other">NOTE</span></div>
+        <h3 class="card-title">Wishlist Draft modes — Manual / Auto / Disabled per matchday</h3>
+        <p class="card-summary">User feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. Commissioners now…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-03</span><span class="foot-refs">PR __PR__, migration 294 (⚠️ NOT YET APPLIED / DEPLOYED)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-other">NOTE</span></div>
+      <h2 class="drawer-title">Wishlist Draft modes — Manual / Auto / Disabled per matchday</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. Commissioners now…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>NOTE · PR __PR__, migration 294 (⚠️ NOT YET APPLIED / DEPLOYED)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-03</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>User feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. Commissioners now choose the draft mode for each league, as a default, and can override it for each round:</p>
+<ul>
+<li><strong>Manual</strong>: the commissioner runs the draft from the admin panel ("Run now", with a two-step confirm). <strong>Safety net</strong>: it always runs automatically at first kickoff − 8h if nobody pressed the button.</li>
+<li><strong>Auto</strong>: the draft runs at a time the commissioner chooses. The minimum notice is 6h, the suggested time is kickoff − 48h, and the latest allowed time is kickoff − 8h. The league banner shows "Draft runs &lt;time&gt;".</li>
+<li><strong>Disabled</strong>: no draft that round. The market opens immediately, first come first served. Wishlists are kept.</li>
+</ul>
+<p><strong>Flip-flop flow</strong> (<code>set_wishlist_draft_mode</code>):</p>
+<ul>
+<li>Every change is audited in <code>wishlist_draft_mode_changes</code> and notifies members.</li>
+<li>Disabling opens the market immediately.</li>
+<li>Re-enabling closes it again. This is refused within kickoff − 8h (<code>TOO_LATE</code>) or while a run is in progress (<code>DRAFT_RUNNING</code>).</li>
+<li>Transfers made while the draft was disabled stand. The UI warns the commissioner how many there were.</li>
+</ul>
+<p><strong>"Player taken → next one"</strong>: <code>commit_wishlist_draft</code> locks the league's squads and returns <code>STALE</code> if anything moved since the allocator's snapshot. The Edge Function then re-runs the allocation (up to 3 attempts, then releases the claim to the next cron tick).</p>
+<ul>
+<li>Targets that are already owned are skipped with reason <code>taken</code> / <code>owned</code> (owner recorded).</li>
+<li>The gazette report now lists every skipped target with its reason, and shows how the draft was triggered (commissioner / scheduled time / 8h safety net).</li>
+<li>Unfinished wishlists carry over to the next round. Targets now owned by someone else stay in the list, greyed "Owned by X" (option a).</li>
+</ul>
+<p><strong>Pieces</strong>:</p>
+<ul>
+<li><strong>Migration 294</strong>: new <code>wishlist_draft_windows</code> columns; <code>wishlist_draft_submissions.carried_over_from</code>; the audit table; RPCs <code>set_wishlist_draft_mode</code>, <code>request_wishlist_draft_run</code>, <code>create_wishlist_draft_round</code>, <code>commit_wishlist_draft</code> and <code>sync_wishlist_draft_kickoffs</code>; phase-aware <code>get_wishlist_draft_status</code> / <code>get_transfer_window_status</code> / <code>submit_wishlist_draft</code> / <code>accept_trade_proposal</code>; the <code>run-wishlist-draft</code> cron changes from hourly to <code>*/15</code>.</li>
+<li><strong>Edge Functions</strong>: <code>_shared/wishlistDraft.ts</code> (claim + run + retry), <code>_shared/snakeDraft.ts</code> (skip log), <code>run-wishlist-draft</code> (scheduler + commissioner "run now"), <code>auto-open-transfer-window</code> (creates the next round's window instead of drafting inline).</li>
+<li><strong>Frontend</strong>:</li>
+<ul>
+<li>CommissionerPanel WISHLIST DRAFT card, desktop and mobile: this-round mode, auto time picker, run now, submission tracker, league default. It uses the leaf module <code>src/lib/wishlistDraft.js</code> (Rolldown TDZ safe, no <code>useAuth</code> import).</li>
+<li>Phase-aware <code>WishlistDraftBanner</code> / <code>TransferWindowBanner</code> / Market locked message.</li>
+<li>Greyed owned targets in <code>WishlistDraftScreen</code>.</li>
+<li>Skipped-targets list in <code>GazetteDraftReport</code>.</li>
+</ul>
+</ul>
+<p><strong>Verified</strong>: <code>npm run lint</code> (0 errors), <code>npm run build</code> (clean), unit tests 23/23 (new <code>tests/unit/wishlistDraft.test.js</code> covers the STALE → re-run → skip path, the claim race, release-on-error and the retry cap).</p>
+<p><strong>Still to do, each needing explicit approval</strong>:</p>
+<ul>
+<li>Back up and apply migration 294.</li>
+<li>Deploy <code>run-wishlist-draft</code>, <code>auto-open-transfer-window</code> and <code>run-draft-lottery</code>, plus every other function bundling <code>_shared</code>, and refresh <code>.function-checksums.json</code>.</li>
+<li>Run a live check of the commissioner card. The UI needs migration 294 (the old RPC has no <code>phase</code> field).</li>
+<li>The backend and frontend must go live together, ideally before UCL round 2 ends.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 p3 — fallback conceded-penalty is silently always 0 due to a field-name mismatch — open, no pr yet (2026-09-06, found during scoring v3 phase 1) 
 
 `fallback_points` in [calculate-scores/index.js](supabase/functions/calculate-scores/index.js) names the goals-conceded-penalty field `conceded_per_goal`, but [scoring-logic.js](supabase/functions/calculate-scores/scoring-logic.js)&#x27;s `scoreplayer`/`buildbreakdown` reads `rules.conceded_2plus_penalty` — so any tournament falling back to `fallback_points` (no `scoring_rules` db row, e.g. a future epl/426 tournament) silently never applies the conceded-goals penalty for gk/def, with no error. pre-existing bug, not introduced by phase 1 — found while auditing the fallback constants for that pr, deliberately left out of its scope. fix: rename `conceded_per_goal` → `conceded_2plus_penalty` in `fallback_points` (both gk and def rows currently have it at value `0` anyway, so no scoring change today — but the field name needs to match before that value is ever made non-zero, or before a tournament without a db row goes live).

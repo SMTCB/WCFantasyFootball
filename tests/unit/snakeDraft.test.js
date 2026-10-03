@@ -248,3 +248,43 @@ describe('runSnakeDraft — contested players and taken set', () => {
     assert.equal(result.contestedPlayers, 0);
   });
 });
+
+describe('runSnakeDraft — skipLog', () => {
+  it('records why each skipped wishlist entry was passed over', () => {
+    const order = ['u1'];
+    const playerMap = {
+      owned: makePlayer('owned', 'MID', 5),
+      pricey: makePlayer('pricey', 'MID', 95),
+      gk1: makePlayer('gk1', 'GK', 5),
+      gk2: makePlayer('gk2', 'GK', 5),
+      gk3: makePlayer('gk3', 'GK', 5),
+      ok: makePlayer('ok', 'MID', 5),
+    };
+    const submissionMap = { u1: ['owned', 'ghost', 'pricey', 'gk1', 'gk2', 'gk3', 'ok'] };
+    const userState = freshUserState(order);
+    const taken = new Set(['owned']);
+    const skipLog = [];
+
+    runSnakeDraft({
+      order, submissionMap, userState, playerMap, taken,
+      squadSize: 4, posCaps: POS_CAPS, budget: 50, clubCap: 99, skipLog,
+    });
+
+    assert.deepEqual(userState.u1.allocated, ['gk1', 'gk2', 'ok']);
+    assert.deepEqual(
+      skipLog.map(s => [s.player_id, s.reason, s.wishlist_rank]),
+      [['owned', 'taken', 1], ['ghost', 'unknown_player', 2], ['pricey', 'budget', 3], ['gk3', 'position_full', 6]],
+    );
+  });
+
+  it('is optional — omitting it changes nothing', () => {
+    const order = ['u1'];
+    const playerMap = { a: makePlayer('a', 'MID', 5) };
+    const userState = freshUserState(order);
+    runSnakeDraft({
+      order, submissionMap: { u1: ['a'] }, userState, playerMap, taken: new Set(['a']),
+      squadSize: 2, posCaps: POS_CAPS, budget: 100, clubCap: 99,
+    });
+    assert.deepEqual(userState.u1.allocated, []);
+  });
+});
