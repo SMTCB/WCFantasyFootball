@@ -1,7 +1,7 @@
 {
   "_note": "SHA-256 of each supabase/functions/*/index.{ts,js} + combined _shared/*.ts at last deploy. Run 'npm run update:checksums' after every function deploy, then commit this file. CI fails if checksums drift.",
-  "_shared_hash": "cef488382c66e0a2e9622b86bbef1128c083b8e022c9859abf6572c338f65cc0",
-  "auto-open-transfer-window": "668c6411057255e223e7cf983c7f2a5e47104e6a6c8126145ea9a6c0f4413ea9",
+  "_shared_hash": "e622aae05e42ef8a20d440ee4b1bc845c9a982040e529b83b27c6b083d2020a2",
+  "auto-open-transfer-window": "e3e31945d0f1355578c18fb2a3d60711bc7c8c50d2e9b37e6363cc833af6bcb0",
   "award-season-trophies": "073769d4a77a5dee431f669561d933c5496446eedb34f0ed343772715026a931",
   "calculate-relaxation": "ccd36232def1a9482ec9ed3fafe0766b60923992f80b444993200b90b2d6f0b5",
   "calculate-scores": "1eba0b31f6fcf6d323f11e4da7f062fcf61b514189b7c0efa749bde76dea7067",
@@ -17,7 +17,7 @@
   "resolve-bets": "99890c296446af9c137b331fe993156d1619c46a23cabad0f9649397738b386c",
   "run-draft-lottery": "96eabc625cc915eecb4d7b9b02644aa0a1b0f6031e4f0c6bb61e578c5528f112",
   "run-reverse-standings-draft": "9f58b4dafa9d6594378d60196727e63d94af5b27aefd5f5e04b0378d444410d4",
-  "run-wishlist-draft": "f2da498bf7577ee9420d6bdc7102de492f7828f974f85b3e1d140701630d5511",
+  "run-wishlist-draft": "f1557a5f36ab716212c980a8462b89700cf17c9e53db317f50e0511ecd80aba4",
   "score-atp-finals": "ebb45ebe9b4165abb70426e000866e2e8029bfadbec4f6c38eed61b30d9377c3",
   "score-f1-race": "049be867802347c7925daddf5205f53bf95685b64cb0ed7f92e1ab19a878fb4e",
   "score-tennis-tournament": "4c5084e889565966ba4b5f67ffb0dc13b929976ad951437af2f6cac8f3a007f3",
