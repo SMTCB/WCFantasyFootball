@@ -4,7 +4,14 @@
 // Logic:
 //  1. Find all active leagues
 //  2. For each league, identify the latest completed matchday
-//  3. If next matchday's window doesn't exist, create it (48h, 5 transfers)
+//  3. If next matchday's window doesn't exist:
+//       • draft-mode leagues → create the round's wishlist draft
+//         (create_wishlist_draft_round, migration 294). The market stays
+//         closed until run-wishlist-draft runs the draft at the admin's
+//         chosen time / kickoff − 8h, and the commit opens it. A league whose
+//         wishlist is disabled for the round gets its market opened by the
+//         RPC straight away.
+//       • every other league → open the window now (closes kickoff − 1h).
 //
 // POST body: {} (no parameters needed)
 // Returns:   { ok: true, created: N }
@@ -13,7 +20,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
-import { processLeagueWishlistDraft } from '../_shared/wishlistDraft.ts';
 
 const FN      = 'auto-open-transfer-window';
 const supabase = createClient(
@@ -40,7 +46,7 @@ Deno.serve(async (req) => {
     // "this tournament is over").
     const { data: leagues } = await supabase
       .from('leagues')
-      .select('id, tournament_id')
+      .select('id, tournament_id, format, league_mode')
       .eq('is_dry_run', false)
       .eq('archived', false);
 
@@ -108,18 +114,6 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Resolve any opted-in wishlist draft submissions for this round before
-        // the market opens to everyone else — this is what removes the
-        // "whoever's online first" timezone bias for draft-mode leagues.
-        // No-ops fast for non-draft leagues and rounds with zero participants.
-        // A failure here must never block the window from opening for
-        // everyone else, so it's isolated in its own try/catch.
-        try {
-          await processLeagueWishlistDraft(supabase, league.id, nextRound);
-        } catch (err) {
-          await logError(FN, 'error', 'wishlist draft pre-step failed', { leagueId: league.id, round: nextRound, error: err.message });
-        }
-
         // ── 3. Create new transfer window for next round ────────────────────
         const now = new Date();
         const opens_at = now.toISOString();
@@ -140,6 +134,24 @@ Deno.serve(async (req) => {
           .order('kickoff_at', { ascending: true })
           .limit(1)
           .maybeSingle();
+
+        if (league.format === 'noduplicate' || league.league_mode === 'draft') {
+          const { data: res, error: rpcErr } = await supabase.rpc('create_wishlist_draft_round', {
+            p_league_id:      league.id,
+            p_round:          nextRound,
+            p_round_ended_at: opens_at,
+            p_first_kickoff:  nextKickoff?.kickoff_at ?? null,
+          });
+          if (rpcErr || !res?.ok) {
+            await logError(FN, 'error', 'create_wishlist_draft_round failed', {
+              leagueId: league.id, round: nextRound, error: rpcErr?.message ?? res?.error,
+            });
+          } else if (res.created) {
+            console.log(`Created wishlist draft round for league ${league.id}, round ${nextRound} (mode ${res.mode})`);
+            created++;
+          }
+          continue;
+        }
 
         let closes_at;
         if (nextKickoff?.kickoff_at) {

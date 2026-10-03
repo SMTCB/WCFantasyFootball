@@ -76,10 +76,10 @@ export default function WishlistInfoModal({ onClose }) {
       <Section title="WHY IT EXISTS">
         <InfoBox>
           <div>
-            Draft leagues don't have a transfer market where you buy and sell freely — every
-            player is either on a roster or unowned. The Wishlist Draft is how unowned players
-            change hands fairly: instead of a scramble the moment the market opens, everyone's
-            priorities are collected in advance and resolved in one automated pass.
+            In a draft league every player belongs to at most one manager. The Wishlist Draft
+            is how unowned players change hands fairly: instead of a scramble the moment the
+            market opens, everyone's priorities are collected in advance and resolved in one
+            automated pass. Whatever's left afterwards is first come, first served.
           </div>
         </InfoBox>
       </Section>
@@ -106,11 +106,35 @@ export default function WishlistInfoModal({ onClose }) {
 
       <Section title="WHEN IT RUNS">
         <InfoBox>
+          <div style={{ marginBottom: 8 }}>
+            Your commissioner picks one of three settings for each round:
+          </div>
+          <div style={{ marginBottom: 6 }}>
+            <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>AUTO</span> — the draft runs at a set
+            date and time, shown on the league banner (announced at least 6 hours ahead).
+          </div>
+          <div style={{ marginBottom: 6 }}>
+            <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>MANUAL</span> — the commissioner runs it.
+            If they don't, it runs automatically 8 hours before the round's first kickoff.
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>DISABLED</span> — no draft this round:
+            the market is open, first come, first served. Your list is kept for when the draft returns.
+          </div>
+          <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>
+            While a draft is pending the market is locked, but player-to-player trades still work.
+            The market opens right after the draft runs.
+          </div>
+        </InfoBox>
+      </Section>
+
+      <Section title="IF A TARGET IS GONE">
+        <InfoBox>
           <div>
-            There's no fixed deadline. The round resolves automatically shortly before that
-            round's transfer market opens, using whatever each manager has submitted at that
-            point — so it's worth keeping your list up to date, not filling it in once and
-            forgetting it.
+            If someone else owns one of your targets by the time the draft runs (for example,
+            they bought them during a free-market round), that player is simply skipped and
+            the draft moves on to your next target. Your list carries over to the next round
+            automatically — targets now owned by others show greyed out so you can replace them.
           </div>
         </InfoBox>
       </Section>
@@ -118,11 +142,11 @@ export default function WishlistInfoModal({ onClose }) {
       <Section title="EDITING YOUR LIST">
         <InfoBox>
           <div>
-            You can keep changing your targets and releases right up until the round resolves.
+            You can keep changing your targets and releases right up until the draft runs.
             Changes auto-save as you go — use <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>SAVE</span> to
             checkpoint your list, or <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>SUBMIT</span> once
             you're happy with it. Submitting doesn't lock anything — you can still return and
-            adjust your list until the round resolves.
+            adjust your list until the draft runs.
           </div>
         </InfoBox>
       </Section>

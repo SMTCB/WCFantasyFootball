@@ -431,6 +431,58 @@ function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded, t
   );
 }
 
+const TRIGGER_LABEL = {
+  manual:   'run by the commissioner',
+  auto:     'ran at the scheduled time',
+  deadline: 'ran automatically 8h before kickoff',
+};
+
+function skipReasonText(sk, members) {
+  switch (sk.reason) {
+    case 'taken':
+      return sk.detail === 'picked_this_round'
+        ? `taken earlier in this draft${sk.picked_by ? ` by ${members[sk.picked_by] ?? 'another manager'}` : ''}`
+        : `already owned${sk.owner_user_id ? ` by ${members[sk.owner_user_id] ?? 'another manager'}` : ''}`;
+    case 'position_full':     return 'position already full';
+    case 'budget':            return 'over budget';
+    case 'club_cap':          return 'club limit reached';
+    case 'formation_reserve': return 'kept a slot for formation';
+    case 'not_reached':       return 'not reached — squad filled first';
+    default:                  return sk.reason;
+  }
+}
+
+// Why wishlist targets didn't land — "taken → on to the next one" made visible.
+function SkippedTargetsList({ skipLog, members, players }) {
+  const [expanded, setExpanded] = useState(false);
+  const rows = [...skipLog].sort((a, b) =>
+    (members[a.user_id] ?? '').localeCompare(members[b.user_id] ?? '') || a.wishlist_rank - b.wishlist_rank);
+  const shown = expanded ? rows : rows.slice(0, 6);
+  return (
+    <div className="mx-3 mb-3">
+      <div className="text-[9px] font-black uppercase tracking-widest text-black/50 mb-1">Skipped targets</div>
+      <ul className="space-y-0.5">
+        {shown.map((sk, i) => (
+          <li key={`${sk.user_id}-${sk.player_id}-${i}`} className="flex flex-wrap gap-1.5 text-black/70">
+            <span className="font-bold text-[#1a1a1a]">{members[sk.user_id] ?? 'Manager'}</span>
+            <span className="opacity-50">#{sk.wishlist_rank}</span>
+            <span className="inline-flex items-center gap-1">
+              <ClubCrest name={players?.[sk.player_id]?.club} size={12} />
+              {players?.[sk.player_id]?.name ?? sk.player_id}
+            </span>
+            <span className="opacity-60">— {skipReasonText(sk, members)}</span>
+          </li>
+        ))}
+      </ul>
+      {rows.length > 6 && (
+        <button onClick={() => setExpanded(!expanded)} className="mt-1 text-[9px] font-black uppercase tracking-widest text-black/40">
+          {expanded ? 'Show less' : `Show all ${rows.length}`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function WishlistRoundReport({ entry, members, players }) {
   const bullets  = parseJson(entry.bullets, []);
   const fullData = parseJson(entry.full_data, null);
@@ -445,12 +497,15 @@ function WishlistRoundReport({ entry, members, players }) {
   const hasPickLog       = pickLog.length > 0;
   const hasSubmissions    = submissions.length > 0;
   const hasSafetyNet     = safetyNet.length > 0;
+  const skipLog          = (fullData?.skip_log ?? []).filter(sk => sk.reason !== 'unknown_player');
+  const triggerLabel     = TRIGGER_LABEL[fullData?.trigger] ?? null;
 
   return (
     <div className="border border-black/10 rounded overflow-hidden text-[10px]">
       <div className="flex items-center justify-between bg-black text-white px-3 py-1.5">
         <span className="font-black uppercase tracking-widest">
           Round {fullData?.round_number ?? '—'}
+          {triggerLabel && <span className="opacity-60 font-normal normal-case tracking-normal"> · {triggerLabel}</span>}
         </span>
         <span className="opacity-60">{date}</span>
       </div>
@@ -491,6 +546,10 @@ function WishlistRoundReport({ entry, members, players }) {
             setExpanded={setListsExpanded}
           />
         </div>
+      )}
+
+      {skipLog.length > 0 && (
+        <SkippedTargetsList skipLog={skipLog} members={members} players={players} />
       )}
 
       {hasSafetyNet && (

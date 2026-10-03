@@ -164,6 +164,24 @@ If Alice AND Charlie both list Salah at rank 1, whoever appears first in round 1
 
 ---
 
+## Between matchdays: the recurring Wishlist Draft (migration 294)
+
+After the season draft, draft leagues run the same snake allocation again between rounds, using each manager's wishlist and drop list. The commissioner picks **when** it runs. The league has a default mode, and each round can be overridden from Commissioner panel → WISHLIST DRAFT:
+
+| Mode | When it runs | Market before the run |
+|------|--------------|-----------------------|
+| **Manual** | When the commissioner presses "Run now". **Safety net**: it always runs at first kickoff − 8h if nobody did | Closed (trades still allowed) |
+| **Auto** | At the commissioner's chosen time: at least 6h notice, suggested kickoff − 48h, no later than kickoff − 8h. The league banner shows the time | Closed (trades still allowed) |
+| **Disabled** | Never. Free market, first come first served | Open |
+
+- While the draft is actually running, everything is frozen for a moment. Once it commits, the market opens until kickoff − 1h.
+- **Switching modes mid-window**: disabling opens the market immediately. Re-enabling closes it again, unless kickoff − 8h has already passed. Transfers made in between stand.
+- **"Player taken → next one"**: if a wishlisted player was bought in the meantime, the draft skips them like any other taken player. The commit is atomic: if a squad changed while the allocation was being computed, it is recomputed (up to 3 tries).
+- The gazette report lists every skipped target and the reason (taken / position full / budget / club cap / formation reserve / not reached).
+- Unfinished wishlists carry over to the next round. Targets someone else now owns stay in the list, greyed "Owned by X".
+
+---
+
 ## Glossary
 
 | Term | Meaning |
@@ -186,4 +204,4 @@ If Alice AND Charlie both list Salah at rank 1, whoever appears first in round 1
 
 ---
 
-Last Updated: **2026-06-09** (full rewrite — snake draft replaces flat lottery)
+Last Updated: **2026-10-03** (added the between-matchday Wishlist Draft modes, migration 294)

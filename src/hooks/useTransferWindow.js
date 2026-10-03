@@ -55,6 +55,10 @@ export function useTransferWindow(leagueId) {
         opensAt:            data.opens_at             ?? null,
         transfersRemaining: data.transfers_remaining  ?? null,
         windowType:         data.window_type          ?? null,
+        // Wishlist-draft lock (migration 294): 'manual' | 'auto' when the
+        // market is closed for a pending draft; opensAt is then the draft
+        // time (auto) or the kickoff − 8h fallback (manual).
+        draftMode:          data.draft_mode           ?? null,
       };
       _cache.set(leagueId, { data: next, fetchedAt: Date.now() });
       setState(next);
