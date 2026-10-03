@@ -1530,6 +1530,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
   const [picked, setPicked]         = useState(null); // mode chosen but not yet applied
   const [autoAt, setAutoAt]         = useState('');
   const [confirmRun, setConfirmRun] = useState(false);
+  const [confirmReopen, setConfirmReopen] = useState(false);
 
   if (!status) {
     return (
@@ -1573,6 +1574,23 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
       await reload();
     } catch (e) {
       say('err', e.message || 'Could not change the draft setting');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reopen = async () => {
+    setBusy(true);
+    setConfirmReopen(false);
+    commissioner.setCommMsg(null);
+    try {
+      const { data, error } = await supabase.rpc('reopen_wishlist_draft', { p_league_id: leagueId });
+      if (error) throw new Error(error.message);
+      if (!data?.ok) { say('err', draftErrorMessage(data)); return; }
+      say('ok', `Round ${data.round_number} wishlist draft reopened — managers can update their wishlists. Run it from here (latest ${fmtDraftTime(data.hard_deadline_at)}).`);
+      await reload();
+    } catch (e) {
+      say('err', e.message || 'Could not reopen the draft');
     } finally {
       setBusy(false);
     }
@@ -1632,6 +1650,25 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
           The last draft has run and round {round} isn&apos;t set up yet — it opens once the current round
           finishes, as <strong style={{ color: 'var(--paper)' }}>{MODE_LABEL[defaultMode]}</strong>. Change the league default below to alter that.
         </div>
+      )}
+
+      {phase === 'awaiting_round' && (
+        confirmReopen ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={wlNote('var(--warn)')}>
+              Holds another wishlist draft before this round&apos;s first kickoff. The market closes for everyone
+              (trades stay allowed) until you run the draft. Managers keep only the targets they don&apos;t own yet.
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button" disabled={lock} onClick={reopen} style={{ ...btnBase, flex: 1, background: 'var(--gold)', color: 'var(--ink)' }}>CONFIRM — REOPEN DRAFT</button>
+              <button type="button" disabled={lock} onClick={() => setConfirmReopen(false)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CANCEL</button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" disabled={lock} onClick={() => setConfirmReopen(true)} style={{ ...ghostBtn, width: '100%', opacity: lock ? 0.5 : 1 }}>
+            REOPEN WISHLIST DRAFT (EXTRA DRAFT THIS ROUND)
+          </button>
+        )
       )}
 
       {hasPendingRound && (

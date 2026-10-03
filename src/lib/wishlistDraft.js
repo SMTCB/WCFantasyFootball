@@ -54,6 +54,9 @@ export function draftErrorMessage(res) {
     case 'NO_PENDING_ROUND': return 'This round\'s draft has already run. Change the league default to affect the next round.';
     case 'DRAFT_RUNNING':    return 'The draft is running right now — try again in a minute.';
     case 'DISABLED':         return 'The draft is disabled for this round. Switch it to Manual or Auto first.';
+    case 'ALREADY_PENDING':  return 'A draft is already waiting to run for this round.';
+    case 'NOTHING_TO_REOPEN': return 'There is no finished draft to reopen right now.';
+    case 'NO_KICKOFF':       return 'This round has no kickoff date yet, so a draft cannot be reopened.';
     case 'FORBIDDEN':        return 'Only the commissioner can do this.';
     default:                 return res?.error ?? 'Something went wrong — try again.';
   }
