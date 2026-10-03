@@ -141,8 +141,87 @@ Always create a new file — never modify existing migrations.
 | 201 | `201_tennis_leaderboard_rpcs.sql` | Sprint T-3: `get_player_box_leaderboard` (Masters Drop Rule when ≥5 standard tournaments complete), `get_tennis_season_summary` (per-tournament breakdown per user), `get_tennis_tournament_list` (calendar + player counts + has_my_roster). |
 
 | 215 | `215_clubhouse_centric_model.sql` | Session 2026-06-28 (v2 branch only): add nullable `circle_id uuid REFERENCES circles(id)` to `leagues`, `paddocks`, `player_boxes`; backfill from junction tables (`circle_leagues`, `circle_paddocks`, `circle_player_boxes`); `CREATE OR REPLACE FUNCTION create_paddock` writes `circle_id` directly (was already in signature but not persisted); `CREATE OR REPLACE FUNCTION create_player_box` same fix; new 6-param `create_league` overload adds `p_circle_id uuid DEFAULT NULL` (inserts both `leagues.circle_id` and `circle_leagues` row for backwards compat). **⚠️ File committed, NOT yet applied to production DB** — apply from Supabase-linked PC. |
+| 216 | `216_wire_tennis_competitions.sql` | Wires tennis `player_boxes` into `get_clubhouse_competitions` (tennis branch was hard-coded `[]`). |
+| 217 | `217_circle_id_not_null.sql` | Enforces `circle_id NOT NULL` on `leagues`, `paddocks`, `player_boxes` — every competition belongs to a Clubhouse. |
+| 218 | `218_no_cash_out_constraint.sql` | LEGAL-1: positive schema constraint — Frontrow Coins (FRC) can never convert back to real money. |
+| 219 | `219_delete_user_data.sql` | DATA-2: GDPR right-to-erasure RPC (`delete_user_data`), callable by the user or an admin. |
+| 220 | `220_bet_types_expansion.sql` | Adds `category` to `bet_templates` + seeds 22 new bet types (renumbered from 193). |
+| 221 | `221_sync_cup_eliminations_v2.sql` | `sync_cup_eliminations` v2 — fixes false negatives from the 6h guard and shootout handling (renumbered from 195). |
+| 222 | `222_classic_transfers_per_round_6.sql` | Classic-mode free transfers per round 5→6 (renumbered from 196). |
+| 223 | `223_cron_failure_streaks.sql` | OPS-2c: `get_cron_failure_streaks()` RPC — consecutive failures per active cron job. |
+| 224 | `224_fix_p2p_resolve_payout.sql` | Fixes two coin-movement bugs in `resolve_p2p_challenge()` (from migration 205). |
+| 225 | `225_export_user_data.sql` | GDPR-2: read-only data-portability RPC (`export_user_data`), mirrors the table set of 219. |
+| 226 | `226_fix_credit_coins_overload_and_wallet_trigger.sql` | Fixes ambiguous `credit_coins()` overload + wallet-trigger `search_path`. |
+| 227 | `227_get_my_circles.sql` | `get_my_circles()` RPC — Clubhouse picker for creating Player Boxes / Paddocks. |
+| 228 | `228_fix_leaderboard_user_id_ambiguity.sql` | Fixes ambiguous `user_id` in the tennis leaderboard RPCs (from 201). |
+| 229 | `229_fix_create_league_overload_ambiguity.sql` | Fixes ambiguous `create_league()` overload introduced by 215. |
+| 230 | `230_fix_circle_members_rls_recursion.sql` | Fixes infinite recursion in the `circle_members` RLS policy. |
+| 231 | `231_enable_clubhouse_messages_realtime.sql` | Enables Realtime on `clubhouse_messages` (same bug class as 55). |
+| 232 | `232_fix_resolve_bet_points_ordering.sql` | Fixes `resolve_bet` points-type reward aggregation ordering. |
+| 233 | `233_clubhouse_backfill_pilot_leagues.sql` | Cutover backfill: groups the 7 pre-Clubhouse pilot leagues into one Clubhouse. |
+| 234 | `234_fix_auto_resolve_p2p_challenges_distinct.sql` | Fixes invalid `FOR UPDATE` + `DISTINCT` in `auto_resolve_p2p_challenges()`. |
+| 235 | `235_fix_p2p_decline_cancel_expire_double_refund.sql` | Fixes double refund in `decline_/cancel_p2p_challenge` and `expire_stale_challenges`. |
+| 236 | `236_p2p_circle_scope.sql` | Extends `p2p_challenges` from league scope to Clubhouse (circle) scope — additive. |
+| 237 | `237_p2p_create_challenge_circle_scoped.sql` | `create_p2p_challenge` / `get_my_challenges` rewritten to circle scope. |
+| 238 | `238_fix_p2p_create_challenge_anon_grant.sql` | Revokes the over-broad anon grant left by 237. |
+| 239 | `239_p2p_freeform_bets.sql` | Freeform P2P bets: declare → confirm/dispute → owner arbitrates. |
+| 240 | `240_schedule_check_cron_health.sql` | OPS-2c: schedules `check-cron-health`. |
+| 241 | `241_fix_check_cron_health_auth.sql` | Fixes `check-cron-health` cron 401 by using `ADMIN_TRIGGER_KEY`. |
+| 242 | — | Number unused (no migration file). |
+| 243 | `243_competition_admin_model.sql` | ADMIN-1: Clubhouse/competition admin ownership model. |
+| 244 | `244_league_archive_toggle.sql` | B-13: `leagues.archived` — pauses scoring/sync/drafts/cup elimination for a league. |
+| 245 | `245_sync_squad_matchdays_skip_archived.sql` | B-13: `sync_squad_matchdays()` skips archived leagues. |
+| 246 | `246_award_trophy_helper.sql` | ARCH-1a: `award_trophy()` helper for `trophy_ledger`. |
+| 247 | `247_award_trophy_lockdown.sql` | Locks `award_trophy()` to `service_role` only. |
+| 248 | `248_trophy_ledger_multisport.sql` | ARCH-1c: makes `trophy_ledger` sport-polymorphic; creates `f1_seasons`. |
+| 249 | `249_schedule_award_season_trophies.sql` | ARCH-1d: schedules `award-season-trophies`. |
+| 250 | `250_f1_seasons_rls.sql` | DD-P0-1: enables RLS on `f1_seasons` (public read, restricted write). |
+| 251 | `251_paddock_playerbox_archive_toggle.sql` | B-13-F1 / B-13-TENNIS: archive toggle for Paddocks and Player Boxes. |
+| 252 | `252_wishlist_draft_submissions.sql` | Wishlist Draft: `wishlist_draft_submissions` (ranked targets, up to 10). |
+| 253 | `253_wishlist_draft_windows.sql` | Wishlist Draft: `wishlist_draft_windows` per-league-per-round marker + snake rotation state. |
+| 254 | `254_wishlist_draft_gazette_enum.sql` | Adds `wishlist_draft_report` to `gazette_entry_type`. |
+| 255 | `255_schedule_run_wishlist_draft.sql` | Schedules `run-wishlist-draft` safety-net cron (hourly; changed to `*/15` by 294). |
+| 256 | `256_fix_get_circle_feed_column.sql` | Fixes `get_circle_feed` (used non-existent `created_at`; table uses `published_at`). |
+| 257 | `257_fix_get_circle_meta_standings_ambiguity.sql` | Fixes ambiguous `user_id` in `get_circle_meta_standings`. |
+| 258 | `258_fix_circle_members_user_fk.sql` | Repoints `circle_members.user_id` FK from `auth.users` to `public.users`. |
+| 259 | `259_enforce_circle_required_on_create.sql` | Failsafe for the “no standalone competition” invariant on create. |
+| 260 | `260_fix_paddock_playerbox_members_rls_recursion.sql` | Fixes RLS recursion on `paddock_members` / `player_box_members`. |
+| 261 | `261_fix_p2p_dispute_notification_check.sql` | Adds `p2p_challenge` to the `clubhouse_notifications` source_type CHECK (BUG-P2P-DISPUTE). |
+| 262 | `262_p2p_group_bets.sql` | P2P Group Bets: structured options, multi-target, start/end enforcement, Clubhouse dashboard. |
+| 263 | `263_get_my_p2p_bets.sql` | Cross-clubhouse “My Bets” read RPC. |
+| 264 | `264_p2p_betting_default_on.sql` | Group Bets default ON per Clubhouse (opt-out); backfills existing. |
+| 265 | `265_open_challenges.sql` | Open Challenges: post a 1:1 challenge without naming an opponent. |
+| 266 | `266_p2p_streak.sql` | Win-streak badge RPC across both P2P schemas. |
+| 267 | `267_fix_credit_coins_debit_escrow_overload.sql` | Fixes `credit_coins()` / `debit_coins_to_escrow()` overload ambiguity reintroduced by 262. |
+| 268 | `268_fix_release_escrow_overload.sql` | Same overload fix for `release_escrow()`. |
+| 269 | `269_fix_seed_cup_clubs_overload.sql` | Same overload fix for `seed_cup_clubs()` (broke `run-draft-lottery`). |
+| 270 | `270_rename_finalize_bet_payout.sql` | Renames `finalize_bet_payout()` → `settle_bet_coins()` to satisfy the LEGAL-1 compliance test. |
+| 271 | `271_clubhouse_bet_activity_messages.sql` | Bet create/resolve events post system messages into Clubhouse chat. |
+| 272 | `272_schedule_sync_tennis_results.sql` | Schedules `sync-tennis-results`. |
+| 273 | `273_generic_active_tournament_sync_crons.sql` | Replaces WC-hardcoded sync crons with a generic active-tournament loop. |
+| 274 | `274_repoint_cron_bearers_to_admin_trigger_key.sql` | Repoints every HTTP cron bearer to `ADMIN_TRIGGER_KEY`. |
+| 275 | `275_fix_274_reactivation_side_effect.sql` | Undoes 274's unintended reactivation of paused crons. |
+| 276 | `276_schedule_sync_f1_race_results.sql` | Schedules `sync-f1-race-results`. |
+| 277 | `277_rotate_admin_trigger_key.sql` | Rotates `ADMIN_TRIGGER_KEY` and repoints crons/functions. |
+| 278 | `278_fix_wishlist_draft_status_tournament_id_type.sql` | Fixes `get_wishlist_draft_status` (`tournament_id` is text, not uuid). |
+| 279 | `279_relaxation_formula_admin_toggle.sql` | Admin on/off switch for the player-repeat relaxation formula. |
+| 280 | `280_tennis_stale_tournament_safety_net.sql` | Daily sweep for stale tennis tournaments (PR #923). |
+| 281 | `281_clubhouse_archive.sql` | Clubhouse (circles) archive/active toggle via `update_circle_settings`. |
+| 282 | `282_drop_stale_update_circle_settings_overload.sql` | Drops stale 4-arg `update_circle_settings` overload left by 281. |
+| 283 | `283_club_logos.sql` | `club_logos` reference table + public `club-logos` storage bucket. |
+| 284 | `284_fix_signup_wallet_creation.sql` | Fixes broken new-user signup (welcome-bonus wallet) caused by 262's `credit_coins` rewrite. |
+| 285 | `285_scoring_v3_foundational.sql` | Scoring v3 foundations for tournaments 429/1593 (flat +3 assist, penalty_missed −2, appearance/60-min bonus). |
+| 286 | `286_fix_invite_code_case_sensitivity.sql` | Case-insensitive invite-code matching for Clubhouse + F1 Paddock joins. |
+| 287 | `287_scoring_v3_penalty_goals.sql` | Scoring v3: penalty conversions score a flat +3 via `penalty_scored`. |
+| 288 | `288_wishlist_draft_always_open.sql` | Wishlist becomes a standing watchlist (permanently open). Superseded in part by 294. |
+| 289 | `289_scoring_v3_conceded_penalty_1593.sql` | Brings tournament 1593 GK/DEF conceded penalty to parity with 429. |
+| 290 | `290_ucl_scoring_v2_parity.sql` | UCL (1593) scoring parity with World Cup (429) Bucket A. |
+| 291 | `291_round_freeze_lock.sql` | CODE-RACE-1: lock fixing a race in `rollupSquads` when fixtures finish simultaneously. |
+| 292 | `292_score_discrepancy_detector.sql` | `get_score_discrepancies()` RPC — ingestion reconciliation for frozen rounds. |
+| 293 | `293_clubhouse_competitions_finished_flag.sql` | Finished-tournament visibility + archived-flag parity in `get_clubhouse_competitions` (PR #1022). |
+| 294 | `294_wishlist_draft_modes.sql` | Wishlist Draft modes (manual / auto / disabled) per league + per round; audit table; atomic `commit_wishlist_draft`; cron → `*/15` (PR #1024). |
 
-**Next migration**: `223_` (v2 — single canonical numbering; main fully synced into v2 as of 2026-07-17)
+**Next migration**: `295_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
 
 **Key pipeline facts (2026-06-29 — Redesign Phase C, PR #676, v2 branch):**
 - **`useActiveCompetition()` hook** (`src/hooks/useActiveCompetition.js`): derives `{sport, competitionId}` from `useLocation().pathname` only — no context, no global state. Football matched by `/league/`, `/live`, `/squad`, `/market`, `/recap`; F1 by `/f1/`; tennis by `/tennis/tournament/`. `SportContext.activeSport`/`setActiveSport` **removed entirely**. `AppLayout`, `ClubhouseScreen`, `F1HomeScreen`, `PaddockLobbyScreen`, `PlayerBoxScreen` all cleaned of `setActiveSport()` calls. `SportContext` retains `activePaddockId`/`activePlayerBoxId` (used by `usePaddock`/`usePlayerBox` for localStorage).
