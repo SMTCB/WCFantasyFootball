@@ -51,6 +51,8 @@ User feedback: the between-matchday wishlist draft ran the moment the previous r
 - A logged-in check of the commissioner card on a real draft league.
 - Notion card (the connector is unauthenticated).
 
+**Extra draft (2026-10-03, migration 295)**: commissioner can reopen a finished round's wishlist draft before kickoff via `reopen_wishlist_draft` (button in the WISHLIST DRAFT card when phase is awaiting_round). Reopens as Manual, closes the market until the draft runs, safety net kickoff − 8h. Needed for Draft Champions 26/27 round 2.
+
 **Docs** (PR #1025): `TRANSFER_WINDOW_SYSTEM.md` (wishlist draft gate), `DRAFT_SYSTEM_DESIGN.md` §13 + decision 12, `TRANSFERS_AND_LINEUP_GUIDE.md` and `DRAFT_MECHANICS_FOR_DUMMIES.md`.
 
 ## ✅ Clubhouse housekeeping: FINISHED tag for completed tournaments + get_clubhouse_competitions archived-flag parity fix (2026-09-13) — PR #1022, migration 293
