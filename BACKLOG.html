@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-10-03. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-10-11. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>257</strong><span>closed</span></div>
+      <div class="total-pill"><strong>258</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (175)</span>
+    <span class="chip" data-filter-kind="done">Shipped (176)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">257</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">258</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">175</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">176</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,51 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">175</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">176</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl pre-matchday-2 health check — sync re-enabled, squads advanced, monitoring wired (2026-10-11) — migration 296 
+
+user asked for a health check before ucl round 2 (13 oct 16:45 utc) after a month without matches. read-only audit of the live db first (management api, no docker/cli db access from the cloud container). round 1 closure was clean: 18/18 fixtures finished, 27 squads scored, league totals match `fantasy_points`, `round_backups` + 27 kickoff snapshots written, round 2 transfer windows opened 10 sep 21:05.
+
+**found and fixed (each approved in chat, backed up to `backups/` first):**
+- **ucl data sync was off** — `tournaments.sync_enabled = false` for 1593, so `sync-ucl-fixtures-30m` returned 403 every run and the generic player / player-status syncs skipped it. cron reports &quot;succeeded&quot; for these (it only queues the http call), so `check-cron-health` could not see it. re-enabled; first sync verified (144 league-phase fixtures + deadlines unchanged, only the `competition` label corrected 2025-26 → 2026-27).
+- **26 of 27 squads still tagged `1593-r1`** — `sync-squad-matchdays` cron inactive since 31 jul. scoring unaffected (uses kickoff snapshots) but `activate_chip` reads the squad&#x27;s tag and refuses triple captain with deadline_passed. ran `sync_squad_matchdays()` once (diffed vs backup: only `matchday_id` changed, 26 rows; wc untouched) and re-enabled the cron.
+- **monitoring gaps** — re-enabled `check-cron-health` (hourly); migration 296 schedules `reconcile-scores-daily` (07:17 utc), scoped to `status=&#x27;active&#x27;` tournaments&#x27; frozen rounds so the ~45 known wc discrepancies do not re-alert.
+
+**open follow-ups:**
+- `sync-fixtures` now inserts 90 round-less finished ucl **qualifying** matches (harmless to scoring/active round). code change in this branch drops round-less matches for round-based competitions — **needs merge + manual `functions deploy sync-fixtures`**; `.function-checksums.json` deliberately not refreshed until deployed.
+- `check-cron-health` o" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">UCL pre-matchday-2 health check — sync re-enabled, squads advanced, monitoring wired</h3>
+        <p class="card-summary">User asked for a health check before UCL round 2 (13 Oct 16:45 UTC) after a month without matches. Read-only audit of the live DB first (Management API, no Docker/CLI DB…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-11</span><span class="foot-refs">migration 296</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">UCL pre-matchday-2 health check — sync re-enabled, squads advanced, monitoring wired</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>User asked for a health check before UCL round 2 (13 Oct 16:45 UTC) after a month without matches. Read-only audit of the live DB first (Management API, no Docker/CLI DB…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · migration 296</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-11</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>User asked for a health check before UCL round 2 (13 Oct 16:45 UTC) after a month without matches. Read-only audit of the live DB first (Management API, no Docker/CLI DB access from the cloud container). Round 1 closure was clean: 18/18 fixtures finished, 27 squads scored, league totals match <code>fantasy_points</code>, <code>round_backups</code> + 27 kickoff snapshots written, round 2 transfer windows opened 10 Sep 21:05.</p>
+<p><strong>Found and fixed (each approved in chat, backed up to <code>backups/</code> first):</strong></p>
+<ul>
+<li><strong>UCL data sync was off</strong> — <code>tournaments.sync_enabled = false</code> for 1593, so <code>sync-ucl-fixtures-30m</code> returned 403 every run and the generic player / player-status syncs skipped it. Cron reports "succeeded" for these (it only queues the HTTP call), so <code>check-cron-health</code> could not see it. Re-enabled; first sync verified (144 league-phase fixtures + deadlines unchanged, only the <code>competition</code> label corrected 2025-26 → 2026-27).</li>
+<li><strong>26 of 27 squads still tagged <code>1593-r1</code></strong> — <code>sync-squad-matchdays</code> cron inactive since 31 Jul. Scoring unaffected (uses kickoff snapshots) but <code>activate_chip</code> reads the squad's tag and refuses Triple Captain with DEADLINE_PASSED. Ran <code>sync_squad_matchdays()</code> once (diffed vs backup: only <code>matchday_id</code> changed, 26 rows; WC untouched) and re-enabled the cron.</li>
+<li><strong>Monitoring gaps</strong> — re-enabled <code>check-cron-health</code> (hourly); migration 296 schedules <code>reconcile-scores-daily</code> (07:17 UTC), scoped to <code>status='active'</code> tournaments' frozen rounds so the ~45 known WC discrepancies do not re-alert.</li>
+</ul>
+<p><strong>Open follow-ups:</strong></p>
+<ul>
+<li><code>sync-fixtures</code> now inserts 90 round-less finished UCL <strong>qualifying</strong> matches (harmless to scoring/active round). Code change in this branch drops round-less matches for round-based competitions — <strong>needs merge + manual <code>functions deploy sync-fixtures</code></strong>; <code>.function-checksums.json</code> deliberately NOT refreshed until deployed.</li>
+<li><code>check-cron-health</code> only detects cron *run* failures, not HTTP 4xx/5xx from the function a cron calls. Consider a check on <code>net._http_response</code> status codes.</li>
+<li>WC (429, completed) still has <code>sync_enabled = true</code> — harmless but wastes Forza calls.</li>
+<li>Draft Champions 26/27: 3 managers with incomplete squads/lineups (14 players; XI of 0; XI of 8) — scorer repairs, but managers should set lineups.</li>
+<li>Migration 240 (and 86/90/91/181) hardcode a service bearer in git — check it was rotated by migration 274's repoint.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft modes — manual / auto / disabled per matchday (2026-10-03) — pr #1024, migration 294 
 
 user feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. commissioners now choose the draft mode for each league, as a default, and can override it for each round:

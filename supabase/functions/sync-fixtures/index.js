@@ -54,7 +54,13 @@ Deno.serve(async (req) => {
 
   try {
     // ── 2. Fetch all matches from Forza ───────────────────────────────────────
-    const { matches } = await forza(`/v1/tournaments/${forza_id}/matches`);
+    const { matches: allMatches } = await forza(`/v1/tournaments/${forza_id}/matches`);
+    // Forza's UCL feed also carries qualifying-round matches with no round number. They
+    // can never be scored or locked, and each sync would re-insert them if deleted, so
+    // drop them — but only for round-based competitions, where friendlies-style
+    // tournaments legitimately have no rounds at all.
+    const roundBased = !!allMatches?.some(m => m.round);
+    const matches = roundBased ? allMatches.filter(m => m.round) : allMatches;
     if (!matches?.length) {
       // #13: a previously-populated tournament returning 0 matches is almost certainly a
       // Forza outage/partial response, not a legitimate empty — surface it instead of
