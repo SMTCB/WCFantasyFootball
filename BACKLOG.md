@@ -12,6 +12,24 @@
 
 ---
 
+## ✅ UCL pre-matchday-2 health check — sync re-enabled, squads advanced, monitoring wired (2026-10-11) — migration 296
+
+User asked for a health check before UCL round 2 (13 Oct 16:45 UTC) after a month without matches. Read-only audit of the live DB first (Management API, no Docker/CLI DB access from the cloud container). Round 1 closure was clean: 18/18 fixtures finished, 27 squads scored, league totals match `fantasy_points`, `round_backups` + 27 kickoff snapshots written, round 2 transfer windows opened 10 Sep 21:05.
+
+**Found and fixed (each approved in chat, backed up to `backups/` first):**
+- **UCL data sync was off** — `tournaments.sync_enabled = false` for 1593, so `sync-ucl-fixtures-30m` returned 403 every run and the generic player / player-status syncs skipped it. Cron reports "succeeded" for these (it only queues the HTTP call), so `check-cron-health` could not see it. Re-enabled; first sync verified (144 league-phase fixtures + deadlines unchanged, only the `competition` label corrected 2025-26 → 2026-27).
+- **26 of 27 squads still tagged `1593-r1`** — `sync-squad-matchdays` cron inactive since 31 Jul. Scoring unaffected (uses kickoff snapshots) but `activate_chip` reads the squad's tag and refuses Triple Captain with DEADLINE_PASSED. Ran `sync_squad_matchdays()` once (diffed vs backup: only `matchday_id` changed, 26 rows; WC untouched) and re-enabled the cron.
+- **Monitoring gaps** — re-enabled `check-cron-health` (hourly); migration 296 schedules `reconcile-scores-daily` (07:17 UTC), scoped to `status='active'` tournaments' frozen rounds so the ~45 known WC discrepancies do not re-alert.
+
+**Open follow-ups:**
+- `sync-fixtures` now inserts 90 round-less finished UCL **qualifying** matches (harmless to scoring/active round). Code change in this branch drops round-less matches for round-based competitions — **needs merge + manual `functions deploy sync-fixtures`**; `.function-checksums.json` deliberately NOT refreshed until deployed.
+- `check-cron-health` only detects cron *run* failures, not HTTP 4xx/5xx from the function a cron calls. Consider a check on `net._http_response` status codes.
+- WC (429, completed) still has `sync_enabled = true` — harmless but wastes Forza calls.
+- Draft Champions 26/27: 3 managers with incomplete squads/lineups (14 players; XI of 0; XI of 8) — scorer repairs, but managers should set lineups.
+- Migration 240 (and 86/90/91/181) hardcode a service bearer in git — check it was rotated by migration 274's repoint.
+
+---
+
 ## ✅ Wishlist Draft modes — Manual / Auto / Disabled per matchday (2026-10-03) — PR #1024, migration 294
 
 User feedback: the between-matchday wishlist draft ran the moment the previous round finished, before managers had picked the new players they wanted. Commissioners now choose the draft mode for each league, as a default, and can override it for each round:
