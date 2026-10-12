@@ -12,6 +12,16 @@
 
 ---
 
+## ✅ check-cron-health root cause: statement timeout on an unpruned cron log — migration 297 (2026-10-12) — PR #1032
+
+With PR #1031 making errors readable, the 09:00 UTC run showed the real cause of the hourly `check-cron-health` failures (since it was first enabled 2026-07-28): `get_cron_failure_streaks` → `57014 canceling statement due to statement timeout`. It sorted all of `cron.job_run_details` — 271,695 rows / 179 MB, never pruned, +~2,100/day — and the API role (`authenticator`) has `statement_timeout = 8s`. An earlier "the DB side is healthy" check was wrong: it ran as an admin session with no timeout.
+
+**Fix (approved in chat, applied live, rolled-back test first):** migration 297 — the function now scans only the latest 20,000 runs via the `runid` primary key (≈45–90 ms as `service_role`, was 2.0–2.8 s warm); `prune-cron-run-history` cron (daily 04:30 UTC, keeps 30 days); one-off delete of 210,034 old rows (271,695 → 61,663). Pre-change function definition + cron job list saved in `backups/pre297_*`. Table file stays 179 MB until space is reused (no VACUUM FULL needed).
+
+**Verify:** the 10:00 UTC `check-cron-health` run should log no `streakError`. The hourly cron-failure monitor — missing since July — is now effective for the first time.
+
+---
+
 ## ✅ check-cron-health: readable errors + unpriced-player alert no longer blocked by the cron-streak check (2026-10-12) — PR #1031
 
 Found while verifying PR #1030: `check-cron-health` has logged an `error` every hour with the message `[object Object]` since it was first enabled (first row in `edge_function_errors` is 2026-07-28 — it was disabled again days later, almost certainly for this). The DB side is healthy (`get_cron_failure_streaks()` runs fine as `service_role` in a rolled-back transaction, EXECUTE granted), so the throw is in the Edge Function; PostgREST errors are plain objects and `String(err)` hid the real message. Fix: `describeError()` helper; a failing streak RPC is now logged with its real message and **no longer aborts the run**, so the new unpriced-active-player alert (PR #1030) still executes. Root cause of the underlying error is read from the next hourly run's log. The monitor was re-enabled on 2026-10-11 as part of the pre-matchday-2 health check.

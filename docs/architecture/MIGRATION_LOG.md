@@ -222,8 +222,9 @@ Always create a new file — never modify existing migrations.
 | 294 | `294_wishlist_draft_modes.sql` | Wishlist Draft modes (manual / auto / disabled) per league + per round; audit table; atomic `commit_wishlist_draft`; cron → `*/15` (PR #1024). |
 | 295 | `295_reopen_wishlist_draft.sql` | `reopen_wishlist_draft(league)` — commissioner reopens a finished wishlist draft for the current round (extra draft before kickoff). |
 | 296 | `296_schedule_reconcile_scores.sql` | Schedules `reconcile-scores-daily` (07:17 UTC). Scoped to rounds with a `round_backups` row in `status = 'active'` tournaments, so the finished World Cup's known discrepancies do not re-alert. Service bearer read from an existing cron at apply time — no key in git. |
+| 297 | `297_fast_cron_failure_streaks_and_prune.sql` | `get_cron_failure_streaks` scans only the latest 20,000 runs (PK index) — was timing out at the API role's 8s limit on 271k unpruned rows, so `check-cron-health` failed every hour since 2026-07-28; adds `prune-cron-run-history` cron (daily 04:30 UTC, >30 days) and a one-off delete of 210,034 old rows. |
 
-**Next migration**: `297_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
+**Next migration**: `298_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
 
 **Key pipeline facts (2026-06-29 — Redesign Phase C, PR #676, v2 branch):**
 - **`useActiveCompetition()` hook** (`src/hooks/useActiveCompetition.js`): derives `{sport, competitionId}` from `useLocation().pathname` only — no context, no global state. Football matched by `/league/`, `/live`, `/squad`, `/market`, `/recap`; F1 by `/f1/`; tennis by `/tennis/tournament/`. `SportContext.activeSport`/`setActiveSport` **removed entirely**. `AppLayout`, `ClubhouseScreen`, `F1HomeScreen`, `PaddockLobbyScreen`, `PlayerBoxScreen` all cleaned of `setActiveSport()` calls. `SportContext` retains `activePaddockId`/`activePlayerBoxId` (used by `usePaddock`/`usePlayerBox` for localStorage).
