@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>260</strong><span>closed</span></div>
+      <div class="total-pill"><strong>261</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (178)</span>
+    <span class="chip" data-filter-kind="done">Shipped (179)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">260</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">261</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">178</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">179</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,38 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">178</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">179</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ check-cron-health root cause: statement timeout on an unpruned cron log — migration 297 (2026-10-12) — pr #1032 
+
+with pr #1031 making errors readable, the 09:00 utc run showed the real cause of the hourly `check-cron-health` failures (since it was first enabled 2026-07-28): `get_cron_failure_streaks` → `57014 canceling statement due to statement timeout`. it sorted all of `cron.job_run_details` — 271,695 rows / 179 mb, never pruned, +~2,100/day — and the api role (`authenticator`) has `statement_timeout = 8s`. an earlier &quot;the db side is healthy&quot; check was wrong: it ran as an admin session with no timeout.
+
+**fix (approved in chat, applied live, rolled-back test first):** migration 297 — the function now scans only the latest 20,000 runs via the `runid` primary key (≈45–90 ms as `service_role`, was 2.0–2.8 s warm); `prune-cron-run-history` cron (daily 04:30 utc, keeps 30 days); one-off delete of 210,034 old rows (271,695 → 61,663). pre-change function definition + cron job list saved in `backups/pre297_*`. table file stays 179 mb until space is reused (no vacuum full needed).
+
+**verify:** the 10:00 utc `check-cron-health` run should log no `streakerror`. the hourly cron-failure monitor — missing since july — is now effective for the first time.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">check-cron-health root cause: statement timeout on an unpruned cron log — migration 297</h3>
+        <p class="card-summary">With PR #1031 making errors readable, the 09:00 UTC run showed the real cause of the hourly check-cron-health failures (since it was first enabled 2026-07-28):…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-12</span><span class="foot-refs">PR #1032</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">check-cron-health root cause: statement timeout on an unpruned cron log — migration 297</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>With PR #1031 making errors readable, the 09:00 UTC run showed the real cause of the hourly check-cron-health failures (since it was first enabled 2026-07-28):…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1032</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-12</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>With PR #1031 making errors readable, the 09:00 UTC run showed the real cause of the hourly <code>check-cron-health</code> failures (since it was first enabled 2026-07-28): <code>get_cron_failure_streaks</code> → <code>57014 canceling statement due to statement timeout</code>. It sorted all of <code>cron.job_run_details</code> — 271,695 rows / 179 MB, never pruned, +~2,100/day — and the API role (<code>authenticator</code>) has <code>statement_timeout = 8s</code>. An earlier "the DB side is healthy" check was wrong: it ran as an admin session with no timeout.</p>
+<p><strong>Fix (approved in chat, applied live, rolled-back test first):</strong> migration 297 — the function now scans only the latest 20,000 runs via the <code>runid</code> primary key (≈45–90 ms as <code>service_role</code>, was 2.0–2.8 s warm); <code>prune-cron-run-history</code> cron (daily 04:30 UTC, keeps 30 days); one-off delete of 210,034 old rows (271,695 → 61,663). Pre-change function definition + cron job list saved in <code>backups/pre297_*</code>. Table file stays 179 MB until space is reused (no VACUUM FULL needed).</p>
+<p><strong>Verify:</strong> the 10:00 UTC <code>check-cron-health</code> run should log no <code>streakError</code>. The hourly cron-failure monitor — missing since July — is now effective for the first time.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ check-cron-health: readable errors + unpriced-player alert no longer blocked by the cron-streak check (2026-10-12) — pr #1031 
 
 found while verifying pr #1030: `check-cron-health` has logged an `error` every hour with the message `[object object]` since it was first enabled (first row in `edge_function_errors` is 2026-07-28 — it was disabled again days later, almost certainly for this). the db side is healthy (`get_cron_failure_streaks()` runs fine as `service_role` in a rolled-back transaction, execute granted), so the throw is in the edge function; postgrest errors are plain objects and `string(err)` hid the real message. fix: `describeerror()` helper; a failing streak rpc is now logged with its real message and **no longer aborts the run**, so the new unpriced-active-player alert (pr #1030) still executes. root cause of the underlying error is read from the next hourly run&#x27;s log. the monitor was re-enabled on 2026-10-11 as part of the pre-matchday-2 health check.
