@@ -12,6 +12,12 @@
 
 ---
 
+## ✅ check-cron-health: readable errors + unpriced-player alert no longer blocked by the cron-streak check (2026-10-12) — PR #1031
+
+Found while verifying PR #1030: `check-cron-health` has logged an `error` every hour with the message `[object Object]` since it was first enabled (first row in `edge_function_errors` is 2026-07-28 — it was disabled again days later, almost certainly for this). The DB side is healthy (`get_cron_failure_streaks()` runs fine as `service_role` in a rolled-back transaction, EXECUTE granted), so the throw is in the Edge Function; PostgREST errors are plain objects and `String(err)` hid the real message. Fix: `describeError()` helper; a failing streak RPC is now logged with its real message and **no longer aborts the run**, so the new unpriced-active-player alert (PR #1030) still executes. Root cause of the underlying error is read from the next hourly run's log. The monitor was re-enabled on 2026-10-11 as part of the pre-matchday-2 health check.
+
+---
+
 ## ✅ UCL qualifier pollution — cleanup, pricing and sync hardening (2026-10-12) — PR #1030
 
 **Incident.** Re-enabling the UCL sync (see the 2026-10-11 health-check entry) let Forza's UCL feed bring in 90 round-less qualifying-round fixtures (Jul–Aug 2026). `sync-players` derives its club list from `fixtures`, so it then fetched 45 extra qualifying clubs: 1,407 new active players with **no price** (UCL pool 1,076 → 2,477), 43 extra `teams` rows. The Market lists every active player and `process-transfer` priced a NULL as `0` (`?? 0`) — an unpriced player was buyable for free. Caught by the post-sync verification before any squad bought one; squads, `fantasy_points` and standings diffed unchanged against backups at every step.

@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>259</strong><span>closed</span></div>
+      <div class="total-pill"><strong>260</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (177)</span>
+    <span class="chip" data-filter-kind="done">Shipped (178)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">259</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">260</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">177</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">178</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,32 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">177</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">178</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ check-cron-health: readable errors + unpriced-player alert no longer blocked by the cron-streak check (2026-10-12) — pr #1031 
+
+found while verifying pr #1030: `check-cron-health` has logged an `error` every hour with the message `[object object]` since it was first enabled (first row in `edge_function_errors` is 2026-07-28 — it was disabled again days later, almost certainly for this). the db side is healthy (`get_cron_failure_streaks()` runs fine as `service_role` in a rolled-back transaction, execute granted), so the throw is in the edge function; postgrest errors are plain objects and `string(err)` hid the real message. fix: `describeerror()` helper; a failing streak rpc is now logged with its real message and **no longer aborts the run**, so the new unpriced-active-player alert (pr #1030) still executes. root cause of the underlying error is read from the next hourly run&#x27;s log. the monitor was re-enabled on 2026-10-11 as part of the pre-matchday-2 health check.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">check-cron-health: readable errors + unpriced-player alert no longer blocked by the cron-streak check</h3>
+        <p class="card-summary">Found while verifying PR #1030: check-cron-health has logged an error every hour with the message [object Object] since it was first enabled (first row in…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-12</span><span class="foot-refs">PR #1031</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">check-cron-health: readable errors + unpriced-player alert no longer blocked by the cron-streak check</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Found while verifying PR #1030: check-cron-health has logged an error every hour with the message [object Object] since it was first enabled (first row in…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1031</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-12</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Found while verifying PR #1030: <code>check-cron-health</code> has logged an <code>error</code> every hour with the message <code>[object Object]</code> since it was first enabled (first row in <code>edge_function_errors</code> is 2026-07-28 — it was disabled again days later, almost certainly for this). The DB side is healthy (<code>get_cron_failure_streaks()</code> runs fine as <code>service_role</code> in a rolled-back transaction, EXECUTE granted), so the throw is in the Edge Function; PostgREST errors are plain objects and <code>String(err)</code> hid the real message. Fix: <code>describeError()</code> helper; a failing streak RPC is now logged with its real message and <strong>no longer aborts the run</strong>, so the new unpriced-active-player alert (PR #1030) still executes. Root cause of the underlying error is read from the next hourly run's log. The monitor was re-enabled on 2026-10-11 as part of the pre-matchday-2 health check.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl qualifier pollution — cleanup, pricing and sync hardening (2026-10-12) — pr #1030 
 
 **incident.** re-enabling the ucl sync (see the 2026-10-11 health-check entry) let forza&#x27;s ucl feed bring in 90 round-less qualifying-round fixtures (jul–aug 2026). `sync-players` derives its club list from `fixtures`, so it then fetched 45 extra qualifying clubs: 1,407 new active players with **no price** (ucl pool 1,076 → 2,477), 43 extra `teams` rows. the market lists every active player and `process-transfer` priced a null as `0` (`?? 0`) — an unpriced player was buyable for free. caught by the post-sync verification before any squad bought one; squads, `fantasy_points` and standings diffed unchanged against backups at every step.

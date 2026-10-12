@@ -27,6 +27,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// PostgREST errors are plain objects, so String(err) logged an unreadable "[object Object]".
+const describeError = (e: unknown): string =>
+  e instanceof Error ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
+
 const DEFAULT_THRESHOLD = 3;
 const COOLDOWN_HOURS = 6;
 
@@ -57,12 +61,21 @@ Deno.serve(async (req) => {
       if (typeof body?.threshold === 'number' && body.threshold > 0) threshold = body.threshold;
     } catch { /* empty/no body is fine — use default threshold */ }
 
+    // A failure here must not skip the unpriced-player check below, so it is reported
+    // (with a readable message) and the run continues.
+    let rows: FailureStreak[] = [];
+    let streakError: string | null = null;
     const { data: streaks, error: rpcErr } = await supabase.rpc('get_cron_failure_streaks', {
       p_threshold: threshold,
     });
-    if (rpcErr) throw rpcErr;
-
-    const rows = (streaks ?? []) as FailureStreak[];
+    if (rpcErr) {
+      streakError = describeError(rpcErr);
+      await logError('check-cron-health', 'error', `get_cron_failure_streaks failed: ${streakError}`, {
+        check: 'cron_failure_streaks',
+      });
+    } else {
+      rows = (streaks ?? []) as FailureStreak[];
+    }
     const alerted: string[] = [];
     const skipped: string[] = [];
 
@@ -141,13 +154,13 @@ Deno.serve(async (req) => {
     console.log(`[check-cron-health] threshold=${threshold} alerted=${alerted.length} skipped(cooldown)=${skipped.length} unpriced=${unpriced?.count ?? 0}`);
 
     return new Response(
-      JSON.stringify({ ok: true, threshold, alerted, skipped, unpriced }),
+      JSON.stringify({ ok: streakError === null, threshold, alerted, skipped, unpriced, streakError }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
-    await logError('check-cron-health', 'error', String(err));
+    await logError('check-cron-health', 'error', describeError(err));
     return new Response(
-      JSON.stringify({ error: 'INTERNAL_ERROR', detail: String(err) }),
+      JSON.stringify({ error: 'INTERNAL_ERROR', detail: describeError(err) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
