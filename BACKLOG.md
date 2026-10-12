@@ -12,6 +12,20 @@
 
 ---
 
+## ✅ UCL qualifier pollution — cleanup, pricing and sync hardening (2026-10-12) — PR #1030
+
+**Incident.** Re-enabling the UCL sync (see the 2026-10-11 health-check entry) let Forza's UCL feed bring in 90 round-less qualifying-round fixtures (Jul–Aug 2026). `sync-players` derives its club list from `fixtures`, so it then fetched 45 extra qualifying clubs: 1,407 new active players with **no price** (UCL pool 1,076 → 2,477), 43 extra `teams` rows. The Market lists every active player and `process-transfer` priced a NULL as `0` (`?? 0`) — an unpriced player was buyable for free. Caught by the post-sync verification before any squad bought one; squads, `fantasy_points` and standings diffed unchanged against backups at every step.
+
+**Live cleanup (each approved in chat, `backups/ucl_precleanup_*` first, guarded `DO` blocks that abort on a count mismatch):** deleted the 90 round-less fixtures; deactivated then deleted the 1,378 qualifier-only players (+ 2 `player_status` rows) and the 43 teams (`teams` back to 130, matching the Sep 2026 post-cleanup figure); priced and activated the 30 genuine league-phase arrivals (Slavia, Galatasaray, Porto, Arsenal, Liverpool…) at the lower end of each position — GK 3.5, DEF/MID/FWD 4.0. UCL now 1,100 active players, 0 unpriced.
+
+**Code (this PR):** `sync-players` ignores round-less fixtures when picking clubs (`team-filter.js`); `sync-fixtures` filter extracted to `match-filter.js`; `process-transfer` refuses unpriced players (`PRICE_UNAVAILABLE`, no more `?? 0`); Market hides unpriced players; `check-cron-health` now alerts on active players with no price in `status='active'` tournaments (6h cooldown). Regression tests: `tests/unit/sync-filters.test.js`.
+
+**Decision (user):** NO auto-pricing trigger — new arrivals must be priced by a human in the designated windows so a star signing is never auto-priced at a floor. The periodic unpriced-player alert is the procedure.
+
+**Open:** two owned players (Fernandez-Pardo, Sanyang) were soft-deactivated by Forza squad-list churn — left as is. `_shared/wishlistDraft.ts` still treats NULL price as 0 (safe only while no active player is unpriced). `sync-cup-eliminations` cron is inactive (needed before the UCL knockout phase). WC (429) still has 479 old unpriced active players (completed tournament, ignored by the alert).
+
+---
+
 ## ✅ UCL pre-matchday-2 health check — sync re-enabled, squads advanced, monitoring wired (2026-10-11) — migration 296
 
 User asked for a health check before UCL round 2 (13 Oct 16:45 UTC) after a month without matches. Read-only audit of the live DB first (Management API, no Docker/CLI DB access from the cloud container). Round 1 closure was clean: 18/18 fixtures finished, 27 squads scored, league totals match `fantasy_points`, `round_backups` + 27 kickoff snapshots written, round 2 transfer windows opened 10 Sep 21:05.

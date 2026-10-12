@@ -83,7 +83,16 @@ Deno.serve(async (req) => {
       }, 400, corsHeaders);
     }
 
-    const price = Number(playerData.price ?? 0);
+    // An unpriced player (price NULL) must never be buyable: `?? 0` used to make
+    // them free. New arrivals synced from Forza arrive unpriced until reviewed.
+    if (playerData.price == null || !(Number(playerData.price) > 0)) {
+      return json({
+        ok:    false,
+        code:  'PRICE_UNAVAILABLE',
+        error: 'This player is not available yet',
+      }, 422, corsHeaders);
+    }
+    const price = Number(playerData.price);
 
     // ── Free window check (commissioner override) ────────────────────────────
     // A commissioner can open an unlimited, time-bounded transfer window at any

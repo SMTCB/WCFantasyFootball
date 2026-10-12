@@ -96,10 +96,52 @@ Deno.serve(async (req) => {
       alerted.push(row.jobname);
     }
 
-    console.log(`[check-cron-health] threshold=${threshold} alerted=${alerted.length} skipped(cooldown)=${skipped.length}`);
+    // ── Unpriced active players (active tournaments only) ───────────────────────
+    // New arrivals synced from Forza land with price NULL and must be priced by a
+    // human before they are buyable (process-transfer refuses them, the Market hides
+    // them). This surfaces them so they are priced in the designated windows instead
+    // of silently sitting in the pool. Same cooldown dedup as the cron alerts above.
+    let unpriced: { count: number; sample: string[] } | null = null;
+    const { data: activeTournaments } = await supabase
+      .from('tournaments').select('forza_id').eq('status', 'active');
+    const activeIds = (activeTournaments ?? []).map((t: { forza_id: string }) => t.forza_id);
+    if (activeIds.length) {
+      const { data: unpricedRows, count } = await supabase
+        .from('players')
+        .select('name, club, position, tournament_id', { count: 'exact' })
+        .in('tournament_id', activeIds)
+        .eq('is_active', true)
+        .is('price', null)
+        .limit(15);
+      if ((count ?? 0) > 0) {
+        const { data: recentUnpriced } = await supabase
+          .from('edge_function_errors')
+          .select('id')
+          .eq('function', 'check-cron-health')
+          .eq('context->>check', 'unpriced_active_players')
+          .gte('created_at', cooldownCutoff)
+          .limit(1);
+        unpriced = {
+          count: count ?? 0,
+          sample: (unpricedRows ?? []).map(
+            (p: { name: string; club: string; position: string }) => `${p.name} (${p.club}, ${p.position})`,
+          ),
+        };
+        if (!recentUnpriced || recentUnpriced.length === 0) {
+          await logError(
+            'check-cron-health',
+            'warning',
+            `${count} active player(s) in active tournaments have no price — price them before they reach managers`,
+            { check: 'unpriced_active_players', count, sample: unpriced.sample },
+          );
+        }
+      }
+    }
+
+    console.log(`[check-cron-health] threshold=${threshold} alerted=${alerted.length} skipped(cooldown)=${skipped.length} unpriced=${unpriced?.count ?? 0}`);
 
     return new Response(
-      JSON.stringify({ ok: true, threshold, alerted, skipped }),
+      JSON.stringify({ ok: true, threshold, alerted, skipped, unpriced }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {

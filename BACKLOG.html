@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-10-11. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-10-12. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>258</strong><span>closed</span></div>
+      <div class="total-pill"><strong>259</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (176)</span>
+    <span class="chip" data-filter-kind="done">Shipped (177)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">258</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">259</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">176</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">177</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">176</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">177</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl qualifier pollution — cleanup, pricing and sync hardening (2026-10-12) — pr #1030 
+
+**incident.** re-enabling the ucl sync (see the 2026-10-11 health-check entry) let forza&#x27;s ucl feed bring in 90 round-less qualifying-round fixtures (jul–aug 2026). `sync-players` derives its club list from `fixtures`, so it then fetched 45 extra qualifying clubs: 1,407 new active players with **no price** (ucl pool 1,076 → 2,477), 43 extra `teams` rows. the market lists every active player and `process-transfer` priced a null as `0` (`?? 0`) — an unpriced player was buyable for free. caught by the post-sync verification before any squad bought one; squads, `fantasy_points` and standings diffed unchanged against backups at every step.
+
+**live cleanup (each approved in chat, `backups/ucl_precleanup_*` first, guarded `do` blocks that abort on a count mismatch):** deleted the 90 round-less fixtures; deactivated then deleted the 1,378 qualifier-only players (+ 2 `player_status` rows) and the 43 teams (`teams` back to 130, matching the sep 2026 post-cleanup figure); priced and activated the 30 genuine league-phase arrivals (slavia, galatasaray, porto, arsenal, liverpool…) at the lower end of each position — gk 3.5, def/mid/fwd 4.0. ucl now 1,100 active players, 0 unpriced.
+
+**code (this pr):** `sync-players` ignores round-less fixtures when picking clubs (`team-filter.js`); `sync-fixtures` filter extracted to `match-filter.js`; `process-transfer` refuses unpriced players (`price_unavailable`, no more `?? 0`); market hides unpriced players; `check-cron-health` now alerts on active players with no price in `status=&#x27;active&#x27;` tournaments (6h cooldown). regression tests: `tests/unit/sync-filters.test.js`.
+
+**decision (user):** no auto-pricing trigger — new arrivals must be priced by a human in the designated windows so a star signing is never auto-priced at a floor. the periodic unpriced-player alert is the procedure.
+
+**open:** two owned players (fernandez-pardo, sanyang) were soft-deac" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">UCL qualifier pollution — cleanup, pricing and sync hardening</h3>
+        <p class="card-summary">Incident. Re-enabling the UCL sync (see the 2026-10-11 health-check entry) let Forza's UCL feed bring in 90 round-less qualifying-round fixtures (Jul–Aug 2026).…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-12</span><span class="foot-refs">PR #1030</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">UCL qualifier pollution — cleanup, pricing and sync hardening</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Incident. Re-enabling the UCL sync (see the 2026-10-11 health-check entry) let Forza's UCL feed bring in 90 round-less qualifying-round fixtures (Jul–Aug 2026).…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1030</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-12</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Incident.</strong> Re-enabling the UCL sync (see the 2026-10-11 health-check entry) let Forza's UCL feed bring in 90 round-less qualifying-round fixtures (Jul–Aug 2026). <code>sync-players</code> derives its club list from <code>fixtures</code>, so it then fetched 45 extra qualifying clubs: 1,407 new active players with <strong>no price</strong> (UCL pool 1,076 → 2,477), 43 extra <code>teams</code> rows. The Market lists every active player and <code>process-transfer</code> priced a NULL as <code>0</code> (<code>?? 0</code>) — an unpriced player was buyable for free. Caught by the post-sync verification before any squad bought one; squads, <code>fantasy_points</code> and standings diffed unchanged against backups at every step.</p>
+<p><strong>Live cleanup (each approved in chat, <code>backups/ucl_precleanup_*</code> first, guarded <code>DO</code> blocks that abort on a count mismatch):</strong> deleted the 90 round-less fixtures; deactivated then deleted the 1,378 qualifier-only players (+ 2 <code>player_status</code> rows) and the 43 teams (<code>teams</code> back to 130, matching the Sep 2026 post-cleanup figure); priced and activated the 30 genuine league-phase arrivals (Slavia, Galatasaray, Porto, Arsenal, Liverpool…) at the lower end of each position — GK 3.5, DEF/MID/FWD 4.0. UCL now 1,100 active players, 0 unpriced.</p>
+<p><strong>Code (this PR):</strong> <code>sync-players</code> ignores round-less fixtures when picking clubs (<code>team-filter.js</code>); <code>sync-fixtures</code> filter extracted to <code>match-filter.js</code>; <code>process-transfer</code> refuses unpriced players (<code>PRICE_UNAVAILABLE</code>, no more <code>?? 0</code>); Market hides unpriced players; <code>check-cron-health</code> now alerts on active players with no price in <code>status='active'</code> tournaments (6h cooldown). Regression tests: <code>tests/unit/sync-filters.test.js</code>.</p>
+<p><strong>Decision (user):</strong> NO auto-pricing trigger — new arrivals must be priced by a human in the designated windows so a star signing is never auto-priced at a floor. The periodic unpriced-player alert is the procedure.</p>
+<p><strong>Open:</strong> two owned players (Fernandez-Pardo, Sanyang) were soft-deactivated by Forza squad-list churn — left as is. <code>_shared/wishlistDraft.ts</code> still treats NULL price as 0 (safe only while no active player is unpriced). <code>sync-cup-eliminations</code> cron is inactive (needed before the UCL knockout phase). WC (429) still has 479 old unpriced active players (completed tournament, ignored by the alert).</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl pre-matchday-2 health check — sync re-enabled, squads advanced, monitoring wired (2026-10-11) — migration 296 
 
 user asked for a health check before ucl round 2 (13 oct 16:45 utc) after a month without matches. read-only audit of the live db first (management api, no docker/cli db access from the cloud container). round 1 closure was clean: 18/18 fixtures finished, 27 squads scored, league totals match `fantasy_points`, `round_backups` + 27 kickoff snapshots written, round 2 transfer windows opened 10 sep 21:05.
