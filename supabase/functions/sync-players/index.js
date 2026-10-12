@@ -15,6 +15,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
 import { requireServiceRole } from '../_shared/auth.ts';
 import { forzaFetch as forza, POSITION_MAP } from '../_shared/providers/forza.ts';
+import { relevantFixtures } from './team-filter.js';
 
 const FN      = 'sync-players';
 const supabase = createClient(
@@ -70,13 +71,15 @@ Deno.serve(async (req) => {
     // outside Supabase IPs, so we derive teams from fixture data instead.
     const { data: fixtures, error: fErr } = await supabase
       .from('fixtures')
-      .select('home_team_forza_id, away_team_forza_id, home_team, away_team')
+      .select('home_team_forza_id, away_team_forza_id, home_team, away_team, round_number')
       .eq('tournament_id', forza_id);
 
     if (fErr) return respond(500, { error: `fixtures query: ${fErr.message}` });
 
+    const relevant = relevantFixtures(fixtures);
+
     const teamMap = {};
-    for (const f of fixtures ?? []) {
+    for (const f of relevant) {
       if (f.home_team_forza_id && isRealTeam(f.home_team))
         teamMap[f.home_team_forza_id] = f.home_team;
       if (f.away_team_forza_id && isRealTeam(f.away_team))

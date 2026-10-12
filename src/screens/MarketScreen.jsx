@@ -359,6 +359,7 @@ export default function MarketScreen() {
       // conservative ceiling well within that cap.
       let playersQuery = supabase.from('players').select('*')
         .eq('is_active', true)
+        .not('price', 'is', null)
         .order('price', { ascending: false })
         .limit(5000);
       if (tournamentId) playersQuery = playersQuery.eq('tournament_id', tournamentId);
