@@ -3,7 +3,6 @@ import { useBets } from '../../hooks/useBets';
 import BetWidget from '../BetWidget';
 import { HubSectionLabel, MobSection } from './HubShared';
 import { MONO, DISPLAY } from './HubConstants';
-import TourReplayButton from '../TourReplayButton';
 
 // ── Visual styling per slug / category ───────────────────────────────────────
 
@@ -210,7 +209,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible,
 
 // ── Hub ───────────────────────────────────────────────────────────────────────
 
-export default function BetsTabHub({ leagueId, squadId, onReplayTour, currentGW }) {
+export default function BetsTabHub({ leagueId, squadId, currentGW }) {
   const { bets, loading, error, refetch } = useBets(leagueId, squadId);
 
   const open     = bets.filter(b => b.status === 'open');
@@ -304,8 +303,6 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour, currentGW 
           </>
         )}
       </div>
-
-      <TourReplayButton onReplay={onReplayTour} label="REPLAY BETS GUIDE" title="Replay the bets tour" />
     </div>
   );
 }

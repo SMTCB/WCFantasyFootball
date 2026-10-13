@@ -143,7 +143,7 @@ export default function LeagueScreen() {
   const {
     showLeagueTour, completeLeagueTour, replayLeagueTour,
     showCommissionerTour, completeCommissionerTour, replayCommissionerTour,
-    showBetsTour, completeBetsTour, replayBetsTour,
+    showBetsTour, completeBetsTour,
   } = useOnboarding();
 
   const [leagues, setLeagues] = useState([]);
@@ -1550,7 +1550,6 @@ export default function LeagueScreen() {
            <BetsTabHub
              leagueId={activeLeague?.league_id}
              squadId={mySquadId}
-             onReplayTour={replayBetsTour}
              currentGW={currentGW}
            />
          )}
