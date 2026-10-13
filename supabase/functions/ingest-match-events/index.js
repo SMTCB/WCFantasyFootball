@@ -570,7 +570,12 @@ Deno.serve(async (req) => {
         // Forza E10 player_statistics.goals includes own goals in the count; subtract them so a GK
         // own goal isn't also scored as a regular goal (+8). E9 fallback already excludes own goals.
         minutes_played:  mins,
-        goals:           Math.max(0, (s.goals ?? periodsResult.goalsMap[fpid] ?? 0) - (ownGoalMap[fpid] ?? 0)),
+        // E10 goals also include penalty conversions (Kane: 1 open-play + 1 pen → goals=2), which score
+        // separately via penalty_scored (+3) — subtract them or the pen is paid twice (+4 and +3).
+        // The E9 goalsMap fallback already excludes penalties, so only subtract on the E10 path.
+        goals:           Math.max(0, s.goals != null
+          ? s.goals - (ownGoalMap[fpid] ?? 0) - (periodsResult.penaltyScoredMap[fpid] ?? 0)
+          : (periodsResult.goalsMap[fpid] ?? 0) - (ownGoalMap[fpid] ?? 0)),
         assists:         s.assists ?? periodsResult.assistsMap[fpid] ?? 0,
         yellow_cards:    s.yellow_cards      ?? 0,
         saves:           s.saves             ?? 0,
