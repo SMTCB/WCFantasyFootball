@@ -104,6 +104,7 @@ function flattenPlayerStats(raw) {
 function processPeriodsData(periodsData, homeTeamForzaId, awayTeamForzaId) {
   const result = {
     redCards:                new Set(),
+    yellowCounts:            {},
     penaltyMissed:           new Set(),
     penaltyMissedByTeamSide: {},
     penaltyScoredMap:        {},
@@ -160,12 +161,16 @@ function processPeriodsData(periodsData, homeTeamForzaId, awayTeamForzaId) {
 
       // ── Regular period event handling ─────────────────────────────────────────
 
-      if (ev.type === 'card' && ev.detail === 'red' && playerForzaId) {
+      // Any red-flavoured detail counts (e.g. 'red', 'yellow_red'); a second yellow is a
+      // dismissal too and is handled after the loop via yellowCounts.
+      if (ev.type === 'card' && /red/i.test(String(ev.detail ?? '')) && playerForzaId) {
+        if (!result.redCards.has(playerForzaId)) {
+          result.activityEvents.push({
+            type: 'red', player_forza_id: playerForzaId,
+            team_side: ev.team_side, minute: String(ev.match_minute ?? '?'),
+          });
+        }
         result.redCards.add(playerForzaId);
-        result.activityEvents.push({
-          type: 'red', player_forza_id: playerForzaId,
-          team_side: ev.team_side, minute: String(ev.match_minute ?? '?'),
-        });
       }
 
       if (ev.type === 'missed_penalty' || (ev.type === 'missed_goal' && ev.detail === 'penalty')) {
@@ -222,6 +227,17 @@ function processPeriodsData(periodsData, homeTeamForzaId, awayTeamForzaId) {
       }
 
       if (ev.type === 'card' && ev.detail === 'yellow') {
+        if (playerForzaId) {
+          result.yellowCounts[playerForzaId] = (result.yellowCounts[playerForzaId] ?? 0) + 1;
+          // Second yellow = sent off: red -3 regardless of how Forza labels the event.
+          if (result.yellowCounts[playerForzaId] >= 2 && !result.redCards.has(playerForzaId)) {
+            result.redCards.add(playerForzaId);
+            result.activityEvents.push({
+              type: 'red', player_forza_id: playerForzaId,
+              team_side: ev.team_side, minute: String(ev.match_minute ?? '?'),
+            });
+          }
+        }
         result.activityEvents.push({
           type: 'yellow', player_forza_id: playerForzaId,
           team_side: ev.team_side, minute: String(ev.match_minute ?? '?'),
