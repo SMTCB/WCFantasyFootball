@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
 import {
@@ -1506,50 +1507,69 @@ const wlNote = (color = 'var(--mute)') => ({
 const wlLabel = { fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' };
 
 function ModeSegment({ value, onPick, disabled }) {
-  const [helpFor, setHelpFor] = useState(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <button
+        type="button"
+        onClick={() => setHelpOpen(true)}
+        aria-label="What do Manual, Auto and Disabled mean?"
+        style={{
+          ...ghostBtn, alignSelf: 'flex-end', width: 26, height: 26, padding: 0,
+          fontSize: 'var(--fs-micro)', color: 'var(--mute)',
+        }}
+      >?</button>
       <div style={{ display: 'flex', gap: 4 }}>
         {['manual', 'auto', 'disabled'].map(m => {
           const active = value === m;
-          const helpOpen = helpFor === m;
           return (
-            <div key={m} style={{ flex: 1, display: 'flex', gap: 2 }}>
-              <button
-                type="button"
-                onClick={() => onPick(m)}
-                disabled={disabled}
-                aria-pressed={active}
-                style={{
-                  ...ghostBtn, flex: 1, padding: '8px 6px',
-                  fontSize: 'var(--fs-micro)', letterSpacing: '.16em',
-                  background: active ? 'var(--paper)' : 'transparent',
-                  color: active ? 'var(--ink)' : 'var(--mute)',
-                  borderColor: active ? 'var(--paper)' : 'var(--rule)',
-                  cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-                }}
-              >{MODE_LABEL[m].toUpperCase()}</button>
-              <button
-                type="button"
-                onClick={() => setHelpFor(helpOpen ? null : m)}
-                aria-label={`What does ${MODE_LABEL[m]} mean?`}
-                aria-expanded={helpOpen}
-                style={{
-                  ...ghostBtn, flex: '0 0 auto', width: 28, padding: 0,
-                  fontSize: 'var(--fs-micro)',
-                  background: helpOpen ? 'var(--gold)' : 'transparent',
-                  color: helpOpen ? 'var(--ink)' : 'var(--mute)',
-                  borderColor: helpOpen ? 'var(--gold)' : 'var(--rule)',
-                }}
-              >?</button>
-            </div>
+            <button
+              key={m}
+              type="button"
+              onClick={() => onPick(m)}
+              disabled={disabled}
+              aria-pressed={active}
+              style={{
+                ...ghostBtn, flex: 1, padding: '8px 6px',
+                fontSize: 'var(--fs-micro)', letterSpacing: '.16em',
+                background: active ? 'var(--paper)' : 'transparent',
+                color: active ? 'var(--ink)' : 'var(--mute)',
+                borderColor: active ? 'var(--paper)' : 'var(--rule)',
+                cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
+              }}
+            >{MODE_LABEL[m].toUpperCase()}</button>
           );
         })}
       </div>
-      {helpFor && (
-        <div style={wlNote()}>
-          <strong style={{ color: 'var(--paper)' }}>{MODE_LABEL[helpFor]}.</strong> {MODE_HELP_LONG[helpFor]}
-        </div>
+      {helpOpen && createPortal(
+        <div
+          onClick={() => setHelpOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--ink)', border: '1px solid var(--rule)', padding: 16,
+              maxWidth: 420, width: '100%', maxHeight: '85vh', overflowY: 'auto',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            <span style={wlLabel}>WISHLIST DRAFT MODES</span>
+            {['manual', 'auto', 'disabled'].map(m => (
+              <div key={m} style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--paper)', letterSpacing: '.12em' }}>{MODE_LABEL[m].toUpperCase()}</strong>
+                <br />{MODE_HELP_LONG[m]}
+              </div>
+            ))}
+            <button type="button" onClick={() => setHelpOpen(false)} style={{ ...btnBase, background: 'var(--paper)', color: 'var(--ink)' }}>GOT IT</button>
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
