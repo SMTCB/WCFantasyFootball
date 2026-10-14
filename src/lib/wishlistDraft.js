@@ -16,6 +16,17 @@ export const MODE_HELP = {
 // Rule mirrors set_wishlist_draft_mode: auto times need ≥ 6h notice.
 export const MIN_NOTICE_MS = 6 * 60 * 60 * 1000;
 
+// Auto times may run right up to the first kickoff, minus one scheduler tick
+// (the cron is */15). Mirrors migration 298.
+export const KICKOFF_BUFFER_MS = 15 * 60 * 1000;
+
+// Short explanations behind each mode's "?" button.
+export const MODE_HELP_LONG = {
+  manual:   'You decide when the draft runs: press "Run draft now" in this panel once enough managers have submitted their wishlists. The market stays closed (trades still allowed) until you do. If you forget, the draft runs automatically 8 hours before the first kickoff so nobody is left without a draft. You get a reminder 24h before kickoff.',
+  auto:     'Pick a date and hour and the draft runs by itself at that time. Managers see it on the league banner and get a notification. Choose at least 6 hours from now so managers can prepare, and before the first kickoff of the round. The suggestion is 48h before kickoff. You can still run it earlier by hand.',
+  disabled: 'No draft this round. The market opens straight away, first come, first served. Wishlists are kept and carry over to a later round.',
+};
+
 // Local, compact: "Sat 12 Oct, 18:00"
 export function fmtDraftTime(iso) {
   if (!iso) return null;
@@ -34,12 +45,12 @@ export function toLocalInput(iso) {
 
 // Suggested auto time when the commissioner switches a round to Auto:
 // 48h before kickoff, but never sooner than 6h from now (+ a minute of slack)
-// and never after the kickoff − 8h deadline. Mirrors the SQL default.
-export function suggestDraftTime({ firstKickoffAt, hardDeadlineAt }) {
+// and never after the first kickoff − 15 min. Mirrors the SQL default.
+export function suggestDraftTime({ firstKickoffAt }) {
   const minT = Date.now() + MIN_NOTICE_MS + 5 * 60 * 1000;
   let t = firstKickoffAt ? new Date(firstKickoffAt).getTime() - 48 * 60 * 60 * 1000 : minT;
   t = Math.max(t, minT);
-  if (hardDeadlineAt) t = Math.min(t, new Date(hardDeadlineAt).getTime());
+  if (firstKickoffAt) t = Math.min(t, new Date(firstKickoffAt).getTime() - KICKOFF_BUFFER_MS);
   return new Date(t).toISOString();
 }
 
@@ -49,7 +60,7 @@ export function suggestDraftTime({ firstKickoffAt, hardDeadlineAt }) {
 export function draftErrorMessage(res) {
   switch (res?.code) {
     case 'TOO_SOON':         return 'Pick a time at least 6 hours from now so managers can prepare.';
-    case 'AFTER_DEADLINE':   return `The draft must run at least 8h before kickoff${res.hard_deadline_at ? ` — latest ${fmtDraftTime(res.hard_deadline_at)}` : ''}.`;
+    case 'AFTER_DEADLINE':   return `The draft must run before the first kickoff${res.latest_at ? ` — latest ${fmtDraftTime(res.latest_at)}` : ''}.`;
     case 'TOO_LATE':         return 'Kickoff is too close to bring the draft back this round — it stays a free market. Change the league default for next round.';
     case 'NO_PENDING_ROUND': return 'This round\'s draft has already run. Change the league default to affect the next round.';
     case 'DRAFT_RUNNING':    return 'The draft is running right now — try again in a minute.';

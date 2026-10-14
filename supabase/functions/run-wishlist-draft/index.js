@@ -161,7 +161,10 @@ async function handleWindow(w, now, nowIso) {
   let trigger = null;
   if (w.run_requested_at)                                              trigger = 'manual';
   else if (w.mode === 'auto' && w.scheduled_at && ts(w.scheduled_at) <= now) trigger = 'auto';
-  else if (deadline !== null && now >= deadline)                       trigger = 'deadline';
+  // An Auto time may sit after kickoff − 8h (migration 298 lets it run up to
+  // kickoff − 15 min) — don't let the safety net pre-empt a later chosen time.
+  else if (deadline !== null && now >= deadline
+           && !(w.mode === 'auto' && w.scheduled_at && ts(w.scheduled_at) > now)) trigger = 'deadline';
 
   if (trigger) {
     const win = await claimWishlistDraft(supabase, w.id, trigger);
