@@ -12,6 +12,14 @@
 
 ---
 
+## ✅ Wishlist Draft: pre-set the Auto date before the round exists + Auto up to kickoff + mode help (2026-10-14) — migration 298
+
+- **Problem**: a commissioner couldn't set a date for the between-matchday draft in the "NEXT ROUND" (awaiting_round) phase, and Auto times were capped at kickoff − 8h.
+- **Migration 298**: `get_wishlist_next_draft` / `set_wishlist_next_draft` store a pre-set Auto time (`league_config` key `wishlist_draft_next_preset`, ≥ 6h from now, ≤ first kickoff − 15 min — one cron tick). `create_wishlist_draft_round` consumes it (mode forced to Auto, falls back + warns commissioners if it no longer fits). `set_wishlist_draft_mode` / `sync_wishlist_draft_kickoffs` Auto cap moved from kickoff − 8h to kickoff − 15 min. Manual's kickoff − 8h safety net is unchanged.
+- **`run-wishlist-draft`**: the 8h safety net no longer pre-empts a later Auto time.
+- **UI** (`CommissionerPanel.jsx`, `wishlistDraft.js`): "NEXT DRAFT · ROUND N" date/time picker (prefilled 48h before kickoff), and a "?" help button on every Manual / Auto / Disabled option.
+- Next migration: 299_.
+
 ## ✅ check-cron-health root cause: statement timeout on an unpruned cron log — migration 297 (2026-10-12) — PR #1032
 
 With PR #1031 making errors readable, the 09:00 UTC run showed the real cause of the hourly `check-cron-health` failures (since it was first enabled 2026-07-28): `get_cron_failure_streaks` → `57014 canceling statement due to statement timeout`. It sorted all of `cron.job_run_details` — 271,695 rows / 179 MB, never pruned, +~2,100/day — and the API role (`authenticator`) has `statement_timeout = 8s`. An earlier "the DB side is healthy" check was wrong: it ran as an admin session with no timeout.

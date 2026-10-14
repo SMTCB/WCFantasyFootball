@@ -2,7 +2,7 @@
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
 import {
-  MODE_LABEL, MODE_HELP, MIN_NOTICE_MS, fmtDraftTime, toLocalInput, suggestDraftTime, draftErrorMessage,
+  MODE_LABEL, MODE_HELP, MODE_HELP_LONG, MIN_NOTICE_MS, KICKOFF_BUFFER_MS, fmtDraftTime, toLocalInput, suggestDraftTime, draftErrorMessage,
 } from '../../lib/wishlistDraft';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
@@ -1446,6 +1446,7 @@ function useWishlistDraftAdmin(leagueId, league) {
   const [status, setStatus]       = useState(null); // get_wishlist_draft_status, null = n/a
   const [members, setMembers]     = useState([]);
   const [submitted, setSubmitted] = useState(null); // Set<user_id>, null = not loaded
+  const [nextDraft, setNextDraft] = useState(null); // get_wishlist_next_draft (awaiting_round only)
   const enabled = !!leagueId && !!league && isWishlistDraftLeague(league);
 
   const reload = useCallback(async () => {
@@ -1457,6 +1458,12 @@ function useWishlistDraftAdmin(leagueId, league) {
       return;
     }
     setStatus(st);
+    if (st.phase === 'awaiting_round') {
+      const { data: nd } = await supabase.rpc('get_wishlist_next_draft', { p_league_id: leagueId });
+      setNextDraft(nd?.available ? nd : null);
+    } else {
+      setNextDraft(null);
+    }
     const [{ data: mem }, { data: subs }] = await Promise.all([
       supabase
         .from('league_members')
@@ -1475,7 +1482,7 @@ function useWishlistDraftAdmin(leagueId, league) {
 
   useEffect(() => { reload(); }, [reload]);
 
-  return { wishlistStatus: status, wishlistMembers: members, wishlistSubmitted: submitted, reloadWishlist: reload };
+  return { wishlistStatus: status, wishlistMembers: members, wishlistSubmitted: submitted, wishlistNextDraft: nextDraft, reloadWishlist: reload };
 }
 
 function wishlistCardStatus(st) {
@@ -1499,33 +1506,119 @@ const wlNote = (color = 'var(--mute)') => ({
 const wlLabel = { fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' };
 
 function ModeSegment({ value, onPick, disabled }) {
+  const [helpFor, setHelpFor] = useState(null);
   return (
-    <div style={{ display: 'flex', gap: 4 }}>
-      {['manual', 'auto', 'disabled'].map(m => {
-        const active = value === m;
-        return (
-          <button
-            key={m}
-            type="button"
-            onClick={() => onPick(m)}
-            disabled={disabled}
-            aria-pressed={active}
-            style={{
-              ...ghostBtn, flex: 1, padding: '8px 6px',
-              fontSize: 'var(--fs-micro)', letterSpacing: '.16em',
-              background: active ? 'var(--paper)' : 'transparent',
-              color: active ? 'var(--ink)' : 'var(--mute)',
-              borderColor: active ? 'var(--paper)' : 'var(--rule)',
-              cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-            }}
-          >{MODE_LABEL[m].toUpperCase()}</button>
-        );
-      })}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {['manual', 'auto', 'disabled'].map(m => {
+          const active = value === m;
+          const helpOpen = helpFor === m;
+          return (
+            <div key={m} style={{ flex: 1, display: 'flex', gap: 2 }}>
+              <button
+                type="button"
+                onClick={() => onPick(m)}
+                disabled={disabled}
+                aria-pressed={active}
+                style={{
+                  ...ghostBtn, flex: 1, padding: '8px 6px',
+                  fontSize: 'var(--fs-micro)', letterSpacing: '.16em',
+                  background: active ? 'var(--paper)' : 'transparent',
+                  color: active ? 'var(--ink)' : 'var(--mute)',
+                  borderColor: active ? 'var(--paper)' : 'var(--rule)',
+                  cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
+                }}
+              >{MODE_LABEL[m].toUpperCase()}</button>
+              <button
+                type="button"
+                onClick={() => setHelpFor(helpOpen ? null : m)}
+                aria-label={`What does ${MODE_LABEL[m]} mean?`}
+                aria-expanded={helpOpen}
+                style={{
+                  ...ghostBtn, flex: '0 0 auto', width: 28, padding: 0,
+                  fontSize: 'var(--fs-micro)',
+                  background: helpOpen ? 'var(--gold)' : 'transparent',
+                  color: helpOpen ? 'var(--ink)' : 'var(--mute)',
+                  borderColor: helpOpen ? 'var(--gold)' : 'var(--rule)',
+                }}
+              >?</button>
+            </div>
+          );
+        })}
+      </div>
+      {helpFor && (
+        <div style={wlNote()}>
+          <strong style={{ color: 'var(--paper)' }}>{MODE_LABEL[helpFor]}.</strong> {MODE_HELP_LONG[helpFor]}
+        </div>
+      )}
     </div>
   );
 }
 
-function WishlistDraftControls({ leagueId, status, members, submitted, reload, commissioner }) {
+// Awaiting-round phase: pre-set next round's Auto time before its window exists.
+function NextDraftPicker({ leagueId, nextDraft, lock, setBusy, say, reload }) {
+  const [at, setAt] = useState('');
+  useEffect(() => {
+    if (!nextDraft) return;
+    setAt(toLocalInput(nextDraft.preset_at ?? suggestDraftTime({ firstKickoffAt: nextDraft.first_kickoff_at })));
+  }, [nextDraft]);
+  if (!nextDraft) return null;
+
+  const minLocal = toLocalInput(new Date(Date.now() + MIN_NOTICE_MS).toISOString());
+  const maxLocal = nextDraft.latest_at ? toLocalInput(nextDraft.latest_at) : undefined;
+
+  const save = async (iso) => {
+    setBusy(true);
+    say(null, null);
+    try {
+      const { data, error } = await supabase.rpc('set_wishlist_next_draft', { p_league_id: leagueId, p_at: iso });
+      if (error) throw new Error(error.message);
+      if (!data?.ok) { say('err', draftErrorMessage(data)); return; }
+      say('ok', iso
+        ? `Round ${data.round_number} draft pre-set to ${fmtDraftTime(iso)} (Auto). Managers are told when the round opens.`
+        : `Pre-set cleared — round ${data.round_number} follows the league default.`);
+      await reload();
+    } catch (e) {
+      say('err', e.message || 'Could not save the draft time');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={wlLabel}>
+        NEXT DRAFT · ROUND {nextDraft.round_number} · AUTO{nextDraft.preset_at ? ` · SET ${fmtDraftTime(nextDraft.preset_at)}` : ''}
+      </span>
+      <input
+        type="datetime-local"
+        value={at}
+        min={minLocal}
+        max={maxLocal}
+        onChange={e => setAt(e.target.value)}
+        style={inputStyle}
+      />
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--mute)', lineHeight: 1.7 }}>
+        {nextDraft.first_kickoff_at
+          ? <>KICKOFF · {fmtDraftTime(nextDraft.first_kickoff_at)}<br />LATEST · {fmtDraftTime(nextDraft.latest_at)} · EARLIEST · 6H FROM NOW</>
+          : 'NO KICKOFF DATE YET · EARLIEST 6H FROM NOW'}
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button
+          type="button"
+          disabled={lock || !at}
+          onClick={() => save(new Date(at).toISOString())}
+          style={{ ...btnBase, flex: 1, background: 'var(--paper)', color: 'var(--ink)', opacity: lock || !at ? 0.5 : 1 }}
+        >{nextDraft.preset_at ? 'UPDATE TIME' : 'SET AUTO TIME'}</button>
+        {nextDraft.preset_at && (
+          <button type="button" disabled={lock} onClick={() => save(null)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CLEAR</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function WishlistDraftControls({ leagueId, status, members, submitted, reload, commissioner, nextDraft = null }) {
   const [busy, setBusy]             = useState(false);
   const [picked, setPicked]         = useState(null); // mode chosen but not yet applied
   const [autoAt, setAutoAt]         = useState('');
@@ -1546,7 +1639,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
   const shown           = picked ?? mode;
   const reEnabling      = mode === 'disabled' && picked && picked !== 'disabled';
 
-  const say = (type, text) => commissioner.setCommMsg({ type, text });
+  const say = (type, text) => commissioner.setCommMsg(type ? { type, text } : null);
 
   const apply = async (scope, nextMode, scheduledAt = null) => {
     setBusy(true);
@@ -1601,7 +1694,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
     if (m === mode && m !== 'auto') { setPicked(null); return; }
     if (m === 'auto') {
       setAutoAt(toLocalInput(status.scheduled_at ?? suggestDraftTime({
-        firstKickoffAt: status.first_kickoff_at, hardDeadlineAt: status.hard_deadline_at,
+        firstKickoffAt: status.first_kickoff_at,
       })));
     }
     setPicked(m);
@@ -1633,7 +1726,9 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
   };
 
   const minLocal = toLocalInput(new Date(Date.now() + MIN_NOTICE_MS).toISOString());
-  const maxLocal = status.hard_deadline_at ? toLocalInput(status.hard_deadline_at) : undefined;
+  const maxLocal = status.first_kickoff_at
+    ? toLocalInput(new Date(new Date(status.first_kickoff_at).getTime() - KICKOFF_BUFFER_MS).toISOString())
+    : undefined;
   const submittedCount = submitted ? members.filter(m => submitted.has(m.user_id)).length : null;
 
   return (
@@ -1648,8 +1743,20 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
       {phase === 'awaiting_round' && (
         <div style={wlNote()}>
           The last draft has run and round {round} isn&apos;t set up yet — it opens once the current round
-          finishes, as <strong style={{ color: 'var(--paper)' }}>{MODE_LABEL[defaultMode]}</strong>. Change the league default below to alter that.
+          finishes, as <strong style={{ color: 'var(--paper)' }}>{MODE_LABEL[defaultMode]}</strong>. Change the league default below to alter that,
+          or pre-set an Auto draft time here.
         </div>
+      )}
+
+      {phase === 'awaiting_round' && (
+        <NextDraftPicker
+          leagueId={leagueId}
+          nextDraft={nextDraft}
+          lock={lock}
+          setBusy={setBusy}
+          say={say}
+          reload={reload}
+        />
       )}
 
       {phase === 'awaiting_round' && (
@@ -1790,7 +1897,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     archiveLeague, unarchiveLeague,
   } = commissioner;
 
-  const { wishlistStatus, wishlistMembers, wishlistSubmitted, reloadWishlist } = useWishlistDraftAdmin(leagueId, league);
+  const { wishlistStatus, wishlistMembers, wishlistSubmitted, wishlistNextDraft, reloadWishlist } = useWishlistDraftAdmin(leagueId, league);
   const wlCard = wishlistCardStatus(wishlistStatus);
 
   // Deadline-controlled = league belongs to a tournament with matchday_deadlines
@@ -2058,6 +2165,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                 members={wishlistMembers}
                 submitted={wishlistSubmitted}
                 reload={reloadWishlist}
+                nextDraft={wishlistNextDraft}
                 commissioner={commissioner}
               />
             }
@@ -2671,7 +2779,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   // Draft submission tracker — same dual-call pattern, shared by desktop LifecycleOps and the mobile DRAFT card.
   const { draftMembers, draftSubmissions } = useDraftSubmissionTracker(leagueId, league);
   // Wishlist draft — mobile card only (desktop LifecycleOps loads its own copy).
-  const { wishlistStatus: mobWlStatus, wishlistMembers: mobWlMembers, wishlistSubmitted: mobWlSubmitted, reloadWishlist: mobReloadWishlist } = useWishlistDraftAdmin(isMobile ? leagueId : null, league);
+  const { wishlistStatus: mobWlStatus, wishlistMembers: mobWlMembers, wishlistSubmitted: mobWlSubmitted, wishlistNextDraft: mobWlNext, reloadWishlist: mobReloadWishlist } = useWishlistDraftAdmin(isMobile ? leagueId : null, league);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -2876,6 +2984,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               members={mobWlMembers}
               submitted={mobWlSubmitted}
               reload={mobReloadWishlist}
+              nextDraft={mobWlNext}
               commissioner={commissioner}
             />
           </MobLifecycleCard>

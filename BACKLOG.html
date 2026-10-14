@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-10-12. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-10-14. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>261</strong><span>closed</span></div>
+      <div class="total-pill"><strong>262</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (179)</span>
+    <span class="chip" data-filter-kind="done">Shipped (180)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">261</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">262</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">179</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">180</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,39 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">179</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">180</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft: pre-set the auto date before the round exists + auto up to kickoff + mode help (2026-10-14) — migration 298 
+
+- **problem**: a commissioner couldn&#x27;t set a date for the between-matchday draft in the &quot;next round&quot; (awaiting_round) phase, and auto times were capped at kickoff − 8h.
+- **migration 298**: `get_wishlist_next_draft` / `set_wishlist_next_draft` store a pre-set auto time (`league_config` key `wishlist_draft_next_preset`, ≥ 6h from now, ≤ first kickoff − 15 min — one cron tick). `create_wishlist_draft_round` consumes it (mode forced to auto, falls back + warns commissioners if it no longer fits). `set_wishlist_draft_mode` / `sync_wishlist_draft_kickoffs` auto cap moved from kickoff − 8h to kickoff − 15 min. manual&#x27;s kickoff − 8h safety net is unchanged.
+- **`run-wishlist-draft`**: the 8h safety net no longer pre-empts a later auto time.
+- **ui** (`commissionerpanel.jsx`, `wishlistdraft.js`): &quot;next draft · round n&quot; date/time picker (prefilled 48h before kickoff), and a &quot;?&quot; help button on every manual / auto / disabled option.
+- next migration: 299_.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Wishlist Draft: pre-set the Auto date before the round exists + Auto up to kickoff + mode help</h3>
+        <p class="card-summary">Problem : a commissioner couldn't set a date for the between-matchday draft in the "NEXT ROUND" (awaiting_round) phase, and Auto times were capped at kickoff − 8h.…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-14</span><span class="foot-refs">migration 298</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Wishlist Draft: pre-set the Auto date before the round exists + Auto up to kickoff + mode help</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Problem : a commissioner couldn't set a date for the between-matchday draft in the "NEXT ROUND" (awaiting_round) phase, and Auto times were capped at kickoff − 8h.…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · migration 298</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-14</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><ul>
+<li><strong>Problem</strong>: a commissioner couldn't set a date for the between-matchday draft in the "NEXT ROUND" (awaiting_round) phase, and Auto times were capped at kickoff − 8h.</li>
+<li><strong>Migration 298</strong>: <code>get_wishlist_next_draft</code> / <code>set_wishlist_next_draft</code> store a pre-set Auto time (<code>league_config</code> key <code>wishlist_draft_next_preset</code>, ≥ 6h from now, ≤ first kickoff − 15 min — one cron tick). <code>create_wishlist_draft_round</code> consumes it (mode forced to Auto, falls back + warns commissioners if it no longer fits). <code>set_wishlist_draft_mode</code> / <code>sync_wishlist_draft_kickoffs</code> Auto cap moved from kickoff − 8h to kickoff − 15 min. Manual's kickoff − 8h safety net is unchanged.</li>
+<li><strong><code>run-wishlist-draft</code></strong>: the 8h safety net no longer pre-empts a later Auto time.</li>
+<li><strong>UI</strong> (<code>CommissionerPanel.jsx</code>, <code>wishlistDraft.js</code>): "NEXT DRAFT · ROUND N" date/time picker (prefilled 48h before kickoff), and a "?" help button on every Manual / Auto / Disabled option.</li>
+<li>Next migration: 299_.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ check-cron-health root cause: statement timeout on an unpruned cron log — migration 297 (2026-10-12) — pr #1032 
 
 with pr #1031 making errors readable, the 09:00 utc run showed the real cause of the hourly `check-cron-health` failures (since it was first enabled 2026-07-28): `get_cron_failure_streaks` → `57014 canceling statement due to statement timeout`. it sorted all of `cron.job_run_details` — 271,695 rows / 179 mb, never pruned, +~2,100/day — and the api role (`authenticator`) has `statement_timeout = 8s`. an earlier &quot;the db side is healthy&quot; check was wrong: it ran as an admin session with no timeout.
