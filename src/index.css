@@ -173,6 +173,9 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color])
 select, textarea {
   font-size: max(16px, var(--fs-body)) !important;
 }
+/* TCH-01: keep a small chip's look but extend its tap area to >=44px (iOS 44pt / Android 48dp). */
+.hit-44 { position: relative; }
+.hit-44::after { content: ''; position: absolute; inset: -12px -6px; }
 
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar { display: none; }
