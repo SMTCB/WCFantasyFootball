@@ -685,8 +685,16 @@ Deno.serve(async (req) => {
       // 14-circle (or 12-league) sweep afterward, which is what made single-item
       // calls just as likely to hit the platform's ~150s idle-connection timeout
       // as the unscoped run.
-      const runLeagues = !cronCircleId;
-      const runCircles = !cronLeagueId;
+      //
+      // `scope` ('leagues' | 'circles') splits the sweep across separate invocations:
+      // the unscoped run does 4 leagues (~35s each incl. delay) and then ~10 circles,
+      // which exceeds the platform timeout, so circles never ran. With scope 'circles'
+      // each call handles at most `limit` circles that don't yet have an edition today
+      // and is re-invoked by cron every few minutes until all are done (idempotent).
+      const scope = body.scope === 'leagues' || body.scope === 'circles' ? body.scope as 'leagues' | 'circles' : null;
+      const circleBatchLimit = Number.isInteger(body.limit) && body.limit > 0 ? body.limit as number : null;
+      const runLeagues = !cronCircleId && scope !== 'circles';
+      const runCircles = !cronLeagueId && scope !== 'leagues';
 
       // ── Per-league editions ──
       if (runLeagues) {
@@ -724,8 +732,9 @@ Deno.serve(async (req) => {
       const { data: circleRows } = cronCircleId
         ? await sb.from('circles').select('id, name').eq('id', cronCircleId)
         : await sb.from('circles').select('id, name');
+      let circlesAttempted = 0;
       for (const circle of (circleRows ?? []) as { id: string; name: string }[]) {
-        await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+        if (circleBatchLimit !== null && circlesAttempted >= circleBatchLimit) break;
         try {
           // Skip if circle has no linked leagues (nothing to report)
           const { count: linkedCount } = await sb.from('circle_leagues').select('*', { count: 'exact', head: true }).eq('circle_id', circle.id);
@@ -739,6 +748,10 @@ Deno.serve(async (req) => {
             const hoursSince = (Date.now() - new Date(todayEdition.generated_at).getTime()) / 3_600_000;
             if (hoursSince < 12) { results.skipped++; continue; }
           }
+          // Batched calls are re-run by cron, so skip circles already done today.
+          if (circleBatchLimit !== null && todayEdition) { results.skipped++; continue; }
+          if (circlesAttempted > 0) await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+          circlesAttempted++;
           await generateForCircle(sb, circle, false);
           results.processed++;
         } catch (err) {
