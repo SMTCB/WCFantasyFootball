@@ -75,7 +75,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
                 {s.total_points.toLocaleString()}
               </div>
               {(s.ace_card_bonus > 0 || s.captain_bonus > 0) && (
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '0.06em' }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '0.06em' }}>
                   {s.ace_card_bonus > 0 && `+${s.ace_card_bonus} ace`}
                   {s.ace_card_bonus > 0 && s.captain_bonus > 0 && ' · '}
                   {s.captain_bonus > 0 && `+${s.captain_bonus} cap`}

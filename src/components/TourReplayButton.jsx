@@ -48,7 +48,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
         borderRadius:  '50%',
         background:    'rgba(224,168,0,0.15)',
         border:        '1px solid rgba(224,168,0,0.6)',
-        color:         'var(--gold)',
+        color:         'var(--gold-text)',
         fontFamily:    MONO,
         fontSize: 'var(--fs-micro)',
         fontWeight:    700,
@@ -64,7 +64,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
         fontFamily:    MONO,
         fontSize: 'var(--fs-micro)',
         letterSpacing: '.2em',
-        color:         'var(--gold)',
+        color:         'var(--gold-text)',
         fontWeight:    600,
         whiteSpace:    'nowrap',
       }}>{label}</span>

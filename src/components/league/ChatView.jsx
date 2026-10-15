@@ -65,7 +65,7 @@ function MessageBody({ text, onHashtagClick }) {
         <span
           key={`h${i++}`}
           onClick={() => onHashtagClick(token)}
-          style={{ color: 'var(--gold)', fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '0 2px', background: 'rgba(240,180,0,.1)', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(240,180,0,.5)' }}
+          style={{ color: 'var(--gold-text)', fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '0 2px', background: 'rgba(240,180,0,.1)', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(240,180,0,.5)' }}
         >{token}</span>
       );
     } else {
@@ -172,7 +172,7 @@ export default function ChatView({
           {/* Pinned banner */}
           {pinnedMessage && (
             <div style={{ padding: '10px 20px', background: 'rgba(224,168,0,.06)', borderBottom: '1px solid rgba(224,168,0,.27)', display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: 'var(--gold)', padding: '2px 6px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
+              <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', padding: '2px 6px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
               <span style={{ fontFamily: 'Archivo,sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 "{pinnedMessage.message}"
               </span>
@@ -425,7 +425,7 @@ export default function ChatView({
       {/* Pinned banner */}
       {pinnedMessage && (
         <div style={{ padding: '8px 16px', background: 'rgba(224,168,0,.06)', borderBottom: '1px solid rgba(224,168,0,.27)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-          <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: 'var(--gold)', padding: '2px 5px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
+          <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', padding: '2px 5px', background: 'rgba(224,168,0,.18)', letterSpacing: '.18em', flexShrink: 0 }}>PINNED</span>
           <span style={{ fontFamily: 'Archivo,sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--paper)', lineHeight: 1.4, flex: 1, overflow: 'hidden' }}>
             "{pinnedMessage.message}"
             <span style={{ fontFamily: MONO, color: 'var(--mute)', fontSize: 'var(--fs-micro)', marginLeft: 4, letterSpacing: '.16em' }}>— @{pinnedMessage.userName}</span>

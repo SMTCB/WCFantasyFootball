@@ -1060,7 +1060,7 @@ export default function SquadScreen() {
         <button onClick={() => { setDangerDismissed(true); setMobileTab('tools'); }} className="text-[9px] font-black uppercase tracking-widest shrink-0 px-2 py-1 rounded" style={{ color: 'var(--danger)', background: 'rgba(240,58,58,0.12)' }}>
           View
         </button>
-        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'var(--on-shell-faint)' }}>×</button>
+        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'var(--on-shell-dim)' }}>×</button>
       </div>
     );
   };

@@ -384,13 +384,13 @@ export default function HomeDashboardScreen() {
           <div style={{ display: 'flex', gap: 24, marginTop: 18 }}>
             <div>
               <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{myCircles.length}</div>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)', marginTop: 2 }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>
                 {myCircles.length === 1 ? 'CLUBHOUSE' : 'CLUBHOUSES'}
               </div>
             </div>
             <div>
               <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)', marginTop: 2 }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>
                 COMPETITIONS
               </div>
             </div>

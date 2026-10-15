@@ -200,7 +200,7 @@ export default function F1HomeScreen() {
                 style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(225,6,0,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid var(--shell-rule)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: p.paddock_id === paddockId ? 'var(--f1)' : 'var(--on-shell)' }}
               >
                 {p.name}
-                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-faint)' }}>{p.member_count}m</span>
+                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)' }}>{p.member_count}m</span>
                 {p.archived && <ArchivedBadge />}
               </button>
             ))}
@@ -214,7 +214,7 @@ export default function F1HomeScreen() {
             )}
             <button
               onClick={() => { navigate('/f1'); setShowSelector(false); }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-faint)', letterSpacing: '0.1em' }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '0.1em' }}
             >
               + JOIN OR CREATE PADDOCK
             </button>

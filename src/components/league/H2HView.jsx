@@ -153,7 +153,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                     <span>-{row.draws}-</span>
                     <span style={{ color: 'var(--danger)' }}>{row.losses}</span>
                   </div>
-                  <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--gold)' }}>{row.total_h2h_pts}</div>
+                  <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--gold-text)' }}>{row.total_h2h_pts}</div>
                 </div>
               );
             })}
@@ -189,7 +189,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                   const byeName = usernameOf(row.bye_user_id);
                   return (
                     <div key={row.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid var(--shell-rule)' }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.18em' }}>BYE</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.18em' }}>BYE</span>
                       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{byeName}</span>
                       {isResolved && (
                         <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', fontWeight: 700 }}>+{row.home_h2h_pts}</span>

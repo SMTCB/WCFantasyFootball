@@ -8,7 +8,7 @@ import CompetitionRankBadge from '../CompetitionRankBadge';
 // Maps gazette entry_type (DB enum) to a filter category and display label.
 // Current enum values: draft_report, breaking_news, activity, auction_result, trade_result, p2p_challenge, p2p_result, wishlist_draft_report
 const ENTRY_META = {
-  draft_report:     { filter: 'GAME',   badge: 'DRAFT',      color: 'var(--gold)' },
+  draft_report:     { filter: 'GAME',   badge: 'DRAFT',      color: 'var(--gold-text)' },
   breaking_news:    { filter: 'GAME',   badge: 'NEWS',       color: 'var(--danger)' },
   activity:         { filter: 'GAME',   badge: 'SCORES',     color: 'var(--positive)' },
   auction_result:   { filter: 'TRADES', badge: 'AUCTION',    color: 'var(--positive)' },
@@ -17,10 +17,10 @@ const ENTRY_META = {
   relaxation:       { filter: 'GAME',   badge: 'POOL',       color: 'var(--cyan)' },
   cup_elimination:  { filter: 'GAME',   badge: 'CUP',        color: 'var(--danger)' },
   transfer:         { filter: 'TRADES', badge: 'TRANSFER',   color: 'var(--positive)' },
-  classified:       { filter: 'GAME',   badge: 'CLASSIFIED', color: 'var(--gold)' },
-  p2p_challenge:    { filter: 'TRADES', badge: 'CHALLENGE',  color: 'var(--gold)' },
-  p2p_result:       { filter: 'TRADES', badge: 'P2P',        color: 'var(--gold)' },
-  wishlist_draft_report: { filter: 'GAME', badge: 'WISHLIST', color: 'var(--gold)' },
+  classified:       { filter: 'GAME',   badge: 'CLASSIFIED', color: 'var(--gold-text)' },
+  p2p_challenge:    { filter: 'TRADES', badge: 'CHALLENGE',  color: 'var(--gold-text)' },
+  p2p_result:       { filter: 'TRADES', badge: 'P2P',        color: 'var(--gold-text)' },
+  wishlist_draft_report: { filter: 'GAME', badge: 'WISHLIST', color: 'var(--gold-text)' },
 };
 
 // Normalise a single gazette bullet to a display string.
@@ -180,7 +180,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         </div>
         {/* Leader */}
         <div style={{ padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: '2px solid var(--gold)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.2em' }}>LEADER · {mgrMono(leaderName)}</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.2em' }}>LEADER · {mgrMono(leaderName)}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{leader?.total_points != null ? Math.round(leader.total_points) : '—'}</span>
           </div>
@@ -196,7 +196,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             rows={members}
             columns={[
               { key: 'total', label: 'TOT', width: '80px', accessor: m => Math.round(m.total_points ?? 0) },
-              ...(h2hEnabled ? [{ key: 'h2h', label: 'H2H', width: '60px', accessor: m => h2hMap[m.user_id] ?? '—', color: 'var(--gold)' }] : []),
+              ...(h2hEnabled ? [{ key: 'h2h', label: 'H2H', width: '60px', accessor: m => h2hMap[m.user_id] ?? '—', color: 'var(--gold-text)' }] : []),
             ]}
             accent="var(--cyan)"
             activeColumnKey="total"
@@ -251,7 +251,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             >
               <span style={{ fontSize: 'var(--fs-body)' }}>‹</span>
               <span style={{
-                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--gold)',
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--gold-text)',
                 writingMode: 'vertical-rl', transform: 'rotate(180deg)',
               }}>ACTIVITY</span>
             </button>
@@ -429,7 +429,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                 <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{Math.round(m.total_points ?? 0)}</div>
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>TOT</div>
                 {h2hEnabled && (
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.12em', marginTop: 1 }}>
                     {h2hMap[m.user_id] ?? '—'} H2H
                   </div>
                 )}
