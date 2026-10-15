@@ -224,7 +224,9 @@ Always create a new file — never modify existing migrations.
 | 296 | `296_schedule_reconcile_scores.sql` | Schedules `reconcile-scores-daily` (07:17 UTC). Scoped to rounds with a `round_backups` row in `status = 'active'` tournaments, so the finished World Cup's known discrepancies do not re-alert. Service bearer read from an existing cron at apply time — no key in git. |
 | 297 | `297_fast_cron_failure_streaks_and_prune.sql` | `get_cron_failure_streaks` scans only the latest 20,000 runs (PK index) — was timing out at the API role's 8s limit on 271k unpruned rows, so `check-cron-health` failed every hour since 2026-07-28; adds `prune-cron-run-history` cron (daily 04:30 UTC, >30 days) and a one-off delete of 210,034 old rows. |
 
-**Next migration**: `298_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
+| 298 | `298_wishlist_next_draft_preset.sql` | Commissioner pre-sets next round's Auto draft time before its window exists (`get_/set_wishlist_next_draft`, `league_config` key `wishlist_draft_next_preset`); Auto cap moves kickoff − 8h → kickoff − 15 min in `set_wishlist_draft_mode`, `sync_wishlist_draft_kickoffs`, `create_wishlist_draft_round` (PR #1036). |
+
+**Next migration**: `299_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
 
 **Key pipeline facts (2026-06-29 — Redesign Phase C, PR #676, v2 branch):**
 - **`useActiveCompetition()` hook** (`src/hooks/useActiveCompetition.js`): derives `{sport, competitionId}` from `useLocation().pathname` only — no context, no global state. Football matched by `/league/`, `/live`, `/squad`, `/market`, `/recap`; F1 by `/f1/`; tennis by `/tennis/tournament/`. `SportContext.activeSport`/`setActiveSport` **removed entirely**. `AppLayout`, `ClubhouseScreen`, `F1HomeScreen`, `PaddockLobbyScreen`, `PlayerBoxScreen` all cleaned of `setActiveSport()` calls. `SportContext` retains `activePaddockId`/`activePlayerBoxId` (used by `usePaddock`/`usePlayerBox` for localStorage).

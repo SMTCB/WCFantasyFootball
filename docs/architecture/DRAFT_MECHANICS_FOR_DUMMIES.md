@@ -171,7 +171,7 @@ After the season draft, draft leagues run the same snake allocation again betwee
 | Mode | When it runs | Market before the run |
 |------|--------------|-----------------------|
 | **Manual** | When the commissioner presses "Run now". **Safety net**: it always runs at first kickoff − 8h if nobody did | Closed (trades still allowed) |
-| **Auto** | At the commissioner's chosen time: at least 6h notice, suggested kickoff − 48h, no later than kickoff − 8h. The league banner shows the time | Closed (trades still allowed) |
+| **Auto** | At the commissioner's chosen time: at least 6h notice, suggested kickoff − 48h, no later than 15 min before kickoff. The commissioner can pick this date even before the next round opens ("Next draft" picker); a "?" button on the mode selector explains the three modes. The league banner shows the time | Closed (trades still allowed) |
 | **Disabled** | Never. Free market, first come first served | Open |
 
 - While the draft is actually running, everything is frozen for a moment. Once it commits, the market opens until kickoff − 1h.
@@ -204,4 +204,4 @@ After the season draft, draft leagues run the same snake allocation again betwee
 
 ---
 
-Last Updated: **2026-10-03** (added the between-matchday Wishlist Draft modes, migration 294)
+Last Updated: **2026-10-15** (Auto date can be pre-set; Auto cap kickoff − 15 min, migration 298)

@@ -12,12 +12,14 @@
 
 ---
 
-## ✅ Wishlist Draft: pre-set the Auto date before the round exists + Auto up to kickoff + mode help (2026-10-14) — migration 298
+## ✅ Wishlist Draft: pre-set the Auto date before the round exists + Auto up to kickoff + mode help (2026-10-14) — PR #1036, PR #1037, migration 298
 
 - **Problem**: a commissioner couldn't set a date for the between-matchday draft in the "NEXT ROUND" (awaiting_round) phase, and Auto times were capped at kickoff − 8h.
 - **Migration 298**: `get_wishlist_next_draft` / `set_wishlist_next_draft` store a pre-set Auto time (`league_config` key `wishlist_draft_next_preset`, ≥ 6h from now, ≤ first kickoff − 15 min — one cron tick). `create_wishlist_draft_round` consumes it (mode forced to Auto, falls back + warns commissioners if it no longer fits). `set_wishlist_draft_mode` / `sync_wishlist_draft_kickoffs` Auto cap moved from kickoff − 8h to kickoff − 15 min. Manual's kickoff − 8h safety net is unchanged.
 - **`run-wishlist-draft`**: the 8h safety net no longer pre-empts a later Auto time.
-- **UI** (`CommissionerPanel.jsx`, `wishlistDraft.js`): "NEXT DRAFT · ROUND N" date/time picker (prefilled 48h before kickoff), and a "?" help button on every Manual / Auto / Disabled option.
+- **UI** (`CommissionerPanel.jsx`, `wishlistDraft.js`): "NEXT DRAFT · ROUND N" date/time picker (prefilled 48h before kickoff), and a single "?" button on each mode selector opening a popup that explains Manual / Auto / Disabled (PR #1037).
+- Docs updated: MIGRATION_LOG, DRAFT_SYSTEM_DESIGN §13, DRAFT_MECHANICS_FOR_DUMMIES, TRANSFER_WINDOW_SYSTEM.
+- **Open**: CI `Security` (npm audit — Capacitor + source-map-js advisories) fails on unrelated deps; PRs #1036/#1037 merged regardless. Needs a dependency bump.
 - Next migration: 299_.
 
 ## ✅ check-cron-health root cause: statement timeout on an unpruned cron log — migration 297 (2026-10-12) — PR #1032

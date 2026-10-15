@@ -376,7 +376,7 @@ After the season/group draft, draft leagues re-run the snake allocation between 
 | Mode | Runs | Notes |
 |---|---|---|
 | `manual` | Commissioner "Run now" → `run-wishlist-draft` `{league_id}` (403 if not commissioner, 409 on other errors, `{running_elsewhere:true}` if already claimed) | Safety net: runs at `hard_deadline_at` (first kickoff − 8h) |
-| `auto` | At `scheduled_at` | ≥ 6h notice (`TOO_SOON`), ≤ kickoff − 8h (`AFTER_DEADLINE`); suggested kickoff − 48h (`_wishlist_suggested_draft_at`) |
+| `auto` | At `scheduled_at` | ≥ 6h notice (`TOO_SOON`), ≤ kickoff − 15 min (`AFTER_DEADLINE`, migration 298; cron tick buffer). Can be pre-set before the round's window exists via `set_wishlist_next_draft` (stored in `league_config` `wishlist_draft_next_preset`, consumed by `create_wishlist_draft_round`). The kickoff − 8h safety net applies to manual only — `run-wishlist-draft` skips it while a later auto time is pending; suggested kickoff − 48h (`_wishlist_suggested_draft_at`) |
 | `disabled` | Never | Market opens immediately; wishlists kept |
 
 There is a league default (`league_config.wishlist_draft_mode`, scope `default`) and a per-round override (scope `round` on the pending `wishlist_draft_windows` row). Both are set via `set_wishlist_draft_mode(p_league_id, p_scope, p_mode, p_scheduled_at)`.
@@ -434,4 +434,4 @@ Carry-over keeps targets that are now owned by someone else (decision "option a"
 
 ---
 
-Last Updated: **2026-10-03** (§13 recurring Wishlist Draft modes — manual/auto/disabled, migration 294)
+Last Updated: **2026-10-15** (§13: Auto pre-set + kickoff − 15 min cap, migration 298; originally modes, migration 294)
