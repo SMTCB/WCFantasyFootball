@@ -68,7 +68,7 @@ function OptionPicker({ options, onSelect, onClose }) {
                 <div>
                   <div className="text-[13px] font-bold">{opt.label}</div>
                   {opt.meta?.club && (
-                    <div className="text-[10px] text-white/40 uppercase tracking-wider">{opt.meta.club}{opt.meta?.pos ? ` · ${opt.meta.pos}` : ''}</div>
+                    <div className="text-[11px] text-white/40 uppercase tracking-wider">{opt.meta.club}{opt.meta?.pos ? ` · ${opt.meta.pos}` : ''}</div>
                   )}
                 </div>
               </div>
@@ -227,13 +227,13 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
     if (!isResolved || !submission) return null;
     if (submission.is_correct) {
       return (
-        <div className="text-[9px] font-black px-2 py-0.5 rounded-sm" style={{ color: 'var(--positive)', background: 'rgba(24,201,107,0.1)' }}>
+        <div className="text-[11px] font-black px-2 py-0.5 rounded-sm" style={{ color: 'var(--positive)', background: 'rgba(24,201,107,0.1)' }}>
           ✓ +{submission.reward_awarded} {bet.reward_type === 'budget' ? 'M' : 'pts'}
         </div>
       );
     }
     return (
-      <div className="text-[9px] font-black px-2 py-0.5 rounded-sm" style={{ color: 'var(--danger)', background: 'rgba(255,80,80,0.1)' }}>
+      <div className="text-[11px] font-black px-2 py-0.5 rounded-sm" style={{ color: 'var(--danger)', background: 'rgba(255,80,80,0.1)' }}>
         ✗ Wrong
       </div>
     );
@@ -245,7 +245,7 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
         {/* Resolved: show correct answer */}
         {isResolved && (
           <div className="flex items-center gap-3">
-            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--mute)' }}>Answer:</div>
+            <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: 'var(--mute)' }}>Answer:</div>
             <div className="text-[13px] font-black" style={{ color: correctAnswerKeys?.length ? 'var(--paper)' : 'var(--mute)' }}>
               {correctAnswerKeys?.length ? correctLabel : 'No winner'}
             </div>
@@ -257,25 +257,25 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
         {submission && (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#1e1e1e] border border-[#333] flex items-center justify-center text-[10px] font-black text-white/40 uppercase">
+              <div className="w-8 h-8 rounded-full bg-[#1e1e1e] border border-[#333] flex items-center justify-center text-[11px] font-black text-white/40 uppercase">
                 {answerLabel?.substring(0, 2)}
               </div>
               <div>
-                <div className="text-[10px] font-semibold mb-0.5" style={{ color: isResolved ? (submission.is_correct ? 'var(--positive)' : 'var(--danger)') : 'var(--cyan)' }}>
+                <div className="text-[11px] font-semibold mb-0.5" style={{ color: isResolved ? (submission.is_correct ? 'var(--positive)' : 'var(--danger)') : 'var(--cyan)' }}>
                   {isResolved ? (submission.is_correct ? '✓ Correct' : '✗ Wrong') : 'Your pick'}
                 </div>
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--paper)' }}>{answerLabel}</div>
               </div>
             </div>
             {!isPastDeadline && !isResolved && (
-              <div className="text-[9px] font-semibold" style={{ color: 'var(--mute)' }}>Tap below to change</div>
+              <div className="text-[11px] font-semibold" style={{ color: 'var(--mute)' }}>Tap below to change</div>
             )}
           </div>
         )}
 
         {/* No-squad guard — user hasn't completed their team setup */}
         {!isPastDeadline && !squadId && options.length > 0 && (
-          <div className="text-[10px] font-semibold mt-1 px-3 py-2 rounded" style={{ color: 'var(--mute)', background: 'var(--shell-fill)', border: '1px solid var(--rule)' }}>
+          <div className="text-[11px] font-semibold mt-1 px-3 py-2 rounded" style={{ color: 'var(--mute)', background: 'var(--shell-fill)', border: '1px solid var(--rule)' }}>
             Complete your squad setup to place bets.
           </div>
         )}

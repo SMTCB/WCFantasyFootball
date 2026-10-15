@@ -45,7 +45,7 @@ function StatusBadge({ status }) {
     scheduled: 'text-text-secondary border-border bg-transparent',
   };
   return (
-    <span className={`text-[9px] font-black uppercase tracking-widest border px-1.5 py-0.5 rounded-sm ${map[status] ?? map.scheduled}`}>
+    <span className={`text-[11px] font-black uppercase tracking-widest border px-1.5 py-0.5 rounded-sm ${map[status] ?? map.scheduled}`}>
       {status}
     </span>
   );
@@ -62,7 +62,7 @@ function Toggle({ label, sub, value, onChange, disabled }) {
     >
       <div className="text-left">
         <p className="text-xs font-black uppercase tracking-widest">{label}</p>
-        {sub && <p className="text-[10px] text-text-secondary mt-0.5">{sub}</p>}
+        {sub && <p className="text-[11px] text-text-secondary mt-0.5">{sub}</p>}
       </div>
       <div className={`w-10 h-5 rounded-full relative transition-colors shrink-0 ml-4
         ${value ? 'bg-positive' : 'bg-border'}`}>
@@ -76,7 +76,7 @@ function Toggle({ label, sub, value, onChange, disabled }) {
 function ActionLog({ entries }) {
   if (!entries.length) return null;
   return (
-    <div className="mt-3 font-mono text-[10px] leading-relaxed border border-border bg-bg p-3 max-h-48 overflow-y-auto">
+    <div className="mt-3 font-mono text-[11px] leading-relaxed border border-border bg-bg p-3 max-h-48 overflow-y-auto">
       {entries.map((e, i) => (
         <div key={i} className={e.ok === false ? 'text-negative' : 'text-positive'}>{e.msg}</div>
       ))}
@@ -94,12 +94,12 @@ function Section({ title, sub, badge, defaultOpen = false, children }) {
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-black uppercase tracking-widest">{title}</h2>
             {badge && (
-              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 border border-[#FFB300]/40 text-[#FFB300] bg-[#FFB300]/10 rounded-sm">
+              <span className="text-[11px] font-black uppercase px-1.5 py-0.5 border border-[#FFB300]/40 text-[#FFB300] bg-[#FFB300]/10 rounded-sm">
                 {badge}
               </span>
             )}
           </div>
-          {sub && <p className="text-[10px] text-text-secondary mt-0.5">{sub}</p>}
+          {sub && <p className="text-[11px] text-text-secondary mt-0.5">{sub}</p>}
         </div>
         <span className="text-text-secondary text-xs shrink-0 ml-4">{open ? '▲' : '▼'}</span>
       </button>
@@ -230,7 +230,7 @@ function LeagueControls({ league, tournament, onRefresh }) {
 
         {/* Draft deadline */}
         <div className="border border-border p-3 mt-1">
-          <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-2">Draft Deadline</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-2">Draft Deadline</p>
           <div className="flex gap-2">
             <input type="datetime-local" value={deadline}
               onChange={e => setDeadline(e.target.value)}
@@ -241,7 +241,7 @@ function LeagueControls({ league, tournament, onRefresh }) {
             </button>
           </div>
           {league.draft_deadline && (
-            <p className="text-[10px] text-text-secondary mt-1">
+            <p className="text-[11px] text-text-secondary mt-1">
               Current: {new Date(league.draft_deadline).toLocaleString()}
             </p>
           )}
@@ -250,16 +250,16 @@ function LeagueControls({ league, tournament, onRefresh }) {
         {/* Run Draft Lottery — noduplicate leagues only */}
         {league.format === 'noduplicate' && (
           <div className="border border-border p-3 mt-1">
-            <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Draft Lottery</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-1">Draft Lottery</p>
             {lotteryStatus === null ? (
-              <p className="text-[10px] text-text-secondary">Checking lottery status…</p>
+              <p className="text-[11px] text-text-secondary">Checking lottery status…</p>
             ) : lotteryStatus > 0 ? (
-              <p className="text-[10px] text-positive font-bold">
+              <p className="text-[11px] text-positive font-bold">
                 ✓ Lottery already ran — {lotteryStatus} manager(s) allocated
               </p>
             ) : (
               <>
-                <p className="text-[10px] text-text-secondary mb-2">
+                <p className="text-[11px] text-text-secondary mb-2">
                   Manually trigger the draft lottery for this league. Managers who submitted a list will be allocated their players.
                 </p>
                 <button
@@ -272,7 +272,7 @@ function LeagueControls({ league, tournament, onRefresh }) {
               </>
             )}
             {lotteryMsg && (
-              <p className={`text-[10px] font-bold mt-2 ${lotteryMsg.ok ? 'text-positive' : 'text-negative'}`}>
+              <p className={`text-[11px] font-bold mt-2 ${lotteryMsg.ok ? 'text-positive' : 'text-negative'}`}>
                 {lotteryMsg.text}
               </p>
             )}
@@ -282,14 +282,14 @@ function LeagueControls({ league, tournament, onRefresh }) {
         {/* Run Wishlist Draft — noduplicate leagues only */}
         {league.format === 'noduplicate' && (
           <div className="border border-border p-3 mt-1">
-            <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Wishlist Draft</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-1">Wishlist Draft</p>
             {wishlistStatus === null ? (
-              <p className="text-[10px] text-text-secondary">Checking wishlist draft status…</p>
+              <p className="text-[11px] text-text-secondary">Checking wishlist draft status…</p>
             ) : wishlistStatus.available === false && wishlistStatus.reason ? (
-              <p className="text-[10px] text-text-secondary">Not available — {wishlistStatus.reason}</p>
+              <p className="text-[11px] text-text-secondary">Not available — {wishlistStatus.reason}</p>
             ) : (
               <>
-                <p className="text-[10px] text-text-secondary mb-2">
+                <p className="text-[11px] text-text-secondary mb-2">
                   {wishlistStatus.available
                     ? `Round ${wishlistStatus.round_number} is open for submissions. Manually resolve it now instead of waiting for the transfer window to open automatically.`
                     : `Round ${wishlistStatus.round_number} has already been allocated.`}
@@ -304,7 +304,7 @@ function LeagueControls({ league, tournament, onRefresh }) {
               </>
             )}
             {wishlistMsg && (
-              <p className={`text-[10px] font-bold mt-2 ${wishlistMsg.ok ? 'text-positive' : 'text-negative'}`}>
+              <p className={`text-[11px] font-bold mt-2 ${wishlistMsg.ok ? 'text-positive' : 'text-negative'}`}>
                 {wishlistMsg.text}
               </p>
             )}
@@ -319,7 +319,7 @@ function LeagueControls({ league, tournament, onRefresh }) {
             ['Join code', league.join_code ?? '—'],
             ['Tournament', league.tournament_id ?? 'none'],
           ].map(([k, v]) => (
-            <span key={k} className="text-[9px] border border-border px-2 py-1 text-text-secondary font-mono">
+            <span key={k} className="text-[11px] border border-border px-2 py-1 text-text-secondary font-mono">
               {k}: <span className="text-white font-black">{v}</span>
             </span>
           ))}
@@ -372,16 +372,16 @@ function MatchdayDeadlines({ tournamentId }) {
       <div className="flex items-center justify-between mb-3 p-2 border border-border rounded"
         style={{ background: overrideMode ? 'rgba(240,180,0,0.07)' : 'var(--shell-fill)' }}>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: overrideMode ? 'var(--gold)' : 'var(--mute)' }}>
+          <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: overrideMode ? 'var(--gold)' : 'var(--mute)' }}>
             {overrideMode ? '✏ Override mode — editing enabled' : '⚙ Auto-managed by fixture sync'}
           </p>
-          <p className="text-[9px] mt-0.5" style={{ color: 'var(--mute)' }}>
+          <p className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>
             {overrideMode ? 'Changes you save here will persist until the next sync overwrites them.' : 'Deadlines are set automatically. Toggle to override a specific round.'}
           </p>
         </div>
         <button
           onClick={handleToggleOverride}
-          className="ml-4 text-[9px] font-black uppercase px-3 py-1.5 border transition-colors flex-shrink-0"
+          className="ml-4 text-[11px] font-black uppercase px-3 py-1.5 border transition-colors flex-shrink-0"
           style={{
             border:     overrideMode ? '1px solid rgba(240,180,0,0.6)' : '1px solid var(--shell-rule-emphasis)',
             color:      overrideMode ? 'var(--gold)' : 'var(--mute)',
@@ -405,23 +405,23 @@ function MatchdayDeadlines({ tournamentId }) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black font-mono">{d.matchday_id}</span>
-                  {locked && <span className="fk-mono text-[9px] uppercase" style={{ color: 'var(--gold)' }}>LOCKED</span>}
+                  {locked && <span className="fk-mono text-[11px] uppercase" style={{ color: 'var(--gold)' }}>LOCKED</span>}
                 </div>
                 <button onClick={() => setEditing(isEdit ? null : { ...d, deadline_at: d.deadline_at?.slice(0,16), unlocks_at: d.unlocks_at?.slice(0,16) ?? '' })}
-                  className="text-[9px] font-black uppercase px-2 py-1 border border-border hover:border-white/40">
+                  className="text-[11px] font-black uppercase px-2 py-1 border border-border hover:border-white/40">
                   {isEdit ? 'Cancel' : 'Edit'}
                 </button>
               </div>
               {isEdit ? (
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col gap-1">
-                    <span className="text-[9px] text-text-secondary uppercase">Deadline (lock squads)</span>
+                    <span className="text-[11px] text-text-secondary uppercase">Deadline (lock squads)</span>
                     <input type="datetime-local" value={editing.deadline_at ?? ''}
                       onChange={e => setEditing(r => ({ ...r, deadline_at: e.target.value }))}
                       className="bg-bg border border-border text-white text-xs py-1.5 px-2" />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-[9px] text-text-secondary uppercase">Unlocks at (open transfers)</span>
+                    <span className="text-[11px] text-text-secondary uppercase">Unlocks at (open transfers)</span>
                     <input type="datetime-local" value={editing.unlocks_at ?? ''}
                       onChange={e => setEditing(r => ({ ...r, unlocks_at: e.target.value }))}
                       className="bg-bg border border-border text-white text-xs py-1.5 px-2" />
@@ -432,7 +432,7 @@ function MatchdayDeadlines({ tournamentId }) {
                   </button>
                 </div>
               ) : (
-                <div className="text-[10px] text-text-secondary space-y-0.5">
+                <div className="text-[11px] text-text-secondary space-y-0.5">
                   <div>Lock: <span className="text-white">{d.deadline_at ? new Date(d.deadline_at).toLocaleString() : '—'}</span></div>
                   <div>Unlock: <span className="text-white">{d.unlocks_at ? new Date(d.unlocks_at).toLocaleString() : '—'}</span></div>
                 </div>
@@ -479,7 +479,7 @@ function DataSync({ forzaId }) {
             className="w-full flex items-center justify-between p-3 border border-border bg-surface hover:border-white/30 disabled:opacity-40 transition-colors text-left">
             <div>
               <p className="text-xs font-black uppercase tracking-widest">{a.label}</p>
-              <p className="text-[10px] text-text-secondary mt-0.5">{a.sub}</p>
+              <p className="text-[11px] text-text-secondary mt-0.5">{a.sub}</p>
             </div>
             <span className="text-text-secondary text-xs shrink-0 ml-4">
               {busy === a.fn ? '⏳' : '→'}
@@ -534,7 +534,7 @@ function MatchIngestion({ tournamentId }) {
       <div className="flex gap-1 flex-wrap mb-3">
         {['all', ...rounds.map(String)].map(r => (
           <button key={r} onClick={() => setRound(r)}
-            className={`text-[9px] font-black uppercase px-2.5 py-1 border tracking-widest transition-colors
+            className={`text-[11px] font-black uppercase px-2.5 py-1 border tracking-widest transition-colors
               ${round === r ? 'bg-white text-black border-white' : 'bg-transparent text-text-secondary border-border hover:border-white/30'}`}>
             {r === 'all' ? 'All' : `R${r}`}
           </button>
@@ -553,9 +553,9 @@ function MatchIngestion({ tournamentId }) {
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <StatusBadge status={f.status} />
-                  {f.round_number && <span className="text-[9px] text-text-secondary">R{f.round_number}</span>}
+                  {f.round_number && <span className="text-[11px] text-text-secondary">R{f.round_number}</span>}
                   {f.forza_match_id && (
-                    <span className="text-[9px] text-text-secondary font-mono">{f.forza_match_id}</span>
+                    <span className="text-[11px] text-text-secondary font-mono">{f.forza_match_id}</span>
                   )}
                 </div>
               </div>
@@ -563,13 +563,13 @@ function MatchIngestion({ tournamentId }) {
                 <button
                   disabled={!!busy || !f.forza_match_id}
                   onClick={() => act(`Ingest ${f.forza_match_id}`, () => callFunction('ingest-match-events', { forza_match_id: f.forza_match_id }))}
-                  className="text-[9px] font-black uppercase px-2 py-1.5 border border-border bg-surface hover:border-white/40 disabled:opacity-40 tracking-wider">
+                  className="text-[11px] font-black uppercase px-2 py-1.5 border border-border bg-surface hover:border-white/40 disabled:opacity-40 tracking-wider">
                   {busy === `Ingest ${f.forza_match_id}` ? '…' : 'Ingest'}
                 </button>
                 <button
                   disabled={!!busy}
                   onClick={() => act(`Score ${f.id}`, () => callFunction('calculate-scores', { fixture_id: f.id }))}
-                  className="text-[9px] font-black uppercase px-2 py-1.5 border border-positive/40 text-positive bg-positive/10 hover:bg-positive/20 disabled:opacity-40 tracking-wider">
+                  className="text-[11px] font-black uppercase px-2 py-1.5 border border-positive/40 text-positive bg-positive/10 hover:bg-positive/20 disabled:opacity-40 tracking-wider">
                   {busy === `Score ${f.id}` ? '…' : 'Score'}
                 </button>
               </div>
@@ -667,7 +667,7 @@ function EventEditor({ tournamentId }) {
       {fid && (
         <>
           {/* Current events */}
-          <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-2">
+          <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-2">
             Events ({events.length})
           </p>
           {events.length === 0 && (
@@ -677,23 +677,23 @@ function EventEditor({ tournamentId }) {
             {events.map(ev => (
               <div key={ev.id} className="flex items-center gap-2 border border-border p-2 bg-bg text-xs">
                 <span className="font-mono text-text-secondary w-7 text-right shrink-0">{ev.minute}'</span>
-                <span className={`text-[9px] font-black uppercase px-1.5 border rounded-sm shrink-0 ${
+                <span className={`text-[11px] font-black uppercase px-1.5 border rounded-sm shrink-0 ${
                   ev.type === 'goal'   ? 'text-positive border-positive/30' :
                   ev.type === 'red'    ? 'text-negative border-negative/30' :
                   ev.type === 'yellow' ? 'text-[#FFB300] border-[#FFB300]/30' :
                   ev.type === 'var'    ? 'text-[#FFB300] border-[#FFB300]/30' :
                   'text-text-secondary border-border'}`}>{ev.type}</span>
                 <span className="flex-1 truncate">{ev.players?.name ?? <span className="text-text-secondary italic">no player</span>}</span>
-                <span className="text-text-secondary text-[9px] shrink-0 truncate max-w-[80px]">{ev.team}</span>
+                <span className="text-text-secondary text-[11px] shrink-0 truncate max-w-[80px]">{ev.team}</span>
                 <button onClick={() => deleteEvent(ev.id)}
-                  className="text-negative text-[9px] font-black border border-negative/30 px-1.5 py-0.5 hover:bg-negative/10 shrink-0">✕</button>
+                  className="text-negative text-[11px] font-black border border-negative/30 px-1.5 py-0.5 hover:bg-negative/10 shrink-0">✕</button>
               </div>
             ))}
           </div>
 
           {/* Add form */}
           <div className="border border-border p-3 bg-bg/50 mb-2">
-            <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-3">Add Event</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-3">Add Event</p>
             <div className="flex flex-col gap-2">
               <div className="relative">
                 <input placeholder="Search player by name…" value={search}
@@ -709,7 +709,7 @@ function EventEditor({ tournamentId }) {
                         }}
                         className="w-full text-left px-3 py-2 text-xs hover:bg-bg transition-colors">
                         <span className="font-bold">{p.name}</span>
-                        <span className="text-text-secondary ml-2 text-[10px]">{p.club} · {p.position}</span>
+                        <span className="text-text-secondary ml-2 text-[11px]">{p.club} · {p.position}</span>
                       </button>
                     ))}
                   </div>
@@ -740,7 +740,7 @@ function EventEditor({ tournamentId }) {
           </button>
 
           {status && (
-            <div className="mt-2 p-3 bg-bg border border-border text-[10px] font-mono text-positive text-center">
+            <div className="mt-2 p-3 bg-bg border border-border text-[11px] font-mono text-positive text-center">
               {status}
             </div>
           )}
@@ -826,21 +826,21 @@ function StatsOverride({ tournamentId }) {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-xs font-black">{editRow.players?.name}</p>
-              <p className="text-[10px] text-text-secondary">{editRow.players?.club} · {editRow.players?.position}</p>
+              <p className="text-[11px] text-text-secondary">{editRow.players?.club} · {editRow.players?.position}</p>
             </div>
             <button onClick={() => setEditRow(null)} className="text-text-secondary text-xs px-2 py-1 border border-border">✕ Cancel</button>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             {NUM_FIELDS.map(([k, label]) => (
               <label key={k} className="flex flex-col gap-0.5">
-                <span className="text-[9px] text-text-secondary uppercase tracking-widest">{label}</span>
+                <span className="text-[11px] text-text-secondary uppercase tracking-widest">{label}</span>
                 <input type="number" min="0" value={editRow[k] ?? 0}
                   onChange={e => setEditRow(r => ({ ...r, [k]: e.target.value }))}
                   className="bg-bg border border-border text-white text-xs py-1 px-2 w-full" />
               </label>
             ))}
             <label className="flex flex-col gap-0.5 col-span-3">
-              <span className="text-[9px] text-text-secondary uppercase tracking-widest">Clean Sheet</span>
+              <span className="text-[11px] text-text-secondary uppercase tracking-widest">Clean Sheet</span>
               <select value={editRow.clean_sheet ? 'true' : 'false'}
                 onChange={e => setEditRow(r => ({ ...r, clean_sheet: e.target.value === 'true' }))}
                 className="bg-bg border border-border text-white text-xs py-1.5 px-2">
@@ -865,14 +865,14 @@ function StatsOverride({ tournamentId }) {
               <div key={s.id} className="flex items-center gap-2 border border-border p-2.5 bg-bg">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold truncate">{s.players?.name}</div>
-                  <div className="text-[9px] text-text-secondary mt-0.5">
+                  <div className="text-[11px] text-text-secondary mt-0.5">
                     {s.players?.club} · {s.players?.position} · {s.minutes_played}' ·{' '}
                     {s.goals}G {s.assists}A ·{' '}
                     <span className="text-positive font-bold">{Number(s.fantasy_points).toFixed(1)} pts</span>
                   </div>
                 </div>
                 <button onClick={() => setEditRow({ ...s })}
-                  className="text-[9px] font-black uppercase px-2 py-1.5 border border-[#FFB300]/40 text-[#FFB300] hover:bg-[#FFB300]/10 shrink-0">
+                  className="text-[11px] font-black uppercase px-2 py-1.5 border border-[#FFB300]/40 text-[#FFB300] hover:bg-[#FFB300]/10 shrink-0">
                   Edit
                 </button>
               </div>
@@ -889,7 +889,7 @@ function StatsOverride({ tournamentId }) {
       )}
 
       {status && (
-        <div className="mt-2 p-3 bg-bg border border-border text-[10px] font-mono text-positive text-center">{status}</div>
+        <div className="mt-2 p-3 bg-bg border border-border text-[11px] font-mono text-positive text-center">{status}</div>
       )}
     </Section>
   );
@@ -962,11 +962,11 @@ function ScoringRulesEditor({ tournamentId }) {
     <Section title="Scoring Rules" sub="Edit per-position point multipliers. Changes take effect on the next Score run.">
       {/* Universal row */}
       <div className="mb-4">
-        <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-2">Universal (all positions)</p>
+        <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-2">Universal (all positions)</p>
         <div className="grid grid-cols-2 gap-2">
           {UNIVERSAL_FIELDS.map(f => (
             <label key={f} className="flex flex-col gap-0.5">
-              <span className="text-[9px] text-text-secondary">{FIELD_LABEL[f] ?? f}</span>
+              <span className="text-[11px] text-text-secondary">{FIELD_LABEL[f] ?? f}</span>
               <input
                 type="number" step="0.25"
                 value={rules['UNIVERSAL']?.[f] ?? ''}
@@ -982,11 +982,11 @@ function ScoringRulesEditor({ tournamentId }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {SCORING_POSITIONS.map(pos => (
           <div key={pos} className="border border-border p-3">
-            <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-2">{pos}</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-2">{pos}</p>
             <div className="flex flex-col gap-1.5">
               {POSITION_FIELDS.map(f => (
                 <label key={f} className="flex items-center justify-between gap-2">
-                  <span className="text-[9px] text-text-secondary flex-1 truncate">{FIELD_LABEL[f] ?? f}</span>
+                  <span className="text-[11px] text-text-secondary flex-1 truncate">{FIELD_LABEL[f] ?? f}</span>
                   <input
                     type="number" step="0.25"
                     value={rules[pos]?.[f] ?? ''}
@@ -1076,34 +1076,34 @@ function ObservabilityPanel() {
       <div className="flex items-center gap-2 mb-4">
         {['1h', '24h', '7d'].map(t => (
           <button key={t} onClick={() => setSince(t)}
-            className={`text-[9px] font-black uppercase px-2 py-1 border transition-colors ${since === t ? 'border-cyan text-cyan' : 'border-border text-text-secondary'}`}>
+            className={`text-[11px] font-black uppercase px-2 py-1 border transition-colors ${since === t ? 'border-cyan text-cyan' : 'border-border text-text-secondary'}`}>
             {t}
           </button>
         ))}
         <button onClick={load} disabled={loading}
-          className="ml-auto text-[9px] font-black uppercase px-2 py-1 border border-border text-text-secondary hover:border-white/40 disabled:opacity-40">
+          className="ml-auto text-[11px] font-black uppercase px-2 py-1 border border-border text-text-secondary hover:border-white/40 disabled:opacity-40">
           {loading ? 'Loading…' : 'Refresh'}
         </button>
       </div>
 
       {/* Panel C — Cron jobs (shown first — most actionable at pilot time) */}
       <div className="flex items-center justify-between mb-1">
-        <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary">Cron Jobs</p>
+        <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary">Cron Jobs</p>
         {cronSummary && (
-          <span className={`text-[9px] font-black uppercase ${failedCount > 0 ? 'text-negative' : 'text-positive'}`}>
+          <span className={`text-[11px] font-black uppercase ${failedCount > 0 ? 'text-negative' : 'text-positive'}`}>
             {cronSummary}
           </span>
         )}
       </div>
       {cronJobs.length === 0 && !loading ? (
-        <p className="text-[10px] text-text-secondary mb-4">Loading…</p>
+        <p className="text-[11px] text-text-secondary mb-4">Loading…</p>
       ) : (
         <div className="mb-6 flex flex-col gap-1 max-h-72 overflow-y-auto">
           {cronJobs.map((j) => {
             const ok = j.status === 'succeeded';
             const hasRun = !!j.last_run;
             return (
-              <div key={j.jobname} className={`font-mono text-[10px] border p-2 flex items-start gap-2 ${ok ? 'border-border bg-bg' : 'border-negative/40 bg-negative/5'}`}>
+              <div key={j.jobname} className={`font-mono text-[11px] border p-2 flex items-start gap-2 ${ok ? 'border-border bg-bg' : 'border-negative/40 bg-negative/5'}`}>
                 <span className={`mt-0.5 shrink-0 w-2 h-2 rounded-full ${!hasRun ? 'bg-text-secondary' : ok ? 'bg-positive' : 'bg-negative'}`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1126,13 +1126,13 @@ function ObservabilityPanel() {
       )}
 
       {/* Panel A — Edge function errors */}
-      <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Edge Function Errors</p>
+      <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-1">Edge Function Errors</p>
       {edgeLogs.length === 0 ? (
-        <p className="text-[10px] text-positive mb-4">No errors in this window ✓</p>
+        <p className="text-[11px] text-positive mb-4">No errors in this window ✓</p>
       ) : (
         <div className="mb-4 flex flex-col gap-1 max-h-48 overflow-y-auto">
           {edgeLogs.map((r, i) => (
-            <div key={i} className="font-mono text-[10px] border border-border bg-bg p-2">
+            <div key={i} className="font-mono text-[11px] border border-border bg-bg p-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-text-secondary">{fmt(r.created_at)}</span>
                 <span className="text-white font-black">{r.function}</span>
@@ -1145,13 +1145,13 @@ function ObservabilityPanel() {
       )}
 
       {/* Panel B — Client errors */}
-      <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Client Errors</p>
+      <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-1">Client Errors</p>
       {clientLogs.length === 0 ? (
-        <p className="text-[10px] text-positive mb-4">No client errors in this window ✓</p>
+        <p className="text-[11px] text-positive mb-4">No client errors in this window ✓</p>
       ) : (
         <div className="mb-4 flex flex-col gap-1 max-h-48 overflow-y-auto">
           {clientLogs.map((r, i) => (
-            <div key={i} className="font-mono text-[10px] border border-border bg-bg p-2">
+            <div key={i} className="font-mono text-[11px] border border-border bg-bg p-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-text-secondary">{fmt(r.created_at)}</span>
                 <span className="text-text-secondary break-all">{r.url}</span>
@@ -1252,7 +1252,7 @@ export default function AdminSeedScreen() {
 
       {/* League selector */}
       <div className="border border-border p-4 mb-4 bg-surface">
-        <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-2">Your Leagues</p>
+        <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-2">Your Leagues</p>
         {loading ? (
           <p className="text-xs text-text-secondary">Loading…</p>
         ) : myLeagues.length === 0 ? (
@@ -1266,9 +1266,9 @@ export default function AdminSeedScreen() {
                 <div>
                   <p className="text-sm font-black">{l.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[9px] text-text-secondary uppercase">{l.format}</span>
-                    {l.tournament_id && <span className="text-[9px] text-text-secondary font-mono">· {l.tournament_id}</span>}
-                    {l.is_dry_run && <span className="text-[9px] text-[#FFB300] font-black uppercase">dry run</span>}
+                    <span className="text-[11px] text-text-secondary uppercase">{l.format}</span>
+                    {l.tournament_id && <span className="text-[11px] text-text-secondary font-mono">· {l.tournament_id}</span>}
+                    {l.is_dry_run && <span className="text-[11px] text-[#FFB300] font-black uppercase">dry run</span>}
                   </div>
                 </div>
                 {selectedId === l.id && <span className="text-positive font-black text-xs">✓</span>}
@@ -1283,14 +1283,14 @@ export default function AdminSeedScreen() {
         <div className="border border-border bg-bg px-4 py-2.5 mb-4 flex items-center gap-3 flex-wrap">
           {tournament ? (
             <>
-              <span className="text-[10px] text-text-secondary">Tournament:</span>
+              <span className="text-[11px] text-text-secondary">Tournament:</span>
               <span className="text-xs font-black">{tournament.name}</span>
-              <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 border rounded-sm ${
+              <span className={`text-[11px] font-black uppercase px-1.5 py-0.5 border rounded-sm ${
                 tournament.sync_enabled ? 'text-positive border-positive/30 bg-positive/10' : 'text-text-secondary border-border'}`}>
                 {tournament.sync_enabled ? 'sync on' : 'sync off'}
               </span>
               {tournament.environment && (
-                <span className="text-[9px] text-text-secondary border border-border px-1.5 py-0.5 rounded-sm">
+                <span className="text-[11px] text-text-secondary border border-border px-1.5 py-0.5 rounded-sm">
                   {tournament.environment}
                 </span>
               )}

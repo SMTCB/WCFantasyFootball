@@ -256,7 +256,7 @@ export default function DraftRecoveryScreen() {
         <div className="flex items-center justify-between mb-3">
           <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--on-shell-dim)] text-[20px] leading-none">←</button>
           <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--on-shell-dim)] font-serif">
+            <div className="text-[11px] font-black uppercase tracking-[0.4em] text-[var(--on-shell-dim)] font-serif">
               Draft Recovery
             </div>
             <div className="text-[var(--paper)] font-black text-[15px] uppercase tracking-wider">
@@ -269,12 +269,12 @@ export default function DraftRecoveryScreen() {
         {/* Status bar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black" style={{ color: 'var(--warn)' }}>{displaySlots}</span>
-            <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">slots remaining</span>
+            <span className="text-[11px] font-black" style={{ color: 'var(--warn)' }}>{displaySlots}</span>
+            <span className="text-[var(--on-shell-dim)] text-[11px] uppercase tracking-widest">slots remaining</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Budget</span>
-            <span className="text-[10px] font-black" style={{ color: budgetLeft < 10 ? 'var(--danger)' : 'var(--positive)' }}>
+            <span className="text-[var(--on-shell-dim)] text-[11px] uppercase tracking-widest">Budget</span>
+            <span className="text-[11px] font-black" style={{ color: budgetLeft < 10 ? 'var(--danger)' : 'var(--positive)' }}>
               €{budgetLeft.toFixed(1)}M
             </span>
           </div>
@@ -286,12 +286,12 @@ export default function DraftRecoveryScreen() {
             {missingPositions.map(({ pos, need }) => (
               <div key={pos} className="flex items-center gap-1">
                 <span
-                  className="text-[9px] font-black px-1.5 py-0.5 rounded-sm"
+                  className="text-[11px] font-black px-1.5 py-0.5 rounded-sm"
                   style={{ color: POS_CONFIG[pos]?.color, background: POS_CONFIG[pos]?.bg }}
                 >
                   {pos}
                 </span>
-                <span className="text-[var(--on-shell-dim)] text-[9px]">×{need}</span>
+                <span className="text-[var(--on-shell-dim)] text-[11px]">×{need}</span>
               </div>
             ))}
           </div>
@@ -375,7 +375,7 @@ export default function DraftRecoveryScreen() {
               <button
                 key={pos}
                 onClick={() => setFilterPos(pos)}
-                className={`flex-1 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
+                className={`flex-1 py-1.5 rounded text-[11px] font-black uppercase tracking-wider transition-all ${
                   filterPos === pos
                     ? 'bg-white text-black'
                     : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--rule)]'
@@ -409,7 +409,7 @@ export default function DraftRecoveryScreen() {
                 } ${isBusy ? 'animate-pulse' : ''}`}
               >
                 <span
-                  className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+                  className="text-[11px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                   style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
                 >
                   {p.position}
@@ -423,7 +423,7 @@ export default function DraftRecoveryScreen() {
                   <span className="text-[18px] leading-none shrink-0 font-black" style={{ color: 'var(--positive)' }}>+</span>
                 )}
                 {posAtCap && (
-                  <span className="text-[9px] text-[var(--mute)] shrink-0 uppercase">cap</span>
+                  <span className="text-[11px] text-[var(--mute)] shrink-0 uppercase">cap</span>
                 )}
               </div>
             );

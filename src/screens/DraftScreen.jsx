@@ -86,26 +86,26 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
       >
         ⠿
       </span>
-      <span className="text-[var(--mute)] text-[10px] font-black w-4 text-right shrink-0">{idx + 1}</span>
+      <span className="text-[var(--mute)] text-[11px] font-black w-4 text-right shrink-0">{idx + 1}</span>
       <span
-        className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+        className="text-[11px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
         style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
       >
         {p.position}
       </span>
       <span className="text-[var(--paper)] text-[11px] font-bold flex-1 truncate">{p.name}</span>
-      <span className="text-[var(--mute)] text-[10px] shrink-0">€{p.price}M</span>
+      <span className="text-[var(--mute)] text-[11px] shrink-0">€{p.price}M</span>
       {/* ▲▼ kept as fallback — useful on desktop and for accessibility */}
       <div className="flex flex-col gap-0.5 shrink-0">
         <button
           onClick={() => onMoveUp(idx)}
           disabled={idx === 0}
-          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[10px] leading-none"
+          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[11px] leading-none"
         >▲</button>
         <button
           onClick={() => onMoveDown(idx)}
           disabled={idx === listLength - 1}
-          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[10px] leading-none"
+          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[11px] leading-none"
         >▼</button>
       </div>
       <button
@@ -439,7 +439,7 @@ export default function DraftScreen() {
             <div key={p.id} className="flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-2">
               <span className="text-[var(--mute)] text-[11px] font-black w-5">{i + 1}</span>
               <span
-                className="text-[9px] font-black px-1.5 py-0.5 rounded-sm"
+                className="text-[11px] font-black px-1.5 py-0.5 rounded-sm"
                 style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
               >
                 {p.position}
@@ -479,7 +479,7 @@ export default function DraftScreen() {
         <div className="flex items-center justify-between mb-3">
           <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--on-shell-dim)] text-[20px] leading-none">←</button>
           <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--on-shell-dim)] font-serif">
+            <div className="text-[11px] font-black uppercase tracking-[0.4em] text-[var(--on-shell-dim)] font-serif">
               Draft
             </div>
             <div className="text-[var(--paper)] font-black text-[15px] uppercase tracking-wider">
@@ -494,21 +494,21 @@ export default function DraftScreen() {
           <div className="flex items-center gap-1.5">
             {deadline
               ? countdown === 'CLOSED'
-                ? <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Submission window closed</span>
+                ? <span className="text-[var(--on-shell-dim)] text-[11px] uppercase tracking-widest">Submission window closed</span>
                 : <>
-                    <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Suggested deadline in</span>
-                    <span className="text-[10px] font-black" style={{ color: 'var(--warn)' }}>{countdown}</span>
+                    <span className="text-[var(--on-shell-dim)] text-[11px] uppercase tracking-widest">Suggested deadline in</span>
+                    <span className="text-[11px] font-black" style={{ color: 'var(--warn)' }}>{countdown}</span>
                   </>
-              : <span className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest">Open until lottery runs</span>
+              : <span className="text-[var(--on-shell-dim)] text-[11px] uppercase tracking-widest">Open until lottery runs</span>
             }
           </div>
           <div className="flex gap-3">
             {['GK', 'DEF', 'MID', 'FWD'].map(pos => (
               <div key={pos} className="text-center">
-                <div className="text-[9px] font-black" style={{ color: POS_CONFIG[pos].color }}>
+                <div className="text-[11px] font-black" style={{ color: POS_CONFIG[pos].color }}>
                   {posCounts[pos] ?? 0}
                 </div>
-                <div className="text-[8px] text-[var(--on-shell-dim)] uppercase">{pos}</div>
+                <div className="text-[11px] text-[var(--on-shell-dim)] uppercase">{pos}</div>
               </div>
             ))}
           </div>
@@ -566,7 +566,7 @@ export default function DraftScreen() {
         <div className="px-4 py-3 border-b border-[var(--rule)]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--mute)]">
+              <span className="text-[11px] font-black uppercase tracking-widest text-[var(--mute)]">
                 Your List — {list.length}/{DRAFT_LIST_SIZE}
               </span>
               <button
@@ -579,14 +579,14 @@ export default function DraftScreen() {
               <button
                 onClick={autoComplete}
                 disabled={list.length >= DRAFT_LIST_SIZE}
-                className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border border-[var(--rule)] text-[var(--mute)] bg-[var(--elev)] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                className="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 border border-[var(--rule)] text-[var(--mute)] bg-[var(--elev)] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
               >
                 ⚡ Auto-Fill
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={list.length === 0 || saving}
-                className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                className="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
                 style={{
                   background: list.length > 0 ? 'var(--positive)' : 'var(--elev)',
                   color:      list.length > 0 ? '#fff'            : 'var(--mute)',
@@ -638,13 +638,13 @@ export default function DraftScreen() {
                   >
                     <span className="text-[var(--mute)] shrink-0 select-none" style={{ fontSize: 'var(--fs-body)', fontWeight: 900 }}>⠿</span>
                     <span
-                      className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+                      className="text-[11px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[activePlayer.position]?.color, background: POS_CONFIG[activePlayer.position]?.bg }}
                     >
                       {activePlayer.position}
                     </span>
                     <span className="text-[var(--paper)] text-[11px] font-bold truncate flex-1">{activePlayer.name}</span>
-                    <span className="text-[var(--mute)] text-[10px] shrink-0">€{activePlayer.price}M</span>
+                    <span className="text-[var(--mute)] text-[11px] shrink-0">€{activePlayer.price}M</span>
                   </div>
                 )}
               </DragOverlay>
@@ -668,7 +668,7 @@ export default function DraftScreen() {
                 <button
                   key={pos}
                   onClick={() => setFilterPos(pos)}
-                  className={`flex-1 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
+                  className={`flex-1 py-1.5 rounded text-[11px] font-black uppercase tracking-wider transition-all ${
                     filterPos === pos
                       ? 'bg-white text-black'
                       : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--rule)]'
@@ -683,7 +683,7 @@ export default function DraftScreen() {
               <div className="relative">
                 <button
                   onClick={() => setShowClubPicker(v => !v)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-sm text-[10px] font-black uppercase tracking-wider transition-all"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-sm text-[11px] font-black uppercase tracking-wider transition-all"
                   style={{
                     background: filterClubs.size > 0 ? 'var(--accent-bg)' : 'var(--elev)',
                     border: filterClubs.size > 0 ? '1px solid rgba(26,111,168,0.4)' : '1px solid var(--rule)',
@@ -691,7 +691,7 @@ export default function DraftScreen() {
                   }}
                 >
                   {filterClubs.size > 0 ? `${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Club ▾'}
-                  <span className="text-[8px] opacity-60">{showClubPicker ? '▲' : '▼'}</span>
+                  <span className="text-[11px] opacity-60">{showClubPicker ? '▲' : '▼'}</span>
                 </button>
 
                 {showClubPicker && (
@@ -705,7 +705,7 @@ export default function DraftScreen() {
                         placeholder="Search clubs..."
                         value={clubSearch}
                         onChange={e => setClubSearch(e.target.value)}
-                        className="w-full bg-[var(--card)] border border-[var(--rule)] rounded-sm px-2 py-1.5 text-[var(--paper)] text-[10px] outline-none placeholder:text-[var(--mute)]"
+                        className="w-full bg-[var(--card)] border border-[var(--rule)] rounded-sm px-2 py-1.5 text-[var(--paper)] text-[11px] outline-none placeholder:text-[var(--mute)]"
                         onClick={e => e.stopPropagation()}
                       />
                     </div>
@@ -729,7 +729,7 @@ export default function DraftScreen() {
                                 })}
                                 className="accent-cyan-400 w-3 h-3"
                               />
-                              <span className="text-[10px] text-[var(--paper)] font-medium tracking-wide flex-1">{club}</span>
+                              <span className="text-[11px] text-[var(--paper)] font-medium tracking-wide flex-1">{club}</span>
                             </label>
                           );
                         })}
@@ -737,13 +737,13 @@ export default function DraftScreen() {
                     <div className="flex gap-2 p-2 border-t border-white/5">
                       <button
                         onClick={() => { setFilterClubs(new Set()); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
+                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
                       >
                         Clear
                       </button>
                       <button
                         onClick={() => { setShowClubPicker(false); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-sm"
+                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-sm"
                         style={{ background: 'var(--cyan)', color: '#000' }}
                       >
                         {filterClubs.size > 0 ? `Show ${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Apply'}
@@ -774,7 +774,7 @@ export default function DraftScreen() {
                     onClick={() => !disabled && setExpandedId(isExpanded ? null : p.id)}
                   >
                     <span
-                      className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+                      className="text-[11px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
                     >
                       {p.position}
@@ -788,7 +788,7 @@ export default function DraftScreen() {
                   </div>
                   {isExpanded && !disabled && (
                     <div className="border border-[var(--rule)] border-t-0 rounded-b-lg px-3 py-2 flex items-center justify-between" style={{ background: 'var(--elev)' }}>
-                      <div className="text-[10px] text-[var(--mute)]">
+                      <div className="text-[11px] text-[var(--mute)]">
                         {p.points > 0 && <span>{Math.round(p.points)} pts · </span>}
                         {p.intel?.status !== 'fit' && (
                           <span style={{ color: 'var(--warn)' }}>{p.intel?.status} · </span>
@@ -797,7 +797,7 @@ export default function DraftScreen() {
                       </div>
                       <button
                         onClick={() => addPlayer(p)}
-                        className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
+                        className="text-[11px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
                         style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
                       >
                         Add to List
@@ -813,7 +813,7 @@ export default function DraftScreen() {
 
       {/* Save status */}
       {(lastSaved || saveError) && (
-        <div className={`px-4 py-1.5 text-center text-[10px] font-bold ${saveError ? 'text-[var(--danger)]' : 'text-[var(--mute)]'}`}>
+        <div className={`px-4 py-1.5 text-center text-[11px] font-bold ${saveError ? 'text-[var(--danger)]' : 'text-[var(--mute)]'}`}>
           {saveError || `Draft saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
         </div>
       )}

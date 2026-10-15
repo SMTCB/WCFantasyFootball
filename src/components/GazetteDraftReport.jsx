@@ -120,7 +120,7 @@ export default function GazetteDraftReport({ leagueId }) {
       )}
       {wishlistEntries.length > 0 && (
         <div className={draftEntry ? 'mt-6' : ''}>
-          <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-2">
+          <div className="text-[11px] font-black uppercase tracking-widest text-black/40 mb-2">
             Wishlist Draft Rounds
           </div>
           <div className="space-y-3">
@@ -164,7 +164,7 @@ function SeasonDraftReport({ entry, submissions, players, members, expanded, set
 
   return (
     <div>
-      <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-2">
+      <div className="text-[11px] font-black uppercase tracking-widest text-black/40 mb-2">
         Draft Edition — {date}
       </div>
 
@@ -214,7 +214,7 @@ function SeasonDraftReport({ entry, submissions, players, members, expanded, set
         <div className="space-y-3 mb-4">
           {managerGroups.map(([winnerId, picks]) => (
             <div key={winnerId}>
-              <div className="text-[10px] font-black uppercase tracking-widest text-black/50 mb-1">
+              <div className="text-[11px] font-black uppercase tracking-widest text-black/50 mb-1">
                 {members[winnerId] ?? 'Unknown'}
                 <span className="opacity-50 font-normal normal-case">
                   {' '}— {picks.length} contested pick{picks.length > 1 ? 's' : ''} won
@@ -241,13 +241,13 @@ function SeasonDraftReport({ entry, submissions, players, members, expanded, set
         <div>
           <button
             onClick={() => setExpanded(e => !e)}
-            className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
+            className="text-[11px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
           >
             Full Draft Results {expanded ? '▲' : '▼'}
           </button>
 
           {expanded && (
-            <div className="border border-black/10 rounded overflow-hidden text-[10px]">
+            <div className="border border-black/10 rounded overflow-hidden text-[11px]">
               <div className="grid grid-cols-[1fr_auto_auto] bg-black text-white px-3 py-1.5 font-black uppercase tracking-widest gap-4">
                 <span>Manager</span>
                 <span className="text-right">Players</span>
@@ -271,7 +271,7 @@ function SeasonDraftReport({ entry, submissions, players, members, expanded, set
                   </span>
                 </div>
               ))}
-              <div className="px-3 py-1.5 bg-black/5 text-black/40 italic text-[9px] border-t border-black/10">
+              <div className="px-3 py-1.5 bg-black/5 text-black/40 italic text-[11px] border-t border-black/10">
                 {fullData.total_managers} managers · {fullData.contested_count ?? 0} contested player{fullData.contested_count !== 1 ? 's' : ''} resolved by lottery
               </div>
             </div>
@@ -301,17 +301,17 @@ function DraftOrderBoard({ snakeOrder, members }) {
 
   return (
     <div className="mb-4 border border-black/10 rounded p-3">
-      <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-1">
+      <div className="text-[11px] font-black uppercase tracking-widest text-black/40 mb-1">
         Pick Order — Snake Draft
       </div>
-      <p className="text-[10px] text-black/50 italic mb-3">
+      <p className="text-[11px] text-black/50 italic mb-3">
         Round 1 order was set by random lottery. Every round after reverses direction, so no manager always picks first.
       </p>
 
       <div className="space-y-2">
         {rows.map(({ label, reversed }) => (
           <div key={label} className="flex items-center gap-2">
-            <span className="text-[9px] font-black uppercase tracking-widest text-black/40 w-14 shrink-0">
+            <span className="text-[11px] font-black uppercase tracking-widest text-black/40 w-14 shrink-0">
               {label}
             </span>
             <div className="flex items-center gap-1 flex-wrap">
@@ -319,11 +319,11 @@ function DraftOrderBoard({ snakeOrder, members }) {
                 const pickNumber = reversed ? n * 2 - i : i + 1;
                 return (
                   <span key={uid + i} className="flex items-center" title={`Pick ${pickNumber} — ${members[uid] ?? 'Manager'}`}>
-                    <span className="w-6 h-6 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-black text-white text-[11px] font-black flex items-center justify-center shrink-0">
                       {pickNumber}
                     </span>
                     {i < snakeOrder.length - 1 && (
-                      <span className="text-black/20 text-[10px] px-0.5">{reversed ? '←' : '→'}</span>
+                      <span className="text-black/20 text-[11px] px-0.5">{reversed ? '←' : '→'}</span>
                     )}
                   </span>
                 );
@@ -331,12 +331,12 @@ function DraftOrderBoard({ snakeOrder, members }) {
             </div>
           </div>
         ))}
-        <div className="text-[9px] text-black/30 italic pl-16">
+        <div className="text-[11px] text-black/30 italic pl-16">
           …continues alternating every round until squads are full
         </div>
       </div>
 
-      <div className="mt-3 pt-2 border-t border-black/10 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-black/60">
+      <div className="mt-3 pt-2 border-t border-black/10 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-black/60">
         {snakeOrder.map((uid, i) => (
           <span key={uid}>
             <span className="font-black text-black/40">{i + 1}.</span> {members[uid] ?? 'Manager'}
@@ -357,17 +357,17 @@ function DraftOrderList({
 }) {
   return (
     <div className="mb-4 border border-black/10 rounded p-3">
-      <div className="text-[9px] font-black uppercase tracking-widest text-black/40 mb-2">
+      <div className="text-[11px] font-black uppercase tracking-widest text-black/40 mb-2">
         {title}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-black/60">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-black/60">
         {snakeOrder.map((uid, i) => (
           <span key={uid}>
             <span className="font-black text-black/40">{i + 1}.</span> {members[uid] ?? 'Manager'}
           </span>
         ))}
       </div>
-      <p className="text-[9px] text-black/40 italic mt-2">
+      <p className="text-[11px] text-black/40 italic mt-2">
         {note}
       </p>
     </div>
@@ -390,13 +390,13 @@ function DraftPickLogTable({ pickLog, members, players, expanded, setExpanded, t
     <div className="mb-4">
       <button
         onClick={() => setExpanded(e => !e)}
-        className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
+        className="text-[11px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
       >
         {title} {expanded ? '▲' : '▼'}
       </button>
 
       {expanded && (
-        <div className="border border-black/10 rounded overflow-hidden text-[10px] max-h-[480px] overflow-y-auto">
+        <div className="border border-black/10 rounded overflow-hidden text-[11px] max-h-[480px] overflow-y-auto">
           {Array.from({ length: totalRounds }, (_, i) => i + 1).map(round => {
             const picks = byRound[round] ?? [];
             const reversed = round % 2 === 0;
@@ -460,7 +460,7 @@ function SkippedTargetsList({ skipLog, members, players }) {
   const shown = expanded ? rows : rows.slice(0, 6);
   return (
     <div className="mx-3 mb-3">
-      <div className="text-[9px] font-black uppercase tracking-widest text-black/50 mb-1">Skipped targets</div>
+      <div className="text-[11px] font-black uppercase tracking-widest text-black/50 mb-1">Skipped targets</div>
       <ul className="space-y-0.5">
         {shown.map((sk, i) => (
           <li key={`${sk.user_id}-${sk.player_id}-${i}`} className="flex flex-wrap gap-1.5 text-black/70">
@@ -475,7 +475,7 @@ function SkippedTargetsList({ skipLog, members, players }) {
         ))}
       </ul>
       {rows.length > 6 && (
-        <button onClick={() => setExpanded(!expanded)} className="mt-1 text-[9px] font-black uppercase tracking-widest text-black/40">
+        <button onClick={() => setExpanded(!expanded)} className="mt-1 text-[11px] font-black uppercase tracking-widest text-black/40">
           {expanded ? 'Show less' : `Show all ${rows.length}`}
         </button>
       )}
@@ -501,7 +501,7 @@ function WishlistRoundReport({ entry, members, players }) {
   const triggerLabel     = TRIGGER_LABEL[fullData?.trigger] ?? null;
 
   return (
-    <div className="border border-black/10 rounded overflow-hidden text-[10px]">
+    <div className="border border-black/10 rounded overflow-hidden text-[11px]">
       <div className="flex items-center justify-between bg-black text-white px-3 py-1.5">
         <span className="font-black uppercase tracking-widest">
           Round {fullData?.round_number ?? '—'}
@@ -554,10 +554,10 @@ function WishlistRoundReport({ entry, members, players }) {
 
       {hasSafetyNet && (
         <div className="mx-3 mb-3 border border-amber-600/30 bg-amber-50 rounded p-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-amber-800 mb-1">
+          <div className="text-[11px] font-black uppercase tracking-widest text-amber-800 mb-1">
             ⚠ Formation Safety Net
           </div>
-          <p className="text-[9px] text-amber-900/80 italic mb-1.5">
+          <p className="text-[11px] text-amber-900/80 italic mb-1.5">
             One or more managers' wishlists would have left their squad short of a fielding-legal formation. The system auto-corrected it — full swap below.
           </p>
           <ul className="space-y-0.5">
@@ -624,13 +624,13 @@ function InitialListsTable({ submissions, members, players, pickLog, expanded, s
     <div className="mb-4">
       <button
         onClick={() => setExpanded(e => !e)}
-        className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
+        className="text-[11px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
       >
         Initial Priority Lists — As Submitted {expanded ? '▲' : '▼'}
       </button>
 
       {expanded && (
-        <div className="border border-black/10 rounded overflow-hidden text-[10px] max-h-[480px] overflow-y-auto">
+        <div className="border border-black/10 rounded overflow-hidden text-[11px] max-h-[480px] overflow-y-auto">
           {sorted.map((sub, si) => {
             const ids = sub.player_ids ?? [];
             if (!ids.length) return null;
@@ -654,7 +654,7 @@ function InitialListsTable({ submissions, members, players, pickLog, expanded, s
                         <ClubCrest name={players[pid]?.club} size={12} />
                         <span className="truncate">{players[pid]?.name ?? pid}</span>
                       </span>
-                      <span className={`text-right shrink-0 text-[9px] font-bold ${won ? 'text-green-700' : lost ? 'text-red-600' : 'text-black/30'}`}>
+                      <span className={`text-right shrink-0 text-[11px] font-bold ${won ? 'text-green-700' : lost ? 'text-red-600' : 'text-black/30'}`}>
                         {won ? '✓ won' : lost ? `→ ${members[pick.user_id] ?? 'other'}` : '—'}
                       </span>
                     </div>
@@ -686,13 +686,13 @@ function WishlistListsTable({ submissions, members, players, pickLog, expanded, 
     <div className="mb-3">
       <button
         onClick={() => setExpanded(e => !e)}
-        className="text-[10px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
+        className="text-[11px] font-black uppercase tracking-widest text-black/50 underline underline-offset-2 mb-3 flex items-center gap-1"
       >
         Manager Wishlists — Full Submissions {expanded ? '▲' : '▼'}
       </button>
 
       {expanded && (
-        <div className="border border-black/10 rounded overflow-hidden text-[10px] max-h-[480px] overflow-y-auto">
+        <div className="border border-black/10 rounded overflow-hidden text-[11px] max-h-[480px] overflow-y-auto">
           {sorted.map((sub, si) => {
             const targets = sub.target_ids ?? [];
             const drops   = sub.drop_ids ?? [];
@@ -715,12 +715,12 @@ function WishlistListsTable({ submissions, members, players, pickLog, expanded, 
                       className={`grid grid-cols-[auto_auto_1fr_auto] px-3 py-1 gap-3 items-center ${i % 2 === 0 ? 'bg-white' : 'bg-black/5'}`}
                     >
                       <span className="font-black text-black/40 w-6 text-right shrink-0">{i + 1}.</span>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-cyan-700 w-10 shrink-0">Target</span>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-cyan-700 w-10 shrink-0">Target</span>
                       <span className={`inline-flex items-center gap-1.5 truncate min-w-0 ${lost ? 'line-through opacity-50' : ''}`}>
                         <ClubCrest name={players[pid]?.club} size={12} />
                         <span className="truncate">{players[pid]?.name ?? pid}</span>
                       </span>
-                      <span className={`text-right shrink-0 text-[9px] font-bold ${won ? 'text-green-700' : lost ? 'text-red-600' : 'text-black/30'}`}>
+                      <span className={`text-right shrink-0 text-[11px] font-bold ${won ? 'text-green-700' : lost ? 'text-red-600' : 'text-black/30'}`}>
                         {won ? '✓ gained' : lost ? `→ ${members[pick.user_id] ?? 'other'}` : '—'}
                       </span>
                     </div>
@@ -732,12 +732,12 @@ function WishlistListsTable({ submissions, members, players, pickLog, expanded, 
                     className={`grid grid-cols-[auto_auto_1fr_auto] px-3 py-1 gap-3 items-center ${(targets.length + i) % 2 === 0 ? 'bg-white' : 'bg-black/5'}`}
                   >
                     <span className="w-6 shrink-0" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-red-700 w-10 shrink-0">Drop</span>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-red-700 w-10 shrink-0">Drop</span>
                     <span className="inline-flex items-center gap-1.5 truncate min-w-0">
                       <ClubCrest name={players[pid]?.club} size={12} />
                       <span className="truncate">{players[pid]?.name ?? pid}</span>
                     </span>
-                    <span className="text-right shrink-0 text-[9px] text-black/30">offered</span>
+                    <span className="text-right shrink-0 text-[11px] text-black/30">offered</span>
                   </div>
                 ))}
               </div>

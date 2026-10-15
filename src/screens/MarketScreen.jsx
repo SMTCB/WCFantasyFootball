@@ -796,7 +796,7 @@ export default function MarketScreen() {
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? 'var(--pos)' : 'var(--on-shell)' }}
               >
                 {squadCount}
-                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--on-shell-dim)' }}>/{squadSize}</span>
+                <span className="text-[11px] lg:text-[12px] font-normal" style={{ color: 'var(--on-shell-dim)' }}>/{squadSize}</span>
               </div>
             </div>
 
@@ -836,12 +836,12 @@ export default function MarketScreen() {
                     title={isUnlimited ? 'Unlimited transfers — build your squad freely' : `${projFreeLeft} free transfer${projFreeLeft !== 1 ? 's' : ''} remaining this round`}
                   >
                     {isUnlimited ? '∞' : projFreeLeft}
-                    <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--on-shell-dim)' }}>
+                    <span className="text-[11px] lg:text-[12px] font-normal" style={{ color: 'var(--on-shell-dim)' }}>
                       {isUnlimited ? ' free' : ' free'}
                     </span>
                   </div>
                   {totalPenCost > 0 && (
-                    <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--on-shell-gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                    <div className="text-[11px] font-black mt-0.5" style={{ color: 'var(--on-shell-gold)', fontFamily: 'Archivo Black, sans-serif' }}>
                       -{totalPenCost}pt cost
                     </div>
                   )}
@@ -859,10 +859,10 @@ export default function MarketScreen() {
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: effectiveBudget < 5 ? 'var(--on-shell-danger)' : 'var(--on-shell-accent)' }}
               >
                 €{effectiveBudget.toFixed(1)}
-                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--on-shell-dim)' }}>M</span>
+                <span className="text-[11px] lg:text-[12px] font-normal" style={{ color: 'var(--on-shell-dim)' }}>M</span>
               </div>
               {emptySlots > 0 && (
-                <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--on-shell-gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                <div className="text-[11px] font-black mt-0.5" style={{ color: 'var(--on-shell-gold)', fontFamily: 'Archivo Black, sans-serif' }}>
                   {emptySlots} empty
                 </div>
               )}
@@ -922,10 +922,10 @@ export default function MarketScreen() {
                   style={{ width: `${pct}%`, background: statusColor }}
                 />
                 <div className="px-1.5 py-1 flex items-center justify-between">
-                  <span className="text-[9px] font-black uppercase" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}>
+                  <span className="text-[11px] font-black uppercase" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}>
                     {pos}
                   </span>
-                  <span className="text-[9px] font-black tabular-nums" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif' }}>
+                  <span className="text-[11px] font-black tabular-nums" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif' }}>
                     {count}/{max}
                   </span>
                 </div>
@@ -1504,7 +1504,7 @@ export default function MarketScreen() {
         style={{ borderTop: '1px solid var(--rule)' }}
       >
         <span
-          className="text-[9px] font-semibold uppercase tracking-wider"
+          className="text-[11px] font-semibold uppercase tracking-wider"
           style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}
         >
           Max {clubCap} per club (Joker exempt) · Max {squadSize} players · €{cfg.budgetTotal}M budget

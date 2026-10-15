@@ -8,7 +8,7 @@ function TeamCrest({ team, isRight = false }) {
       className={`flex items-center gap-3 ${isRight ? "flex-row-reverse" : ""} flex-1 min-w-0`}
     >
       <div
-        className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[8px] font-bold text-black border border-white/20"
+        className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold text-black border border-white/20"
         style={{ backgroundColor: team.color }}
       ></div>
       <span className="font-medium uppercase text-sm truncate">

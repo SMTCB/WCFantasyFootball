@@ -51,14 +51,14 @@ function FixtureCard({ fixture, prediction, onPredict }) {
         style={{ borderBottom: '1px solid var(--shell-rule)' }}
       >
         <span
-          className="text-[9px] font-black uppercase tracking-widest"
+          className="text-[11px] font-black uppercase tracking-widest"
           style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
         >
           {fixture.competition ?? ''}
         </span>
         {isLive && (
           <span
-            className="flex items-center gap-1 text-[9px] font-black uppercase"
+            className="flex items-center gap-1 text-[11px] font-black uppercase"
             style={{ color: 'var(--positive)', fontFamily: 'Archivo Black, sans-serif' }}
           >
             <span className="w-[5px] h-[5px] rounded-full animate-pulse inline-block" style={{ background: 'var(--positive)' }} />
@@ -67,7 +67,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
         )}
         {isFinished && (
           <span
-            className="text-[9px] font-black uppercase"
+            className="text-[11px] font-black uppercase"
             style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
           >
             FT
@@ -75,7 +75,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
         )}
         {isScheduled && (
           <span
-            className="text-[9px] font-medium"
+            className="text-[11px] font-medium"
             style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
           >
             {kickoffLabel}
@@ -138,7 +138,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
         {isFinished ? (
           /* Result feedback */
           <div
-            className="flex items-center justify-center gap-2 py-1.5 rounded text-[10px] font-black uppercase tracking-widest"
+            className="flex items-center justify-center gap-2 py-1.5 rounded text-[11px] font-black uppercase tracking-widest"
             style={{
               background: result === 'correct' ? 'rgba(24,201,107,0.1)' : result === 'wrong' ? 'rgba(240,58,58,0.08)' : 'transparent',
               color: result === 'correct' ? 'var(--positive)' : result === 'wrong' ? 'var(--danger)' : 'var(--mute)',
@@ -162,7 +162,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
                 type="button"
                 onClick={() => onPredict(fixture.id, key)}
                 disabled={isLive}
-                className="flex-1 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all"
+                className="flex-1 py-1.5 rounded text-[11px] font-black uppercase tracking-wider transition-all"
                 style={{
                   fontFamily: 'Archivo Black, sans-serif',
                   background: prediction === key
@@ -256,7 +256,7 @@ export default function BracketScreen() {
           </Button>
           <div className="text-center">
             <div
-              className="text-[9px] font-black uppercase tracking-[0.35em]"
+              className="text-[11px] font-black uppercase tracking-[0.35em]"
               style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
             >
               Fixture Challenge
@@ -271,7 +271,7 @@ export default function BracketScreen() {
           {/* Score badge */}
           <div className="text-right">
             <div
-              className="text-[9px] font-black uppercase tracking-widest"
+              className="text-[11px] font-black uppercase tracking-widest"
               style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
             >
               Accuracy
@@ -288,7 +288,7 @@ export default function BracketScreen() {
         {/* Score summary strip */}
         {predicted.length > 0 && (
           <div
-            className="mt-3 flex items-center justify-center gap-4 text-[10px] font-bold"
+            className="mt-3 flex items-center justify-center gap-4 text-[11px] font-bold"
             style={{ fontFamily: 'Archivo Black, sans-serif' }}
           >
             <span style={{ color: 'var(--positive)' }}>✓ {correct.length} correct</span>
@@ -323,7 +323,7 @@ export default function BracketScreen() {
             <div key={gw}>
               {/* GW label */}
               <div
-                className="text-[9px] font-black uppercase tracking-[0.25em] mb-2"
+                className="text-[11px] font-black uppercase tracking-[0.25em] mb-2"
                 style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
               >
                 {gw}

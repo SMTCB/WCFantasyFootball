@@ -35,12 +35,12 @@ export default function DangerZone({ players = [], onSelectPlayer }) {
         </span>
         <div className="flex items-center gap-1 ml-1">
           {outCount > 0 && (
-            <span className="text-[8px] font-black px-1.5 py-0.5 rounded-sm bg-negative/15 text-negative uppercase tracking-wider">
+            <span className="text-[11px] font-black px-1.5 py-0.5 rounded-sm bg-negative/15 text-negative uppercase tracking-wider">
               {outCount} OUT
             </span>
           )}
           {doubtfulCount > 0 && (
-            <span className="text-[8px] font-black px-1.5 py-0.5 rounded-sm bg-gold/15 text-gold uppercase tracking-wider">
+            <span className="text-[11px] font-black px-1.5 py-0.5 rounded-sm bg-gold/15 text-gold uppercase tracking-wider">
               {doubtfulCount} DOUBT
             </span>
           )}
@@ -69,7 +69,7 @@ export default function DangerZone({ players = [], onSelectPlayer }) {
                   {player.name.split(' ').pop()}
                 </div>
                 <div
-                  className="text-[9px] font-black uppercase tracking-wider"
+                  className="text-[11px] font-black uppercase tracking-wider"
                   style={{ color: cfg.color, fontFamily: 'Archivo Black, sans-serif' }}
                 >
                   {cfg.label}

@@ -103,7 +103,7 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
                     position: 'absolute', top: -5, left: -5,
                     width: 15, height: 15, borderRadius: '50%',
                     background: 'var(--gold)', color: 'var(--ink)',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 9,
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 11,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '1.5px solid var(--ink)',
                   }}>C</div>
