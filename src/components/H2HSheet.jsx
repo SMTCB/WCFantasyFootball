@@ -166,7 +166,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
   const lossPct = total > 0 ? Math.round((h2h.losses / total) * 100) : 0;
 
   return (
-    <BottomSheet onClose={onClose} background="var(--ink)" maxHeight="90vh" maxWidth={448}>
+    <BottomSheet ariaLabel="Head to head" onClose={onClose} background="var(--ink)" maxHeight="90vh" maxWidth={448}>
         {/* Header */}
         <div className="px-5 pt-2 pb-4 border-b border-white/5 shrink-0">
           <div className="flex items-center justify-between">

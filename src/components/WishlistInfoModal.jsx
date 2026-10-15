@@ -27,7 +27,7 @@ function InfoBox({ children }) {
 
 export default function WishlistInfoModal({ onClose }) {
   return (
-    <BottomSheet
+    <BottomSheet ariaLabel="Wishlist draft info"
       onClose={onClose}
       background="var(--ink)"
       maxWidth={480}
