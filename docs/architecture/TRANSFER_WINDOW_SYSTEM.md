@@ -57,8 +57,8 @@ In draft leagues (`format='noduplicate'` OR `league_mode='draft'`), the between-
 
 **When the draft runs:**
 - `manual`: the commissioner presses "Run now" (`run-wishlist-draft` invoked with `{league_id}`).
-- `auto`: at `scheduled_at` (≥ 6h notice; suggested first kickoff − 48h).
-- Both: always by `hard_deadline_at` = first kickoff − 8h.
+- `auto`: at `scheduled_at` (≥ 6h notice, ≤ first kickoff − 15 min; suggested first kickoff − 48h; can be pre-set before the window exists, migration 298).
+- `manual`: safety net at `hard_deadline_at` = first kickoff − 8h (not applied while a later auto time is pending).
 
 The scheduler is the `run-wishlist-draft` cron (`*/15`). Claiming is atomic (`status scheduled→running` + `run_token`), so the commissioner and the cron can never both run it.
 
@@ -264,4 +264,4 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 ---
 
-Last Updated: **2026-10-03** (Draft leagues: wishlist draft gate — manual/auto/disabled per round, migration 294)
+Last Updated: **2026-10-15** (wishlist draft gate: Auto pre-set + kickoff − 15 min cap, migration 298)
