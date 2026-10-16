@@ -1159,7 +1159,7 @@ export default function LiveScreen() {
           <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', padding: '0 18px 8px' }}>YOUR LEAGUES — TAP TO SWITCH</div>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 18px 4px', scrollbarWidth: 'none' }}>
             {loading ? (
-              <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '10px 0' }}>Loading…</div>
+              <LoadingRows rows={3} />
             ) : userLeagues.length === 0 ? (
               <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '10px 0' }}>No leagues</div>
             ) : userLeagues.map(lg => {

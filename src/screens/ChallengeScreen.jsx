@@ -1491,7 +1491,7 @@ function WalletTabContent({ wallet, walletLoading }) {
           </div>
           <div style={{ padding: '20px 16px', textAlign: 'center' }}>
             {walletLoading ? (
-              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
+              <LoadingRows rows={3} />
             ) : (
               <>
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 10 }}>Available balance</div>
@@ -1930,7 +1930,7 @@ function CreateChallengeModal({
                   <div style={{ marginBottom: 14 }}>
                     <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek</span>
                     {gwLoading ? (
-                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</div>
+                      <LoadingRows rows={3} />
                     ) : !current && !next ? (
                       <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No upcoming gameweeks found.</div>
                     ) : (

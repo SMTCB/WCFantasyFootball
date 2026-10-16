@@ -15,6 +15,7 @@
  *   6. Stats Override    — edit individual player stats, force recalculate
  */
 
+import { LoadingRows } from '../components/Skeleton';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -956,7 +957,7 @@ function ScoringRulesEditor({ tournamentId }) {
     setStatus(error ? `Error: ${error.message}` : '✓ Scoring rules saved');
   };
 
-  if (loading) return <p className="text-xs text-text-secondary">Loading scoring rules…</p>;
+  if (loading) return <div style={{ padding: 20 }}><LoadingRows rows={3} /></div>;
 
   return (
     <Section title="Scoring Rules" sub="Edit per-position point multipliers. Changes take effect on the next Score run.">
@@ -1096,7 +1097,7 @@ function ObservabilityPanel() {
         )}
       </div>
       {cronJobs.length === 0 && !loading ? (
-        <p className="text-[11px] text-text-secondary mb-4">Loading…</p>
+        <LoadingRows rows={3} />
       ) : (
         <div className="mb-6 flex flex-col gap-1 max-h-72 overflow-y-auto">
           {cronJobs.map((j) => {
@@ -1254,7 +1255,7 @@ export default function AdminSeedScreen() {
       <div className="border border-border p-4 mb-4 bg-surface">
         <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-2">Your Leagues</p>
         {loading ? (
-          <p className="text-xs text-text-secondary">Loading…</p>
+          <LoadingRows rows={3} />
         ) : myLeagues.length === 0 ? (
           <p className="text-xs text-text-secondary">You haven't created or been assigned a commissioner role in any league yet.</p>
         ) : (

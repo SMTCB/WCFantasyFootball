@@ -993,7 +993,7 @@ export default function LeagueScreen() {
                 ))}
               </div>
             ) : (
-              <p className="text-[11px] text-text-secondary">Loading competitions…</p>
+              <LoadingRows rows={3} />
             )}
           </div>
           {/* League Mode Help Modal */}
