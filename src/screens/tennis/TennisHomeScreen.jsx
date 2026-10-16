@@ -9,9 +9,9 @@ import CompetitionSettingsModal from '../../components/shared/CompetitionSetting
 
 const STATUS_LABEL = {
   upcoming:         { label: 'Upcoming',        color: 'var(--mute)', bg: 'transparent', outline: true },
-  roster_open:      { label: 'Pick your squad', color: '#fff', bg: 'var(--ten)' },
-  in_progress:      { label: 'In Progress',     color: '#fff', bg: 'var(--accent)' },
-  qf_captain_open:  { label: 'Pick Captain',    color: '#fff', bg: 'var(--gold)' },
+  roster_open:      { label: 'Pick your squad', color: 'var(--on-accent)', bg: 'var(--ten)' },
+  in_progress:      { label: 'In Progress',     color: 'var(--on-accent)', bg: 'var(--accent)' },
+  qf_captain_open:  { label: 'Pick Captain',    color: 'var(--on-accent)', bg: 'var(--gold)' },
   completed:        { label: 'Completed',       color: 'var(--mute)', bg: 'transparent', outline: true },
 };
 
@@ -57,7 +57,7 @@ export default function TennisHomeScreen() {
               <button
                 onClick={() => setShowSettings(true)}
                 aria-label="Player's Box settings"
-                style={{ padding: '6px 9px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: '#fff' }}
+                style={{ padding: '6px 9px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--on-accent)' }}
               >
                 ⚙
               </button>
@@ -66,7 +66,7 @@ export default function TennisHomeScreen() {
               <select
                 value={activeBox?.player_box_id ?? ''}
                 onChange={e => setActivePlayerBoxId(e.target.value)}
-                style={{ background: 'var(--shell-fill-strong)', color: '#fff', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+                style={{ background: 'var(--shell-fill-strong)', color: 'var(--on-accent)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
               >
                 {visibleBoxes.map(b => (
                   <option key={b.player_box_id} value={b.player_box_id}>{b.name}{b.archived ? ' (Archived)' : ''}</option>
@@ -121,7 +121,7 @@ export default function TennisHomeScreen() {
             </p>
             <button
               onClick={() => navigate('/tennis/box')}
-              style={{ padding: '11px 28px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
+              style={{ padding: '11px 28px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
             >
               Create or join a box
             </button>
@@ -135,13 +135,13 @@ export default function TennisHomeScreen() {
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
                 {activeOrNext.status === 'qf_captain_open' ? 'QF Captain window open' : 'Roster selection open'}
               </div>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: '#fff' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--on-accent)' }}>
                 {activeOrNext.name}
               </div>
             </div>
             <button
               onClick={() => navigate(`/tennis/tournament/${activeOrNext.tournament_id ?? activeOrNext.id}`)}
-              style={{ padding: '9px 18px', background: 'var(--shell-fill-active)', color: '#fff', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              style={{ padding: '9px 18px', background: 'var(--shell-fill-active)', color: 'var(--on-accent)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
               {activeOrNext.status === 'qf_captain_open' ? 'Pick captain →' : 'Pick squad →'}
             </button>

@@ -248,7 +248,7 @@ export default function F1RacePickForm({ race, paddock }) {
             <button
               type="submit"
               disabled={saving || !p1 || !p2 || !p3}
-              style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : (!p1 || !p2 || !p3) ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: (saving || !p1 || !p2 || !p3) ? 'default' : 'pointer', transition: 'background 0.2s' }}
+              style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : (!p1 || !p2 || !p3) ? 'var(--mute)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: (saving || !p1 || !p2 || !p3) ? 'default' : 'pointer', transition: 'background 0.2s' }}
             >
               {saved ? '✓ PICKS SAVED' : saving ? 'SAVING…' : 'SAVE PICKS'}
             </button>

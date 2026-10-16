@@ -70,7 +70,7 @@ export default function LeagueInviteCard({ league, onDone }) {
     try {
       const dataUrl = await domToPng(cardRef.current, {
         scale: 2,
-        backgroundColor: '#FFFFFF',   // --card resolved value
+        backgroundColor: 'var(--on-accent)',   // --card resolved value
       });
       const link = document.createElement('a');
       link.download = `${league.name.replace(/\s+/g, '-')}-invite.png`;
@@ -229,7 +229,7 @@ export default function LeagueInviteCard({ league, onDone }) {
               padding:        '14px',
               background:     '#25D366',
               borderRadius:   '10px',
-              color:          '#fff',
+              color:          'var(--on-accent)',
               fontSize: 'var(--fs-body)',
               fontFamily:     'Archivo Black, sans-serif',
               fontWeight:     800,

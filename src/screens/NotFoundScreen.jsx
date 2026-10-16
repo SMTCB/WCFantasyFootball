@@ -45,7 +45,7 @@ export default function NotFoundScreen() {
             textTransform: 'uppercase',
             padding:       '10px 20px',
             background:    'var(--accent)',
-            color:         '#fff',
+            color:         'var(--on-accent)',
             border:        'none',
             borderRadius:  '4px',
             cursor:        'pointer',

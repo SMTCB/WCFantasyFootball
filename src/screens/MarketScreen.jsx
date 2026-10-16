@@ -768,7 +768,7 @@ export default function MarketScreen() {
             <div className="flex items-center gap-2 mt-0.5">
               <div
                 className="text-[18px] lg:text-[24px] font-black uppercase leading-tight tracking-tight"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: '#fff' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--on-accent)' }}
               >
                 Player Market
               </div>

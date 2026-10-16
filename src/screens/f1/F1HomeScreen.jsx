@@ -245,7 +245,7 @@ export default function F1HomeScreen() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff' }}>
+                  <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)' }}>
                     {getFlag(nextRace.gp_name)} {nextRace.gp_name}
                   </div>
                   <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell)', marginTop: 3 }}>
@@ -254,7 +254,7 @@ export default function F1HomeScreen() {
                 </div>
                 {countdown && (
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-title)', color: '#fff' }}>
+                    <div style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-accent)' }}>
                       {countdown.d > 0 ? `${countdown.d}d ${countdown.h}h` : `${countdown.h}h ${countdown.m}m`}
                     </div>
                     <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell)', letterSpacing: '0.12em' }}>TO RACE</div>
@@ -263,7 +263,7 @@ export default function F1HomeScreen() {
               </div>
               <button
                 onClick={() => goToPicks(nextRace.round_number)}
-                style={{ display: 'block', width: '100%', padding: '10px', background: '#fff', color: 'var(--f1)', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
+                style={{ display: 'block', width: '100%', padding: '10px', background: 'var(--on-accent)', color: 'var(--f1)', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
               >
                 SUBMIT PICKS FOR R{nextRace.round_number} →
               </button>

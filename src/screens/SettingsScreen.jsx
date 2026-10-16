@@ -202,7 +202,7 @@ export default function SettingsScreen() {
                       : 'var(--accent)',
                     color: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
                       ? 'var(--mute)'
-                      : '#fff',
+                      : 'var(--on-accent)',
                     border: '1px solid var(--rule)',
                     borderRadius: 4,
                     cursor: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
@@ -291,7 +291,7 @@ export default function SettingsScreen() {
                 textTransform: 'uppercase',
                 padding: '10px 16px',
                 background: isChangingPassword ? 'var(--elev)' : 'var(--accent)',
-                color: isChangingPassword ? 'var(--mute)' : '#fff',
+                color: isChangingPassword ? 'var(--mute)' : 'var(--on-accent)',
                 border: 'none',
                 borderRadius: 4,
                 cursor: isChangingPassword ? 'wait' : 'pointer',

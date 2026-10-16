@@ -590,7 +590,7 @@ export default function DraftScreen() {
                 className="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
                 style={{
                   background: list.length > 0 ? 'var(--positive)' : 'var(--elev)',
-                  color:      list.length > 0 ? '#fff'            : 'var(--mute)',
+                  color:      list.length > 0 ? 'var(--on-accent)'            : 'var(--mute)',
                   border:     list.length > 0 ? 'none'            : '1px solid var(--rule)',
                 }}
               >
@@ -799,7 +799,7 @@ export default function DraftScreen() {
                       <button
                         onClick={() => addPlayer(p)}
                         className="text-[11px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
-                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                        style={{ backgroundColor: 'var(--accent)', color: 'var(--on-accent)' }}
                       >
                         Add to List
                       </button>
@@ -827,7 +827,7 @@ export default function DraftScreen() {
           className="w-full py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
             background:      list.length > 0 ? 'var(--positive)' : undefined,
-            color:           list.length > 0 ? '#fff'            : 'var(--on-shell-dim)',
+            color:           list.length > 0 ? 'var(--on-accent)'            : 'var(--on-shell-dim)',
             backgroundColor: list.length === 0 ? 'var(--elev)' : undefined,
           }}
         >

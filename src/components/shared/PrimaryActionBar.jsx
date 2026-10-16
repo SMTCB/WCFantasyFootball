@@ -32,7 +32,7 @@ export default function PrimaryActionBar({
     ? accent
     : 'var(--elev)';
 
-  const textColor = isAction ? '#fff' : 'var(--mute)';
+  const textColor = isAction ? 'var(--on-accent)' : 'var(--mute)';
 
   const stateIcon = isDone ? '✓' : isLocked ? '🔒' : null;
 

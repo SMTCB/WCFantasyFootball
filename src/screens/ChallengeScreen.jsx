@@ -26,7 +26,7 @@ function Ci({ size = 'md' }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       borderRadius: '50%', background: 'var(--gold)',
-      color: '#fff', ...HEAD, boxShadow: 'inset 0 -1px 0 rgba(0,0,0,.2)',
+      color: 'var(--on-accent)', ...HEAD, boxShadow: 'inset 0 -1px 0 rgba(0,0,0,.2)',
       flexShrink: 0, width: dim, height: dim, fontSize: fs, lineHeight: 1,
     }}>C</span>
   );
@@ -493,7 +493,7 @@ function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
           onClick={handleSubmit} disabled={submitting || !pick}
           style={{
             width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || !pick) ? 'not-allowed' : 'pointer',
-            background: pick ? 'var(--accent)' : 'var(--elev)', color: pick ? '#fff' : 'var(--mute)',
+            background: pick ? 'var(--accent)' : 'var(--elev)', color: pick ? 'var(--on-accent)' : 'var(--mute)',
             ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
             opacity: submitting ? 0.7 : 1,
           }}
@@ -590,7 +590,7 @@ function CheckDot({ selected }) {
       width: 16, height: 16, borderRadius: 4, flexShrink: 0,
       border: `1.5px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
       background: selected ? 'var(--gold)' : 'transparent',
-      display: 'grid', placeItems: 'center', ...MONO, fontSize: 11, color: '#fff', lineHeight: 1,
+      display: 'grid', placeItems: 'center', ...MONO, fontSize: 11, color: 'var(--on-accent)', lineHeight: 1,
     }}>
       {selected && '✓'}
     </span>
@@ -949,7 +949,7 @@ function CreateGroupBetModal({
                     flex: 1, padding: '8px 4px', borderRadius: 6, cursor: 'pointer',
                     background: stakeCoins === v ? 'var(--gold)' : 'var(--elev)',
                     border: `1px solid ${stakeCoins === v ? 'var(--gold)' : 'var(--rule)'}`,
-                    color: stakeCoins === v ? '#fff' : 'var(--text)',
+                    color: stakeCoins === v ? 'var(--on-accent)' : 'var(--text)',
                     ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
                   }}>{v}</button>
                 ))}
@@ -993,7 +993,7 @@ function CreateGroupBetModal({
               onClick={handleSubmit} disabled={submitting || overBudget}
               style={{
                 width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || overBudget) ? 'not-allowed' : 'pointer',
-                background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : '#fff',
+                background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : 'var(--on-accent)',
                 ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
                 opacity: submitting ? 0.7 : 1,
               }}
@@ -1095,7 +1095,7 @@ function SubmitAnswerModal({ bet, onClose, onSubmit, fetchAnswers, userId }) {
           onClick={handleSubmit} disabled={submitting}
           style={{
             width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
-            background: 'var(--gold)', color: '#fff',
+            background: 'var(--gold)', color: 'var(--on-accent)',
             ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
             opacity: submitting ? 0.7 : 1,
           }}
@@ -1235,7 +1235,7 @@ function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipants, fetc
           onClick={handleSubmit} disabled={submitting}
           style={{
             width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
-            background: isArbitrate ? 'var(--purple)' : 'var(--gold)', color: '#fff',
+            background: isArbitrate ? 'var(--purple)' : 'var(--gold)', color: 'var(--on-accent)',
             ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
             opacity: submitting ? 0.7 : 1,
           }}
@@ -1609,7 +1609,7 @@ function MemberAvatar({ username, index, size = 28 }) {
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
       background: MEMBER_COLORS[index % MEMBER_COLORS.length],
       display: 'grid', placeItems: 'center',
-      ...HEAD, fontSize: size * 0.4, color: '#fff',
+      ...HEAD, fontSize: size * 0.4, color: 'var(--on-accent)',
     }}>
       {(username?.[0] ?? '?').toUpperCase()}
     </div>
@@ -1654,7 +1654,7 @@ function Chip({ selected, onClick, children }) {
         padding: '7px 13px', borderRadius: 100, cursor: 'pointer',
         background: selected ? 'var(--gold)' : 'var(--elev)',
         border: `1px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
-        color: selected ? '#fff' : 'var(--text)',
+        color: selected ? 'var(--on-accent)' : 'var(--text)',
         ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, whiteSpace: 'nowrap',
       }}
     >
@@ -1955,7 +1955,7 @@ function CreateChallengeModal({
                     flex: 1, padding: '8px 4px', borderRadius: 6, cursor: 'pointer',
                     background: stakeCoins === v ? 'var(--gold)' : 'var(--elev)',
                     border: `1px solid ${stakeCoins === v ? 'var(--gold)' : 'var(--rule)'}`,
-                    color: stakeCoins === v ? '#fff' : 'var(--text)',
+                    color: stakeCoins === v ? 'var(--on-accent)' : 'var(--text)',
                     ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
                   }}>{v}</button>
                 ))}
@@ -1992,7 +1992,7 @@ function CreateChallengeModal({
               onClick={handleSubmit} disabled={submitting || overBudget}
               style={{
                 width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || overBudget) ? 'not-allowed' : 'pointer',
-                background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : '#fff',
+                background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : 'var(--on-accent)',
                 ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
                 opacity: submitting ? 0.7 : 1,
               }}
@@ -2134,7 +2134,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNew
           onClick={onNewChallenge}
           style={{
             width: '100%', padding: '12px 24px', borderRadius: 6, border: 'none',
-            background: 'var(--gold)', color: '#fff', cursor: 'pointer',
+            background: 'var(--gold)', color: 'var(--on-accent)', cursor: 'pointer',
             ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
             fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
@@ -2449,7 +2449,7 @@ export default function ChallengeScreen() {
       {toast && createPortal(
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: toast.isError ? 'var(--neg)' : 'var(--shell)', color: '#fff',
+          background: toast.isError ? 'var(--neg)' : 'var(--shell)', color: 'var(--on-accent)',
           padding: '12px 22px', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)',
           letterSpacing: '.05em', zIndex: 999, whiteSpace: 'nowrap',
           boxShadow: '0 8px 28px rgba(0,0,0,.25)',

@@ -160,7 +160,7 @@ export default function F1SeasonBetsScreen() {
           <button
             type="submit"
             disabled={saving}
-            style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
+            style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
           >
             {saved ? '✓ SEASON BETS SAVED' : saving ? 'SAVING…' : 'SAVE SEASON BETS'}
           </button>

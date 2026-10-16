@@ -118,7 +118,7 @@ export default function F1AdminScreen() {
     fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em',
     cursor: busy ? 'default' : 'pointer',
     background: variant === 'primary' ? 'var(--f1)' : variant === 'danger' ? 'var(--danger)' : 'var(--elev)',
-    color: variant === 'elev' ? 'var(--paper)' : '#fff',
+    color: variant === 'elev' ? 'var(--paper)' : 'var(--on-accent)',
     opacity: busy ? 0.7 : 1,
   });
 

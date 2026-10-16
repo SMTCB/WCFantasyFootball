@@ -100,7 +100,7 @@ function DmBubble({ msg }) {
         background: msg.isOwn ? 'var(--accent)' : 'var(--card)',
         border: msg.isOwn ? 'none' : '1px solid var(--rule)',
       }}>
-        <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: msg.isOwn ? '#fff' : 'var(--paper)', lineHeight: 1.4, wordBreak: 'break-word' }}>
+        <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: msg.isOwn ? 'var(--on-accent)' : 'var(--paper)', lineHeight: 1.4, wordBreak: 'break-word' }}>
           {msg.content}
         </p>
         <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: msg.isOwn ? 'var(--on-shell-dim)' : 'var(--mute)', marginTop: 4, textAlign: 'right' }}>
@@ -199,7 +199,7 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
         <button
           type="submit"
           disabled={!text.trim() || sending}
-          style={{ padding: '9px 14px', background: !text.trim() || sending ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: !text.trim() || sending ? 'default' : 'pointer', flexShrink: 0 }}
+          style={{ padding: '9px 14px', background: !text.trim() || sending ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: !text.trim() || sending ? 'default' : 'pointer', flexShrink: 0 }}
         >
           {sending ? '…' : 'SEND'}
         </button>
@@ -464,7 +464,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
                       <button
                         onClick={createChannel}
                         disabled={creatingChannel || !newChannelName.trim()}
-                        style={{ flex: 1, padding: '5px 0', background: creatingChannel || !newChannelName.trim() ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}
+                        style={{ flex: 1, padding: '5px 0', background: creatingChannel || !newChannelName.trim() ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}
                       >
                         {creatingChannel ? '…' : 'CREATE'}
                       </button>

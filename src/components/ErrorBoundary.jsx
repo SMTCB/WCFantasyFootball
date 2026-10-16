@@ -172,7 +172,7 @@ export default class ErrorBoundary extends Component {
             style={{
               padding: '12px 28px',
               background: 'var(--cyan)',
-              color: '#fff',
+              color: 'var(--on-accent)',
               border: 'none',
               borderRadius: '4px',
               fontSize: 'var(--fs-micro)',

@@ -244,7 +244,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
   };
   const PRIMARY_BTN = {
     flex: 1, textAlign: 'center', padding: 12, borderRadius: 6,
-    border: 'none', background: 'var(--accent)', color: '#fff',
+    border: 'none', background: 'var(--accent)', color: 'var(--on-accent)',
     fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em',
     textTransform: 'uppercase', fontWeight: 600,
     cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
@@ -379,7 +379,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
                 disabled={loading || !joinCode.trim()}
                 style={{
                   padding: '9px 16px', borderRadius: 6, border: 'none',
-                  background: SPORT_COLOR[joinSport], color: '#fff',
+                  background: SPORT_COLOR[joinSport], color: 'var(--on-accent)',
                   fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)',
                   cursor: loading || !joinCode.trim() ? 'not-allowed' : 'pointer',
                   opacity: loading || !joinCode.trim() ? 0.5 : 1,

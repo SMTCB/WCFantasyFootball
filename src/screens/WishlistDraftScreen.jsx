@@ -406,7 +406,7 @@ export default function WishlistDraftScreen() {
             <div className="flex items-center justify-center gap-2 mt-0.5">
               <div
                 className="text-[16px] font-black uppercase tracking-tight"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: '#fff' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--on-accent)' }}
               >
                 Round {roundNumber}
               </div>
@@ -429,7 +429,7 @@ export default function WishlistDraftScreen() {
             onClick={handleSave}
             disabled={(targets.length === 0 && dropIds.size === 0) || saving}
             className="text-[11px] font-black uppercase tracking-widest shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer' }}
+            style={{ background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer' }}
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -682,7 +682,7 @@ export default function WishlistDraftScreen() {
                         title="Add to wishlist"
                         aria-label={`Add ${p.name} to wishlist`}
                         className="shrink-0 flex items-center justify-center rounded-full font-black active:scale-90 transition-transform"
-                        style={{ width: 22, height: 22, fontSize: 14, lineHeight: 1, backgroundColor: 'var(--accent)', color: '#fff' }}
+                        style={{ width: 22, height: 22, fontSize: 14, lineHeight: 1, backgroundColor: 'var(--accent)', color: 'var(--on-accent)' }}
                       >
                         +
                       </button>
@@ -728,7 +728,7 @@ export default function WishlistDraftScreen() {
           className="flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
             background:      (targets.length > 0 || dropIds.size > 0) ? 'var(--positive)' : undefined,
-            color:           (targets.length > 0 || dropIds.size > 0) ? '#fff'            : 'var(--on-shell-dim)',
+            color:           (targets.length > 0 || dropIds.size > 0) ? 'var(--on-accent)'            : 'var(--on-shell-dim)',
             backgroundColor: (targets.length === 0 && dropIds.size === 0) ? 'var(--elev)' : undefined,
           }}
         >

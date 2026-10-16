@@ -96,6 +96,7 @@
   --gold:           #B8720E;
   /* Text on --shell (dark navy) surfaces */
   --on-shell:       #ffffff;               /* full-brightness text on shell/nav headers */
+  --on-accent:      #ffffff;               /* text/icons on solid accent, danger, success fills */
   --on-shell-faint: rgba(255,255,255,.3);  /* lowest-emphasis text on shell — placeholders, disabled */
   --on-shell-dim:   rgba(255,255,255,.55); /* muted eyebrow labels on shell — raised from .45 for WCAG AA (~5.3:1) */
   --on-shell-mid:   rgba(255,255,255,.7);  /* mid-emphasis text on shell — between dim and full */

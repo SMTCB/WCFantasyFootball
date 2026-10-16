@@ -156,7 +156,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
           <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginBottom: 8 }}>
             Start fresh
           </div>
-          <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: '#fff', marginBottom: 6 }}>Create a Clubhouse</div>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--on-accent)', marginBottom: 6 }}>Create a Clubhouse</div>
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)', marginBottom: 14 }}>
             Name it, invite your group, add competitions as you go
           </div>
@@ -169,13 +169,13 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
                 onChange={e => setNewName(e.target.value)}
                 placeholder="e.g. The Friday Night Crew"
                 maxLength={40}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: '#fff', background: 'var(--shell-fill-strong)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--on-accent)', background: 'var(--shell-fill-strong)', outline: 'none', boxSizing: 'border-box' }}
               />
               {createErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: '#FF8A8A' }}>{createErr}</div>}
               <button
                 type="submit"
                 disabled={createBusy || !newName.trim()}
-                style={{ display: 'block', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: createBusy || !newName.trim() ? 'default' : 'pointer', opacity: createBusy || !newName.trim() ? 0.6 : 1 }}
+                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: createBusy || !newName.trim() ? 'default' : 'pointer', opacity: createBusy || !newName.trim() ? 0.6 : 1 }}
               >
                 {createBusy ? 'Creating…' : 'Create Clubhouse'}
               </button>
@@ -183,7 +183,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
           ) : (
             <button
               onClick={() => setCreating(true)}
-              style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+              style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
             >
               + Create a new Clubhouse
             </button>
@@ -208,7 +208,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
             <button
               type="submit"
               disabled={joinBusy || code.trim().length < 6}
-              style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: joinBusy || code.trim().length < 6 ? 'default' : 'pointer', opacity: joinBusy || code.trim().length < 6 ? 0.6 : 1 }}
+              style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: joinBusy || code.trim().length < 6 ? 'default' : 'pointer', opacity: joinBusy || code.trim().length < 6 ? 0.6 : 1 }}
             >
               {joinBusy ? 'Joining…' : 'Join Clubhouse'}
             </button>
@@ -231,7 +231,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
           <button
             type="submit"
             disabled={searchBusy || query.trim().length < 2}
-            style={{ padding: '10px 16px', background: searchBusy || query.trim().length < 2 ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            style={{ padding: '10px 16px', background: searchBusy || query.trim().length < 2 ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             {searchBusy ? '…' : 'SEARCH'}
           </button>
@@ -261,7 +261,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
                   <button
                     onClick={() => handleSearchJoin(r.invite_code)}
                     disabled={searchJoining === r.invite_code}
-                    style={{ padding: '8px 14px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ padding: '8px 14px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
                     {searchJoining === r.invite_code ? 'JOINING…' : 'JOIN'}
                   </button>
@@ -366,7 +366,7 @@ export default function HomeDashboardScreen() {
             style={{
               flexShrink: 0, width: 28, height: 28, borderRadius: '50%',
               background: 'transparent', border: '1px solid var(--shell-rule-emphasis)',
-              color: '#fff', fontSize: 'var(--fs-body-lg)', fontWeight: 700, lineHeight: 1,
+              color: 'var(--on-accent)', fontSize: 'var(--fs-body-lg)', fontWeight: 700, lineHeight: 1,
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -383,13 +383,13 @@ export default function HomeDashboardScreen() {
         {myCircles.length > 0 && (
           <div style={{ display: 'flex', gap: 24, marginTop: 18 }}>
             <div>
-              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{myCircles.length}</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{myCircles.length}</div>
               <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>
                 {myCircles.length === 1 ? 'CLUBHOUSE' : 'CLUBHOUSES'}
               </div>
             </div>
             <div>
-              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
               <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>
                 COMPETITIONS
               </div>

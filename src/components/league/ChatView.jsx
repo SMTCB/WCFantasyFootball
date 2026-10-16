@@ -379,7 +379,7 @@ export default function ChatView({
       <div style={{ display: 'flex', gap: 6, padding: '10px 16px', borderBottom: '1px solid var(--rule)', overflowX: 'auto', scrollbarWidth: 'none' }}>
         <span style={{ flex: '0 0 auto', padding: '6px 10px', background: 'rgba(0,180,216,.08)', border: '1px solid var(--cyan)', color: 'var(--cyan)', fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '-0.01em', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           #league-chat
-          {(unreadCount || 0) > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontFamily: MONO, fontSize: 'var(--fs-micro)', padding: '0 4px', letterSpacing: '.1em' }}>{unreadCount}</span>}
+          {(unreadCount || 0) > 0 && <span style={{ background: 'var(--danger)', color: 'var(--on-accent)', fontFamily: MONO, fontSize: 'var(--fs-micro)', padding: '0 4px', letterSpacing: '.1em' }}>{unreadCount}</span>}
         </span>
         {/* Hashtag search pill */}
         <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', background: searchTerm ? 'rgba(0,180,216,.08)' : 'transparent', border: `1px solid ${searchTerm ? 'var(--cyan)' : 'var(--rule)'}`, padding: '0 10px', gap: 4 }}>

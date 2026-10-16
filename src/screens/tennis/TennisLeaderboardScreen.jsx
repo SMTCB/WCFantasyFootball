@@ -24,7 +24,7 @@ export default function TennisLeaderboardScreen() {
             <select
               value={activeBox?.player_box_id ?? ''}
               onChange={e => setActivePlayerBoxId(e.target.value)}
-              style={{ background: 'var(--shell-fill-strong)', color: '#fff', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+              style={{ background: 'var(--shell-fill-strong)', color: 'var(--on-accent)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
             >
               {myBoxes.map(b => (
                 <option key={b.player_box_id} value={b.player_box_id}>{b.name}</option>
@@ -50,7 +50,7 @@ export default function TennisLeaderboardScreen() {
         ) : !activeBox ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 16px' }}>Join a Player's Box to see standings.</p>
-            <button onClick={() => navigate('/tennis/box')} style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => navigate('/tennis/box')} style={{ padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}>
               Join a box
             </button>
           </div>

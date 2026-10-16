@@ -35,7 +35,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
       <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: 0 }}>No tennis scores yet this season.</p>
       <button
         onClick={() => navigate('/tennis')}
-        style={{ marginTop: 12, padding: '9px 18px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
+        style={{ marginTop: 12, padding: '9px 18px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
       >
         Enter the Player's Box
       </button>

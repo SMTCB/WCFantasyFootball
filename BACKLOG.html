@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>265</strong><span>closed</span></div>
+      <div class="total-pill"><strong>266</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (183)</span>
+    <span class="chip" data-filter-kind="done">Shipped (184)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">265</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">266</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">183</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">184</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,34 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">183</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">184</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui audit p2 batch c (2026-10-16) — rollback tag `pre-ui-p2-batch-c` 
+
+| id | status | what shipped |
+|----|--------|--------------|
+| sys-04 | ⚠️ partial | new `--on-accent` token replaces 103 raw white literals (`&#x27;#fff&#x27;`) in 32 files. **open:** ~150 other hex literals (brand colours, medals #cd7f32/#c0c0c0, #ffb300, #a855f7) and ~47 sites that append hex alpha (`color + &#x27;22&#x27;`) — need an rgba/`color-mix` token strategy first |
+| frm-04 | ⏸ deferred | `textinput`/`select` already exist but have 8 adopters vs 110 raw `&lt;input&gt;` / 30 `&lt;select&gt;`. not migrated: styles differ (e.g. auth `fieldstyle`), needs 375px visual qa per screen |
+| sys-02 | ⏸ deferred | `button` exists (23 uses vs 514 raw `&lt;button&gt;`); chip/tab variants not added. also the clean fix for tch-01 |
+| thm-01 | ⏸ blocked | dark mode gated on finishing sys-04 |
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">UI audit P2 batch C</h3>
+        <p class="card-summary">ID Status What shipped SYS-04 ⚠️ partial New --on-accent token replaces 103 raw white literals ( '#fff' ) in 32 files. Open: ~150 other hex literals (brand colours,…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-16</span><span class="foot-refs">rollback tag <code>pre-ui-p2-batch-c</code></span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">UI audit P2 batch C</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>ID Status What shipped SYS-04 ⚠️ partial New --on-accent token replaces 103 raw white literals ( '#fff' ) in 32 files. Open: ~150 other hex literals (brand colours,…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · rollback tag <code>pre-ui-p2-batch-c</code></p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-16</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><div class="md-table-wrap"><table class="md-table"><thead><tr><th>ID</th><th>Status</th><th>What shipped</th></tr></thead><tbody><tr><td>SYS-04</td><td>⚠️ partial</td><td>New <code>--on-accent</code> token replaces 103 raw white literals (<code>'#fff'</code>) in 32 files. <strong>Open:</strong> ~150 other hex literals (brand colours, medals #cd7f32/#c0c0c0, #ffb300, #a855f7) and ~47 sites that append hex alpha (<code>color + '22'</code>) — need an rgba/<code>color-mix</code> token strategy first</td></tr><tr><td>FRM-04</td><td>⏸ deferred</td><td><code>TextInput</code>/<code>Select</code> already exist but have 8 adopters vs 110 raw <code>&lt;input&gt;</code> / 30 <code>&lt;select&gt;</code>. Not migrated: styles differ (e.g. Auth <code>fieldStyle</code>), needs 375px visual QA per screen</td></tr><tr><td>SYS-02</td><td>⏸ deferred</td><td><code>Button</code> exists (23 uses vs 514 raw <code>&lt;button&gt;</code>); chip/tab variants not added. Also the clean fix for TCH-01</td></tr><tr><td>THM-01</td><td>⏸ blocked</td><td>Dark mode gated on finishing SYS-04</td></tr></tbody></table></div></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui audit p2 batch a + b (2026-10-16) — pr #1048 (a), pr (b) (rollback tags `pre-ui-p2-batch-a`, `pre-ui-p2-batch-b`) 
 
 | id | status | what shipped |

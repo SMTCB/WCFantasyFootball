@@ -166,13 +166,13 @@ export default function TrophyCabinetScreen() {
         flexWrap: isMobile ? 'wrap' : 'nowrap',
       }}>
         {/* Avatar */}
-        <div style={{ width: 52, height: 52, borderRadius: 10, background: 'var(--accent)', display: 'grid', placeItems: 'center', ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', flexShrink: 0 }}>
+        <div style={{ width: 52, height: 52, borderRadius: 10, background: 'var(--accent)', display: 'grid', placeItems: 'center', ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', flexShrink: 0 }}>
           {initial}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', lineHeight: 1 }}>{username}</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', lineHeight: 1 }}>{username}</div>
             <button
               onClick={() => setShowInfo(v => !v)}
               aria-label="How the Trophy Cabinet works"
@@ -204,8 +204,8 @@ export default function TrophyCabinetScreen() {
             borderTop: '1px solid var(--shell-rule)', flexWrap: 'wrap',
           }}>
             {[
-              { value: myTrophies,            label: 'Trophies', color: '#fff' },
-              { value: activeSports.length || '—', label: 'Sports',   color: '#fff' },
+              { value: myTrophies,            label: 'Trophies', color: 'var(--on-accent)' },
+              { value: activeSports.length || '—', label: 'Sports',   color: 'var(--on-accent)' },
               { value: myGold,                label: 'Gold',     color: 'var(--on-shell-gold)' },
               { value: mySilver,              label: 'Silver',   color: 'var(--on-shell-mid)' },
             ].map(({ value, label, color }) => (
