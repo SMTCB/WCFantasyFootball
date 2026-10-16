@@ -76,7 +76,7 @@ function MessageBubble({ msg, prevMsg, onDelete }) {
           {msg.content}
         </p>
         {onDelete && hovering && (
-          <button
+          <button className="hit-44"
             onClick={onDelete}
             title="Delete message"
             style={{ flexShrink: 0, background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer', padding: '1px 4px', opacity: 0.6, lineHeight: 1 }}
@@ -137,7 +137,7 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
       {/* Thread header */}
       <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         {onBack && (
-          <button
+          <button className="hit-44"
             onClick={onBack}
             style={{ background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-label)', cursor: 'pointer', padding: '2px 8px 2px 0', flexShrink: 0 }}
           >
@@ -336,7 +336,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Chat</div>
             {onExpand && (
-              <button
+              <button className="hit-44"
                 onClick={onExpand}
                 title="Expand chat"
                 style={{ background: 'transparent', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
@@ -347,7 +347,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {['channel', 'dm'].map(mode => (
-              <button
+              <button className="hit-44"
                 key={mode}
                 onClick={() => switchMode(mode)}
                 style={{
@@ -415,7 +415,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 10 }}>Chat</div>
             <div style={{ display: 'flex', gap: 6 }}>
               {['channel', 'dm'].map(mode => (
-                <button
+                <button className="hit-44"
                   key={mode}
                   onClick={() => switchMode(mode)}
                   style={{
@@ -461,14 +461,14 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
                       style={{ width: '100%', padding: '5px 8px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 4, color: 'var(--paper)', ...MONO, fontSize: 'var(--fs-micro)', outline: 'none', boxSizing: 'border-box' }}
                     />
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button
+                      <button className="hit-44"
                         onClick={createChannel}
                         disabled={creatingChannel || !newChannelName.trim()}
                         style={{ flex: 1, padding: '5px 0', background: creatingChannel || !newChannelName.trim() ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}
                       >
                         {creatingChannel ? '…' : 'CREATE'}
                       </button>
-                      <button
+                      <button className="hit-44"
                         onClick={() => { setShowNewChannel(false); setNewChannelName(''); }}
                         style={{ padding: '5px 8px', background: 'transparent', color: 'var(--mute)', border: '1px solid var(--rule)', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
                       >

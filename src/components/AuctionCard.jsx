@@ -98,7 +98,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                 <button
                   onClick={async () => { setBusy(true); const r = await onSellNow(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
                   disabled={busy}
-                  className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                  className="hit-44 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
                   style={{ border: '1px solid rgba(34,197,86,0.35)', color: 'var(--positive)', background: 'rgba(34,197,86,0.08)' }}
                 >
                   {busy ? '…' : `Sell Now · €${(auction.current_bid ?? 0).toFixed(1)}M`}
@@ -119,7 +119,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                   if (!r.ok) setErr(r.error);
                 }}
                 disabled={busy}
-                className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                className="hit-44 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
                 style={{
                   border: `1px solid ${confirmCancel ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.3)'}`,
                   color: 'var(--danger)',
@@ -144,7 +144,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
               <button
                 onClick={handleBid}
                 disabled={busy || !amount}
-                className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                className="hit-44 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
                 style={{ background: 'rgba(0,180,216,0.12)', border: '1px solid rgba(0,180,216,0.3)', color: 'var(--cyan)' }}
               >
                 {busy ? '…' : 'Bid'}

@@ -993,7 +993,7 @@ export default function LeagueScreen() {
                 ))}
               </div>
             ) : (
-              <p className="text-[11px] text-text-secondary">Loading competitions…</p>
+              <LoadingRows rows={3} />
             )}
           </div>
           {/* League Mode Help Modal */}
@@ -1080,7 +1080,7 @@ export default function LeagueScreen() {
                   </p>
                 </div>
                 <div style={{ padding: '10px 18px', borderTop: '1px solid var(--shell-rule)', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'transparent', border: '1px solid var(--shell-rule-strong)', color: 'var(--on-shell-dim)', padding: '6px 14px', fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}>CLOSE</button>
+                  <button className="hit-44" onClick={() => setShowModeHelp(false)} style={{ background: 'transparent', border: '1px solid var(--shell-rule-strong)', color: 'var(--on-shell-dim)', padding: '6px 14px', fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}>CLOSE</button>
                 </div>
               </div>
             </div>
@@ -1416,7 +1416,7 @@ export default function LeagueScreen() {
                 Head to the market to sign players and build your squad
               </div>
             </div>
-            <button onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MARKET →
             </button>
           </div>
@@ -1436,7 +1436,7 @@ export default function LeagueScreen() {
                 Need {11 - mySquadPlayerCount} more player{11 - mySquadPlayerCount !== 1 ? 's' : ''} to field a starting XI
               </div>
             </div>
-            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
             </button>
           </div>
@@ -1454,7 +1454,7 @@ export default function LeagueScreen() {
                 {15 - mySquadPlayerCount} empty slot{15 - mySquadPlayerCount !== 1 ? 's' : ''} — sign more players to complete your squad
               </div>
             </div>
-            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
             </button>
           </div>
@@ -1668,7 +1668,7 @@ export default function LeagueScreen() {
                               </div>
                             )}
                             <div style={{ display: 'flex', gap: 8 }}>
-                              <button
+                              <button className="hit-44"
                                 onClick={async () => {
                                   try {
                                     await acceptProposal(p.id);
@@ -1684,7 +1684,7 @@ export default function LeagueScreen() {
                               >
                                 ACCEPT
                               </button>
-                              <button
+                              <button className="hit-44"
                                 onClick={async () => {
                                   try {
                                     await rejectProposal(p.id);
@@ -1860,7 +1860,7 @@ export default function LeagueScreen() {
                    <LoadingRows rows={3} />
                  )}
                  {managerRoster.map((p, i) => {
-                   const posColor = p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
+                   const posColor = p.position === 'GK' ? 'var(--purple)' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
                    return (
                    <div key={i} className="flex items-center gap-3 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden" style={{ borderLeft: `2px solid ${posColor}44` }}>
                      <div className="flex-1 min-w-0">
@@ -1872,7 +1872,7 @@ export default function LeagueScreen() {
                        <div className="text-[11px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
                      </div>
                      {activeLeague?.leagues?.format === 'noduplicate' && managerTeamView.user_id !== currentUser?.id && (
-                       <button
+                       <button className="hit-44"
                          onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
                          style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--accent)', background: 'transparent', border: '1px solid rgba(26,111,168,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
                        >TRADE</button>
@@ -2001,7 +2001,7 @@ export default function LeagueScreen() {
             </div>
             {visibleLeagues.map(l => {
               const { type, format } = deriveLeagueType(l.leagues ?? {});
-              const medal = l.rank === 1 ? 'var(--gold)' : l.rank === 2 ? '#C0C0C0' : l.rank === 3 ? '#CD7F32' : 'var(--mute)';
+              const medal = l.rank === 1 ? 'var(--gold)' : l.rank === 2 ? 'var(--medal-silver)' : l.rank === 3 ? 'var(--medal-bronze)' : 'var(--mute)';
               return (
                 <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => navigate(`/league/${l.league_id}`))(e); } }}
                   key={l.league_id}

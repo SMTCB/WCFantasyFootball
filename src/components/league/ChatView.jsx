@@ -162,7 +162,7 @@ export default function ChatView({
                     style={{ background: 'transparent', border: 'none', color: 'var(--paper)', padding: '4px 10px 4px 0', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', outline: 'none', width: 180 }}
                   />
                   {searchTerm && (
-                    <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 'var(--fs-micro)', border: 'none', borderLeft: '1px solid var(--rule)' }}>✕</button>
+                    <button className="hit-44" onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 'var(--fs-micro)', border: 'none', borderLeft: '1px solid var(--rule)' }}>✕</button>
                   )}
                 </div>
               </div>
@@ -223,8 +223,8 @@ export default function ChatView({
                           style={{ flex: 1, background: 'var(--ink-2)', border: '1px solid var(--cyan)', color: 'var(--paper)', padding: '4px 8px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', outline: 'none' }}
                           autoFocus
                         />
-                        <button onClick={async () => { const r = await editMessage(msg.id, editingText); if (r.ok) setEditingMessageId(null); }} style={{ ...miniBtnStyle('var(--cyan)'), padding: '4px 10px' }}>SAVE</button>
-                        <button onClick={() => setEditingMessageId(null)} style={{ ...miniBtnStyle('var(--mute)'), padding: '4px 10px' }}>CANCEL</button>
+                        <button className="hit-44" onClick={async () => { const r = await editMessage(msg.id, editingText); if (r.ok) setEditingMessageId(null); }} style={{ ...miniBtnStyle('var(--cyan)'), padding: '4px 10px' }}>SAVE</button>
+                        <button className="hit-44" onClick={() => setEditingMessageId(null)} style={{ ...miniBtnStyle('var(--mute)'), padding: '4px 10px' }}>CANCEL</button>
                       </div>
                     ) : (
                       <>
@@ -240,8 +240,8 @@ export default function ChatView({
                         )}
                         {msg.isOwnMessage && !msg.isDeleted && (
                           <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                            <button onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={miniBtnStyle('var(--mute)')}>EDIT</button>
-                            <button onClick={() => deleteMessage(msg.id)} style={miniBtnStyle('var(--danger)')}>DEL</button>
+                            <button className="hit-44" onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={miniBtnStyle('var(--mute)')}>EDIT</button>
+                            <button className="hit-44" onClick={() => deleteMessage(msg.id)} style={miniBtnStyle('var(--danger)')}>DEL</button>
                           </div>
                         )}
                       </>
@@ -304,7 +304,7 @@ export default function ChatView({
                 <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '8px' }}>No hashtags yet</span>
               ) : (
                 trendingHashtags.slice(0, 10).map(({ tag, count }) => (
-                  <button
+                  <button className="hit-44"
                     key={tag}
                     onClick={() => handleHashtagClick(tag)}
                     style={{
@@ -399,7 +399,7 @@ export default function ChatView({
         {trendingHashtags.length > 0 && (
           <div style={{ display: 'flex', gap: 4, padding: '0 16px 8px', overflowX: 'auto', scrollbarWidth: 'none', flex: '0 0 auto' }}>
             {trendingHashtags.slice(0, 6).map(({ tag, count }) => (
-              <button
+              <button className="hit-44"
                 key={tag}
                 onClick={() => handleHashtagClick(tag)}
                 style={{
@@ -469,8 +469,8 @@ export default function ChatView({
                 </div>
                 {msg.isOwnMessage && !msg.isDeleted && (
                   <div style={{ display: 'flex', gap: 4, marginTop: 3 }}>
-                    <button onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={{ ...miniBtnStyle('var(--mute)'), fontSize: 'var(--fs-micro)', padding: '1px 5px' }}>EDIT</button>
-                    <button onClick={() => deleteMessage(msg.id)} style={{ ...miniBtnStyle('var(--danger)'), fontSize: 'var(--fs-micro)', padding: '1px 5px' }}>DEL</button>
+                    <button className="hit-44" onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={{ ...miniBtnStyle('var(--mute)'), fontSize: 'var(--fs-micro)', padding: '1px 5px' }}>EDIT</button>
+                    <button className="hit-44" onClick={() => deleteMessage(msg.id)} style={{ ...miniBtnStyle('var(--danger)'), fontSize: 'var(--fs-micro)', padding: '1px 5px' }}>DEL</button>
                   </div>
                 )}
               </div>

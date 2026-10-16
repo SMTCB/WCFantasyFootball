@@ -870,7 +870,7 @@ export default function MarketScreen() {
             </div>
 
             {/* Auto-fill button */}
-            <button
+            <button className="hit-44"
               onClick={handleAutoFill}
               disabled={autoFilling}
               title={isLocked ? 'Transfer window closed' : emptySlots === 0 ? 'Squad is full' : `Fill ${emptySlots} empty slot${emptySlots > 1 ? 's' : ''}`}

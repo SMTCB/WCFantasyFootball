@@ -394,7 +394,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
               )}
             </div>
             {isOwner && m.role !== 'owner' && m.user_id !== currentUserId && (
-              <button
+              <button className="hit-44"
                 onClick={() => handleKick(m.user_id)}
                 disabled={kicking === m.user_id}
                 style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
@@ -698,7 +698,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
                             <option key={m.user_id} value={m.user_id}>{m.username}</option>
                           ))}
                       </select>
-                      <button
+                      <button className="hit-44"
                         onClick={() => handleAssignAdmin(group.type, comp.id)}
                         disabled={!assignPicks[comp.id] || pendingKey === `assign-${comp.id}`}
                         style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}

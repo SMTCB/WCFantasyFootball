@@ -1367,7 +1367,7 @@ function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, o
             {bet.status === 'cancelled' ? 'Cancelled — stakes returned' : 'Resolved'}
           </div>
           {onRematch && (
-            <button
+            <button className="hit-44"
               onClick={() => onRematch(bet)} disabled={loading}
               style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 6, border: '1px solid var(--rule)', background: 'transparent', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, color: 'var(--text2)', opacity: loading ? 0.6 : 1 }}
             >↻ Rematch</button>
@@ -1491,7 +1491,7 @@ function WalletTabContent({ wallet, walletLoading }) {
           </div>
           <div style={{ padding: '20px 16px', textAlign: 'center' }}>
             {walletLoading ? (
-              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
+              <LoadingRows rows={3} />
             ) : (
               <>
                 <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 10 }}>Available balance</div>
@@ -1930,7 +1930,7 @@ function CreateChallengeModal({
                   <div style={{ marginBottom: 14 }}>
                     <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek</span>
                     {gwLoading ? (
-                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</div>
+                      <LoadingRows rows={3} />
                     ) : !current && !next ? (
                       <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No upcoming gameweeks found.</div>
                     ) : (

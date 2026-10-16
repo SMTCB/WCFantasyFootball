@@ -394,7 +394,7 @@ export default function AppLayout({ children }) {
             <button
               onClick={handleBack}
               aria-label="Go back"
-              className="flex items-center gap-2 px-2 py-1.5 transition-colors"
+              className="hit-44 flex items-center gap-2 px-2 py-1.5 transition-colors"
               style={{ color: 'var(--cyan)', cursor: 'pointer' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--paper)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--cyan)'}
@@ -436,7 +436,7 @@ export default function AppLayout({ children }) {
             <button
               onClick={handleBack}
               aria-label="Back to league"
-              className="flex items-center gap-2 py-1.5 transition-colors"
+              className="hit-44 flex items-center gap-2 py-1.5 transition-colors"
               style={{ color: 'var(--cyan)', cursor: 'pointer' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--paper)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--cyan)'}

@@ -155,7 +155,7 @@ function FeedItem({ item }) {
 // Shows the user's starting XI split by fixture (finished or upcoming),
 // with accumulated pts per player and the running GW total.
 
-const POS_COLOR = { GK: '#A855F7', DEF: 'var(--cyan)', MID: 'var(--gold)', FWD: 'var(--danger)' };
+const POS_COLOR = { GK: 'var(--purple)', DEF: 'var(--cyan)', MID: 'var(--gold)', FWD: 'var(--danger)' };
 
 function LiveMatchdayCard({ card }) {
   const { gwLabel, totalPts, roundComplete, fixtures, noGamePlayers, leagueName } = card;

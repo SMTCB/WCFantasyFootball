@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { IconLock } from '../../components/UiIcons';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -147,7 +148,7 @@ export default function TennisAdminScreen() {
             Select Tournament
           </label>
           {loading ? (
-            <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-body)', fontFamily: 'Archivo, sans-serif' }}>Loading…</div>
+            <LoadingRows rows={3} />
           ) : (
             <select
               value={selected ?? ''}

@@ -118,7 +118,7 @@ export default function RecapCard({ recap, forwardRef }) {
                 <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700 }}>{joker?.name}</div>
               </div>
             </div>
-            <div style={{ background: '#a855f7', color: 'var(--on-accent)', fontSize: 'var(--fs-label)', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
+            <div style={{ background: 'var(--purple)', color: 'var(--on-accent)', fontSize: 'var(--fs-label)', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
               {joker?.points != null ? `${Math.round(joker.points)} pts` : '— pts'}
             </div>
           </div>

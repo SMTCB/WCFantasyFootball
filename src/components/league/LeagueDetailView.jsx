@@ -222,11 +222,11 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                 <>
                   {!isMe && (
                     <>
-                      {onH2h && <button onClick={() => onH2h({ ...m, name: mName })} style={miniBtnStyle('var(--cyan)')}>H2H</button>}
-                      <button onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--mute)')}>VIEW</button>
+                      {onH2h && <button className="hit-44" onClick={() => onH2h({ ...m, name: mName })} style={miniBtnStyle('var(--cyan)')}>H2H</button>}
+                      <button className="hit-44" onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--mute)')}>VIEW</button>
                     </>
                   )}
-                  {isMe && <button onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--cyan)')}>VIEW</button>}
+                  {isMe && <button className="hit-44" onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--cyan)')}>VIEW</button>}
                 </>
               );
             }}
@@ -264,7 +264,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             right={
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>RECENT</span>
-                <button
+                <button className="hit-44"
                   onClick={() => setActivityCollapsed(true)}
                   aria-label="Collapse league activity"
                   style={{ background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', cursor: 'pointer', padding: '2px 6px', fontSize: 'var(--fs-micro)', lineHeight: 1 }}
@@ -358,7 +358,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               {['ALL', 'GAME', 'TRADES'].map((f) => {
                 const active = activityFilter === f;
                 return (
-                  <button
+                  <button className="hit-44"
                     key={f}
                     onClick={() => setActivityFilter(f)}
                     style={{

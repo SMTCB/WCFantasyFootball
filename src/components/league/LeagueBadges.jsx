@@ -57,7 +57,7 @@ export function FinishedBadge() {
 }
 
 export function RankBadge({ rank, size = 'sm' }) {
-  const medal = rank === 1 ? 'var(--gold)' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : 'var(--mute)';
+  const medal = rank === 1 ? 'var(--gold)' : rank === 2 ? 'var(--medal-silver)' : rank === 3 ? 'var(--medal-bronze)' : 'var(--mute)';
   const big = size === 'lg';
   return (
     <div

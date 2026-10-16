@@ -199,7 +199,7 @@ export function CompetitionNav({
           flexShrink: 0,
         }}
       >
-        <button
+        <button className="hit-44"
           ref={buttonRef}
           onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
           aria-haspopup="menu"

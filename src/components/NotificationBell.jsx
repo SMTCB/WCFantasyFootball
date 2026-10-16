@@ -103,7 +103,7 @@ export default function NotificationBell({
         // Mobile: dedicated full screen with a back button — no room for a dropdown at this width
         <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-dropdown)', background: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-            <button
+            <button className="hit-44"
               onClick={close}
               style={{ background: 'transparent', border: 'none', color: 'var(--paper)', fontSize: 'var(--fs-heading)', cursor: 'pointer', padding: '2px 4px 2px 0', lineHeight: 1 }}
               aria-label="Back"

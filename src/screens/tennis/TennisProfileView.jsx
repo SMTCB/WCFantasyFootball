@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -28,7 +29,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
     load();
   }, [userId, seasonYear]);
 
-  if (loading) return <div style={{ padding: 20, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading tennis history…</div>;
+  if (loading) return <div style={{ padding: 20 }}><LoadingRows rows={3} /></div>;
   if (scores.length === 0) return (
     <div style={{ padding: '20px 0' }}>
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 8 }}>🎾 Tennis</div>

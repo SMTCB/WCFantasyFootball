@@ -461,7 +461,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
             const active = selectedGW === gw;
             const label  = gw === 'AGG' ? 'AGG' : String(gw).replace(/^.*-r/, '');
             return (
-              <button key={gw} onClick={() => setSelectedGW(gw)} style={{
+              <button className="hit-44" key={gw} onClick={() => setSelectedGW(gw)} style={{
                 padding: '4px 9px', flexShrink: 0,
                 border: active ? '1px solid var(--cyan)' : '1px solid var(--rule)',
                 background: active ? 'rgba(0,180,216,.14)' : 'transparent',

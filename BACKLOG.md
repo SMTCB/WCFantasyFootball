@@ -12,6 +12,16 @@
 
 ---
 
+## ✅ UI audit finish — step 1 (mechanical items) (2026-10-16) — rollback tag `pre-ui-finish-step1`
+
+| ID | Status | What shipped |
+|----|--------|--------------|
+| FBK-01 | ✅ | Remaining block-level "Loading…" → `LoadingRows` (Challenge, Live, League, Tennis admin/profile, Admin seed). Inline option/placeholder/button labels and full-screen tennis loaders intentionally left |
+| TCH-01 | ⚠️ mostly | `.hit-44` added to 92 small chip buttons (padding/helper-style heuristic). **Open:** 9 buttons with dynamic `className={…}` (AvailabilityBadge, PlayerCard ×2, AdminSeed ×2, DraftRecovery, Draft, League:1768, Wishlist:557) and non-`<button>` chips |
+| SYS-04 | ⚠️ partial | + `--purple`, `--medal-silver`, `--medal-bronze` (8 sites). Remaining hex literals are mostly one-offs or concatenated with hex alpha (`color + '22'`) — needs a `color-mix` pattern before bulk replace |
+
+Next: fix `npm audit` Security job + 375px walkthrough, then step 2 (A11Y-02, FRM-04, SYS-02).
+
 ## ✅ UI audit P2 batch C (2026-10-16) — rollback tag `pre-ui-p2-batch-c`
 
 | ID | Status | What shipped |

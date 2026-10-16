@@ -194,7 +194,7 @@ function HelpOverlay({ topic, onClose }) {
         </div>
         {/* Footer */}
         <div style={{ padding: '10px 18px', borderTop: '1px solid var(--rule)', display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', padding: '6px 14px' }}>CLOSE</button>
+          <button className="hit-44" onClick={onClose} style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', padding: '6px 14px' }}>CLOSE</button>
         </div>
       </div>
     </div>
@@ -671,7 +671,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                       return (
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                           {customAnswers.map(ca => (
-                            <button key={ca} onClick={() => toggleBetResolutionAnswer(ca)} style={{
+                            <button className="hit-44" key={ca} onClick={() => toggleBetResolutionAnswer(ca)} style={{
                               padding: '5px 9px', cursor: 'pointer',
                               background: 'rgba(34,197,94,.08)', border: '1px solid var(--positive)',
                               color: 'var(--positive)', fontFamily: DISPLAY, fontSize: 'var(--fs-micro)',
@@ -802,7 +802,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
         sub={`${counts.all} TOTAL · ALL STATUSES`}
         tone="var(--purple)"
         right={
-          <button
+          <button className="hit-44"
             onClick={fetchAllBets}
             disabled={allBetsLoading}
             style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', padding: '4px 10px', opacity: allBetsLoading ? 0.5 : 1 }}
@@ -2655,7 +2655,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
       {/* Type selector */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
         {POST_TYPES.map(t => (
-          <button
+          <button className="hit-44"
             key={t.key}
             onClick={() => setPostType(t.key)}
             style={{

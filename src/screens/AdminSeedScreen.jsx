@@ -15,6 +15,7 @@
  *   6. Stats Override    — edit individual player stats, force recalculate
  */
 
+import { LoadingRows } from '../components/Skeleton';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -381,7 +382,7 @@ function MatchdayDeadlines({ tournamentId }) {
         </div>
         <button
           onClick={handleToggleOverride}
-          className="ml-4 text-[11px] font-black uppercase px-3 py-1.5 border transition-colors flex-shrink-0"
+          className="hit-44 ml-4 text-[11px] font-black uppercase px-3 py-1.5 border transition-colors flex-shrink-0"
           style={{
             border:     overrideMode ? '1px solid rgba(240,180,0,0.6)' : '1px solid var(--shell-rule-emphasis)',
             color:      overrideMode ? 'var(--gold)' : 'var(--mute)',
@@ -408,7 +409,7 @@ function MatchdayDeadlines({ tournamentId }) {
                   {locked && <span className="fk-mono text-[11px] uppercase" style={{ color: 'var(--gold)' }}>LOCKED</span>}
                 </div>
                 <button onClick={() => setEditing(isEdit ? null : { ...d, deadline_at: d.deadline_at?.slice(0,16), unlocks_at: d.unlocks_at?.slice(0,16) ?? '' })}
-                  className="text-[11px] font-black uppercase px-2 py-1 border border-border hover:border-white/40">
+                  className="hit-44 text-[11px] font-black uppercase px-2 py-1 border border-border hover:border-white/40">
                   {isEdit ? 'Cancel' : 'Edit'}
                 </button>
               </div>
@@ -563,13 +564,13 @@ function MatchIngestion({ tournamentId }) {
                 <button
                   disabled={!!busy || !f.forza_match_id}
                   onClick={() => act(`Ingest ${f.forza_match_id}`, () => callFunction('ingest-match-events', { forza_match_id: f.forza_match_id }))}
-                  className="text-[11px] font-black uppercase px-2 py-1.5 border border-border bg-surface hover:border-white/40 disabled:opacity-40 tracking-wider">
+                  className="hit-44 text-[11px] font-black uppercase px-2 py-1.5 border border-border bg-surface hover:border-white/40 disabled:opacity-40 tracking-wider">
                   {busy === `Ingest ${f.forza_match_id}` ? '…' : 'Ingest'}
                 </button>
                 <button
                   disabled={!!busy}
                   onClick={() => act(`Score ${f.id}`, () => callFunction('calculate-scores', { fixture_id: f.id }))}
-                  className="text-[11px] font-black uppercase px-2 py-1.5 border border-positive/40 text-positive bg-positive/10 hover:bg-positive/20 disabled:opacity-40 tracking-wider">
+                  className="hit-44 text-[11px] font-black uppercase px-2 py-1.5 border border-positive/40 text-positive bg-positive/10 hover:bg-positive/20 disabled:opacity-40 tracking-wider">
                   {busy === `Score ${f.id}` ? '…' : 'Score'}
                 </button>
               </div>
@@ -686,7 +687,7 @@ function EventEditor({ tournamentId }) {
                 <span className="flex-1 truncate">{ev.players?.name ?? <span className="text-text-secondary italic">no player</span>}</span>
                 <span className="text-text-secondary text-[11px] shrink-0 truncate max-w-[80px]">{ev.team}</span>
                 <button onClick={() => deleteEvent(ev.id)}
-                  className="text-negative text-[11px] font-black border border-negative/30 px-1.5 py-0.5 hover:bg-negative/10 shrink-0">✕</button>
+                  className="hit-44 text-negative text-[11px] font-black border border-negative/30 px-1.5 py-0.5 hover:bg-negative/10 shrink-0">✕</button>
               </div>
             ))}
           </div>
@@ -828,7 +829,7 @@ function StatsOverride({ tournamentId }) {
               <p className="text-xs font-black">{editRow.players?.name}</p>
               <p className="text-[11px] text-text-secondary">{editRow.players?.club} · {editRow.players?.position}</p>
             </div>
-            <button onClick={() => setEditRow(null)} className="text-text-secondary text-xs px-2 py-1 border border-border">✕ Cancel</button>
+            <button onClick={() => setEditRow(null)} className="hit-44 text-text-secondary text-xs px-2 py-1 border border-border">✕ Cancel</button>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             {NUM_FIELDS.map(([k, label]) => (
@@ -872,7 +873,7 @@ function StatsOverride({ tournamentId }) {
                   </div>
                 </div>
                 <button onClick={() => setEditRow({ ...s })}
-                  className="text-[11px] font-black uppercase px-2 py-1.5 border border-[#FFB300]/40 text-[#FFB300] hover:bg-[#FFB300]/10 shrink-0">
+                  className="hit-44 text-[11px] font-black uppercase px-2 py-1.5 border border-[#FFB300]/40 text-[#FFB300] hover:bg-[#FFB300]/10 shrink-0">
                   Edit
                 </button>
               </div>
@@ -956,7 +957,7 @@ function ScoringRulesEditor({ tournamentId }) {
     setStatus(error ? `Error: ${error.message}` : '✓ Scoring rules saved');
   };
 
-  if (loading) return <p className="text-xs text-text-secondary">Loading scoring rules…</p>;
+  if (loading) return <div style={{ padding: 20 }}><LoadingRows rows={3} /></div>;
 
   return (
     <Section title="Scoring Rules" sub="Edit per-position point multipliers. Changes take effect on the next Score run.">
@@ -1081,7 +1082,7 @@ function ObservabilityPanel() {
           </button>
         ))}
         <button onClick={load} disabled={loading}
-          className="ml-auto text-[11px] font-black uppercase px-2 py-1 border border-border text-text-secondary hover:border-white/40 disabled:opacity-40">
+          className="hit-44 ml-auto text-[11px] font-black uppercase px-2 py-1 border border-border text-text-secondary hover:border-white/40 disabled:opacity-40">
           {loading ? 'Loading…' : 'Refresh'}
         </button>
       </div>
@@ -1096,7 +1097,7 @@ function ObservabilityPanel() {
         )}
       </div>
       {cronJobs.length === 0 && !loading ? (
-        <p className="text-[11px] text-text-secondary mb-4">Loading…</p>
+        <LoadingRows rows={3} />
       ) : (
         <div className="mb-6 flex flex-col gap-1 max-h-72 overflow-y-auto">
           {cronJobs.map((j) => {
@@ -1254,7 +1255,7 @@ export default function AdminSeedScreen() {
       <div className="border border-border p-4 mb-4 bg-surface">
         <p className="text-[11px] font-black uppercase tracking-widest text-text-secondary mb-2">Your Leagues</p>
         {loading ? (
-          <p className="text-xs text-text-secondary">Loading…</p>
+          <LoadingRows rows={3} />
         ) : myLeagues.length === 0 ? (
           <p className="text-xs text-text-secondary">You haven't created or been assigned a commissioner role in any league yet.</p>
         ) : (

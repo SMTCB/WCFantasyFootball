@@ -157,7 +157,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible,
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>{bets.length} TOTAL</span>
               {collapsible && (
-                <button
+                <button className="hit-44"
                   onClick={() => setOpen(o => !o)}
                   style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
                 >
@@ -178,7 +178,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible,
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>{bets.length}</span>
               {collapsible && (
-                <button
+                <button className="hit-44"
                   onClick={() => setOpen(o => !o)}
                   style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px' }}
                 >

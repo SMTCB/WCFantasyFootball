@@ -162,7 +162,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
                 type="button"
                 onClick={() => onPredict(fixture.id, key)}
                 disabled={isLive}
-                className="flex-1 py-1.5 rounded text-[11px] font-black uppercase tracking-wider transition-all"
+                className="hit-44 flex-1 py-1.5 rounded text-[11px] font-black uppercase tracking-wider transition-all"
                 style={{
                   fontFamily: 'Archivo Black, sans-serif',
                   background: prediction === key

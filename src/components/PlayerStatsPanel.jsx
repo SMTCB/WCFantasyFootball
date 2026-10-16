@@ -96,7 +96,7 @@ export default memo(function PlayerStatsPanel({
         {onViewStats && (
           <button
             onClick={onViewStats}
-            className="fk-mono transition-all active:scale-95"
+            className="hit-44 fk-mono transition-all active:scale-95"
             style={{
               padding: '5px 10px', border: '1px solid var(--cyan)',
               color: 'var(--cyan)', background: 'transparent',
@@ -114,7 +114,7 @@ export default memo(function PlayerStatsPanel({
           <button
             onClick={() => onAction('sell')}
             disabled={saving}
-            className="fk-mono transition-all active:scale-95 disabled:opacity-40"
+            className="hit-44 fk-mono transition-all active:scale-95 disabled:opacity-40"
             style={{
               padding: '6px 16px', border: '1px solid var(--danger)',
               color: 'var(--danger)', background: 'transparent',
@@ -127,7 +127,7 @@ export default memo(function PlayerStatsPanel({
           <button
             onClick={() => onAction('buy')}
             disabled={saving || !canBuy}
-            className="fk-mono transition-all active:scale-95 disabled:opacity-40"
+            className="hit-44 fk-mono transition-all active:scale-95 disabled:opacity-40"
             style={{
               padding: '6px 16px',
               border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
