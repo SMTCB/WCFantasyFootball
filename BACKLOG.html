@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-10-15. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-10-16. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>262</strong><span>closed</span></div>
+      <div class="total-pill"><strong>263</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (180)</span>
+    <span class="chip" data-filter-kind="done">Shipped (181)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">262</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">263</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">180</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">181</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,39 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">180</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">181</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ commissioner post rls fix + frontrow circle editions batching + score/backup audit (2026-10-15/16) — pr #1039, pr #1040, pr #1041, migrations 299–300 
+
+- **commissioner post error (migration 299, pr #1039)**: posting breaking news / classified from the admin tab failed with `new row violates row-level security policy for table clubhouse_notifications`. cause: the clubhouse fan-out triggers (migration 196) assumed trigger functions bypass rls; they don&#x27;t unless `security definer`, and `clubhouse_notifications` has no insert policy. the three trigger functions are now `security definer set search_path = public` (verified `prosecdef = true`). posts appear in the league&#x27;s gazette (`gazette_entries`) and, for `breaking_news`, fan out as notifications to members of every circle the league is linked to.
+- **frontrow circle editions starved (pr #1040 + migration 300, pr #1041)**: the single daily sweep ran league editions then circle editions sequentially with a 15s delay each, exceeding the ~150s edge function timeout, so circle (clubhouse) editions rarely generated; the cron showed `succeeded` because pg_cron/pg_net only report the request as queued. `generate-frontpage-edition` cron mode now accepts `scope` (`leagues`|`circles`) and `limit`; circles that already have today&#x27;s edition are skipped in batched mode. function deployed 2026-10-15; cron jobs 89/100 now `scope:leagues`, new `generate-frontpage-circles(-preview)` run every 5 min for 40 min, 3 circles per run. mundial do eder + draft mundial 26 circle editions generated manually 2026-10-15. **to verify**: first scheduled batched run is 2026-10-16 05:05 utc — every circle should have a `frontpage_editions` row dated that day. league-scoped editions for the finished world cup leagues were not regenerated (last one 2026-07-31) — not investigated.
+- **round-backup safety net confirmed working** (`round_backups`, `round_freeze_locks`, `squad_matchday_snapshots`).
+- **champions league score audit (`get_score_discrepanc" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Commissioner post RLS fix + Frontrow circle editions batching + score/backup audit</h3>
+        <p class="card-summary">Commissioner post error (migration 299, PR #1039) : posting BREAKING NEWS / classified from the Admin tab failed with new row violates row-level security policy for…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-15/16</span><span class="foot-refs">PR #1039, PR #1040, PR #1041, migrations 299–300</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Commissioner post RLS fix + Frontrow circle editions batching + score/backup audit</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Commissioner post error (migration 299, PR #1039) : posting BREAKING NEWS / classified from the Admin tab failed with new row violates row-level security policy for…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1039, PR #1040, PR #1041, migrations 299–300</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-15/16</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><ul>
+<li><strong>Commissioner post error (migration 299, PR #1039)</strong>: posting BREAKING NEWS / classified from the Admin tab failed with <code>new row violates row-level security policy for table clubhouse_notifications</code>. Cause: the Clubhouse fan-out triggers (migration 196) assumed trigger functions bypass RLS; they don't unless <code>SECURITY DEFINER</code>, and <code>clubhouse_notifications</code> has no INSERT policy. The three trigger functions are now <code>SECURITY DEFINER SET search_path = public</code> (verified <code>prosecdef = true</code>). Posts appear in the league's gazette (<code>gazette_entries</code>) and, for <code>breaking_news</code>, fan out as notifications to members of every circle the league is linked to.</li>
+<li><strong>Frontrow circle editions starved (PR #1040 + migration 300, PR #1041)</strong>: the single daily sweep ran league editions then circle editions sequentially with a 15s delay each, exceeding the ~150s Edge Function timeout, so circle (Clubhouse) editions rarely generated; the cron showed <code>succeeded</code> because pg_cron/pg_net only report the request as queued. <code>generate-frontpage-edition</code> cron mode now accepts <code>scope</code> (<code>leagues</code>|<code>circles</code>) and <code>limit</code>; circles that already have today's edition are skipped in batched mode. Function deployed 2026-10-15; cron jobs 89/100 now <code>scope:leagues</code>, new <code>generate-frontpage-circles(-preview)</code> run every 5 min for 40 min, 3 circles per run. Mundial do Eder + Draft Mundial 26 circle editions generated manually 2026-10-15. <strong>To verify</strong>: first scheduled batched run is 2026-10-16 05:05 UTC — every circle should have a <code>frontpage_editions</code> row dated that day. League-scoped editions for the finished World Cup leagues were not regenerated (last one 2026-07-31) — not investigated.</li>
+<li><strong>Round-backup safety net confirmed working</strong> (<code>round_backups</code>, <code>round_freeze_locks</code>, <code>squad_matchday_snapshots</code>).</li>
+<li><strong>Champions League score audit (<code>get_score_discrepancies</code>)</strong>: rounds 1–2 finished and fully frozen for all real leagues (Champions Eder 26/27, Draft Champions 26/27, Champignon '26/'27) with <strong>zero discrepancies</strong>. Only two test-league squads differ (CHAMPS_2627_TEST r1 −11; "test 1" r2 −1) — deliberately left, test data. World Cup (tournament 429) discrepancies remain untouched per the user ("the World Cup is closed").</li>
+<li><strong>Empty <code>matchday_scores</code> / <code>matchday_recaps</code> / <code>h2h_records</code></strong>: expected, empty for every tournament — no function populates them (legacy tables). Consequence: <code>H2HSheet.jsx</code> reads <code>h2h_records</code> and always shows an empty head-to-head record; matchups actually live in <code>h2h_schedule</code>.</li>
+<li><strong>Open follow-ups</strong>: (1) <code>reconcile-scores</code> is not scheduled — a future undercount is only caught when invoked or a user notices; scheduling needs separate approval. (2) <code>H2HSheet</code> could read <code>h2h_schedule</code>. (3) CI <code>Security</code> (<code>npm audit</code>: <code>@capacitor/android</code>/<code>ios</code> critical GHSA-rvm3-566m-v7fv, <code>source-map-js</code> high) still fails on every PR — dependency bump needed. (4) Verify the 05:05 UTC batched circle run.</li>
+<li>Next migration: 301_.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ wishlist draft: pre-set the auto date before the round exists + auto up to kickoff + mode help (2026-10-14) — pr #1036, pr #1037, migration 298 
 
 - **problem**: a commissioner couldn&#x27;t set a date for the between-matchday draft in the &quot;next round&quot; (awaiting_round) phase, and auto times were capped at kickoff − 8h.
