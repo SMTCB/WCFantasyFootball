@@ -12,6 +12,15 @@
 
 ---
 
+## ✅ UI audit P2 batch C (2026-10-16) — rollback tag `pre-ui-p2-batch-c`
+
+| ID | Status | What shipped |
+|----|--------|--------------|
+| SYS-04 | ⚠️ partial | New `--on-accent` token replaces 103 raw white literals (`'#fff'`) in 32 files. **Open:** ~150 other hex literals (brand colours, medals #cd7f32/#c0c0c0, #ffb300, #a855f7) and ~47 sites that append hex alpha (`color + '22'`) — need an rgba/`color-mix` token strategy first |
+| FRM-04 | ⏸ deferred | `TextInput`/`Select` already exist but have 8 adopters vs 110 raw `<input>` / 30 `<select>`. Not migrated: styles differ (e.g. Auth `fieldStyle`), needs 375px visual QA per screen |
+| SYS-02 | ⏸ deferred | `Button` exists (23 uses vs 514 raw `<button>`); chip/tab variants not added. Also the clean fix for TCH-01 |
+| THM-01 | ⏸ blocked | Dark mode gated on finishing SYS-04 |
+
 ## ✅ UI audit P2 batch A + B (2026-10-16) — PR #1048 (A), PR (B) (rollback tags `pre-ui-p2-batch-a`, `pre-ui-p2-batch-b`)
 
 | ID | Status | What shipped |
