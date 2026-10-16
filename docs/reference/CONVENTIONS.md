@@ -534,6 +534,24 @@ expect(page.url()).toBe('http://localhost:5173/squad');
 
 ---
 
+## UI, Accessibility & Tokens (added 2026-10-16, UI audit P1/P2)
+
+| Need | Use | Notes |
+|------|-----|-------|
+| Confirmation | `const [ask, dialog] = useConfirmDialog()` (`src/hooks/useConfirmDialog.jsx`) and render `{dialog}` | Never `window.confirm` |
+| Loading state | `<LoadingRows rows={3} />` / `<Skeleton>` (`src/components/Skeleton.jsx`) | Not a bare "Loading…" string |
+| Status icon | `IconLock/Warning/Trophy/Hourglass/CheckCircle` (`src/components/UiIcons.jsx`) | Emoji only for sport glyphs and chat/Gazette copy |
+| Clickable non-button | `role="button" tabIndex={0}` + Enter/Space `onKeyDown`; pure backdrops `role="presentation"` | ESLint A11Y-05 guard warns otherwise |
+| Small chip/button | add `.hit-44` class (expands tap area to 44px) | |
+| Toasts | always-mounted `role=status` stack; errors `role=alert` | |
+| Stacking | `var(--z-dropdown/sheet/popover/popover-top/modal/flow/flow-top/bar/confirm/toast)` | No z-index literals ≥100 |
+| White on solid fills | `var(--on-accent)` | Also `--purple`, `--medal-silver`, `--medal-bronze` |
+| Text colour on dark shell | `--on-shell-*`; on light surfaces `--gold-text` | WCAG AA retuned |
+
+Open (see BACKLOG "UI audit" sections): remaining raw hex (esp. hex-alpha concatenation — needs `color-mix`), `TextInput`/`Select`/`Button` adoption, dark mode.
+
+---
+
 ## Related Documents
 
 - [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) — Setup and daily commands
@@ -544,4 +562,4 @@ expect(page.url()).toBe('http://localhost:5173/squad');
 
 ---
 
-Last Updated: 2026-05-28
+Last Updated: 2026-10-16
