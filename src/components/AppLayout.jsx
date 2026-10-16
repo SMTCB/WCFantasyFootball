@@ -80,12 +80,12 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
           background: IDENTITY_COLORS[circles.findIndex(c => c.id === activeCircleId) % IDENTITY_COLORS.length] || IDENTITY_COLORS[0],
         }} />
         <span style={{
-          flex: 1, textAlign: 'left', fontSize: 'var(--fs-label)', fontWeight: 600, color: '#fff',
+          flex: 1, textAlign: 'left', fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--on-accent)',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {activeCircle?.name ?? 'Select Clubhouse'}
         </span>
-        <span aria-hidden="true" style={{ fontSize: 'var(--fs-micro)', opacity: 0.6, color: '#fff', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s' }}>⌄</span>
+        <span aria-hidden="true" style={{ fontSize: 'var(--fs-micro)', opacity: 0.6, color: 'var(--on-accent)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s' }}>⌄</span>
       </button>
 
       {open && (
@@ -107,7 +107,7 @@ function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
                   width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                   padding: '9px 10px', border: 'none', textAlign: 'left', cursor: 'pointer',
                   background: isActive ? 'var(--shell-fill-strong)' : 'transparent',
-                  color: isActive ? '#fff' : 'var(--on-shell-mid)',
+                  color: isActive ? 'var(--on-accent)' : 'var(--on-shell-mid)',
                   fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
                 }}
               >
@@ -146,7 +146,7 @@ function NavItem({ label, path, active, dotColor, tag, tagStyle, sub, onClick, b
     borderRadius: 5,
     fontSize: sub ? 12 : 12.5,
     fontWeight: 500,
-    color: active ? '#fff' : hovered ? 'var(--on-shell)' : 'var(--on-shell-dim)',
+    color: active ? 'var(--on-accent)' : hovered ? 'var(--on-shell)' : 'var(--on-shell-dim)',
     cursor: 'pointer',
     background: active ? 'var(--shell-fill-strong)' : hovered ? 'var(--shell-fill)' : 'transparent',
     transition: 'all .12s',
@@ -181,7 +181,7 @@ function NavItem({ label, path, active, dotColor, tag, tagStyle, sub, onClick, b
       {badge > 0 && (
         <span style={{
           minWidth: 16, height: 16, borderRadius: '50%', background: 'var(--danger)',
-          ...MONO_STYLE, fontSize: 'var(--fs-micro)', fontWeight: 700, color: '#fff',
+          ...MONO_STYLE, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--on-accent)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
         }}>
           {badge > 99 ? '99+' : badge}
@@ -362,7 +362,7 @@ export default function AppLayout({ children }) {
 
         {/* Footer — username */}
         <div style={{ padding: '10px 12px', borderTop: '1px solid var(--shell-rule)', display: 'flex', alignItems: 'center', gap: 9 }}>
-          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--on-accent)', flexShrink: 0 }}>
             {username ? username[0].toUpperCase() : 'M'}
           </div>
           <div>
@@ -536,7 +536,7 @@ export default function AppLayout({ children }) {
                 {key === 'clubhouse' && unreadCount > 0 && (
                   <div
                     className="absolute top-1.5 right-[calc(50%-18px)] flex items-center justify-center rounded-full"
-                    style={{ minWidth: 14, height: 14, background: 'var(--danger)', padding: '0 3px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, color: '#fff' }}
+                    style={{ minWidth: 14, height: 14, background: 'var(--danger)', padding: '0 3px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--on-accent)' }}
                   >
                     {unreadCount > 99 ? '99' : unreadCount}
                   </div>

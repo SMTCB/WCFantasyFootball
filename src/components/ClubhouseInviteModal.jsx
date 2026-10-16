@@ -106,7 +106,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
             rel="noopener noreferrer"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              padding: 14, background: '#25D366', borderRadius: 10, color: '#fff',
+              padding: 14, background: '#25D366', borderRadius: 10, color: 'var(--on-accent)',
               fontSize: 'var(--fs-body)', ...HEAD, fontWeight: 800, letterSpacing: '0.06em',
               textTransform: 'uppercase', textDecoration: 'none',
             }}

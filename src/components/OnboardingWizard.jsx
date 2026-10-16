@@ -435,7 +435,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                     fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                     background: clubhouseMode === m ? 'var(--accent)' : 'transparent',
-                    color: clubhouseMode === m ? '#fff' : 'var(--mute)',
+                    color: clubhouseMode === m ? 'var(--on-accent)' : 'var(--mute)',
                   }}
                 >
                   {m === 'create' ? 'Create' : 'Join'}

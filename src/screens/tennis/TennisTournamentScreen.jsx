@@ -89,7 +89,7 @@ export default function TennisTournamentScreen() {
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 4 }}>
           {tournament.tournament_type === 'grand_slam' ? 'Grand Slam' : tournament.tournament_type === 'atp_finals' ? 'ATP Finals' : 'Masters 1000'} · {tournament.surface}
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: '#fff', margin: '0 0 4px' }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-accent)', margin: '0 0 4px' }}>
           {tournament.name}
         </h1>
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)' }}>
@@ -259,7 +259,7 @@ export default function TennisTournamentScreen() {
             <button
               type="submit"
               disabled={busy}
-              style={{ padding: '13px', background: busy ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}
             >
               {busy ? 'Locking squad…' : roster ? 'Update squad →' : 'Lock squad →'}
             </button>

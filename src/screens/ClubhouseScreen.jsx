@@ -92,7 +92,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
 
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', textAlign: 'left' }}>
           {/* Create — primary, dark shell fill */}
-          <div style={{ flex: '1 1 240px', background: 'var(--shell)', border: '1px solid var(--shell)', borderRadius: 8, padding: '20px 18px', color: '#fff' }}>
+          <div style={{ flex: '1 1 240px', background: 'var(--shell)', border: '1px solid var(--shell)', borderRadius: 8, padding: '20px 18px', color: 'var(--on-accent)' }}>
             <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginBottom: 8 }}>
               Start fresh
             </div>
@@ -109,13 +109,13 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. The Friday Night Crew"
                   maxLength={40}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: '#fff', background: 'var(--shell-fill-strong)', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--on-accent)', background: 'var(--shell-fill-strong)', outline: 'none', boxSizing: 'border-box' }}
                 />
                 {createErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: '#FF8A8A' }}>{createErr}</div>}
                 <button
                   type="submit"
                   disabled={busy === 'create' || !name.trim()}
-                  style={{ display: 'block', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
+                  style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
                 >
                   {busy === 'create' ? 'Creating…' : 'Create Clubhouse'}
                 </button>
@@ -123,7 +123,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
             ) : (
               <button
                 onClick={() => setCreating(true)}
-                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Create Clubhouse
               </button>
@@ -148,7 +148,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
               <button
                 type="submit"
                 disabled={busy === 'join' || code.trim().length < 6}
-                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
+                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
               >
                 {busy === 'join' ? 'Joining…' : 'Join Clubhouse'}
               </button>
@@ -565,7 +565,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
       >
         <div style={{
           position: 'absolute', top: 3, left: value ? 23 : 3,
-          width: 18, height: 18, borderRadius: '50%', background: '#fff',
+          width: 18, height: 18, borderRadius: '50%', background: 'var(--on-accent)',
           transition: 'left 0.15s',
         }} />
       </button>
@@ -592,7 +592,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
         <button
           type="submit"
           disabled={savingName || !name.trim() || name.trim() === circle.name}
-          style={{ padding: '10px 16px', background: savingName || !name.trim() || name.trim() === circle.name ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          style={{ padding: '10px 16px', background: savingName || !name.trim() || name.trim() === circle.name ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
           {savingName ? '…' : 'SAVE'}
         </button>
@@ -634,7 +634,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
               <button
                 onClick={() => handleLink(l.id)}
                 disabled={linkingId === l.id}
-                style={{ padding: '7px 14px', background: linkingId === l.id ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                style={{ padding: '7px 14px', background: linkingId === l.id ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
                 {linkingId === l.id ? '…' : 'LINK'}
               </button>
@@ -701,7 +701,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
                       <button
                         onClick={() => handleAssignAdmin(group.type, comp.id)}
                         disabled={!assignPicks[comp.id] || pendingKey === `assign-${comp.id}`}
-                        style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         {pendingKey === `assign-${comp.id}` ? '…' : 'ADD'}
                       </button>
@@ -864,7 +864,7 @@ export default function ClubhouseScreen() {
                       width: 24, height: 24, borderRadius: '50%',
                       background: AVATAR_COLORS[i % AVATAR_COLORS.length],
                       display: 'grid', placeItems: 'center',
-                      fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: '#fff',
+                      fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--on-accent)',
                       border: '2px solid var(--shell)',
                       marginRight: -6, position: 'relative', zIndex: 5 - i,
                       flexShrink: 0,
@@ -899,11 +899,11 @@ export default function ClubhouseScreen() {
               {activeCircle && totalComps > 0 && (
                 <div style={{ display: 'flex', gap: 20 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
+                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
                     <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>SPORTS</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
+                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
                     <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>COMPETITIONS</div>
                   </div>
                 </div>
@@ -1028,7 +1028,7 @@ export default function ClubhouseScreen() {
                     </p>
                     <button
                       onClick={openNewCompetitionFlow}
-                      style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
+                      style={{ padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
                     >
                       + CREATE A COMPETITION →
                     </button>

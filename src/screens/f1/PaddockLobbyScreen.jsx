@@ -129,7 +129,7 @@ export default function PaddockLobbyScreen() {
                 </p>
                 <button
                   onClick={() => setTab('create')}
-                  style={{ marginTop: 16, padding: '10px 24px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
+                  style={{ marginTop: 16, padding: '10px 24px', background: 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
                 >
                   CREATE YOUR FIRST PADDOCK
                 </button>
@@ -172,7 +172,7 @@ export default function PaddockLobbyScreen() {
                         )}
                         <button
                           onClick={() => enterPaddock(p.paddock_id)}
-                          style={{ padding: '8px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '8px 16px', background: 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           ENTER →
                         </button>
@@ -258,7 +258,7 @@ export default function PaddockLobbyScreen() {
             <button
               type="submit"
               disabled={busy || !name.trim()}
-              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: busy || !name.trim() ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: busy || !name.trim() ? 'default' : 'pointer' }}
             >
               {busy ? 'CREATING…' : 'CREATE PADDOCK →'}
             </button>
@@ -284,7 +284,7 @@ export default function PaddockLobbyScreen() {
             <button
               type="submit"
               disabled={busy || code.trim().length < 6}
-              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
             >
               {busy ? 'JOINING…' : 'JOIN PADDOCK →'}
             </button>

@@ -139,7 +139,7 @@ export default function TennisAtpFinalsScreen() {
                 <button
                   type="submit"
                   disabled={busy || !allGroupPicked}
-                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allGroupPicked ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allGroupPicked ? 'default' : 'pointer' }}
+                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allGroupPicked ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allGroupPicked ? 'default' : 'pointer' }}
                 >
                   {busy ? 'Saving…' : 'Lock group picks →'}
                 </button>
@@ -180,7 +180,7 @@ export default function TennisAtpFinalsScreen() {
                 <button
                   type="submit"
                   disabled={busy || !allKnockoutPicked}
-                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allKnockoutPicked ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allKnockoutPicked ? 'default' : 'pointer' }}
+                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allKnockoutPicked ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allKnockoutPicked ? 'default' : 'pointer' }}
                 >
                   {busy ? 'Saving…' : 'Lock knockout picks →'}
                 </button>
