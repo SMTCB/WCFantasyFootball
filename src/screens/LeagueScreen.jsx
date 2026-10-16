@@ -1860,7 +1860,7 @@ export default function LeagueScreen() {
                    <LoadingRows rows={3} />
                  )}
                  {managerRoster.map((p, i) => {
-                   const posColor = p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
+                   const posColor = p.position === 'GK' ? 'var(--purple)' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
                    return (
                    <div key={i} className="flex items-center gap-3 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden" style={{ borderLeft: `2px solid ${posColor}44` }}>
                      <div className="flex-1 min-w-0">
@@ -2001,7 +2001,7 @@ export default function LeagueScreen() {
             </div>
             {visibleLeagues.map(l => {
               const { type, format } = deriveLeagueType(l.leagues ?? {});
-              const medal = l.rank === 1 ? 'var(--gold)' : l.rank === 2 ? '#C0C0C0' : l.rank === 3 ? '#CD7F32' : 'var(--mute)';
+              const medal = l.rank === 1 ? 'var(--gold)' : l.rank === 2 ? 'var(--medal-silver)' : l.rank === 3 ? 'var(--medal-bronze)' : 'var(--mute)';
               return (
                 <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => navigate(`/league/${l.league_id}`))(e); } }}
                   key={l.league_id}

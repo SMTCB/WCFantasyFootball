@@ -99,7 +99,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
         ) : (
           <span style={{
             fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
-            padding: '2px 8px', border: '1px solid rgba(160,108,255,0.4)', color: '#a855f7',
+            padding: '2px 8px', border: '1px solid rgba(160,108,255,0.4)', color: 'var(--purple)',
             background: 'rgba(160,108,255,0.08)', flexShrink: 0,
           }}>
             {selected.size}/{maxSlots} SELECTED
