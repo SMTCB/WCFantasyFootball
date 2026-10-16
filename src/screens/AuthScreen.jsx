@@ -257,10 +257,15 @@ export default function AuthScreen() {
   return (
     <AuthShell>
       {/* Tab strip */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--shell-rule)', marginBottom: '28px' }}>
+      <div role="tablist" aria-label="Account" style={{ display: 'flex', borderBottom: '1px solid var(--shell-rule)', marginBottom: '28px' }}>
         {[{ id: TAB_SIGNIN, label: 'Sign In' }, { id: TAB_SIGNUP, label: 'Create Account' }].map(t => (
           <button
             key={t.id}
+            type="button"
+            role="tab"
+            id={`auth-tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`auth-panel-${t.id}`}
             onClick={() => switchTab(t.id)}
             style={{
               flex: 1,
@@ -286,7 +291,7 @@ export default function AuthScreen() {
 
       {/* Sign In */}
       {tab === TAB_SIGNIN && (
-        <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form role="tabpanel" id="auth-panel-signin" aria-labelledby="auth-tab-signin" onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <Field label="Email" labelStyle={labelStyle} htmlFor="auth-signin-email">
             <input id="auth-signin-email" type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
           </Field>
@@ -311,7 +316,7 @@ export default function AuthScreen() {
 
       {/* Sign Up */}
       {tab === TAB_SIGNUP && (
-        <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form role="tabpanel" id="auth-panel-signup" aria-labelledby="auth-tab-signup" onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <Field label="Username" labelStyle={labelStyle} htmlFor="auth-signup-username">
             <input id="auth-signup-username" type="text" style={fieldStyle} value={username} onChange={e => setUsername(e.target.value)} required placeholder="Your manager name" autoComplete="username" />
           </Field>

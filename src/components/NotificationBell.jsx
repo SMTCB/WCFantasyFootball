@@ -101,7 +101,7 @@ export default function NotificationBell({
 
       {open && !isDesktop && (
         // Mobile: dedicated full screen with a back button — no room for a dropdown at this width
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-dropdown)', background: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
             <button
               onClick={close}

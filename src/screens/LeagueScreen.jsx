@@ -1000,7 +1000,7 @@ export default function LeagueScreen() {
             <div
               onClick={() => setShowModeHelp(false)}
               style={{
-                position: 'fixed', inset: 0, zIndex: 500,
+                position: 'fixed', inset: 0, zIndex: 'var(--z-popover)',
                 background: 'rgba(0,0,0,0.75)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: 16,

@@ -12,6 +12,7 @@ import TabStrip from '../components/shared/TabStrip';
 import { ArchivedBadge, FinishedBadge } from '../components/league/LeagueBadges';
 import NotificationBell from '../components/NotificationBell';
 import ClubhouseInviteModal from '../components/ClubhouseInviteModal';
+import useConfirmDialog from '../hooks/useConfirmDialog';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -414,6 +415,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
   const [isPublic,    setIsPublic]    = useState(circle.is_public);
   const [p2pEnabled,  setP2pEnabled]  = useState(circle.p2p_betting_enabled);
   const [archived,    setArchived]    = useState(circle.archived);
+  const [askConfirm, confirmDialog] = useConfirmDialog();
   const [savingName,  setSavingName]  = useState(false);
   const [nameMsg,     setNameMsg]     = useState('');
   const [linkableLeagues, setLinkableLeagues] = useState(null);
@@ -455,9 +457,17 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
     catch { setP2pEnabled(!next); }
   }
 
-  async function toggleArchived() {
-    const next = !archived;
-    if (next && !window.confirm('Archive this Clubhouse? It will be hidden from your switcher and Home dashboard until you reactivate. Nothing is deleted.')) return;
+  function toggleArchived() {
+    if (archived) { applyArchived(false); return; }
+    askConfirm({
+      title: 'Archive this Clubhouse?',
+      body: 'It will be hidden from your switcher and Home dashboard until you reactivate. Nothing is deleted.',
+      confirmLabel: 'Archive',
+      onConfirm: () => applyArchived(true),
+    });
+  }
+
+  async function applyArchived(next) {
     setArchived(next);
     try { await onUpdateSettings({ archived: next }); }
     catch { setArchived(!next); }
@@ -564,6 +574,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
 
   return (
     <div>
+      {confirmDialog}
       {archived && (
         <div style={{ padding: '10px 14px', marginBottom: 16, background: 'var(--shell-fill)', border: '1px solid var(--rule)', borderRadius: 8, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.06em' }}>
           ARCHIVED{circle.archived_at ? ` · SINCE ${new Date(circle.archived_at).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}. Hidden from your switcher and Home dashboard.

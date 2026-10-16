@@ -20,7 +20,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
         position:      'fixed',
         bottom:        88,          // above bottom nav bar (~72px)
         right:         20,
-        zIndex:        200,
+        zIndex: 'var(--z-sheet)',
         display:       'flex',
         alignItems:    'center',
         gap:           8,

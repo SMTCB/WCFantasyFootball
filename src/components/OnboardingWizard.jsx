@@ -261,7 +261,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
       style={{
         position:      'fixed',
         inset:         0,
-        zIndex:        9999,
+        zIndex: 'var(--z-toast)',
         background:    'rgba(247, 243, 237, 0.98)',
         display:       'flex',
         flexDirection: 'column',

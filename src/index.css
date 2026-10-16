@@ -60,6 +60,17 @@
 
 /* ── CSS custom properties (non-Tailwind — used in inline styles) ── */
 :root {
+  /* Stacking scale (SYS-06) — use these, never raw numbers above 100 */
+  --z-dropdown: 100;
+  --z-sheet: 200;
+  --z-popover: 500;
+  --z-popover-top: 600;
+  --z-modal: 1000;
+  --z-flow: 1010;
+  --z-flow-top: 1011;
+  --z-bar: 9000;
+  --z-confirm: 9998;
+  --z-toast: 9999;
   /* Kit Light surface scale */
   --bg:       #F7F3ED;   /* page background  */
   --card:     #FFFFFF;   /* card surface     */
@@ -310,7 +321,7 @@ select, textarea {
   white-space: nowrap;
   padding: 4px 8px;
   border-radius: 2px;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   pointer-events: none;
 }
 
@@ -907,10 +918,10 @@ button, a {
   color: var(--mute);
 }
 .fk-mob-sheet-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9998;
+  position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: var(--z-confirm);
 }
 .fk-mob-sheet-wrap {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-toast);
   animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 

@@ -1536,7 +1536,7 @@ export default function MarketScreen() {
             style={{
               position: 'fixed',
               bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom))' : 0,
-              left: 0, right: 0, zIndex: 9000,
+              left: 0, right: 0, zIndex: 'var(--z-bar)',
               background: 'var(--shell)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
