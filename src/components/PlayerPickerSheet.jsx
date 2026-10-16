@@ -64,7 +64,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
   const posCfg = POS_CONFIG[position] ?? POS_CONFIG.MID;
 
   return (
-    <BottomSheet onClose={onClose}>
+    <BottomSheet ariaLabel="Pick a player" onClose={onClose}>
         {/* Header */}
         <div className="px-5 pb-3 shrink-0 flex items-center justify-between">
           <div>

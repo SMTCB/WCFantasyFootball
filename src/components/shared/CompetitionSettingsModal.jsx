@@ -16,7 +16,7 @@ export default function CompetitionSettingsModal({
   onClose,
 }) {
   return (
-    <BottomSheet onClose={onClose} maxWidth={420}>
+    <BottomSheet ariaLabel="Competition settings" onClose={onClose} maxWidth={420}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 16px 12px' }}>
         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--text)' }}>SETTINGS</span>
         <button

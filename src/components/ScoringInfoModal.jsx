@@ -141,7 +141,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
   const meta = TAB_META[tab];
 
   return (
-    <BottomSheet
+    <BottomSheet ariaLabel="Scoring rules"
       onClose={onClose}
       background="var(--ink)"
       maxWidth={480}
