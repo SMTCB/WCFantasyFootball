@@ -881,7 +881,7 @@ export default function HomeScreen() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flex: 1 }}>
             {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMP' }].map((o, i) => (
-              <button key={o.id} onClick={() => setView(o.id)} style={{
+              <button className="hit-44" key={o.id} onClick={() => setView(o.id)} style={{
                 flex: 1, padding: '6px 0',
                 background: view === o.id ? 'var(--accent-bg)' : 'transparent',
                 color: view === o.id ? 'var(--cyan)' : 'var(--mute)',

@@ -580,14 +580,14 @@ export default function DraftScreen() {
               <button
                 onClick={autoComplete}
                 disabled={list.length >= DRAFT_LIST_SIZE}
-                className="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 border border-[var(--rule)] text-[var(--mute)] bg-[var(--elev)] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                className="hit-44 text-[11px] font-black uppercase tracking-widest px-2.5 py-1 border border-[var(--rule)] text-[var(--mute)] bg-[var(--elev)] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
               >
                 ⚡ Auto-Fill
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={list.length === 0 || saving}
-                className="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                className="hit-44 text-[11px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
                 style={{
                   background: list.length > 0 ? 'var(--positive)' : 'var(--elev)',
                   color:      list.length > 0 ? 'var(--on-accent)'            : 'var(--mute)',
@@ -738,13 +738,13 @@ export default function DraftScreen() {
                     <div className="flex gap-2 p-2 border-t border-white/5">
                       <button
                         onClick={() => { setFilterClubs(new Set()); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
+                        className="hit-44 flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
                       >
                         Clear
                       </button>
                       <button
                         onClick={() => { setShowClubPicker(false); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-sm"
+                        className="hit-44 flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-sm"
                         style={{ background: 'var(--cyan)', color: '#000' }}
                       >
                         {filterClubs.size > 0 ? `Show ${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Apply'}
@@ -798,7 +798,7 @@ export default function DraftScreen() {
                       </div>
                       <button
                         onClick={() => addPlayer(p)}
-                        className="text-[11px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
+                        className="hit-44 text-[11px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
                         style={{ backgroundColor: 'var(--accent)', color: 'var(--on-accent)' }}
                       >
                         Add to List

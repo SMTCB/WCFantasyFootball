@@ -628,7 +628,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginTop: 2, textTransform: 'uppercase' }}>{template.category}</div>
               </div>
             </div>
-            <button
+            <button className="hit-44"
               onClick={clearTemplate}
               style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.15em', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
             >
@@ -742,7 +742,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                   />
                   <div style={{ display: 'flex', gap: 4 }}>
                     {['0.5','1.5','2.5','3.5','4.5'].map(v => (
-                      <button
+                      <button className="hit-44"
                         key={v}
                         onClick={() => setOuLine(v)}
                         style={{
@@ -794,7 +794,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     style={{ flex: 1, background: 'var(--shell-fill)', border: '1px solid var(--shell-rule)', color: 'var(--paper)', fontSize: 'var(--fs-micro)', padding: '7px 10px', borderRadius: 3, outline: 'none' }}
                   />
                   {['ALL', 'FWD', 'MID', 'DEF', ...(template.allPositions ? ['GK'] : [])].map(pos => (
-                    <button
+                    <button className="hit-44"
                       key={pos}
                       onClick={() => setPosFilter(pos)}
                       style={{

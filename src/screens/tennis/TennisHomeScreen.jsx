@@ -54,7 +54,7 @@ export default function TennisHomeScreen() {
           </h1>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {activeBox?.is_owner && (
-              <button
+              <button className="hit-44"
                 onClick={() => setShowSettings(true)}
                 aria-label="Player's Box settings"
                 style={{ padding: '6px 9px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--on-accent)' }}

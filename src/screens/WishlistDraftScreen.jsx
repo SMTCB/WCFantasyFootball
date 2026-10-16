@@ -428,7 +428,7 @@ export default function WishlistDraftScreen() {
           <button
             onClick={handleSave}
             disabled={(targets.length === 0 && dropIds.size === 0) || saving}
-            className="text-[11px] font-black uppercase tracking-widest shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hit-44 text-[11px] font-black uppercase tracking-widest shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer' }}
           >
             {saving ? 'Saving…' : 'Save'}
@@ -614,13 +614,13 @@ export default function WishlistDraftScreen() {
                     <div className="flex gap-2 p-2 border-t border-white/5">
                       <button
                         onClick={() => { setFilterClubs(new Set()); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
+                        className="hit-44 flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
                       >
                         Clear
                       </button>
                       <button
                         onClick={() => { setShowClubPicker(false); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-sm"
+                        className="hit-44 flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-sm"
                         style={{ background: 'var(--cyan)', color: '#000' }}
                       >
                         {filterClubs.size > 0 ? `Show ${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Apply'}

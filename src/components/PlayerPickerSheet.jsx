@@ -170,7 +170,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                       <button
                         disabled={isBuying}
                         onClick={() => handleBuy(p)}
-                        className="px-3 py-1.5 rounded text-[11px] font-black uppercase tracking-wide"
+                        className="hit-44 px-3 py-1.5 rounded text-[11px] font-black uppercase tracking-wide"
                         style={{
                           background:    'rgba(24,201,107,0.15)',
                           border:        '1px solid rgba(24,201,107,0.35)',

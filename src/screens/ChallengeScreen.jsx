@@ -1367,7 +1367,7 @@ function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, o
             {bet.status === 'cancelled' ? 'Cancelled — stakes returned' : 'Resolved'}
           </div>
           {onRematch && (
-            <button
+            <button className="hit-44"
               onClick={() => onRematch(bet)} disabled={loading}
               style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 6, border: '1px solid var(--rule)', background: 'transparent', cursor: loading ? 'not-allowed' : 'pointer', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, color: 'var(--text2)', opacity: loading ? 0.6 : 1 }}
             >↻ Rematch</button>

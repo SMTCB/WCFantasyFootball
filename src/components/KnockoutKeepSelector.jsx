@@ -207,7 +207,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
               </span>
             )}
 
-            <button
+            <button className="hit-44"
               onClick={() => { setSelected(new Set()); setSaved(false); setSaveError(null); }}
               disabled={selected.size === 0 || saving}
               style={{

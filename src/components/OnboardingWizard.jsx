@@ -309,7 +309,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         <div className="flex items-center justify-between mb-8">
           <ProgressDots current={step} total={STEPS.length} />
           {current.skip && (
-            <button
+            <button className="hit-44"
               onClick={handleSkip}
               style={{
                 fontSize: 'var(--fs-micro)',

@@ -33,9 +33,9 @@ function RoundNav({ rounds, lastRound, selected, onSelect }) {
       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
         WINDOW
       </span>
-      <button onClick={() => onSelect('all')} style={pillStyle(selected === 'all')}>ALL</button>
+      <button className="hit-44" onClick={() => onSelect('all')} style={pillStyle(selected === 'all')}>ALL</button>
       {rounds.map(r => (
-        <button key={r} onClick={() => onSelect(r)} style={pillStyle(selected === r)}>
+        <button className="hit-44" key={r} onClick={() => onSelect(r)} style={pillStyle(selected === r)}>
           MD {r}{r === lastRound ? ' · LAST' : ''}
         </button>
       ))}
@@ -354,7 +354,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
             sub="PICKING ORDER & FULL LOG"
             tone="var(--gold)"
             right={
-              <button onClick={() => setDraftAuditOpen(o => !o)} style={miniBtnStyle('var(--gold)')}>
+              <button className="hit-44" onClick={() => setDraftAuditOpen(o => !o)} style={miniBtnStyle('var(--gold)')}>
                 {draftAuditOpen ? 'HIDE ▲' : 'SHOW ▼'}
               </button>
             }

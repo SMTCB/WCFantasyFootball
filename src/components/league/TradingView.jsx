@@ -220,11 +220,11 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
       {isPending && isIncoming && (
         windowOpen ? (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button disabled={busy} onClick={() => handleAction(onAccept, 'accept', 'Trade accepted! Squads updated.')}
+            <button className="hit-44" disabled={busy} onClick={() => handleAction(onAccept, 'accept', 'Trade accepted! Squads updated.')}
               style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: 'none', cursor: busy ? 'wait' : 'pointer', background: 'var(--positive)', color: '#000', opacity: busy ? 0.5 : 1 }}>
               ACCEPT
             </button>
-            <button disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
+            <button className="hit-44" disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
               style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1 }}>
               DECLINE
             </button>
@@ -237,7 +237,7 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
             }}>
               ⏳ WINDOW CLOSED — accept when transfer window reopens
             </div>
-            <button disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
+            <button className="hit-44" disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
               style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '5px 10px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1, flexShrink: 0 }}>
               DECLINE
             </button>
@@ -245,7 +245,7 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
         )
       )}
       {isPending && isProposer && !isIncoming && (
-        <button disabled={busy} onClick={() => handleAction(onCancel, 'cancel', 'Offer cancelled.')}
+        <button className="hit-44" disabled={busy} onClick={() => handleAction(onCancel, 'cancel', 'Offer cancelled.')}
           style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', fontWeight: 900, padding: '5px 12px', border: '1px solid rgba(239,68,68,0.35)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--danger)', opacity: busy ? 0.5 : 1 }}>
           CANCEL OFFER
         </button>

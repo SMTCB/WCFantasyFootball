@@ -26,7 +26,7 @@ export function ReactionStrip({
         const count = counts[emoji] ?? 0;
         const mine  = isMyReaction(sectionKey, emoji);
         return (
-          <button
+          <button className="hit-44"
             key={emoji}
             onClick={() => toggleReaction(sectionKey, emoji)}
             title={mine ? `Remove ${emoji}` : `React ${emoji}`}
