@@ -12,6 +12,21 @@
 
 ---
 
+## ✅ UI audit P1 batch (2026-10-16) — PR #1043–#1046 (rollback tag `pre-ui-p1-audit` @ 8ff1503)
+
+Source: Frontrow UI Audit. All six P1 findings addressed; A11Y-02 and TCH-01 partially.
+
+| ID | Status | What shipped |
+|----|--------|--------------|
+| FRM-01 | ✅ | Global 16px floor on text inputs/selects/textareas (#1043) |
+| A11Y-03 | ✅ | `--on-shell-dim` .45→.55; shell text on `--on-shell-faint` moved to dim (#1043) |
+| A11Y-02 | ⚠️ partial | `var(--gold)` text → `--gold-text` in light-surface-only files (#1043). **Open:** ~25 mixed light/dark files need per-surface review (`--on-shell-gold` on navy) |
+| A11Y-01 | ✅ | `text-[8/9/10px]` → 11px (17 files) + 2 inline sizes + lint selector (#1044). **Open:** promote key data (points, prices, fixture times) to `--fs-label` — design call |
+| TCH-01 | ⚠️ partial | `.hit-44` utility, applied to 9 chips on Squad/Market/League (#1045). **Open:** ~100 other small-chip sites; spacing between adjacent targets |
+| A11Y-04 | ✅ | Shared `BottomSheet` now role=dialog, focus in/trap/return, inert `#root` (#1046); covers H2H, PlayerPicker, ScoringInfo, WishlistInfo, CompetitionSettings |
+
+Notes: CI `E2E`/unit jobs are skipped on every PR because the `Security` (npm audit) job fails and gates them, so these PRs merged on Build + Lint only. No 375px visual QA done yet — check Squad/Market/League chips and sheets on device. Rollback: revert the squash commit(s) or reset to tag `pre-ui-p1-audit`.
+
 ## ✅ Commissioner post RLS fix + Frontrow circle editions batching + score/backup audit (2026-10-15/16) — PR #1039, PR #1040, PR #1041, migrations 299–300
 
 - **Commissioner post error (migration 299, PR #1039)**: posting BREAKING NEWS / classified from the Admin tab failed with `new row violates row-level security policy for table clubhouse_notifications`. Cause: the Clubhouse fan-out triggers (migration 196) assumed trigger functions bypass RLS; they don't unless `SECURITY DEFINER`, and `clubhouse_notifications` has no INSERT policy. The three trigger functions are now `SECURITY DEFINER SET search_path = public` (verified `prosecdef = true`). Posts appear in the league's gazette (`gazette_entries`) and, for `breaking_news`, fan out as notifications to members of every circle the league is linked to.
