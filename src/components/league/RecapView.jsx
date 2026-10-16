@@ -1,3 +1,4 @@
+import { IconHourglass } from '../UiIcons';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
@@ -849,7 +850,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           </div>
         ) : !hasScores ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 8 }}>
-            <div style={{ fontSize: 'var(--fs-title)' }}>⏳</div>
+            <div style={{ fontSize: 'var(--fs-title)' }}><IconHourglass size={28} /></div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>SCORES PENDING</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
               Points are calculated after each match completes.
@@ -883,7 +884,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         </div>
       ) : !hasScores ? (
         <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 8 }}>⏳</div>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 8 }}><IconHourglass size={28} /></div>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 6 }}>SCORES PENDING</div>
           <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5 }}>
             Points are calculated after each match completes.

@@ -1,3 +1,4 @@
+import { IconCheckCircle } from '../components/UiIcons';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -425,7 +426,7 @@ export default function DraftScreen() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center px-6 gap-6">
-        <div className="text-[40px]">✅</div>
+        <div className="text-[40px]"><IconCheckCircle size={40} /></div>
         <div className="text-center">
           <div className="text-[var(--paper)] font-black text-xl uppercase tracking-widest mb-2">
             Draft Submitted

@@ -1,3 +1,4 @@
+import { IconLock } from '../../components/UiIcons';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTennisCalendar } from '../../hooks/tennis/useTennisCalendar';
@@ -116,7 +117,7 @@ export default function TennisAdminScreen() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🔒</div>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}><IconLock size={28} /></div>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>ADMIN ACCESS REQUIRED</p>
         </div>
       </div>

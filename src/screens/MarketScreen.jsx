@@ -1,3 +1,4 @@
+import { IconWarning } from '../components/UiIcons';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -1310,7 +1311,7 @@ export default function MarketScreen() {
                         {p.name.toUpperCase()}
                       </span>
                       {intel?.status !== 'fit' && (
-                        <span title={`${intel?.reason ?? intel?.status} — check ⚠️ STATUS tab on My Squad`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}>⚠️</span>
+                        <span title={`${intel?.reason ?? intel?.status} — check ⚠️ STATUS tab on My Squad`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                       )}
                       {isOwned && p.id === mySquad?.captain_id && (
                         <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 900 }}>C</div>
