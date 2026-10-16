@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { LoadingRows } from '../components/Skeleton';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -1856,7 +1857,7 @@ export default function LeagueScreen() {
                </div>
                <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
                  {!managerRoster.length && (
-                   <div className="text-center text-[12px] text-text-tertiary py-8">Loading roster…</div>
+                   <LoadingRows rows={3} />
                  )}
                  {managerRoster.map((p, i) => {
                    const posColor = p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
