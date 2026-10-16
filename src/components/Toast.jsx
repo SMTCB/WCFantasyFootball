@@ -45,7 +45,6 @@ function ToastItem({ toast, onDismiss }) {
 }
 
 function ToastStack({ toasts, onDismiss }) {
-  if (!toasts.length) return null;
   const visible = toasts.slice(-3);
   return (
     <div role="status" aria-live="polite" aria-relevant="additions" style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 'var(--z-toast)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none', padding: '0 16px' }}>

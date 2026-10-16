@@ -261,6 +261,11 @@ export default function AuthScreen() {
         {[{ id: TAB_SIGNIN, label: 'Sign In' }, { id: TAB_SIGNUP, label: 'Create Account' }].map(t => (
           <button
             key={t.id}
+            type="button"
+            role="tab"
+            id={`auth-tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`auth-panel-${t.id}`}
             onClick={() => switchTab(t.id)}
             style={{
               flex: 1,
