@@ -181,7 +181,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--mute)', minWidth: 20 }}>{i + 1}</span>
                         <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
-                        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', flex: 1 }}>{isMe ? 'You' : entry.username}</span>
+                        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', flex: 1 }}>{entry.username}</span>
                         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>+{entry.total_rewards}</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, paddingLeft: 30 }}>
@@ -208,7 +208,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{i + 1}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
-                        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{isMe ? 'You' : entry.username}</span>
+                        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{entry.username}</span>
                       </div>
                       <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)' }}>
                         <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>

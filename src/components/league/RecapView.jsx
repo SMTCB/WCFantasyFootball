@@ -711,14 +711,13 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const memberMap = {};
   (members || []).forEach(m => { memberMap[m.user_id] = m; });
   function nameFor(userId) {
-    if (currentUser && userId === currentUser.id) return 'You';
     return memberMap[userId]?.users?.username || 'Unknown';
   }
 
   // ── Score row renderer ───────────────────────────────────────────────────────
   function renderScoreRow(s, idx, desktop) {
     const name  = nameFor(s.user_id);
-    const hue   = mgrHue(name === 'You' ? (memberMap[s.user_id]?.users?.username || '') : name);
+    const hue   = mgrHue(name);
     const isMe  = currentUser && s.user_id === currentUser.id;
     const isTop = idx === 0 && s.pts !== null;
     const isOpen = expandedUser === s.user_id;

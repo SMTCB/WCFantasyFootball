@@ -35,7 +35,6 @@ export default function H2HView({ leagueId, currentUser, members }) {
     const m = members?.find(m => m.user_id === uid);
     if (!m) return uid?.slice(0, 6) ?? '?';
     const name = m.users?.username ?? '?';
-    if (currentUser && uid === currentUser.id) return 'You';
     return name;
   };
 
@@ -146,7 +145,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                   <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: idx < 3 ? ['var(--gold)','#C0C0C0','#CD7F32'][idx] : 'var(--mute)' }}>{row.h2h_rank}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 18, background: `${hue}18`, border: `1px solid ${hue}66`, color: hue, fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em' }}>{mgrMono(row.username ?? '')}</span>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isMe ? 'var(--cyan)' : 'var(--paper)' }}>{isMe ? 'You' : (row.username ?? '?')}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isMe ? 'var(--cyan)' : 'var(--paper)' }}>{row.username ?? '?'}</span>
                   </div>
                   <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                     <span style={{ color: 'var(--positive)' }}>{row.wins}</span>

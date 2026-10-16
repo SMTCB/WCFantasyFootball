@@ -207,11 +207,11 @@ export default function ChatView({
                   {showDivider && <DateDivider label={formatDateLabel(msg.createdAt)} />}
                 <div style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ paddingTop: 2 }}>
-                    <MgrTag mono={mgrMono(msg.isOwnMessage ? 'You' : (msg.userName || ''))} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={22} />
+                    <MgrTag mono={mgrMono(msg.userName || '')} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={22} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.userName}</span>
                       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     {editingMessageId === msg.id ? (
@@ -339,11 +339,11 @@ export default function ChatView({
               {currentUser && members.filter(m => m.user_id === currentUser.id).map(m => (
                 <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
                   <div style={{ position: 'relative' }}>
-                    <MgrTag mono="YOU" hue="var(--cyan)" size={22} />
+                    <MgrTag mono={mgrMono(m.users?.username || 'You')} hue="var(--cyan)" size={22} />
                     <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--ink-2)' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em' }}>You</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em' }}>{m.users?.username || 'You'}</div>
                     <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{m.users?.username || 'you'}</div>
                   </div>
                 </div>
@@ -453,11 +453,11 @@ export default function ChatView({
               {showDivider && <DateDivider label={formatDateLabel(msg.createdAt)} mobile />}
             <div style={{ padding: '6px 16px', display: 'grid', gridTemplateColumns: '30px 1fr', gap: 8, alignItems: 'flex-start' }}>
               <div style={{ paddingTop: 2 }}>
-                <MgrTag mono={mgrMono(msg.isOwnMessage ? 'You' : (msg.userName || ''))} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={20} />
+                <MgrTag mono={mgrMono(msg.userName || '')} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={20} />
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.userName}</span>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <div style={{ fontFamily: 'Archivo,sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>

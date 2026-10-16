@@ -1891,7 +1891,7 @@ export default function LeagueScreen() {
              leagueId={activeLeague.league_id}
              myId={currentUser?.id || '0'}
              rival={h2hTarget}
-             myName="You"
+             myName={currentUser?.username || "You"}
              onClose={() => setH2hTarget(null)}
            />
          )}
