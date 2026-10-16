@@ -67,7 +67,7 @@ export default function BottomSheet({
 
   return createPortal(
     <>
-      <div className="fk-mob-sheet-overlay" onClick={closeOnBackdrop ? onClose : undefined} />
+      <div role="presentation" className="fk-mob-sheet-overlay" onClick={closeOnBackdrop ? onClose : undefined} />
       <div className="fk-mob-sheet-wrap" data-sheet-tablet>
         <div
           ref={panelRef}

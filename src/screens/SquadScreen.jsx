@@ -1118,7 +1118,7 @@ export default function SquadScreen() {
                 const auctionListing = activeAuctions.find(a => a.player_id === player.id);
                 const isListed = !!auctionListing;
                 const rowAction = (
-                  <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                  <div role="presentation" className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
                     <button className="hit-44"
                       onClick={() => setStatsDashboardPlayer(player)}
                       style={{
@@ -1667,7 +1667,7 @@ export default function SquadScreen() {
                           </button>
                           {/* Auction action — draft leagues only (classic allows shared ownership) */}
                           {activeLeague && cfg.format === 'noduplicate' && (
-                            <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
+                            <div role="presentation" onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
                               {isListed ? (() => {
                                 const isConfirming = confirmCancelId === player.id;
                                 const isCancelBusy = cancelBusy === player.id;
@@ -1934,7 +1934,7 @@ export default function SquadScreen() {
       {selectedPlayer && !swapMode && createPortal(
         <>
           {/* Tap-outside dismiss — portaled to body so iOS WebKit stacking context doesn't trap z-index */}
-          <div
+          <div role="presentation"
             className="fixed inset-0 z-[59] lg:left-[220px]"
             onClick={() => setSelectedPlayer(null)}
           />

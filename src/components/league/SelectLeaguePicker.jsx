@@ -47,7 +47,7 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
         {sortedLeagues.map(l => {
           const tc = TYPE_COLOR[l.type] || 'var(--mute)';
           return (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onSelect(l))(e); } }}
               key={l.id}
               onClick={() => onSelect(l)}
               className="group transition-all"
@@ -106,7 +106,7 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
         {sortedLeagues.map(l => {
           const tc = TYPE_COLOR[l.type] || 'var(--mute)';
           return (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onSelect(l))(e); } }}
               key={l.id}
               onClick={() => onSelect(l)}
               className="active:opacity-70"

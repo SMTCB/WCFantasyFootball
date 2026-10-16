@@ -287,9 +287,9 @@ export default function TradingView({
 
       {/* ── Help modal ─────────────────────────────────────────────── */}
       {showHelp && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        <div role="presentation" style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
              onClick={() => setShowHelp(false)}>
-          <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', maxWidth: 480, width: '100%', padding: 28, position: 'relative' }}
+          <div role="presentation" style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', maxWidth: 480, width: '100%', padding: 28, position: 'relative' }}
                onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-heading)', cursor: 'pointer' }}>✕</button>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.22em', marginBottom: 16 }}>TRADING FLOOR · HOW IT WORKS</div>

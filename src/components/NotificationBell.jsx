@@ -128,7 +128,7 @@ export default function NotificationBell({
 
       {open && isDesktop && (
         <>
-          <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+          <div role="presentation" onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
           <div style={{
             position: 'absolute', top: 40, right: 0, width: 360, maxWidth: '90vw', zIndex: 41,
             background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10,

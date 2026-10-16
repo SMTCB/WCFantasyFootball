@@ -51,7 +51,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
   };
 
   return createPortal(
-    <div
+    <div role="presentation"
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 'var(--z-confirm)',

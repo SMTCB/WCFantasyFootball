@@ -56,7 +56,7 @@ function SportInfoPopover({ sport }) {
       >i</button>
       {open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-flow)' }} />
+          <div role="presentation" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-flow)' }} />
           <div style={{
             position: 'absolute', top: 20, left: 0, zIndex: 'var(--z-flow-top)', width: 260,
             background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8,
@@ -397,7 +397,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
 
   if (isDesktop) {
     return createPortal(
-      <div
+      <div role="presentation"
         onClick={close}
         style={{
           position: 'fixed', inset: 0, zIndex: 'var(--z-modal)',
@@ -405,7 +405,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
-        <div
+        <div role="presentation"
           onClick={e => e.stopPropagation()}
           style={{
             width: 460, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto',
@@ -423,7 +423,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
 
   // Mobile — bottom sheet
   return createPortal(
-    <div
+    <div role="presentation"
       onClick={close}
       style={{
         position: 'fixed', inset: 0, zIndex: 'var(--z-modal)',
@@ -431,7 +431,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         display: 'flex', alignItems: 'flex-end',
       }}
     >
-      <div
+      <div role="presentation"
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%', maxHeight: '90vh', overflowY: 'auto',

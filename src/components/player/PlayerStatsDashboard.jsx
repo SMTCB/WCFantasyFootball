@@ -83,7 +83,7 @@ function KeyStatsStrip({ stats, compact }) {
 
 function GWRow({ r, selected, onClick, columns, fontSize }) {
   return (
-    <div onClick={onClick} style={{
+    <div role="button" tabIndex={0} onClick={onClick} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }} style={{
       display: 'grid', gridTemplateColumns: columns,
       padding: '10px 16px', borderBottom: '1px solid var(--rule)',
       cursor: 'pointer', alignItems: 'center',
@@ -159,10 +159,10 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
   ];
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-center justify-center" style={{ background: 'rgba(6,7,10,.86)' }} onClick={onClose}>
+    <div role="presentation" className="fixed inset-0 z-[80] flex items-center justify-center" style={{ background: 'rgba(6,7,10,.86)' }} onClick={onClose}>
 
       {/* ── DESKTOP ───────────────────────────────────────────── */}
-      <div
+      <div role="presentation"
         className="hidden lg:flex lg:flex-col"
         onClick={e => e.stopPropagation()}
         style={{ width: 900, maxHeight: '88vh', background: 'var(--ink)', border: '1px solid var(--rule)', overflow: 'hidden', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif' }}
@@ -245,14 +245,14 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
       </div>
 
       {/* ── MOBILE ────────────────────────────────────────────── */}
-      <div
+      <div role="presentation"
         className="flex lg:hidden"
         onClick={e => e.stopPropagation()}
         style={{ width: '100%', height: '100%', background: 'var(--ink)', color: 'var(--paper)', flexDirection: 'column', fontFamily: 'Archivo, sans-serif', overflow: 'hidden' }}
       >
         {/* back nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-          <div onClick={onClose} style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', cursor: 'pointer' }}>← BACK</div>
+          <button type="button" onClick={onClose} style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>← BACK</button>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <PosBadge pos={player.position} small />
             <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name}</span>
@@ -271,9 +271,9 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
         {/* position stats */}
         <PosStatsStrip position={player.position} posStats={posStats} compact />
         {/* tabs */}
-        <div style={{ display: 'flex', gap: 20, padding: '9px 16px 0', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+        <div role="tablist" style={{ display: 'flex', gap: 20, padding: '9px 16px 0', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
           {['HISTORY', 'BREAKDOWN'].map(t => (
-            <div key={t} onClick={() => setMobileTab(t.toLowerCase())} style={{ ...MO, fontSize: 'var(--fs-micro)', paddingBottom: 7, cursor: 'pointer', position: 'relative', color: mobileTab === t.toLowerCase() ? 'var(--paper)' : 'var(--mute)' }}>
+            <div key={t} role="tab" aria-selected={mobileTab === t.toLowerCase()} tabIndex={0} onClick={() => setMobileTab(t.toLowerCase())} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileTab(t.toLowerCase()); } }} style={{ ...MO, fontSize: 'var(--fs-micro)', paddingBottom: 7, cursor: 'pointer', position: 'relative', color: mobileTab === t.toLowerCase() ? 'var(--paper)' : 'var(--mute)' }}>
               {t}
               {mobileTab === t.toLowerCase() && <span style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, background: 'var(--cyan)' }} />}
             </div>

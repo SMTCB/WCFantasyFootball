@@ -71,7 +71,7 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
           const ringColor = isSelected ? 'var(--cyan)' : posColor;
 
           return (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => (onPlayerClick ?? (() => {}))(player))(e); } }}
               key={player.id}
               data-testid={`mobile-pitch-token-${player.id}`}
               onClick={() => (onPlayerClick ?? (() => {}))(player)}

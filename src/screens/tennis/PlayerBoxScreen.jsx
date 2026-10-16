@@ -170,7 +170,7 @@ export default function PlayerBoxScreen() {
                         </button>
                       </div>
                     </div>
-                    <div
+                    <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => copyCode(b.invite_code))(e); } }}
                       style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, cursor: 'pointer' }}
                       onClick={() => copyCode(b.invite_code)}
                     >

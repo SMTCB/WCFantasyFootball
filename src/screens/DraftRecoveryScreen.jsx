@@ -401,7 +401,7 @@ export default function DraftRecoveryScreen() {
             const overBudget = budgetLeft < p.price;
 
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => !disabled && !isBusy && pickPlayer(p))(e); } }}
                 key={p.id}
                 onClick={() => !disabled && !isBusy && pickPlayer(p)}
                 className={`flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-3 transition-all ${

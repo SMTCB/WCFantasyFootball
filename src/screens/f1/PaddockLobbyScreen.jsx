@@ -179,7 +179,7 @@ export default function PaddockLobbyScreen() {
                       </div>
                     </div>
                     {/* Invite code strip */}
-                    <div
+                    <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => copyCode(p.invite_code))(e); } }}
                       style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, cursor: 'pointer' }}
                       onClick={() => copyCode(p.invite_code)}
                     >

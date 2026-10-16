@@ -691,7 +691,7 @@ export default function MarketScreen() {
     <div className="min-h-screen bg-bg">
       {/* Team picker backdrop — closes dropdown on outside tap */}
       {showTeamPicker && (
-        <div
+        <div role="presentation"
           style={{ position: 'fixed', inset: 0, zIndex: 55 }}
           onClick={() => { setShowTeamPicker(false); setTeamSearch(''); }}
         />
@@ -1299,7 +1299,7 @@ export default function MarketScreen() {
                   {intel && <StatusDot status={intel.status ?? 'fit'} />}
                   <div className="min-w-0">
                     {/* Name — tap to expand stats panel */}
-                    <div
+                    <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => togglePanel(p.id))(e); } }}
                       className="flex items-center flex-wrap gap-1.5 cursor-pointer"
                       onClick={() => togglePanel(p.id)}
                     >

@@ -769,7 +769,7 @@ export default function DraftScreen() {
 
               return (
                 <div key={p.id}>
-                  <div
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => !disabled && setExpandedId(isExpanded ? null : p.id))(e); } }}
                     className={`flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
                     onClick={() => !disabled && setExpandedId(isExpanded ? null : p.id)}
                   >

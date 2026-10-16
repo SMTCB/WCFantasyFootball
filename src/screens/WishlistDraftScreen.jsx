@@ -644,7 +644,7 @@ export default function WishlistDraftScreen() {
               const intel = p.intel;
               return (
                 <div key={p.id}>
-                  <div
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => !disabled && togglePanel(p.id))(e); } }}
                     className={`flex items-center px-3 py-2.5 gap-2.5 transition-all duration-150 ${disabled ? 'opacity-40' : 'cursor-pointer active:opacity-70'}`}
                     style={{ borderBottom: isExpanded ? 'none' : '1px solid var(--rule)' }}
                     onClick={() => !disabled && togglePanel(p.id)}

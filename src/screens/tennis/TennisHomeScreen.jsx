@@ -195,7 +195,7 @@ export default function TennisHomeScreen() {
               const tb = TYPE_BADGE[t.tournament_type] ?? TYPE_BADGE.masters_1000;
               const isClickable = t.status !== 'upcoming';
               return (
-                <div
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`))(e); } }}
                   key={t.tournament_id ?? t.id}
                   onClick={() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`)}
                   style={{

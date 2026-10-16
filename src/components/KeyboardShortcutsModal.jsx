@@ -24,7 +24,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
   ];
 
   return (
-    <div
+    <div role="presentation"
       style={{
         position: 'fixed',
         top: 0,
@@ -39,7 +39,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
       }}
       onClick={onClose}
     >
-      <div
+      <div role="presentation"
         style={{
           background: 'var(--ink-2)',
           border: '1px solid var(--rule)',

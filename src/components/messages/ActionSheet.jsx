@@ -33,7 +33,7 @@ export default function ActionSheet({ type = 'info', title, text, actions, onDis
 
   return createPortal(
     <>
-      <div className="fk-mob-sheet-overlay" onClick={onDismiss} />
+      <div role="presentation" className="fk-mob-sheet-overlay" onClick={onDismiss} />
       <div className="fk-mob-sheet-wrap">
         <div className={`fk-mob-sheet ${type}`}>
           <div className="fk-mob-sheet-head">
