@@ -67,6 +67,10 @@ export default defineConfig([
     rules: {
       'no-restricted-syntax': ['warn',
         {
+          selector: "JSXOpeningElement[name.name=/^(div|span|li|td|tr)$/]:has(JSXAttribute[name.name='onClick']):not(:has(JSXAttribute[name.name='role']))",
+          message: 'Clickable non-button needs keyboard access (A11Y-05) — use <button>, or add role + tabIndex + onKeyDown. Pure backdrops: role="presentation".',
+        },
+        {
           selector: "Literal[value=/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?([0-9a-fA-F]{2})?$/]",
           message: 'Raw hex color — use a CSS variable from src/index.css instead.',
         },

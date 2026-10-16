@@ -1,3 +1,4 @@
+import { LoadingRows } from './Skeleton';
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
@@ -107,7 +108,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
         {/* Player list */}
         <div className="overflow-y-auto flex-1 pb-6">
           {loading ? (
-            <div className="p-8 text-center text-[13px]" style={{ color: 'var(--mute)' }}>Loading…</div>
+            <LoadingRows rows={3} />
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-[13px]" style={{ color: 'var(--mute)' }}>No players found</div>
           ) : (

@@ -1,3 +1,4 @@
+import { IconTrophy } from './UiIcons';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -343,7 +344,7 @@ export function CompetitionNav({
               fontSize: 'var(--fs-label)', fontWeight: 500,
             }}
           >
-            <span aria-hidden="true">🏆</span>
+            <span aria-hidden="true"><IconTrophy size={20} /></span>
             New competition
           </button>
           {onInvite && (

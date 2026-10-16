@@ -137,7 +137,7 @@ function HelpOverlay({ topic, onClose }) {
   if (!content) return null;
 
   return (
-    <div
+    <div role="presentation"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 'var(--z-popover)',
@@ -386,7 +386,7 @@ function WizField({ label, sub, children }) {
 function VoidConfirmModal({ bet, onConfirm, onCancel }) {
   if (!bet) return null;
   return (
-    <div
+    <div role="presentation"
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 'var(--z-popover-top)',
@@ -1564,7 +1564,7 @@ function ModeSegment({ value, onPick, disabled }) {
         })}
       </div>
       {helpOpen && createPortal(
-        <div
+        <div role="presentation"
           onClick={() => setHelpOpen(false)}
           style={{
             position: 'fixed', inset: 0, zIndex: 'var(--z-modal)', background: 'rgba(0,0,0,.6)',

@@ -1,3 +1,4 @@
+import { LoadingRows } from '../components/Skeleton';
 import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -446,11 +447,11 @@ function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
   }
 
   return createPortal(
-    <div
+    <div role="presentation"
       style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
       <div style={{
         width: '100%', maxWidth: 480, background: 'var(--card)',
         border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
@@ -521,11 +522,11 @@ function ArbitrationModal({ challenge, onClose, onSubmit }) {
   }
 
   return createPortal(
-    <div
+    <div role="presentation"
       style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
       <div style={{
         width: '100%', maxWidth: 500, background: 'var(--card)',
         border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
@@ -766,11 +767,11 @@ function CreateGroupBetModal({
   }
 
   return createPortal(
-    <div
+    <div role="presentation"
       style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
       <div style={{
         width: '100%', maxWidth: 520, background: 'var(--card)',
         border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
@@ -883,10 +884,9 @@ function CreateGroupBetModal({
                     style={{ padding: '7px 12px', borderRadius: 6, border: '1px dashed var(--rule)', background: 'transparent', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}
                   >+ Add option</button>
                 )}
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, cursor: 'pointer' }}>
+                <label role="checkbox" aria-checked={allowMultiple} tabIndex={0} onClick={() => setAllowMultiple(v => !v)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAllowMultiple(v => !v); } }} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, cursor: 'pointer' }}>
                   <CheckDot selected={allowMultiple} />
                   <span
-                    onClick={() => setAllowMultiple(v => !v)}
                     style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}
                   >Allow participants to pick multiple answers</span>
                 </label>
@@ -982,9 +982,9 @@ function CreateGroupBetModal({
                 />
               </label>
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: -8, cursor: 'pointer' }}>
+            <label role="checkbox" aria-checked={noEnd} tabIndex={0} onClick={() => setNoEnd(v => !v)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setNoEnd(v => !v); } }} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: -8, cursor: 'pointer' }}>
               <CheckDot selected={noEnd} />
-              <span onClick={() => setNoEnd(v => !v)} style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}>No fixed end time</span>
+              <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}>No fixed end time</span>
             </label>
 
             {error && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
@@ -1051,11 +1051,11 @@ function SubmitAnswerModal({ bet, onClose, onSubmit, fetchAnswers, userId }) {
   }
 
   return createPortal(
-    <div
+    <div role="presentation"
       style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
       <div style={{
         width: '100%', maxWidth: 480, background: 'var(--card)',
         border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
@@ -1169,11 +1169,11 @@ function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipants, fetc
   const eyebrowColor = isArbitrate ? 'var(--purple)' : 'var(--mute)';
 
   return createPortal(
-    <div
+    <div role="presentation"
       style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
       <div style={{
         width: '100%', maxWidth: 500, background: 'var(--card)',
         border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
@@ -1211,7 +1211,7 @@ function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipants, fetc
             ))}
           </div>
         ) : loadingDetail ? (
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading participants…</div>
+          <LoadingRows rows={3} />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14, maxHeight: 260, overflowY: 'auto' }}>
             {participants.map((p, i) => (
@@ -1569,7 +1569,7 @@ function WalletTabContent({ wallet, walletLoading }) {
           </div>
           <div style={{ padding: '0 16px' }}>
             {walletLoading ? (
-              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>Loading…</div>
+              <LoadingRows rows={3} />
             ) : transactions.length === 0 ? (
               <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>No transactions yet</div>
             ) : transactions.map((tx, i) => {
@@ -1770,11 +1770,11 @@ function CreateChallengeModal({
   }
 
   return createPortal(
-    <div
+    <div role="presentation"
       style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
       <div style={{
         width: '100%', maxWidth: 520, background: 'var(--card)',
         border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
@@ -2014,11 +2014,11 @@ function CreateChallengeModal({
 // (any target shape, including a single person via the new "One Person" mode).
 function BetKindPicker({ onPick, onClose, hasCompetitions }) {
   return createPortal(
-    <div
+    <div role="presentation"
       style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
       <div style={{
         width: '100%', maxWidth: 520, background: 'var(--card)',
         border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
@@ -2554,7 +2554,7 @@ export default function ChallengeScreen() {
                 )}
               </div>
               {(loading || (betsEnabled && betsLoading)) ? (
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 16, textAlign: 'center' }}>Loading…</div>
+                <LoadingRows rows={3} />
               ) : allBets.incoming.length === 0 ? (
                 <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '20px 16px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center' }}>
                   Nothing waiting on you.

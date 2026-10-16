@@ -1,3 +1,4 @@
+import { LoadingRows } from '../components/Skeleton';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -1047,7 +1048,7 @@ export default function LiveScreen() {
 
             <div style={{ minHeight: 'clamp(280px, calc(100dvh - 380px), 620px)' }}>
               {loading ? (
-                <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 20 }}>Loading squad…</div>
+                <LoadingRows rows={3} />
               ) : squadPlayers.length === 0 ? (
                 <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: 20 }}>No squad data</div>
               ) : (
@@ -1287,7 +1288,7 @@ export default function LiveScreen() {
           {mobileTab === 'squad' ? (
             <div style={{ padding: '8px 18px 24px' }}>
               {loading ? (
-                <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '20px 0' }}>Loading squad…</div>
+                <LoadingRows rows={3} />
               ) : squadPlayers.length === 0 ? (
                 <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '20px 0' }}>No squad found — sign in to see your players</div>
               ) : (

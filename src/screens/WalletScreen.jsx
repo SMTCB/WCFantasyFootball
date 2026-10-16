@@ -1,3 +1,4 @@
+import { LoadingRows } from '../components/Skeleton';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -66,7 +67,7 @@ export default function WalletScreen() {
         textAlign: 'center',
       }}>
         {loading ? (
-          <div style={{ ...MONO, fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>Loading…</div>
+          <LoadingRows rows={3} />
         ) : (
           <>
             <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 8 }}>

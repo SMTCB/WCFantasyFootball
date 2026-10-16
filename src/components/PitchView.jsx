@@ -34,7 +34,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
       : player.position === 'MID' ? 'var(--pos-mid)'
       : 'var(--pos-fwd)';
     return (
-      <div
+      <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onClick(player))(e); } }}
         data-testid={`token-${player.id}`}
         onClick={() => onClick(player)}
         style={{
@@ -94,7 +94,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
   }
 
   return (
-    <div
+    <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onClick(player))(e); } }}
       data-testid={`token-${player.id}`}
       onClick={() => onClick(player)}
       style={{

@@ -395,7 +395,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           const mName = isMe ? 'You' : (m.users?.username || 'Unknown');
           const hue = mgrHue(m.users?.username || '');
           return (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onViewManager({ user_id: m.user_id, name: mName }))(e); } }}
               key={m.user_id}
               onClick={() => onViewManager({ user_id: m.user_id, name: mName })}
               style={{

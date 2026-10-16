@@ -1,3 +1,4 @@
+import { IconTrophy } from '../../components/UiIcons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAtpFinalsPicks } from '../../hooks/tennis/useAtpFinalsPicks';
@@ -100,7 +101,7 @@ export default function TennisAtpFinalsScreen() {
         {/* Upcoming */}
         {status === 'upcoming' && (
           <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '24px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🏆</div>
+            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}><IconTrophy size={28} /></div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>
               Match draw not yet seeded. Check back closer to the ATP Finals.
             </p>

@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTennisCalendar } from '../../hooks/tennis/useTennisCalendar';
@@ -187,7 +188,7 @@ export default function TennisHomeScreen() {
         </div>
 
         {calLoading ? (
-          <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', textAlign: 'center', padding: 32 }}>Loading…</div>
+          <LoadingRows rows={3} />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {tournaments.map(t => {
@@ -195,7 +196,7 @@ export default function TennisHomeScreen() {
               const tb = TYPE_BADGE[t.tournament_type] ?? TYPE_BADGE.masters_1000;
               const isClickable = t.status !== 'upcoming';
               return (
-                <div
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`))(e); } }}
                   key={t.tournament_id ?? t.id}
                   onClick={() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`)}
                   style={{

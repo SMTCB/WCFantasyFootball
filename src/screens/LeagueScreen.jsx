@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { LoadingRows } from '../components/Skeleton';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -997,7 +998,7 @@ export default function LeagueScreen() {
           </div>
           {/* League Mode Help Modal */}
           {showModeHelp && (
-            <div
+            <div role="presentation"
               onClick={() => setShowModeHelp(false)}
               style={{
                 position: 'fixed', inset: 0, zIndex: 'var(--z-popover)',
@@ -1006,7 +1007,7 @@ export default function LeagueScreen() {
                 padding: 16,
               }}
             >
-              <div
+              <div role="presentation"
                 onClick={e => e.stopPropagation()}
                 style={{
                   background: 'var(--ink-2, #111)',
@@ -1230,7 +1231,11 @@ export default function LeagueScreen() {
 
     // Reproduces NotificationPanel's row content/click-handling for the shared NotificationBell shell.
     const leagueRenderRow = (n, { onNavigated }) => (
-      <div
+      <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => {
+          if (!n.is_read) markNotificationAsRead(n.id);
+          const link = n.link ?? n.action_url ?? n.metadata?.link;
+          if (link) { navigate(link); onNavigated?.(); }
+        })(e); } }}
         key={n.id}
         onClick={() => {
           if (!n.is_read) markNotificationAsRead(n.id);
@@ -1350,7 +1355,7 @@ export default function LeagueScreen() {
         {activeLeague?.leagues?.format === 'noduplicate'
           && !activeLeague?.leagues?.draft_deadline
           && isCommissioner && (
-          <div
+          <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => setView('commissioner'))(e); } }}
             onClick={() => setView('commissioner')}
             style={{ background: 'rgba(240,180,0,0.12)', borderBottom: '1px solid rgba(240,180,0,0.25)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
           >
@@ -1369,7 +1374,7 @@ export default function LeagueScreen() {
           const fmtDeadline = draftDeadlineDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
           const memberCount = members?.length ?? 0;
           return (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => setView('commissioner'))(e); } }}
               onClick={() => setView('commissioner')}
               style={{ background: 'rgba(240,180,0,0.10)', borderBottom: '1px solid rgba(240,180,0,0.22)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
             >
@@ -1391,7 +1396,7 @@ export default function LeagueScreen() {
           const isWarning = hoursLeft < 48;
           const bg = isCritical ? '#B71C1C' : isWarning ? '#E65100' : '#1B5E20';
           return (
-            <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)} style={{ background: bg, color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
+            <div role="button" tabIndex={0} onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/league/${activeLeague?.league_id}/draft`); } }} style={{ background: bg, color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
                 {isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} DRAFT {isCritical ? `${Math.max(0, Math.floor(hoursLeft))}H LEFT — SUBMIT NOW` : isWarning ? `${Math.floor(hoursLeft)}H LEFT` : 'IS OPEN'} — SUBMIT YOUR RANKED LIST
               </span>
@@ -1618,8 +1623,8 @@ export default function LeagueScreen() {
            />
          )}
          {showTradeBuilder && tradeTarget && (
-            <div className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
-               <div className="w-full h-[90vh] bg-[var(--ink)] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[var(--rule)] relative" onClick={e => e.stopPropagation()}>
+            <div role="presentation" className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
+               <div role="presentation" className="w-full h-[90vh] bg-[var(--ink)] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[var(--rule)] relative" onClick={e => e.stopPropagation()}>
                   <div className="w-full flex justify-center py-3"><div className="w-12 h-1.5 bg-[var(--rule)] rounded-full" /></div>
                   <div className="px-6 py-4 border-b border-[var(--rule)] flex justify-between items-center">
                     <div>
@@ -1841,8 +1846,8 @@ export default function LeagueScreen() {
          )}
 
          {managerTeamView && createPortal(
-           <div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setManagerTeamView(null)}>
-             <div className="w-full h-[80vh] bg-[var(--ink)] rounded-t-2xl flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
+           <div role="presentation" className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setManagerTeamView(null)}>
+             <div role="presentation" className="w-full h-[80vh] bg-[var(--ink)] rounded-t-2xl flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
                <div className="p-6 border-b border-[var(--rule)] flex justify-between items-center">
                  <div>
                     <h2 className="text-[var(--paper)] font-bold text-lg">{managerTeamView.name}'s Roster</h2>
@@ -1852,7 +1857,7 @@ export default function LeagueScreen() {
                </div>
                <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
                  {!managerRoster.length && (
-                   <div className="text-center text-[12px] text-text-tertiary py-8">Loading roster…</div>
+                   <LoadingRows rows={3} />
                  )}
                  {managerRoster.map((p, i) => {
                    const posColor = p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
@@ -1998,7 +2003,7 @@ export default function LeagueScreen() {
               const { type, format } = deriveLeagueType(l.leagues ?? {});
               const medal = l.rank === 1 ? 'var(--gold)' : l.rank === 2 ? '#C0C0C0' : l.rank === 3 ? '#CD7F32' : 'var(--mute)';
               return (
-                <div
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => navigate(`/league/${l.league_id}`))(e); } }}
                   key={l.league_id}
                   onClick={() => navigate(`/league/${l.league_id}`)}
                   style={{
@@ -2078,7 +2083,7 @@ export default function LeagueScreen() {
             const { type, format } = deriveLeagueType(l.leagues ?? {});
             const tc = TYPE_COLOR[type] || 'var(--mute)';
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => navigate(`/league/${l.league_id}`))(e); } }}
                 key={l.league_id}
                 onClick={() => navigate(`/league/${l.league_id}`)}
                 className="active:opacity-70"

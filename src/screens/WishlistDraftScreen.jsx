@@ -1,3 +1,4 @@
+import { IconCheckCircle, IconWarning } from '../components/UiIcons';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWishlistDraft } from '../hooks/useWishlistDraft';
@@ -347,7 +348,7 @@ export default function WishlistDraftScreen() {
   if (isLocked || finalized) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center px-6 gap-6">
-        <div className="text-[40px]">✅</div>
+        <div className="text-[40px]"><IconCheckCircle size={40} /></div>
         <div className="text-center">
           <div className="text-[var(--paper)] font-black text-xl uppercase tracking-widest mb-2">
             {isRunning ? 'Draft Running' : 'Wishlist Submitted'}
@@ -644,7 +645,7 @@ export default function WishlistDraftScreen() {
               const intel = p.intel;
               return (
                 <div key={p.id}>
-                  <div
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => !disabled && togglePanel(p.id))(e); } }}
                     className={`flex items-center px-3 py-2.5 gap-2.5 transition-all duration-150 ${disabled ? 'opacity-40' : 'cursor-pointer active:opacity-70'}`}
                     style={{ borderBottom: isExpanded ? 'none' : '1px solid var(--rule)' }}
                     onClick={() => !disabled && togglePanel(p.id)}
@@ -662,7 +663,7 @@ export default function WishlistDraftScreen() {
                             {p.name}
                           </span>
                           {intel?.status && intel.status !== 'fit' && (
-                            <span title={intel?.reason ?? intel.status} style={{ fontSize: 11, flexShrink: 0 }}>⚠️</span>
+                            <span title={intel?.reason ?? intel.status} style={{ fontSize: 11, flexShrink: 0 }}><IconWarning size={12} /></span>
                           )}
                           {!disabled && (
                             <span className="text-[var(--mute)] text-[11px] shrink-0">{isExpanded ? '▲' : '▼'}</span>

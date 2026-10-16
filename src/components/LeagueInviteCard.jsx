@@ -13,6 +13,7 @@
  *   onDone   () => void  — called when user clicks "Go to my league"
  */
 
+import { IconTrophy } from './UiIcons';
 import { useState, useRef, useEffect } from 'react';
 import { domToPng } from 'modern-screenshot';
 import { supabase } from '../lib/supabase';
@@ -127,7 +128,7 @@ export default function LeagueInviteCard({ league, onDone }) {
 
           {/* Trophy + brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
-            <span style={{ fontSize: 'var(--fs-title)' }}>🏆</span>
+            <span style={{ fontSize: 'var(--fs-title)' }}><IconTrophy size={28} /></span>
             <div>
               <div style={{ fontSize: 'var(--fs-micro)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.18em', color: 'var(--positive)', textTransform: 'uppercase', fontWeight: 800 }}>
                 Forza Fantasy League · {tournamentName}

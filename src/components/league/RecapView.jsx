@@ -1,3 +1,4 @@
+import { IconHourglass } from '../UiIcons';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
@@ -130,7 +131,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
         const items = isExpanded ? buildBreakdownItems({ breakdown: p.breakdown, bonusPts: p.bonusPts }) : [];
         return (
           <div key={p.id}>
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => p.hasStats && setExpandedPid(isExpanded ? null : p.id))(e); } }}
               onClick={() => p.hasStats && setExpandedPid(isExpanded ? null : p.id)}
               style={{
                 display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
@@ -741,7 +742,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     return (
       <div key={s.user_id}>
         {desktop ? (
-          <div onClick={() => toggleBreakdown(s.user_id)} style={rowStyle}>
+          <div role="button" tabIndex={0} onClick={() => toggleBreakdown(s.user_id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBreakdown(s.user_id); } }} style={rowStyle}>
             <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <MgrTag mono={mgrMono(name)} hue={hue} />
@@ -777,7 +778,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{isOpen ? '−' : '+'}</div>
           </div>
         ) : (
-          <div onClick={() => toggleBreakdown(s.user_id)} style={rowStyle}>
+          <div role="button" tabIndex={0} onClick={() => toggleBreakdown(s.user_id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBreakdown(s.user_id); } }} style={rowStyle}>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</span>
             <MgrTag mono={mgrMono(name)} hue={hue} size={20} />
             <div style={{ minWidth: 0 }}>
@@ -849,7 +850,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           </div>
         ) : !hasScores ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 8 }}>
-            <div style={{ fontSize: 'var(--fs-title)' }}>⏳</div>
+            <div style={{ fontSize: 'var(--fs-title)' }}><IconHourglass size={28} /></div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>SCORES PENDING</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
               Points are calculated after each match completes.
@@ -883,7 +884,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         </div>
       ) : !hasScores ? (
         <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 8 }}>⏳</div>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 8 }}><IconHourglass size={28} /></div>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 6 }}>SCORES PENDING</div>
           <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5 }}>
             Points are calculated after each match completes.

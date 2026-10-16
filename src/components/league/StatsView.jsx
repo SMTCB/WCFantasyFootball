@@ -360,7 +360,11 @@ function CaptainHitRate({ captainHitData, currentUser }) {
                     const gwNum   = r.matchday_id?.split('-r')[1] ?? '?';
                     const isActive = activeTooltip?.uid === mgr.user_id && activeTooltip?.matchday_id === r.matchday_id;
                     return (
-                      <div
+                      <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => setActiveTooltip(t =>
+                          t?.uid === mgr.user_id && t?.matchday_id === r.matchday_id
+                            ? null
+                            : { uid: mgr.user_id, matchday_id: r.matchday_id }
+                        ))(e); } }}
                         key={r.matchday_id}
                         onMouseEnter={() => setActiveTooltip({ uid: mgr.user_id, matchday_id: r.matchday_id })}
                         onMouseLeave={() => setActiveTooltip(null)}

@@ -189,7 +189,7 @@ function CompBand({ comp, count, mini }) {
 
 function CompChip({ comp, active, count, onClick }) {
   return (
-    <div onClick={onClick} style={{
+    <div role="button" tabIndex={0} onClick={onClick} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }} style={{
       display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px',
       border: `1px solid ${active ? comp.tone : 'var(--rule)'}`,
       color: active ? comp.tone : 'var(--paper)',
@@ -206,7 +206,7 @@ function CompChip({ comp, active, count, onClick }) {
 
 function AllChip({ active, count, onClick }) {
   return (
-    <div onClick={onClick} style={{
+    <div role="button" tabIndex={0} onClick={onClick} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }} style={{
       display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px',
       border: `1px solid ${active ? 'var(--paper)' : 'var(--rule)'}`,
       color: active ? 'var(--paper)' : 'var(--mute)',
@@ -856,7 +856,7 @@ export default function HomeScreen() {
               ) : (
                 <>
                   <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>DATE</div>
-                  <div
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => calInputRef.current?.showPicker?.() || calInputRef.current?.click())(e); } }}
                     onClick={() => calInputRef.current?.showPicker?.() || calInputRef.current?.click()}
                     style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', letterSpacing: '-0.01em', marginTop: 2, cursor: 'pointer' }}
                   >{selectedDate.split('-').reverse().join('/')}</div>
@@ -897,7 +897,7 @@ export default function HomeScreen() {
                 borderRight: '1px solid var(--rule)',
                 color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', cursor: 'pointer',
               }}>‹</button>
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => mobCalInputRef.current?.showPicker?.() || mobCalInputRef.current?.click())(e); } }}
                 onClick={() => mobCalInputRef.current?.showPicker?.() || mobCalInputRef.current?.click()}
                 style={{ padding: '0 6px', height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--fs-micro)', minWidth: 72, cursor: 'pointer' }}
               >

@@ -58,3 +58,13 @@ export default function Skeleton({
     />
   );
 }
+
+export function LoadingRows({ rows = 3, className = '' }) {
+  return (
+    <div className={`space-y-2 ${className}`} role="status" aria-label="Loading" aria-busy="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <Skeleton key={i} shape="row" role={undefined} aria-label={undefined} aria-busy={undefined} />
+      ))}
+    </div>
+  );
+}

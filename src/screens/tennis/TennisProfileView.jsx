@@ -56,7 +56,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {scores.map(s => (
-          <div
+          <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => s.tournament?.id && navigate(`/tennis/tournament/${s.tournament.id}`))(e); } }}
             key={s.tournament?.id}
             onClick={() => s.tournament?.id && navigate(`/tennis/tournament/${s.tournament.id}`)}
             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer' }}

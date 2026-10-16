@@ -1,3 +1,4 @@
+import { IconLock } from '../../components/UiIcons';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -245,7 +246,7 @@ export default function F1ReportScreen() {
       {tab === 'year' && (
         !isBetsLocked ? (
           <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🔒</div>
+            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}><IconLock size={28} /></div>
             <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)' }}>
               Year bets are not yet locked — picks will be revealed once the paddock admin locks them.
             </p>

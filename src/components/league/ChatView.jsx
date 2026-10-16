@@ -62,7 +62,7 @@ function MessageBody({ text, onHashtagClick }) {
     const token = match[0];
     if (token.startsWith('#')) {
       parts.push(
-        <span
+        <span role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onHashtagClick(token))(e); } }}
           key={`h${i++}`}
           onClick={() => onHashtagClick(token)}
           style={{ color: 'var(--gold-text)', fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '0 2px', background: 'rgba(240,180,0,.1)', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(240,180,0,.5)' }}

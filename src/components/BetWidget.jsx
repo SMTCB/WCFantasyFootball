@@ -30,7 +30,7 @@ function OptionPicker({ options, onSelect, onClose }) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose} />
+      <div role="presentation" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-[#111] border-t border-white/10 rounded-t-2xl pb-safe shadow-2xl">
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-white/10" />

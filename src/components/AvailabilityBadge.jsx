@@ -38,7 +38,10 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
             ? 'bg-cyan-500 text-ink-2 cursor-pointer hover:bg-cyan-600'
             : 'bg-paper border border-rule text-mute'
         }`}
+        role={isOwn ? 'button' : undefined}
+        tabIndex={isOwn ? 0 : undefined}
         onClick={isOwn ? handleClick : undefined}
+        onKeyDown={isOwn ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(e); } } : undefined}
         title={isOwn ? 'Listed for trade — click to remove' : 'Open for trade proposals'}
       >
         <span key="open" className="ffl-icon-morph" data-active="true">

@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
@@ -45,7 +46,7 @@ export default function TennisLeaderboardScreen() {
       <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto' }}>
 
         {boxLoading || loading ? (
-          <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', textAlign: 'center', padding: 40 }}>Loading…</div>
+          <LoadingRows rows={3} />
         ) : !activeBox ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 16px' }}>Join a Player's Box to see standings.</p>

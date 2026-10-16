@@ -1,3 +1,4 @@
+import { IconCheckCircle } from '../components/UiIcons';
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -228,7 +229,7 @@ export default function DraftRecoveryScreen() {
   if (done) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center px-6 gap-6">
-        <div className="text-[40px]">✅</div>
+        <div className="text-[40px]"><IconCheckCircle size={40} /></div>
         <div className="text-center">
           <div className="text-[var(--paper)] font-black text-xl uppercase tracking-widest mb-2">
             Squad Complete
@@ -401,7 +402,7 @@ export default function DraftRecoveryScreen() {
             const overBudget = budgetLeft < p.price;
 
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => !disabled && !isBusy && pickPlayer(p))(e); } }}
                 key={p.id}
                 onClick={() => !disabled && !isBusy && pickPlayer(p)}
                 className={`flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-3 transition-all ${

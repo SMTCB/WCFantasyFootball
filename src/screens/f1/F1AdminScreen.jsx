@@ -1,3 +1,4 @@
+import { IconLock } from '../../components/UiIcons';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -105,7 +106,7 @@ export default function F1AdminScreen() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🔒</div>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}><IconLock size={28} /></div>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>ADMIN ACCESS REQUIRED</p>
         </div>
       </div>

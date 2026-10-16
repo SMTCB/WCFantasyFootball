@@ -1,3 +1,4 @@
+import { LoadingRows } from './Skeleton';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -151,7 +152,7 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: isDm ? '12px 16px' : '4px 16px', display: 'flex', flexDirection: 'column' }}>
         {loading && (
-          <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</div>
+          <LoadingRows rows={3} />
         )}
         {!loading && messages.length === 0 && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', textAlign: 'center', padding: '32px 0' }}>

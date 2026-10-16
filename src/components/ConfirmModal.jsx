@@ -66,7 +66,7 @@ export default function ConfirmModal({
 
   return createPortal(
     /* Backdrop */
-    <div
+    <div role="presentation"
       onClick={() => { if (!loading) onCancel(); }}
       style={{
         position:   'fixed',

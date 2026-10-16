@@ -1,3 +1,4 @@
+import { IconWarning } from '../components/UiIcons';
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -1118,7 +1119,7 @@ export default function SquadScreen() {
                 const auctionListing = activeAuctions.find(a => a.player_id === player.id);
                 const isListed = !!auctionListing;
                 const rowAction = (
-                  <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                  <div role="presentation" className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
                     <button className="hit-44"
                       onClick={() => setStatsDashboardPlayer(player)}
                       style={{
@@ -1535,7 +1536,7 @@ export default function SquadScreen() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
                             {player.intel?.status !== 'fit' && (
-                              <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}>⚠️</span>
+                              <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                             )}
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
                             {isSwapTarget && !isLocked && (
@@ -1631,7 +1632,7 @@ export default function SquadScreen() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                               <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name.split(' ').slice(-1)[0]}</span>
                               {player.intel?.status !== 'fit' && (
-                                <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}>⚠️</span>
+                                <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                               )}
                               {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
@@ -1667,7 +1668,7 @@ export default function SquadScreen() {
                           </button>
                           {/* Auction action — draft leagues only (classic allows shared ownership) */}
                           {activeLeague && cfg.format === 'noduplicate' && (
-                            <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
+                            <div role="presentation" onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
                               {isListed ? (() => {
                                 const isConfirming = confirmCancelId === player.id;
                                 const isCancelBusy = cancelBusy === player.id;
@@ -1934,7 +1935,7 @@ export default function SquadScreen() {
       {selectedPlayer && !swapMode && createPortal(
         <>
           {/* Tap-outside dismiss — portaled to body so iOS WebKit stacking context doesn't trap z-index */}
-          <div
+          <div role="presentation"
             className="fixed inset-0 z-[59] lg:left-[220px]"
             onClick={() => setSelectedPlayer(null)}
           />
