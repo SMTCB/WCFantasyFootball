@@ -19,6 +19,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
 
 const FN                     = 'generate-frontpage-edition';
+const ANNOUNCE_COOLDOWN_MS   = 10 * 60 * 1000;
 const GROQ_URL               = 'https://api.groq.com/openai/v1/chat/completions';
 // llama-3.1-8b-instant was retired by Groq on 2026-08-16; openai/gpt-oss-20b is
 // Groq's documented recommended replacement for it.
@@ -525,7 +526,25 @@ async function collectCircleData(sb: ReturnType<typeof createClient>, circleId: 
       .filter(Boolean) as string[];
   }
 
-  return { leagueDataSections, paddocks, fixtureLines, transferLines };
+  // Commissioner announcements (breaking_news) from the last 48h, passed through verbatim
+  // so the Frontrow can show them as a notice, not just hint at them via the AI headline.
+  const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  let announcements: { league: string; headline: string; bullets: string[]; posted_at: string }[] = [];
+  if (leagueIds.length > 0) {
+    const { data: ann } = await sb.from('gazette_entries')
+      .select('league_id, headline, bullets, published_at')
+      .in('league_id', leagueIds).eq('entry_type', 'breaking_news')
+      .gte('published_at', since48h).order('published_at', { ascending: false }).limit(3);
+    const nameById = Object.fromEntries(leagues.map(l => [l.id, l.name]));
+    announcements = (ann ?? []).map((a: { league_id: string; headline: string; bullets: unknown; published_at: string }) => ({
+      league: nameById[a.league_id] ?? '',
+      headline: a.headline,
+      bullets: Array.isArray(a.bullets) ? (a.bullets as unknown[]).filter((b): b is string => typeof b === 'string') : [],
+      posted_at: a.published_at,
+    }));
+  }
+
+  return { leagueDataSections, paddocks, fixtureLines, transferLines, announcements };
 }
 
 // ── Circle prompt builder ─────────────────────────────────────────────────────
@@ -534,7 +553,7 @@ function buildCirclePrompt(
   circleName: string,
   data: Awaited<ReturnType<typeof collectCircleData>>
 ): { prompt: string; rawInput: Record<string, unknown> } {
-  const { leagueDataSections, paddocks, fixtureLines, transferLines } = data;
+  const { leagueDataSections, paddocks, fixtureLines, transferLines, announcements } = data;
 
   const sportBlocks = leagueDataSections.map(s => {
     const lines = [`FOOTBALL LEAGUE "${s.name}"`];
@@ -545,10 +564,19 @@ function buildCirclePrompt(
 
   const paddockLines = paddocks.map(p => `F1 PADDOCK: "${p.name}"`);
 
-  const rawInput = { clubhouse: circleName, leagues: leagueDataSections, paddocks: paddocks.map(p => p.name), fixtures: fixtureLines, transfers: transferLines };
+  const rawInput = { clubhouse: circleName, leagues: leagueDataSections, paddocks: paddocks.map(p => p.name), fixtures: fixtureLines, transfers: transferLines, announcements };
+
+  const announcementBlock = announcements.length
+    ? '
+COMMISSIONER ANNOUNCEMENTS — the LEAD STORY. The headline and deck MUST report the most recent one as news (do not invent details beyond it):
+' +
+      announcements.map(a => `• [${a.league}] ${a.headline}${a.bullets.length ? ' — ' + a.bullets.join('; ') : ''}`).join('
+') + '
+'
+    : '';
 
   const prompt = `Generate a multi-sport Forza Times edition for "${circleName}" Clubhouse.
-
+${announcementBlock}
 ${sportBlocks.join('\n\n') || 'No linked leagues yet.'}
 ${paddockLines.length ? '\n' + paddockLines.join('\n') : ''}
 ${fixtureLines.length ? '\nUPCOMING FIXTURES (next 48h):\n' + fixtureLines.join('\n') : ''}
@@ -762,6 +790,35 @@ Deno.serve(async (req) => {
       }
 
       return json({ ok: true, ...results }, 200, corsHeaders);
+    }
+
+    // ── ANNOUNCEMENT mode (commissioner posted breaking news → refresh the Frontrow) ──
+    const announceLeagueId = body.announce_league_id as string | undefined;
+    if (announceLeagueId) {
+      const { data: { user }, error: authErr } = await sb.auth.getUser(authHeader.replace('Bearer ', ''));
+      if (authErr || !user) return json({ ok: false, error: 'Unauthorised' }, 401, corsHeaders);
+
+      const { data: m } = await sb.from('league_members').select('role').eq('league_id', announceLeagueId).eq('user_id', user.id).maybeSingle();
+      if (m?.role !== 'commissioner') return json({ ok: false, error: 'Forbidden — commissioners only' }, 403, corsHeaders);
+
+      const { data: cl } = await sb.from('circle_leagues').select('circles(id, name)').eq('league_id', announceLeagueId);
+      const circles = ((cl ?? []) as unknown as { circles: { id: string; name: string } | null }[]).map(r => r.circles).filter(Boolean) as { id: string; name: string }[];
+
+      let regenerated = 0, patched = 0;
+      for (const circle of circles) {
+        // Cooldown protects the Groq quota; inside it we only refresh the verbatim notice.
+        const { data: recent } = await sb.from('frontpage_editions').select('id, raw_input').eq('circle_id', circle.id).eq('edition_date', today())
+          .gte('generated_at', new Date(Date.now() - ANNOUNCE_COOLDOWN_MS).toISOString()).maybeSingle();
+        if (recent) {
+          const fresh = (await collectCircleData(sb, circle.id)).announcements;
+          await sb.from('frontpage_editions').update({ raw_input: { ...(recent.raw_input ?? {}), announcements: fresh } }).eq('id', recent.id);
+          patched++;
+        } else {
+          await generateForCircle(sb, circle, true);
+          regenerated++;
+        }
+      }
+      return json({ ok: true, regenerated, patched }, 200, corsHeaders);
     }
 
     // ── CIRCLE mode (Clubhouse owner manual trigger) ───────────────────────────

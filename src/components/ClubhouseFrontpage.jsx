@@ -150,6 +150,19 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
         )}
       </div>
 
+      {/* Commissioner notices — verbatim, so an admin announcement is never lost in the AI copy */}
+      {(edition.raw_input?.announcements ?? []).map((a, i) => (
+        <div key={i} style={{ background: FT_INK, color: FT_PAPER, padding: '12px 14px', marginBottom: 16 }}>
+          <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_GOLD, textTransform: 'uppercase', marginBottom: 6 }}>
+            📣 Commissioner's notice{a.league ? ` · ${a.league}` : ''}
+          </div>
+          <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-body)', lineHeight: 1.3 }}>{a.headline}</div>
+          {(a.bullets ?? []).map((b, j) => (
+            <div key={j} style={{ fontFamily: FT_SERIF, fontSize: 'var(--fs-label)', lineHeight: 1.5, marginTop: 4 }}>{b}</div>
+          ))}
+        </div>
+      ))}
+
       {/* Lead story */}
       {edition.headline && (
         <div style={{ marginBottom: 20 }}>
