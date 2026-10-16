@@ -75,9 +75,9 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove, owned
       >
         ⠿
       </span>
-      <span className="text-[var(--mute)] text-[10px] font-black w-4 text-right shrink-0">{idx + 1}</span>
+      <span className="text-[var(--mute)] text-[11px] font-black w-4 text-right shrink-0">{idx + 1}</span>
       <span
-        className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+        className="text-[11px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
         style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
       >
         {p.position}
@@ -87,12 +87,12 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove, owned
         {ownedBy && (
           // Carried over from an earlier round (or bought in a free-market
           // round) — the draft will skip them; kept so the manager decides.
-          <span className="block text-[9px] font-black uppercase tracking-widest truncate" style={{ color: 'var(--mute)' }}>
+          <span className="block text-[11px] font-black uppercase tracking-widest truncate" style={{ color: 'var(--mute)' }}>
             Owned by {ownedBy} — will be skipped
           </span>
         )}
       </span>
-      <span className="text-[var(--mute)] text-[10px] shrink-0">€{p.price}M</span>
+      <span className="text-[var(--mute)] text-[11px] shrink-0">€{p.price}M</span>
       <div className="flex flex-col shrink-0">
         <button onClick={() => onMoveUp(idx)} disabled={idx === 0}
           style={{ width: 28, height: 22 }}
@@ -361,7 +361,7 @@ export default function WishlistDraftScreen() {
           {targets.map((p, i) => (
             <div key={p.id} className="flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-2">
               <span className="text-[var(--mute)] text-[11px] font-black w-5">{i + 1}</span>
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-sm"
+              <span className="text-[11px] font-black px-1.5 py-0.5 rounded-sm"
                 style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}>
                 {p.position}
               </span>
@@ -427,19 +427,19 @@ export default function WishlistDraftScreen() {
           <button
             onClick={handleSave}
             disabled={(targets.length === 0 && dropIds.size === 0) || saving}
-            className="text-[10px] font-black uppercase tracking-widest shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-[11px] font-black uppercase tracking-widest shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer' }}
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
-        <div className="text-[var(--on-shell-dim)] text-[10px] uppercase tracking-widest text-center pb-2.5">
+        <div className="text-[var(--on-shell-dim)] text-[11px] uppercase tracking-widest text-center pb-2.5">
           {deadlineCopy}
         </div>
       </div>
 
       {draft.carriedOverFrom && (
-        <div className="px-4 py-2 text-[10px] font-bold border-b border-[var(--rule)]" style={{ background: 'var(--accent-bg)', color: 'var(--cyan)' }}>
+        <div className="px-4 py-2 text-[11px] font-bold border-b border-[var(--rule)]" style={{ background: 'var(--accent-bg)', color: 'var(--cyan)' }}>
           Carried over from round {draft.carriedOverFrom} — players you already own were removed. Review it and save to make it yours.
         </div>
       )}
@@ -448,7 +448,7 @@ export default function WishlistDraftScreen() {
 
         {/* Release panel */}
         <div className="px-4 py-3 border-b border-[var(--rule)]">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[var(--mute)] mb-2">
+          <div className="text-[11px] font-black uppercase tracking-widest text-[var(--mute)] mb-2">
             Willing to Release — {dropIds.size}/{maxDrops}
           </div>
           {squadPlayers.length === 0 ? (
@@ -474,13 +474,13 @@ export default function WishlistDraftScreen() {
                       className="accent-cyan-400 w-3.5 h-3.5"
                     />
                     <span
-                      className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+                      className="text-[11px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
                     >
                       {p.position}
                     </span>
                     <span className="text-[var(--paper)] text-[11px] font-bold flex-1 truncate">{p.name}</span>
-                    <span className="text-[var(--mute)] text-[10px] shrink-0">€{p.price}M</span>
+                    <span className="text-[var(--mute)] text-[11px] shrink-0">€{p.price}M</span>
                   </label>
                 );
               })}
@@ -491,7 +491,7 @@ export default function WishlistDraftScreen() {
         {/* Ranked target list */}
         <div className="px-4 py-3 border-b border-[var(--rule)]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--mute)]">
+            <span className="text-[11px] font-black uppercase tracking-widest text-[var(--mute)]">
               Your Targets — {targets.length}/{maxTargets}
             </span>
           </div>
@@ -528,12 +528,12 @@ export default function WishlistDraftScreen() {
                 {activePlayer && (
                   <div className="flex items-center gap-2 bg-[var(--elev)] border border-[var(--rule)] rounded-sm px-2 py-2 shadow-xl" style={{ width: '320px', maxWidth: '85vw' }}>
                     <span className="text-[var(--mute)] shrink-0 select-none" style={{ fontSize: 'var(--fs-body)', fontWeight: 900 }}>⠿</span>
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+                    <span className="text-[11px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[activePlayer.position]?.color, background: POS_CONFIG[activePlayer.position]?.bg }}>
                       {activePlayer.position}
                     </span>
                     <span className="text-[var(--paper)] text-[11px] font-bold truncate flex-1">{activePlayer.name}</span>
-                    <span className="text-[var(--mute)] text-[10px] shrink-0">€{activePlayer.price}M</span>
+                    <span className="text-[var(--mute)] text-[11px] shrink-0">€{activePlayer.price}M</span>
                   </div>
                 )}
               </DragOverlay>
@@ -556,7 +556,7 @@ export default function WishlistDraftScreen() {
                 <button
                   key={pos}
                   onClick={() => setFilterPos(pos)}
-                  className={`flex-1 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
+                  className={`flex-1 py-1.5 rounded text-[11px] font-black uppercase tracking-wider transition-all ${
                     filterPos === pos ? 'bg-white text-black' : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--rule)]'
                   }`}
                 >
@@ -568,7 +568,7 @@ export default function WishlistDraftScreen() {
               <div className="relative">
                 <button
                   onClick={() => setShowClubPicker(v => !v)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-sm text-[10px] font-black uppercase tracking-wider transition-all"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-sm text-[11px] font-black uppercase tracking-wider transition-all"
                   style={{
                     background: filterClubs.size > 0 ? 'var(--accent-bg)' : 'var(--elev)',
                     border: filterClubs.size > 0 ? '1px solid rgba(26,111,168,0.4)' : '1px solid var(--rule)',
@@ -576,7 +576,7 @@ export default function WishlistDraftScreen() {
                   }}
                 >
                   {filterClubs.size > 0 ? `${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Club ▾'}
-                  <span className="text-[8px] opacity-60">{showClubPicker ? '▲' : '▼'}</span>
+                  <span className="text-[11px] opacity-60">{showClubPicker ? '▲' : '▼'}</span>
                 </button>
                 {showClubPicker && (
                   <div className="absolute left-0 right-0 z-20 rounded-sm mt-1 overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
@@ -586,7 +586,7 @@ export default function WishlistDraftScreen() {
                         placeholder="Search clubs..."
                         value={clubSearch}
                         onChange={e => setClubSearch(e.target.value)}
-                        className="w-full bg-[var(--card)] border border-[var(--rule)] rounded-sm px-2 py-1.5 text-[var(--paper)] text-[10px] outline-none placeholder:text-[var(--mute)]"
+                        className="w-full bg-[var(--card)] border border-[var(--rule)] rounded-sm px-2 py-1.5 text-[var(--paper)] text-[11px] outline-none placeholder:text-[var(--mute)]"
                         onClick={e => e.stopPropagation()}
                       />
                     </div>
@@ -605,7 +605,7 @@ export default function WishlistDraftScreen() {
                               })}
                               className="accent-cyan-400 w-3 h-3"
                             />
-                            <span className="text-[10px] text-[var(--paper)] font-medium tracking-wide flex-1">{club}</span>
+                            <span className="text-[11px] text-[var(--paper)] font-medium tracking-wide flex-1">{club}</span>
                           </label>
                         );
                       })}
@@ -613,13 +613,13 @@ export default function WishlistDraftScreen() {
                     <div className="flex gap-2 p-2 border-t border-white/5">
                       <button
                         onClick={() => { setFilterClubs(new Set()); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
+                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
                       >
                         Clear
                       </button>
                       <button
                         onClick={() => { setShowClubPicker(false); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-sm"
+                        className="flex-1 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-sm"
                         style={{ background: 'var(--cyan)', color: '#000' }}
                       >
                         {filterClubs.size > 0 ? `Show ${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Apply'}
@@ -662,14 +662,14 @@ export default function WishlistDraftScreen() {
                             {p.name}
                           </span>
                           {intel?.status && intel.status !== 'fit' && (
-                            <span title={intel?.reason ?? intel.status} style={{ fontSize: 10, flexShrink: 0 }}>⚠️</span>
+                            <span title={intel?.reason ?? intel.status} style={{ fontSize: 11, flexShrink: 0 }}>⚠️</span>
                           )}
                           {!disabled && (
-                            <span className="text-[var(--mute)] text-[10px] shrink-0">{isExpanded ? '▲' : '▼'}</span>
+                            <span className="text-[var(--mute)] text-[11px] shrink-0">{isExpanded ? '▲' : '▼'}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[var(--mute)] text-[10px] truncate">{p.club}</span>
+                          <span className="text-[var(--mute)] text-[11px] truncate">{p.club}</span>
                           <FormStrip rounds={(statsMap[p.id] || []).slice(0, 5)} />
                         </div>
                       </div>
@@ -703,7 +703,7 @@ export default function WishlistDraftScreen() {
                         className="border border-[var(--rule)] border-t-0 px-3 py-2.5"
                         style={{ background: 'var(--elev)' }}
                       >
-                        <div className="text-[10px] text-[var(--mute)]">#{targets.length + 1} priority if added</div>
+                        <div className="text-[11px] text-[var(--mute)]">#{targets.length + 1} priority if added</div>
                       </div>
                     </>
                   )}
@@ -715,7 +715,7 @@ export default function WishlistDraftScreen() {
       </div>
 
       {(lastSaved || saveError) && (
-        <div className={`px-4 py-1.5 text-center text-[10px] font-bold ${saveError ? 'text-[var(--danger)]' : 'text-[var(--mute)]'}`}>
+        <div className={`px-4 py-1.5 text-center text-[11px] font-bold ${saveError ? 'text-[var(--danger)]' : 'text-[var(--mute)]'}`}>
           {saveError || `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
         </div>
       )}

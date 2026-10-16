@@ -65,7 +65,7 @@ function StreakBadge({ streak }) {
   const isWin = streak.type === 'win';
   return (
     <span
-      className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-sm ml-2"
+      className="text-[11px] font-black uppercase tracking-widest px-2 py-1 rounded-sm ml-2"
       style={{
         color:           isWin ? 'var(--ink)' : 'white',
         backgroundColor: isWin ? 'var(--positive)' : 'var(--danger)',
@@ -171,7 +171,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
         <div className="px-5 pt-2 pb-4 border-b border-white/5 shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-1">
+              <div className="text-[11px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-1">
                 Head-to-Head · All Time
               </div>
               <div className="flex items-center gap-1">
@@ -202,14 +202,14 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             ].map(({ label, value, color }) => (
               <div key={label} className="flex flex-col items-center py-5 gap-1">
                 <div className="text-4xl font-black tabular-nums" style={{ color }}>{value}</div>
-                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary">{label}</div>
+                <div className="text-[11px] font-black uppercase tracking-[0.2em] text-text-tertiary">{label}</div>
               </div>
             ))}
           </div>
 
           {/* ── Win % bar ────────────────────────────────── */}
           <div className="px-5 py-4 border-b border-white/5">
-            <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-text-tertiary mb-2">
+            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-text-tertiary mb-2">
               <span className="text-positive">{myName} {winPct}%</span>
               <span className="text-negative">{rival?.name} {lossPct}%</span>
             </div>
@@ -224,8 +224,8 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
           {h2h.history.length > 0 && (
             <div className="px-5 py-4 border-b border-white/5">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary">Points per Matchday</span>
-                <div className="flex items-center gap-3 text-[9px] font-bold">
+                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-text-tertiary">Points per Matchday</span>
+                <div className="flex items-center gap-3 text-[11px] font-bold">
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-positive inline-block" />{myName}</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-negative inline-block" />{rival?.name}</span>
                 </div>
@@ -234,7 +234,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
               {/* MD axis labels */}
               <div className="flex justify-between mt-2">
                 {h2h.history.map(d => (
-                  <span key={d.md} className="text-[8px] text-text-tertiary font-bold">MD{d.md}</span>
+                  <span key={d.md} className="text-[11px] text-text-tertiary font-bold">MD{d.md}</span>
                 ))}
               </div>
             </div>
@@ -245,7 +245,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             {h2h.biggestWin && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-positive mb-0.5">Biggest Win</div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.15em] text-positive mb-0.5">Biggest Win</div>
                   <div className="text-[12px] font-bold">Matchday {h2h.biggestWin.matchday}</div>
                 </div>
                 <div className="text-right">
@@ -254,7 +254,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
                     <span className="text-text-tertiary mx-1">–</span>
                     <span className="text-text-secondary">{h2h.biggestWin.theirScore}</span>
                   </div>
-                  <div className="text-[9px] text-positive font-bold">+{h2h.biggestWin.myScore - h2h.biggestWin.theirScore} pts margin</div>
+                  <div className="text-[11px] text-positive font-bold">+{h2h.biggestWin.myScore - h2h.biggestWin.theirScore} pts margin</div>
                 </div>
               </div>
             )}
@@ -262,7 +262,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             {h2h.biggestLoss && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-negative mb-0.5">Biggest Loss</div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.15em] text-negative mb-0.5">Biggest Loss</div>
                   <div className="text-[12px] font-bold">Matchday {h2h.biggestLoss.matchday}</div>
                 </div>
                 <div className="text-right">
@@ -271,7 +271,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
                     <span className="text-text-tertiary mx-1">–</span>
                     <span className="text-negative">{h2h.biggestLoss.theirScore}</span>
                   </div>
-                  <div className="text-[9px] text-negative font-bold">–{h2h.biggestLoss.theirScore - h2h.biggestLoss.myScore} pts margin</div>
+                  <div className="text-[11px] text-negative font-bold">–{h2h.biggestLoss.theirScore - h2h.biggestLoss.myScore} pts margin</div>
                 </div>
               </div>
             )}
@@ -279,7 +279,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             {h2h.closest && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-text-tertiary mb-0.5">Closest Match</div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.15em] text-text-tertiary mb-0.5">Closest Match</div>
                   <div className="text-[12px] font-bold">Matchday {h2h.closest.matchday}</div>
                 </div>
                 <div className="text-right">
@@ -288,7 +288,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
                     <span className="text-text-tertiary mx-1">–</span>
                     <span className="text-white">{h2h.closest.theirScore}</span>
                   </div>
-                  <div className="text-[9px] text-text-tertiary font-bold">
+                  <div className="text-[11px] text-text-tertiary font-bold">
                     {h2h.closest.myScore === h2h.closest.theirScore ? 'Draw — 0 pts gap' : `${Math.abs(h2h.closest.myScore - h2h.closest.theirScore)} pts gap`}
                   </div>
                 </div>

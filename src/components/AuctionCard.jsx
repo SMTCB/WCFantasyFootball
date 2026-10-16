@@ -52,7 +52,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
       <div className="px-4 py-3 flex items-start gap-3">
         {/* Position badge */}
         <div
-          className="shrink-0 flex items-center justify-center text-[9px] font-black"
+          className="shrink-0 flex items-center justify-center text-[11px] font-black"
           style={{ width: 36, height: 36, border: `1px solid ${posColor}40`, color: posColor, background: `${posColor}0d` }}
         >
           {player?.position ?? '?'}
@@ -61,10 +61,10 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
         {/* Player info */}
         <div className="flex-1 min-w-0">
           <div className="text-[14px] font-bold text-white truncate">{player?.name ?? '—'}</div>
-          <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>
+          <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>
             {player?.club} · €{player?.price}M
           </div>
-          <div className="text-[9px] mt-0.5" style={{ color: 'var(--mute)', letterSpacing: '.1em' }}>
+          <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)', letterSpacing: '.1em' }}>
             {isMine ? 'Listed by you' : `Listed by ${auction.seller_name ?? 'Unknown'}`}
           </div>
         </div>
@@ -72,7 +72,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
         {/* Timer + bid info */}
         <div className="text-right shrink-0">
           <div
-            className="text-[10px] font-black uppercase"
+            className="text-[11px] font-black uppercase"
             style={{ color: isEnded ? 'var(--mute)' : timeStr.includes('m') && !timeStr.includes('h') ? 'var(--danger)' : 'var(--positive)' }}
           >
             {timeStr}
@@ -81,7 +81,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
             {currentBid != null ? `€${currentBid.toFixed(1)}M` : `from €${auction.starting_bid.toFixed(1)}M`}
           </div>
           {currentBid != null && (
-            <div className="text-[9px]" style={{ color: 'var(--mute)' }}>
+            <div className="text-[11px]" style={{ color: 'var(--mute)' }}>
               {auction.bidder_name ? `${auction.bidder_name} · current bid` : 'current bid'}
             </div>
           )}
@@ -98,7 +98,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                 <button
                   onClick={async () => { setBusy(true); const r = await onSellNow(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
                   disabled={busy}
-                  className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                  className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
                   style={{ border: '1px solid rgba(34,197,86,0.35)', color: 'var(--positive)', background: 'rgba(34,197,86,0.08)' }}
                 >
                   {busy ? '…' : `Sell Now · €${(auction.current_bid ?? 0).toFixed(1)}M`}
@@ -119,7 +119,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                   if (!r.ok) setErr(r.error);
                 }}
                 disabled={busy}
-                className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
                 style={{
                   border: `1px solid ${confirmCancel ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.3)'}`,
                   color: 'var(--danger)',
@@ -144,14 +144,14 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
               <button
                 onClick={handleBid}
                 disabled={busy || !amount}
-                className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                className="text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
                 style={{ background: 'rgba(0,180,216,0.12)', border: '1px solid rgba(0,180,216,0.3)', color: 'var(--cyan)' }}
               >
                 {busy ? '…' : 'Bid'}
               </button>
             </>
           )}
-          {err && <span className="text-[10px] font-bold" style={{ color: 'var(--danger)' }}>{err}</span>}
+          {err && <span className="text-[11px] font-bold" style={{ color: 'var(--danger)' }}>{err}</span>}
         </div>
       )}
     </div>

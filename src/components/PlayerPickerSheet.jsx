@@ -129,7 +129,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                 >
                   {/* Avatar */}
                   <div
-                    className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black text-[10px] uppercase"
+                    className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black text-[11px] uppercase"
                     style={{ background: posCfg.bg, border: `1.5px solid ${posCfg.color}50`, color: posCfg.color, fontFamily: 'Archivo Black, sans-serif' }}
                   >
                     {p.club?.substring(0, 3)}
@@ -141,19 +141,19 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                       {p.name}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px]" style={{ color: 'var(--mute)' }}>{p.club}</span>
+                      <span className="text-[11px]" style={{ color: 'var(--mute)' }}>{p.club}</span>
                       {taken && (
-                        <span className="text-[9px] font-black" style={{ color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}>
+                        <span className="text-[11px] font-black" style={{ color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}>
                           TAKEN — {takenMap[p.id].map(o => o.managerName).join(', ')}
                         </span>
                       )}
                       {owned && (
-                        <span className="text-[9px] font-black" style={{ color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}>
+                        <span className="text-[11px] font-black" style={{ color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}>
                           IN YOUR SQUAD
                         </span>
                       )}
                       {!taken && !owned && !canAfford && (
-                        <span className="text-[9px] font-black" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+                        <span className="text-[11px] font-black" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
                           OVER BUDGET
                         </span>
                       )}

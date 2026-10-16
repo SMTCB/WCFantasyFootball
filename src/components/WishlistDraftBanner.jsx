@@ -47,7 +47,7 @@ export default function WishlistDraftBanner({ leagueId }) {
         <span style={{ fontSize: 'var(--fs-body)' }}>{icon}</span>
         <span className="text-[11px] font-bold" style={{ color: tone }}>{msg}</span>
       </div>
-      <span className="text-[10px] font-black uppercase tracking-widest shrink-0" style={{ color: 'var(--mute)' }}>
+      <span className="text-[11px] font-black uppercase tracking-widest shrink-0" style={{ color: 'var(--mute)' }}>
         {hasSubmission ? 'Edit' : 'Open'} ›
       </span>
     </button>

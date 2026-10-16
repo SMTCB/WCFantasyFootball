@@ -83,6 +83,10 @@ export default defineConfig([
           message: 'Raw pixel Tailwind arbitrary text size — use the type-ramp step from src/index.css instead (B2).',
         },
         {
+          selector: "Literal[value=/text-\\[([0-9]|10)(\\.\\d+)?px\\]/]",
+          message: 'Text below the 11px floor (--fs-micro) — A11Y-01. Use 11px or larger.',
+        },
+        {
           selector: "Literal[value=/rgba\\(\\s*255\\s*,\\s*255\\s*,\\s*255\\s*,/]",
           message: "White-alpha rgba() — use a real token (--rule, --elev, --card, --on-shell, --on-shell-dim) instead (B1).",
         },
