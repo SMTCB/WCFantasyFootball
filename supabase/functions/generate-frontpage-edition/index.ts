@@ -567,12 +567,8 @@ function buildCirclePrompt(
   const rawInput = { clubhouse: circleName, leagues: leagueDataSections, paddocks: paddocks.map(p => p.name), fixtures: fixtureLines, transfers: transferLines, announcements };
 
   const announcementBlock = announcements.length
-    ? '
-COMMISSIONER ANNOUNCEMENTS — the LEAD STORY. The headline and deck MUST report the most recent one as news (do not invent details beyond it):
-' +
-      announcements.map(a => `• [${a.league}] ${a.headline}${a.bullets.length ? ' — ' + a.bullets.join('; ') : ''}`).join('
-') + '
-'
+    ? '\nCOMMISSIONER ANNOUNCEMENTS — the LEAD STORY. The headline and deck MUST report the most recent one as news (do not invent details beyond it):\n' +
+      announcements.map(a => `• [${a.league}] ${a.headline}${a.bullets.length ? ' — ' + a.bullets.join('; ') : ''}`).join('\n') + '\n'
     : '';
 
   const prompt = `Generate a multi-sport Forza Times edition for "${circleName}" Clubhouse.
