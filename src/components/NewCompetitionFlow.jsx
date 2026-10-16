@@ -56,9 +56,9 @@ function SportInfoPopover({ sport }) {
       >i</button>
       {open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 1010 }} />
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-flow)' }} />
           <div style={{
-            position: 'absolute', top: 20, left: 0, zIndex: 1011, width: 260,
+            position: 'absolute', top: 20, left: 0, zIndex: 'var(--z-flow-top)', width: 260,
             background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8,
             padding: 12, boxShadow: '0 12px 28px -8px rgba(0,0,0,0.5)',
           }}>
@@ -400,7 +400,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
       <div
         onClick={close}
         style={{
-          position: 'fixed', inset: 0, zIndex: 1000,
+          position: 'fixed', inset: 0, zIndex: 'var(--z-modal)',
           background: 'rgba(24,32,46,0.55)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
@@ -426,7 +426,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
     <div
       onClick={close}
       style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
+        position: 'fixed', inset: 0, zIndex: 'var(--z-modal)',
         background: 'rgba(24,32,46,0.55)',
         display: 'flex', alignItems: 'flex-end',
       }}

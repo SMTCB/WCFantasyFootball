@@ -35,7 +35,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 9999,
+        zIndex: 'var(--z-toast)',
       }}
       onClick={onClose}
     >

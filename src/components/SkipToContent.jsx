@@ -34,7 +34,7 @@ export default function SkipToContent({ targetId = 'main-content' }) {
         borderRadius: 4,
         fontSize: 'var(--fs-label)',
         fontWeight: 600,
-        zIndex: 9999,
+        zIndex: 'var(--z-toast)',
         fontFamily: 'Archivo, sans-serif',
       }}
       className="focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"

@@ -54,7 +54,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 9998,
+        position: 'fixed', inset: 0, zIndex: 'var(--z-confirm)',
         background: 'rgba(7,10,15,0.75)', backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
       }}

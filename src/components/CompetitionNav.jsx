@@ -258,7 +258,7 @@ export function CompetitionNav({
           style={{
             position: 'fixed', top: menuPos.top, left: menuPos.left,
             background: 'var(--card)', border: '1px solid var(--rule)',
-            borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.25)', zIndex: 9999,
+            borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.25)', zIndex: 'var(--z-toast)',
             overflow: 'hidden', width: 260, maxHeight: '70vh', overflowY: 'auto',
           }}
         >
