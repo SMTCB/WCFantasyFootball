@@ -12,6 +12,20 @@
 
 ---
 
+## ✅ UI audit P2 batch A + B (2026-10-16) — PR #1048 (A), PR (B) (rollback tags `pre-ui-p2-batch-a`, `pre-ui-p2-batch-b`)
+
+| ID | Status | What shipped |
+|----|--------|--------------|
+| A11Y-06 | ✅ | Toast stack is an always-mounted `role=status` live region; errors `role=alert` (#1048) |
+| FRM-02 | ✅ | Auth tabs: `tablist/tab/tabpanel`, `type=button` (#1048) |
+| FRM-03 | ✅ | All `window.confirm` → `ConfirmModal` via `useConfirmDialog` (Commissioner, Clubhouse, archive panel) (#1048). Not click-tested against a live league |
+| SYS-06 | ✅ | Stacking tokens `--z-dropdown…--z-toast` (value-preserving) replace z-index literals ≥100 (#1048) |
+| A11Y-05 | ✅ | Clickable divs/spans get role/tabIndex/Enter-Space handlers; pure backdrops `role=presentation`; new ESLint guard |
+| FBK-01 | ⚠️ partial | `LoadingRows` skeletons replace "Loading…" in 8 key panels (chat, picker, challenge, live squad, wallet, tennis). **Open:** ~15 admin/inline "Loading…" strings left |
+| ICN-01 | ⚠️ partial | `UiIcons` (lock/warning/trophy/hourglass/check) replace 15 standalone status emoji. **Open:** ~280 inline emoji (sport glyphs ⚽🎾🏁 are brand identity and kept) |
+
+Notes: no E2E (Security job gates it); verified via lint (0 errors) + build. **Next:** Batch C — SYS-04 raw hex → tokens, FRM-04 TextInput/Select, SYS-02 Button/chip/tab variants; THM-01 dark mode gated on SYS-04.
+
 ## ✅ UI audit P1 batch (2026-10-16) — PR #1043–#1046 (rollback tag `pre-ui-p1-audit` @ 8ff1503)
 
 Source: Frontrow UI Audit. All six P1 findings addressed; A11Y-02 and TCH-01 partially.

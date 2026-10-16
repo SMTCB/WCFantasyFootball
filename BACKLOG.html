@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>264</strong><span>closed</span></div>
+      <div class="total-pill"><strong>265</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (182)</span>
+    <span class="chip" data-filter-kind="done">Shipped (183)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">264</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">265</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">182</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">183</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">182</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">183</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui audit p2 batch a + b (2026-10-16) — pr #1048 (a), pr (b) (rollback tags `pre-ui-p2-batch-a`, `pre-ui-p2-batch-b`) 
+
+| id | status | what shipped |
+|----|--------|--------------|
+| a11y-06 | ✅ | toast stack is an always-mounted `role=status` live region; errors `role=alert` (#1048) |
+| frm-02 | ✅ | auth tabs: `tablist/tab/tabpanel`, `type=button` (#1048) |
+| frm-03 | ✅ | all `window.confirm` → `confirmmodal` via `useconfirmdialog` (commissioner, clubhouse, archive panel) (#1048). not click-tested against a live league |
+| sys-06 | ✅ | stacking tokens `--z-dropdown…--z-toast` (value-preserving) replace z-index literals ≥100 (#1048) |
+| a11y-05 | ✅ | clickable divs/spans get role/tabindex/enter-space handlers; pure backdrops `role=presentation`; new eslint guard |
+| fbk-01 | ⚠️ partial | `loadingrows` skeletons replace &quot;loading…&quot; in 8 key panels (chat, picker, challenge, live squad, wallet, tennis). **open:** ~15 admin/inline &quot;loading…&quot; strings left |
+| icn-01 | ⚠️ partial | `uiicons` (lock/warning/trophy/hourglass/check) replace 15 standalone status emoji. **open:** ~280 inline emoji (sport glyphs ⚽🎾🏁 are brand identity and kept) |
+
+notes: no e2e (security job gates it); verified via lint (0 errors) + build. **next:** batch c — sys-04 raw hex → tokens, frm-04 textinput/select, sys-02 button/chip/tab variants; thm-01 dark mode gated on sys-04.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">UI audit P2 batch A + B</h3>
+        <p class="card-summary">ID Status What shipped A11Y-06 ✅ Toast stack is an always-mounted role=status live region; errors role=alert (#1048) FRM-02 ✅ Auth tabs: tablist/tab/tabpanel ,…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-16</span><span class="foot-refs">PR #1048 (A), PR (B) (rollback tags <code>pre-ui-p2-batch-a</code>, <code>pre-ui-p2-batch-b</code>)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">UI audit P2 batch A + B</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>ID Status What shipped A11Y-06 ✅ Toast stack is an always-mounted role=status live region; errors role=alert (#1048) FRM-02 ✅ Auth tabs: tablist/tab/tabpanel ,…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1048 (A), PR (B) (rollback tags <code>pre-ui-p2-batch-a</code>, <code>pre-ui-p2-batch-b</code>)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-16</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><div class="md-table-wrap"><table class="md-table"><thead><tr><th>ID</th><th>Status</th><th>What shipped</th></tr></thead><tbody><tr><td>A11Y-06</td><td>✅</td><td>Toast stack is an always-mounted <code>role=status</code> live region; errors <code>role=alert</code> (#1048)</td></tr><tr><td>FRM-02</td><td>✅</td><td>Auth tabs: <code>tablist/tab/tabpanel</code>, <code>type=button</code> (#1048)</td></tr><tr><td>FRM-03</td><td>✅</td><td>All <code>window.confirm</code> → <code>ConfirmModal</code> via <code>useConfirmDialog</code> (Commissioner, Clubhouse, archive panel) (#1048). Not click-tested against a live league</td></tr><tr><td>SYS-06</td><td>✅</td><td>Stacking tokens <code>--z-dropdown…--z-toast</code> (value-preserving) replace z-index literals ≥100 (#1048)</td></tr><tr><td>A11Y-05</td><td>✅</td><td>Clickable divs/spans get role/tabIndex/Enter-Space handlers; pure backdrops <code>role=presentation</code>; new ESLint guard</td></tr><tr><td>FBK-01</td><td>⚠️ partial</td><td><code>LoadingRows</code> skeletons replace "Loading…" in 8 key panels (chat, picker, challenge, live squad, wallet, tennis). <strong>Open:</strong> ~15 admin/inline "Loading…" strings left</td></tr><tr><td>ICN-01</td><td>⚠️ partial</td><td><code>UiIcons</code> (lock/warning/trophy/hourglass/check) replace 15 standalone status emoji. <strong>Open:</strong> ~280 inline emoji (sport glyphs ⚽🎾🏁 are brand identity and kept)</td></tr></tbody></table></div>
+<p>Notes: no E2E (Security job gates it); verified via lint (0 errors) + build. <strong>Next:</strong> Batch C — SYS-04 raw hex → tokens, FRM-04 TextInput/Select, SYS-02 Button/chip/tab variants; THM-01 dark mode gated on SYS-04.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui audit p1 batch (2026-10-16) — pr #1043–#1046 (rollback tag `pre-ui-p1-audit` @ 8ff1503) 
 
 source: frontrow ui audit. all six p1 findings addressed; a11y-02 and tch-01 partially.
