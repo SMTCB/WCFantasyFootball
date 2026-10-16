@@ -12,6 +12,43 @@
 
 ---
 
+## 🟡 P2 — DRAFT-20: optional 20-player squads + 5-substitution cap per matchday for draft leagues (2026-10-16) — open, spec only, no PR yet
+
+**Origin**: user suggestion, reviewed 2026-10-16. Draft ("noduplicate") leagues only; classic leagues and in-flight leagues are untouched.
+
+**Agreed rules**
+- **Squad size is optional**: 15 (current) or 20, chosen when the draft league is created. Both stay valid.
+- **20-player split** (`position_limits`): GK 2 / DEF 7 / MID 7 / FWD 4. 15-player split stays GK 2 / DEF 5 / MID 5 / FWD 3. Starting XI rule is unchanged (exactly 1 GK, ≥1 DEF/MID/FWD, 11 total), so the bench is 9 at size 20.
+- **Budget**: €130M for a 20-player squad. Product view: budget is not a binding constraint in draft leagues (top players get taken, money is left over), so no further balancing is needed.
+- **Club cap** stays 3 per club (`club_cap_default`).
+- **Transfers** stay unlimited in draft leagues (`process-transfer` already skips the per-round limit for `noduplicate`); the whole squad can be changed.
+- **Substitution cap = 5 per matchday.** A substitution is an XI↔bench swap made through `set_lineup`.
+  - Before the round's kickoff the lineup is team management: **no limit, any number of changes, nothing counted.**
+  - After kickoff each swap counts toward the cap of 5. Existing rules already prevent re-entry: a player subbed out after his match started is locked for the round (`lineup_locks`), and a player whose match has started or finished cannot be subbed in. So there is no swap-and-swap-back loophole to special-case.
+  - Auto-subs at round end (`applyAutoSubs`, 0-minute starters) are system actions and are **not** counted.
+
+**Technical plan**
+1. **Migration (next free number 301+)**: new `league_config` key `max_lineup_subs` (null = unlimited; seeded 5 for new draft leagues only); updated `create_league` seeding / league-creation path to take `squad_size` 15|20 and set `squad_size`, `position_limits`, `draft_position_caps`, `draft_list_size` (≈3× squad size — see migrations 159/160 for the prior mismatch) and `budget_total` accordingly. Needs the pre-migration backup and an explicit "yes, run it" before applying.
+2. **`set_lineup`** (latest version: migration 214): after the existing validations, if the round's first kickoff has passed and `max_lineup_subs` is set, count this squad's post-kickoff `lineup_swap` events for the matchday (`squad_events`, migration 183) and reject at the cap with a clear error code; otherwise log the swap as usual. Server-authoritative, so it cannot be bypassed from the client.
+3. **Hardcoded 15s to remove**: `process-transfer/index.js:278` (`currentPlayers.length < 15`), `LeagueScreen.jsx` (~1446–1454), `GazetteDraftReport.jsx:267`, `CommissionerPanel.jsx` copy (lines ~118, 2195, 3031), `ScoringInfoModal.jsx:79`, `OnboardingWizard.jsx:25` fallback. Default `15` fallbacks in `useLeagueConfig`, `wishlistDraft.ts`, `claim_draft_player` and the auction functions are fine as fallbacks.
+4. **UI**: squad-size option in `NewCompetitionFlow.jsx` (draft only); `SquadScreen`/`LiveScreen` bench list sized for 9; "Subs used n/5" counter, swap disabled at 5 and toast on server rejection.
+5. **Docs/tests**: update `ScoringInfoModal` and `docs/architecture/DRAFT_SYSTEM_DESIGN.md`; add `platform.spec.js`/unit coverage for the cap and a 20-player draft dry run.
+6. **Edge Functions**: only redeploy if a function file changes (likely `process-transfer`); Vercel does not auto-deploy them.
+
+**Risks to check before shipping**
+- **Pool depth**: no-duplicate draft needs managers × squad size unique players (10 managers × 20 = 200). Fine for a full World Cup/UCL pool; check short tournaments and knockout stages with eliminated clubs. `calculate_relaxation_state` already reads `squad_size`, so pressure (and relaxation tiers) will rise earlier — simulate (read-only) against the real pool first.
+- **Draft length / wishlist**: more picks per manager; verify `run-wishlist-draft`, lottery and reverse-standings draft fill 20 slots within position caps and the 3-per-club cap, including the formation floor safety net.
+- **Bench ordering**: auto-sub priority follows `players[]` array order; with 9 bench players the manager has no way to set it (possible follow-up).
+
+**Open questions (confirm before build)**
+1. **What counts as "after kickoff"?** (a) the round's first kickoff — any swap after that counts, even between two players whose matches haven't started; or (b) per player — a swap counts only if the outgoing player's match has started/finished (consistent with the per-fixture lock model; swapping two not-yet-played players stays free). Recommendation: (b).
+2. **Budget for a 15-player draft league**: assumed to stay at €100M; confirm.
+3. **In-flight draft leagues**: out of scope for v1. Converting one later (raise `squad_size` to 20 / budget to €130M, managers top up via market) is possible but needs a per-league data write with SELECT-first approval, a fairness rule for the 5 extra slots, and a pool-depth check.
+
+**Effort**: ~2–3 days + 1 migration. **Priority**: P2.
+
+---
+
 ## ✅ UI audit finish — step 1 (mechanical items) (2026-10-16) — rollback tag `pre-ui-finish-step1`
 
 | ID | Status | What shipped |
