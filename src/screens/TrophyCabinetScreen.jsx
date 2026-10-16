@@ -183,7 +183,7 @@ export default function TrophyCabinetScreen() {
                 background: showInfo ? 'rgba(255,255,255,.08)' : 'transparent', cursor: 'pointer',
                 display: 'grid', placeItems: 'center',
                 ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
-                color: showInfo ? 'var(--on-shell-gold)' : 'var(--on-shell-faint)',
+                color: showInfo ? 'var(--on-shell-gold)' : 'var(--on-shell-dim)',
               }}
             >?</button>
           </div>
@@ -211,7 +211,7 @@ export default function TrophyCabinetScreen() {
             ].map(({ value, label, color }) => (
               <div key={label}>
                 <div style={{ ...HEAD, fontSize: 'var(--fs-title)', color, letterSpacing: '-0.02em' }}>{value}</div>
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)', marginTop: 1 }}>{label}</div>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 1 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -228,11 +228,11 @@ export default function TrophyCabinetScreen() {
               #{myRank}
             </div>
             <div>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)' }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)' }}>
                 Group overall
               </div>
               {activeCircle && (
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--on-shell-faint)', marginTop: 2 }}>
+                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--on-shell-dim)', marginTop: 2 }}>
                   {activeCircle.name}
                 </div>
               )}

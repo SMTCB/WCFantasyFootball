@@ -86,7 +86,7 @@
   /* Text on --shell (dark navy) surfaces */
   --on-shell:       #ffffff;               /* full-brightness text on shell/nav headers */
   --on-shell-faint: rgba(255,255,255,.3);  /* lowest-emphasis text on shell — placeholders, disabled */
-  --on-shell-dim:   rgba(255,255,255,.45); /* muted eyebrow labels on shell */
+  --on-shell-dim:   rgba(255,255,255,.55); /* muted eyebrow labels on shell — raised from .45 for WCAG AA (~5.3:1) */
   --on-shell-mid:   rgba(255,255,255,.7);  /* mid-emphasis text on shell — between dim and full */
   --on-shell-accent: #5FB3E5; /* --cyan retuned for text on --shell — WCAG AA (was 3.02:1) */
   --on-shell-danger: #F0575A; /* --danger retuned for status text on --shell — WCAG AA (was ~2.53:1) */
@@ -165,6 +165,13 @@ body {
   overscroll-behavior-y: none;
   overflow-x: hidden;
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* A11Y/FRM-01: iOS Safari + Capacitor WKWebView zoom the page when a field under 16px is focused.
+   !important because many inputs set fontSize inline. Viewport zoom stays enabled. */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+select, textarea {
+  font-size: max(16px, var(--fs-body)) !important;
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────────── */

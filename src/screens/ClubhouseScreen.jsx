@@ -889,11 +889,11 @@ export default function ClubhouseScreen() {
                 <div style={{ display: 'flex', gap: 20 }}>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)', marginTop: 2 }}>SPORTS</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>SPORTS</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-faint)', marginTop: 2 }}>COMPETITIONS</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>COMPETITIONS</div>
                   </div>
                 </div>
               )}

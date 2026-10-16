@@ -37,7 +37,7 @@ const SLUG_STYLE = {
 
 const CAT_META = {
   match:   { label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
-  stats:   { label: 'STATS',   color: 'var(--gold)',  icon: '📊' },
+  stats:   { label: 'STATS',   color: 'var(--gold-text)',  icon: '📊' },
   players: { label: 'PLAYERS', color: 'var(--cyan)',  icon: '🎯' },
   custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏' },
 };

@@ -927,7 +927,7 @@ export default function LeagueScreen() {
             <div style={{ padding: '20px 0', textAlign: 'center' }}>
               <p style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', lineHeight: 1.6 }}>
                 YOU DON&apos;T HAVE A CLUBHOUSE YET<br />
-                <span style={{ color: 'var(--on-shell-faint)' }}>Every league needs a Clubhouse — create one first.</span>
+                <span style={{ color: 'var(--on-shell-dim)' }}>Every league needs a Clubhouse — create one first.</span>
               </p>
             </div>
           )}
@@ -1067,14 +1067,14 @@ export default function LeagueScreen() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {rows.map(([k, v]) => (
                           <div key={k} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 10 }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--on-shell-faint)', paddingTop: 2, textTransform: 'uppercase' }}>{k}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--on-shell-dim)', paddingTop: 2, textTransform: 'uppercase' }}>{k}</span>
                             <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', lineHeight: 1.55 }}>{v}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   ))}
-                  <p style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-faint)', lineHeight: 1.5, margin: 0, borderTop: '1px solid var(--shell-rule)', paddingTop: 14 }}>
+                  <p style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', lineHeight: 1.5, margin: 0, borderTop: '1px solid var(--shell-rule)', paddingTop: 14 }}>
                     Regardless of mode: position rules always apply (1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD) and the max 3 players per club rule applies to final squads in all formats.
                   </p>
                 </div>

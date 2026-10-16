@@ -38,7 +38,7 @@ function NavSectionLabel({ children }) {
   return (
     <div style={{
       ...MONO_STYLE, fontSize: 'var(--fs-micro)', letterSpacing: '0.2em', textTransform: 'uppercase',
-      color: 'var(--on-shell-faint)', padding: '10px 8px 4px',
+      color: 'var(--on-shell-dim)', padding: '10px 8px 4px',
     }}>
       {children}
     </div>
@@ -367,7 +367,7 @@ export default function AppLayout({ children }) {
           </div>
           <div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell-mid)', fontWeight: 600 }}>{username ?? 'Manager'}</div>
-            <div style={{ ...MONO_STYLE, fontSize: 'var(--fs-micro)', letterSpacing: '0.06em', color: 'var(--on-shell-faint)' }}>Multi-sport</div>
+            <div style={{ ...MONO_STYLE, fontSize: 'var(--fs-micro)', letterSpacing: '0.06em', color: 'var(--on-shell-dim)' }}>Multi-sport</div>
           </div>
         </div>
       </nav>

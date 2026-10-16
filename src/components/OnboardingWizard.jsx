@@ -334,7 +334,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             fontSize: 'var(--fs-title)',
             lineHeight:   1,
             marginBottom: '20px',
-            color:        'var(--gold)',
+            color:        'var(--gold-text)',
           }}
         >
           {current.id === 'welcome' ? 'FFL' : current.id === 'clubhouse' ? 'CLB' : current.id === 'squad' ? 'SQD' : current.id === 'league' ? 'LGE' : 'GO'}
@@ -346,7 +346,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             fontSize: 'var(--fs-micro)',
             fontFamily:    'Archivo Black, sans-serif',
             letterSpacing: '0.15em',
-            color:         'var(--gold)',
+            color:         'var(--gold-text)',
             textTransform: 'uppercase',
             marginBottom:  '8px',
           }}

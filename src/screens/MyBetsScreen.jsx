@@ -51,7 +51,7 @@ function MyBetCard({ bet, onOpen }) {
         {bet.question}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>
-        <span style={{ color: 'var(--gold)' }}>{bet.stake_coins} COINS</span>
+        <span style={{ color: 'var(--gold-text)' }}>{bet.stake_coins} COINS</span>
         <span>{bet.participant_count} JOINED</span>
         {bet.status === 'open' && bet.ends_at && <span>{timeLeft(bet.ends_at)}</span>}
       </div>
