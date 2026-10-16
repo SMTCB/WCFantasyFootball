@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>263</strong><span>closed</span></div>
+      <div class="total-pill"><strong>264</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (181)</span>
+    <span class="chip" data-filter-kind="done">Shipped (182)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">263</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">264</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">181</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">182</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,42 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">181</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">182</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui audit p1 batch (2026-10-16) — pr #1043–#1046 (rollback tag `pre-ui-p1-audit` @ 8ff1503) 
+
+source: frontrow ui audit. all six p1 findings addressed; a11y-02 and tch-01 partially.
+
+| id | status | what shipped |
+|----|--------|--------------|
+| frm-01 | ✅ | global 16px floor on text inputs/selects/textareas (#1043) |
+| a11y-03 | ✅ | `--on-shell-dim` .45→.55; shell text on `--on-shell-faint` moved to dim (#1043) |
+| a11y-02 | ⚠️ partial | `var(--gold)` text → `--gold-text` in light-surface-only files (#1043). **open:** ~25 mixed light/dark files need per-surface review (`--on-shell-gold` on navy) |
+| a11y-01 | ✅ | `text-[8/9/10px]` → 11px (17 files) + 2 inline sizes + lint selector (#1044). **open:** promote key data (points, prices, fixture times) to `--fs-label` — design call |
+| tch-01 | ⚠️ partial | `.hit-44` utility, applied to 9 chips on squad/market/league (#1045). **open:** ~100 other small-chip sites; spacing between adjacent targets |
+| a11y-04 | ✅ | shared `bottomsheet` now role=dialog, focus in/trap/return, inert `#root` (#1046); covers h2h, playerpicker, scoringinfo, wishlistinfo, competitionsettings |
+
+notes: ci `e2e`/unit jobs are skipped on every pr because the `security` (npm audit) job fails and gates them, so these prs merged on build + lint only. no 375px visual qa done yet — check squad/market/league chips and sheets on device. rollback: revert the squash commit(s) or reset to tag `pre-ui-p1-audit`.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">UI audit P1 batch</h3>
+        <p class="card-summary">Source: Frontrow UI Audit. All six P1 findings addressed; A11Y-02 and TCH-01 partially. ID Status What shipped FRM-01 ✅ Global 16px floor on text…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-16</span><span class="foot-refs">PR #1043–#1046 (rollback tag <code>pre-ui-p1-audit</code> @ 8ff1503)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">UI audit P1 batch</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Source: Frontrow UI Audit. All six P1 findings addressed; A11Y-02 and TCH-01 partially. ID Status What shipped FRM-01 ✅ Global 16px floor on text…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1043–#1046 (rollback tag <code>pre-ui-p1-audit</code> @ 8ff1503)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-16</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Source: Frontrow UI Audit. All six P1 findings addressed; A11Y-02 and TCH-01 partially.</p>
+<div class="md-table-wrap"><table class="md-table"><thead><tr><th>ID</th><th>Status</th><th>What shipped</th></tr></thead><tbody><tr><td>FRM-01</td><td>✅</td><td>Global 16px floor on text inputs/selects/textareas (#1043)</td></tr><tr><td>A11Y-03</td><td>✅</td><td><code>--on-shell-dim</code> .45→.55; shell text on <code>--on-shell-faint</code> moved to dim (#1043)</td></tr><tr><td>A11Y-02</td><td>⚠️ partial</td><td><code>var(--gold)</code> text → <code>--gold-text</code> in light-surface-only files (#1043). <strong>Open:</strong> ~25 mixed light/dark files need per-surface review (<code>--on-shell-gold</code> on navy)</td></tr><tr><td>A11Y-01</td><td>✅</td><td><code>text-[8/9/10px]</code> → 11px (17 files) + 2 inline sizes + lint selector (#1044). <strong>Open:</strong> promote key data (points, prices, fixture times) to <code>--fs-label</code> — design call</td></tr><tr><td>TCH-01</td><td>⚠️ partial</td><td><code>.hit-44</code> utility, applied to 9 chips on Squad/Market/League (#1045). <strong>Open:</strong> ~100 other small-chip sites; spacing between adjacent targets</td></tr><tr><td>A11Y-04</td><td>✅</td><td>Shared <code>BottomSheet</code> now role=dialog, focus in/trap/return, inert <code>#root</code> (#1046); covers H2H, PlayerPicker, ScoringInfo, WishlistInfo, CompetitionSettings</td></tr></tbody></table></div>
+<p>Notes: CI <code>E2E</code>/unit jobs are skipped on every PR because the <code>Security</code> (npm audit) job fails and gates them, so these PRs merged on Build + Lint only. No 375px visual QA done yet — check Squad/Market/League chips and sheets on device. Rollback: revert the squash commit(s) or reset to tag <code>pre-ui-p1-audit</code>.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ commissioner post rls fix + frontrow circle editions batching + score/backup audit (2026-10-15/16) — pr #1039, pr #1040, pr #1041, migrations 299–300 
 
 - **commissioner post error (migration 299, pr #1039)**: posting breaking news / classified from the admin tab failed with `new row violates row-level security policy for table clubhouse_notifications`. cause: the clubhouse fan-out triggers (migration 196) assumed trigger functions bypass rls; they don&#x27;t unless `security definer`, and `clubhouse_notifications` has no insert policy. the three trigger functions are now `security definer set search_path = public` (verified `prosecdef = true`). posts appear in the league&#x27;s gazette (`gazette_entries`) and, for `breaking_news`, fan out as notifications to members of every circle the league is linked to.
