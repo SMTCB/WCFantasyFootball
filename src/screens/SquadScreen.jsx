@@ -1119,7 +1119,7 @@ export default function SquadScreen() {
                 const isListed = !!auctionListing;
                 const rowAction = (
                   <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
-                    <button
+                    <button className="hit-44"
                       onClick={() => setStatsDashboardPlayer(player)}
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
@@ -1158,7 +1158,7 @@ export default function SquadScreen() {
                       onToggle={() => toggleFlag(squadData.squadId, player.id)}
                     />
                     {activeLeague && !isListed && cfg.format === 'noduplicate' && (
-                      <button
+                      <button className="hit-44"
                         disabled={auctionBusy === player.id}
                         onClick={async () => {
                           const bid = parseFloat(player.price ?? 0);
@@ -1189,7 +1189,7 @@ export default function SquadScreen() {
                       const isConfirming = confirmCancelId === player.id;
                       const isCancelBusy = cancelBusy === player.id;
                       return (
-                        <button
+                        <button className="hit-44"
                           disabled={isCancelBusy}
                           onClick={() => handleAuctionBadgeClick(player, auctionListing)}
                           style={{
@@ -1648,7 +1648,7 @@ export default function SquadScreen() {
                           {/* Points */}
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{Math.round(player.points ?? 0)}</div>
                           {/* Full stats dashboard trigger */}
-                          <button
+                          <button className="hit-44"
                             onClick={e => { e.stopPropagation(); setStatsDashboardPlayer(player); }}
                             style={{
                               fontFamily: 'JetBrains Mono, monospace',
@@ -1672,7 +1672,7 @@ export default function SquadScreen() {
                                 const isConfirming = confirmCancelId === player.id;
                                 const isCancelBusy = cancelBusy === player.id;
                                 return (
-                                  <button
+                                  <button className="hit-44"
                                     disabled={isCancelBusy}
                                     onClick={() => handleAuctionBadgeClick(player, auctionListing)}
                                     style={{

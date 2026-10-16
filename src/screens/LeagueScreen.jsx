@@ -1718,7 +1718,7 @@ export default function LeagueScreen() {
                               </span>
                               <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>awaiting response</span>
                             </div>
-                            <button
+                            <button className="hit-44"
                               onClick={async () => {
                                 try {
                                   await cancelProposal(p.id);

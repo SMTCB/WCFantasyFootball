@@ -1119,7 +1119,7 @@ export default function MarketScreen() {
           return (
             <div className="px-4 pb-2.5 flex flex-wrap items-center gap-2" style={{ borderTop: '1px solid var(--shell-rule)' }}>
               {hasEliminated && (
-                <button
+                <button className="hit-44"
                   onClick={() => setFilterHideEliminated(v => !v)}
                   style={{
                     padding: '4px 9px', borderRadius: 3, cursor: 'pointer', fontSize: 'var(--fs-micro)', fontWeight: 700,
@@ -1133,7 +1133,7 @@ export default function MarketScreen() {
                 </button>
               )}
               {hasTaken && (
-                <button
+                <button className="hit-44"
                   onClick={() => setFilterHideTaken(v => !v)}
                   style={{
                     padding: '4px 9px', borderRadius: 3, cursor: 'pointer', fontSize: 'var(--fs-micro)', fontWeight: 700,
