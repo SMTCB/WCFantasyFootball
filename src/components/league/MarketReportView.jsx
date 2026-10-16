@@ -107,7 +107,7 @@ function TransferRow({ t, playerMap, username, isMe }) {
     }}>
       <MgrTag mono={mgrMono(username)} hue={mgrHue(username)} size={18} />
       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)', flexShrink: 0 }}>
-        {isMe ? 'You' : username}
+        {username}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {pOut && <ClubCrest name={pOut.club} size={16} />}

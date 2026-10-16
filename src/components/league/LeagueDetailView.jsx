@@ -122,7 +122,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
   const myPts     = myEntry?.total_points ?? '—';
   const leader    = members[0];
   const leaderName = leader
-    ? (currentUser && leader.user_id === currentUser.id ? 'You' : leader.users?.username || 'Unknown')
+    ? (leader.users?.username || 'Unknown')
     : '—';
 
   return (
@@ -146,7 +146,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         </div>
         {/* Podium 1–3 */}
         {members.slice(0, 3).map((m, idx) => {
-          const mName = (currentUser && m.user_id === currentUser.id) ? 'You' : (m.users?.username || 'Unknown');
+          const mName = (m.users?.username || 'Unknown');
           const hue = mgrHue(m.users?.username || '');
           return (
             <div key={m.user_id} style={{ padding: '18px 22px', borderRight: idx < 2 ? '1px solid var(--rule)' : 'none', display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -203,8 +203,8 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             highlightUserId={currentUser?.id}
             rankWidth="48px"
             actionsWidth="100px"
-            renderName={(m, isMe) => {
-              const mName = isMe ? 'You' : (m.users?.username || 'Unknown');
+            renderName={(m) => {
+              const mName = (m.users?.username || 'Unknown');
               const hue = mgrHue(m.users?.username || '');
               return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -217,7 +217,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               );
             }}
             renderActions={(m, isMe) => {
-              const mName = isMe ? 'You' : (m.users?.username || 'Unknown');
+              const mName = (m.users?.username || 'Unknown');
               return (
                 <>
                   {!isMe && (
@@ -392,7 +392,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           </div>
         ) : members.map((m) => {
           const isMe = currentUser && m.user_id === currentUser.id;
-          const mName = isMe ? 'You' : (m.users?.username || 'Unknown');
+          const mName = (m.users?.username || 'Unknown');
           const hue = mgrHue(m.users?.username || '');
           return (
             <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onViewManager({ user_id: m.user_id, name: mName }))(e); } }}

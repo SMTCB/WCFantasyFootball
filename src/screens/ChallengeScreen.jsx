@@ -303,7 +303,7 @@ function LiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, loading 
           background: diff > 0 ? 'var(--pbg)' : 'transparent',
         }}>
           <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase', color: diff > 0 ? 'var(--pos)' : 'var(--mute)', marginBottom: 4 }}>
-            {diff > 0 ? 'You (leading)' : 'You'}
+            {(challenge.challenger_id === userId ? challenge.challenger_username : challenge.opponent_username) ?? 'You'}{diff > 0 ? ' (leading)' : ''}
           </div>
           <div style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.03em', lineHeight: 1, color: diff > 0 ? 'var(--pos)' : 'var(--text)' }}>
             {myPts ?? '—'}

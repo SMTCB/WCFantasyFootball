@@ -217,7 +217,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                 #{mgr.rank}
               </span>
               <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', flex: 1 }}>{mgr.username}</span>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isLeader ? 'var(--gold)' : 'var(--paper)' }}>
                   {mgr.totalPts}
@@ -312,7 +312,7 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>{i + 1}</span>
             <MgrTag mono={mgrMono(m.username || '')} hue={hue} />
             <div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)' }}>{isMe ? 'You' : m.username}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)' }}>{m.username}</div>
               {gwNum && <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>GW{gwNum}</div>}
             </div>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
@@ -327,7 +327,7 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
 
 // ─── Captaincy hit rate ───────────────────────────────────────────────────────
 
-function CaptainHitRate({ captainHitData, currentUser }) {
+function CaptainHitRate({ captainHitData }) {
   const [activeTooltip, setActiveTooltip] = useState(null); // { uid, matchday_id }
 
   if (!captainHitData || captainHitData.length === 0) {
@@ -339,7 +339,6 @@ function CaptainHitRate({ captainHitData, currentUser }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {captainHitData.map(mgr => {
-        const isMe  = currentUser?.id === mgr.user_id;
         const hue   = mgrHue(mgr.username || '');
         const rate  = mgr.total > 0 ? mgr.hits / mgr.total : 0;
         const pct   = Math.round(rate * 100);
@@ -352,7 +351,7 @@ function CaptainHitRate({ captainHitData, currentUser }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)' }}>{isMe ? 'You' : mgr.username}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)' }}>{mgr.username}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 3 }}>
@@ -489,7 +488,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
                 #{i + 1}
               </span>
               <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', flex: 1 }}>{mgr.username}</span>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
                   {mgr.pts}
@@ -566,7 +565,7 @@ function RoiPanel({ roiData, currentUser }) {
                         #{i + 1}
                       </span>
                       <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', flex: 1 }}>{mgr.username}</span>
                       <div style={{ textAlign: 'right' }}>
                         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
                           {mgr.roi.toFixed(2)}
