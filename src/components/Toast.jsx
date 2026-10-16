@@ -20,7 +20,7 @@ function ToastItem({ toast, onDismiss }) {
   };
 
   return (
-    <div className={`fk-toast ${type}`} style={{ width: '100%', maxWidth: 380, animation: 'toast-in 0.18s ease-out' }}>
+    <div className={`fk-toast ${type}`} role={type === 'error' ? 'alert' : undefined} style={{ width: '100%', maxWidth: 380, animation: 'toast-in 0.18s ease-out' }}>
       <span className="fk-toast-dot" />
       <div className="fk-toast-body">
         <div className="fk-toast-label">{MESSAGE_LABELS[type] ?? MESSAGE_LABELS.info}</div>
@@ -48,7 +48,7 @@ function ToastStack({ toasts, onDismiss }) {
   if (!toasts.length) return null;
   const visible = toasts.slice(-3);
   return (
-    <div style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none', padding: '0 16px' }}>
+    <div role="status" aria-live="polite" aria-relevant="additions" style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 'var(--z-toast)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none', padding: '0 16px' }}>
       {visible.map(t => (
         <div key={t.id} style={{ pointerEvents: 'auto', width: '100%', maxWidth: 380 }}>
           <ToastItem toast={t} onDismiss={onDismiss} />
