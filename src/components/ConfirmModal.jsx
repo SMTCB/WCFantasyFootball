@@ -71,7 +71,7 @@ export default function ConfirmModal({
       style={{
         position:   'fixed',
         inset:      0,
-        zIndex:     9998,
+        zIndex: 'var(--z-confirm)',
         background: 'rgba(7,10,15,0.75)',
         display:    'flex',
         alignItems: 'center',
@@ -119,6 +119,7 @@ export default function ConfirmModal({
           lineHeight:   1.6,
           color:        'rgba(240,242,245,0.6)',
           marginBottom: warning ? '12px' : '24px',
+          whiteSpace:   'pre-line',
         }}>
           {body}
         </p>

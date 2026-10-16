@@ -1,4 +1,5 @@
 import { useCompetitionArchive } from '../../hooks/useCompetitionArchive';
+import useConfirmDialog from '../../hooks/useConfirmDialog';
 
 // Local constants, not imported from CommissionerPanel/HubShared — this panel
 // is mounted from F1/tennis screens as well as (eventually) league screens,
@@ -62,15 +63,21 @@ export default function CompetitionArchivePanel({
 }) {
   const { archive, unarchive, busy, message } = useCompetitionArchive(competitionType, competitionId, onUpdated);
   const noun = COPY[competitionType]?.noun ?? 'competition';
+  const [askConfirm, confirmDialog] = useConfirmDialog();
 
   const handleToggle = () => {
     if (archived) { unarchive(); return; }
-    if (!window.confirm(`Archive this ${noun}? It will be hidden from your active list until you reactivate. Nothing is deleted.`)) return;
-    archive();
+    askConfirm({
+      title: `Archive this ${noun}?`,
+      body: 'It will be hidden from your active list until you reactivate. Nothing is deleted.',
+      confirmLabel: 'Archive',
+      onConfirm: archive,
+    });
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {confirmDialog}
       <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>
         {name ? `${name.toUpperCase()} · ` : ''}ARCHIVE STATUS
       </div>

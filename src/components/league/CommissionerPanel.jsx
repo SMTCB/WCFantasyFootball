@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
+import useConfirmDialog from '../../hooks/useConfirmDialog';
 import {
   MODE_LABEL, MODE_HELP, MODE_HELP_LONG, MIN_NOTICE_MS, KICKOFF_BUFFER_MS, fmtDraftTime, toLocalInput, suggestDraftTime, draftErrorMessage,
 } from '../../lib/wishlistDraft';
@@ -139,7 +140,7 @@ function HelpOverlay({ topic, onClose }) {
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 500,
+        position: 'fixed', inset: 0, zIndex: 'var(--z-popover)',
         background: 'rgba(0,0,0,0.72)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '16px',
@@ -388,7 +389,7 @@ function VoidConfirmModal({ bet, onConfirm, onCancel }) {
     <div
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 600,
+        position: 'fixed', inset: 0, zIndex: 'var(--z-popover-top)',
         background: 'rgba(0,0,0,0.78)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '16px',
@@ -443,6 +444,7 @@ function VoidConfirmModal({ bet, onConfirm, onCancel }) {
 
 function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswers, toggleBetResolutionAnswer, setBetResolutionAnswers, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, resolveNoWinner, voidBet, commLoading, commMsg, memberCount = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [askConfirm, confirmDialog] = useConfirmDialog();
   const [voidConfirmBet, setVoidConfirmBet] = useState(null); // {id, title} | null
   const [customAnswerOpen, setCustomAnswerOpen] = useState(false);
   const [customAnswerText, setCustomAnswerText] = useState('');
@@ -481,6 +483,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      {confirmDialog}
       <VoidConfirmModal
         bet={voidConfirmBet}
         onConfirm={() => { voidBet(voidConfirmBet.id); setVoidConfirmBet(null); }}
@@ -704,8 +707,12 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         {/* NO WINNER — bet was valid but no option was correct (0 pts, stays resolved) */}
                         <button
                           onClick={() => {
-                            if (!window.confirm(`Resolve "${b.title}" with no winner? 0 pts will be awarded. This cannot be undone.`)) return;
-                            resolveNoWinner();
+                            askConfirm({
+                              title: 'Resolve with no winner?',
+                              body: `"${b.title}" will be resolved with no winner. 0 pts will be awarded. This cannot be undone.`,
+                              confirmLabel: 'Resolve',
+                              onConfirm: resolveNoWinner,
+                            });
                           }}
                           disabled={commLoading}
                           style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', borderColor: 'rgba(245,158,11,.4)', color: 'var(--warn)' }}
@@ -1098,15 +1105,8 @@ function useFreeTransferWindow(leagueId, commissioner) {
 
   useEffect(() => { refreshFreeWindow(); }, [refreshFreeWindow]);
 
-  const openFreeWindow = () => {
-    if (!window.confirm(
-      'Turn ON emergency transfers?\n\n' +
-      'This allows transfers during a live matchday, bypassing the deadline and live-fixture locks (budget, position, club cap, and ownership rules still apply).\n\n' +
-      'This can distort the game:\n' +
-      '- Managers can sub IN players who have already played this round, banking points they already earned elsewhere.\n' +
-      '- Managers can sub OUT underperforming players, erasing points they have already conceded this round.\n\n' +
-      `The window stays open for ${FREE_WINDOW_HOURS}h or until you turn it off. Continue?`
-    )) return;
+  const [askConfirm, freeWindowDialog] = useConfirmDialog();
+  const doOpenFreeWindow = () => {
     commissioner.commAction(async () => {
       const closesAt = new Date(Date.now() + FREE_WINDOW_HOURS * 3600 * 1000).toISOString();
       const { error } = await supabase.from('transfer_windows').insert({
@@ -1122,9 +1122,31 @@ function useFreeTransferWindow(leagueId, commissioner) {
     });
   };
 
+  const openFreeWindow = () => {
+    askConfirm({
+      title: 'Turn on emergency transfers?',
+      body:
+        'This allows transfers during a live matchday, bypassing the deadline and live-fixture locks (budget, position, club cap, and ownership rules still apply).\n\n' +
+        'This can distort the game:\n' +
+        '- Managers can sub IN players who have already played this round, banking points they already earned elsewhere.\n' +
+        '- Managers can sub OUT underperforming players, erasing points they have already conceded this round.\n\n' +
+        `The window stays open for ${FREE_WINDOW_HOURS}h or until you turn it off.`,
+      confirmLabel: 'Turn on',
+      onConfirm: doOpenFreeWindow,
+    });
+  };
+
   const closeFreeWindow = () => {
     if (!activeFreeWindow) return;
-    if (!window.confirm('Turn off emergency transfers now?')) return;
+    askConfirm({
+      title: 'Turn off emergency transfers?',
+      body: 'Normal deadline and live-fixture locks apply again immediately.',
+      confirmLabel: 'Turn off',
+      onConfirm: doCloseFreeWindow,
+    });
+  };
+
+  const doCloseFreeWindow = () => {
     commissioner.commAction(async () => {
       const { error } = await supabase
         .from('transfer_windows')
@@ -1136,7 +1158,7 @@ function useFreeTransferWindow(leagueId, commissioner) {
     });
   };
 
-  return { activeFreeWindow, openFreeWindow, closeFreeWindow };
+  return { activeFreeWindow, openFreeWindow, closeFreeWindow, freeWindowDialog };
 }
 
 // Free transfers config — toggle that lifts the per-round transfer cap while the
@@ -1545,7 +1567,7 @@ function ModeSegment({ value, onPick, disabled }) {
         <div
           onClick={() => setHelpOpen(false)}
           style={{
-            position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,.6)',
+            position: 'fixed', inset: 0, zIndex: 'var(--z-modal)', background: 'rgba(0,0,0,.6)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
           }}
         >
@@ -1940,7 +1962,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
 
   // Free transfer window state — emergency "open the market mid-matchday" toggle.
   // Shared with the mobile layout via useFreeTransferWindow.
-  const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
+  const { activeFreeWindow, openFreeWindow, closeFreeWindow, freeWindowDialog } = useFreeTransferWindow(leagueId, commissioner);
+  const [askConfirm, confirmDialog] = useConfirmDialog();
   // Free transfers config — lifts per-round cap while window is open (Classic leagues only).
   const { freeTransfers, toggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
   const { relaxationEnabled, relaxationLocked, relaxationTier, toggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
@@ -1964,19 +1987,32 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     :                           'var(--positive)';
 
   const handleCloseNow = () => {
-    if (!window.confirm('This stops all in-progress transfers immediately. Continue?')) return;
-    closeTransferWindow();
+    askConfirm({
+      title: 'Close the transfer window?',
+      body: 'This stops all in-progress transfers immediately.',
+      confirmLabel: 'Close window',
+      onConfirm: closeTransferWindow,
+    });
   };
 
   const handleRunAllocation = () => {
-    if (!window.confirm('This allocates squads for all managers. It cannot be undone without a manual reset. Continue?')) return;
-    triggerDraftAllocation();
+    askConfirm({
+      title: 'Run squad allocation?',
+      body: 'This allocates squads for all managers. It cannot be undone without a manual reset.',
+      confirmLabel: 'Run allocation',
+      slideToConfirm: true,
+      onConfirm: triggerDraftAllocation,
+    });
   };
 
   const handleArchiveToggle = () => {
     if (league?.archived) { unarchiveLeague(); return; }
-    if (!window.confirm('Archive this league? Scoring, matchday sync, and draft jobs will stop running for it until you reactivate. Nothing is deleted.')) return;
-    archiveLeague();
+    askConfirm({
+      title: 'Archive this league?',
+      body: 'Scoring, matchday sync, and draft jobs will stop running for it until you reactivate. Nothing is deleted.',
+      confirmLabel: 'Archive',
+      onConfirm: archiveLeague,
+    });
   };
 
   const opBtnStyle = (bg, color = 'var(--ink)') => ({
@@ -1997,6 +2033,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {confirmDialog}
+      {freeWindowDialog}
       <HubSectionLabel
         label="LIFECYCLE OPERATIONS"
         sub="SEASON-STAGE CONTROLS"
@@ -2792,7 +2830,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   // Emergency transfers — shared state/handlers across desktop LifecycleOps grid
   // and the mobile lifecycle cards below. Called unconditionally (Rules of Hooks)
   // even though it's only rendered on one of the two layouts per render.
-  const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
+  const { activeFreeWindow, openFreeWindow, closeFreeWindow, freeWindowDialog } = useFreeTransferWindow(leagueId, commissioner);
+  const [askConfirm, confirmDialog] = useConfirmDialog();
   // Free transfers config — same dual-call pattern as useFreeTransferWindow above.
   const { freeTransfers: mobFreeTransfers, toggleFreeTransfers: mobToggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
   const { relaxationEnabled: mobRelaxationEnabled, relaxationLocked: mobRelaxationLocked, relaxationTier: mobRelaxationTier, toggleRelaxation: mobToggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
@@ -2865,12 +2904,18 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
     const mobHandleArchiveToggle = () => {
       if (league?.archived) { unarchiveLeague(); return; }
-      if (!window.confirm('Archive this league? Scoring, matchday sync, and draft jobs will stop running for it until you reactivate. Nothing is deleted.')) return;
-      archiveLeague();
+      askConfirm({
+        title: 'Archive this league?',
+        body: 'Scoring, matchday sync, and draft jobs will stop running for it until you reactivate. Nothing is deleted.',
+        confirmLabel: 'Archive',
+        onConfirm: archiveLeague,
+      });
     };
 
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
+        {confirmDialog}
+        {freeWindowDialog}
         <HelpOverlay topic={helpModal} onClose={() => setHelpModal(null)} />
         <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
         <MobSeasonStepper league={league} memberCount={memberCount} windowType={windowType} onHelp={() => setHelpModal('commissioner')} />
@@ -2904,7 +2949,12 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             <ToggleSwitch
               checked={!!league?.transfers_open}
               onChange={league?.transfers_open
-                ? () => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }
+                ? () => askConfirm({
+                  title: 'Close the transfer window?',
+                  body: 'Managers will not be able to make transfers until it is reopened.',
+                  confirmLabel: 'Close window',
+                  onConfirm: closeTransferWindow,
+                })
                 : openTransferWindow}
               disabled={commLoading}
               labelOn="WINDOW OPEN"
@@ -2980,7 +3030,13 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                 <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>SET DEADLINE</button>
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · €100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
                 <button
-                  onClick={() => { if (window.confirm('Run allocation for all managers? This cannot be undone without a manual reset.')) triggerDraftAllocation(); }}
+                  onClick={() => askConfirm({
+                    title: 'Run squad allocation?',
+                    body: 'This allocates squads for all managers. It cannot be undone without a manual reset.',
+                    confirmLabel: 'Run allocation',
+                    slideToConfirm: true,
+                    onConfirm: triggerDraftAllocation,
+                  })}
                   disabled={commLoading}
                   style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
                 >RUN ALLOCATION ↯</button>
