@@ -89,7 +89,7 @@ test.describe('Navigation', () => {
     // Top bar is clubhouse-centric — always shows these items
     // Use .first() — strict mode: both "Clubhouse" heading and "My Clubhouse" link match
     await expect(sidebar.getByText(/clubhouse/i).first()).toBeVisible();
-    await expect(sidebar.getByText(/settings/i)).toBeVisible();
+    await expect(sidebar.locator('a[href="/settings"]')).toBeVisible();
   });
 
   test('mobile bottom nav is visible at 375px', async ({ page }) => {
