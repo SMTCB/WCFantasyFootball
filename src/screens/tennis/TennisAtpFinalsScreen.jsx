@@ -64,17 +64,17 @@ export default function TennisAtpFinalsScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '20px 16px' }}>
-        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--on-shell-dim)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '20px 16px' }}>
+        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Tennis
         </button>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 4 }}>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
           🏆 ATP Finals · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>
           ATP Finals Predictions
         </h1>
-        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)', margin: '4px 0 0' }}>
+        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '4px 0 0' }}>
           Pick the winner of all 15 matches across 2 login windows.
         </p>
       </div>
@@ -82,7 +82,7 @@ export default function TennisAtpFinalsScreen() {
       <div style={{ padding: '16px', maxWidth: 600, margin: '0 auto' }}>
 
         {/* Scoring tiers reference */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '14px 16px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', marginBottom: 20 }}>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 10 }}>Scoring Tiers</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {TIER_TIERS.map(t => (
@@ -100,7 +100,7 @@ export default function TennisAtpFinalsScreen() {
 
         {/* Upcoming */}
         {status === 'upcoming' && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '24px 20px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '24px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}><IconTrophy size={28} /></div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>
               Match draw not yet seeded. Check back closer to the ATP Finals.
@@ -110,7 +110,7 @@ export default function TennisAtpFinalsScreen() {
 
         {/* Group Stage Picks */}
         {(isGroupOpen || isKnockoutOpen || isCompleted) && groupMatches.length > 0 && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', marginBottom: 20 }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
               Login 1 — Group Stage (12 matches)
             </div>
@@ -139,7 +139,7 @@ export default function TennisAtpFinalsScreen() {
                 <button
                   type="submit"
                   disabled={busy || !allGroupPicked}
-                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allGroupPicked ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allGroupPicked ? 'default' : 'pointer' }}
+                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allGroupPicked ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allGroupPicked ? 'default' : 'pointer' }}
                 >
                   {busy ? 'Saving…' : 'Lock group picks →'}
                 </button>
@@ -150,7 +150,7 @@ export default function TennisAtpFinalsScreen() {
 
         {/* Knockout Picks */}
         {(isKnockoutOpen || isCompleted) && knockoutMatches.length > 0 && (
-          <div style={{ background: 'var(--card)', border: `2px solid ${isKnockoutOpen ? 'var(--ten)' : 'var(--rule)'}`, borderRadius: 6, padding: '16px' }}>
+          <div style={{ background: 'var(--card)', border: `2px solid ${isKnockoutOpen ? 'var(--ten)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', padding: '16px' }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
               Login 2 — Knockouts (3 matches)
             </div>
@@ -180,7 +180,7 @@ export default function TennisAtpFinalsScreen() {
                 <button
                   type="submit"
                   disabled={busy || !allKnockoutPicked}
-                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allKnockoutPicked ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allKnockoutPicked ? 'default' : 'pointer' }}
+                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allKnockoutPicked ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !allKnockoutPicked ? 'default' : 'pointer' }}
                 >
                   {busy ? 'Saving…' : 'Lock knockout picks →'}
                 </button>
@@ -199,8 +199,8 @@ function MatchPickRow({ match, label, current, locked, onChange }) {
   const hasResult = !!match.winner_player_id;
 
   return (
-    <div style={{ border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden' }}>
-      <div style={{ padding: '6px 12px', background: 'var(--elev)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+    <div style={{ border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+      <div style={{ padding: '6px 12px', background: 'var(--elev)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
         {label ?? `Match ${match.match_number}`}
         {hasResult && <span style={{ marginLeft: 8, color: 'var(--pos)' }}>Result in</span>}
       </div>
@@ -227,7 +227,7 @@ function MatchPickRow({ match, label, current, locked, onChange }) {
             >
               {p.name}
               {correctPick && <span style={{ fontSize: 'var(--fs-label)' }}>✓</span>}
-              {isWinner && !isPicked && hasResult && <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>winner</span>}
+              {isWinner && !isPicked && hasResult && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>winner</span>}
             </button>
           );
         })}
@@ -237,7 +237,7 @@ function MatchPickRow({ match, label, current, locked, onChange }) {
 }
 
 function Loader() {
-  return <div style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</div>;
+  return <div style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>;
 }
 
 function Err({ msg, onBack }) {

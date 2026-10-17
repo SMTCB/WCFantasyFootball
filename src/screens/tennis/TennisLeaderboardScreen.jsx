@@ -12,19 +12,19 @@ export default function TennisLeaderboardScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '20px 16px' }}>
-        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--on-shell-dim)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '20px 16px' }}>
+        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Tennis
         </button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>
+          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>
             Season Standings
           </h1>
           {myBoxes.length > 1 && (
             <select
               value={activeBox?.player_box_id ?? ''}
               onChange={e => setActivePlayerBoxId(e.target.value)}
-              style={{ background: 'var(--shell-fill-strong)', color: 'var(--on-accent)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+              style={{ background: 'var(--elev)', color: 'var(--text)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
             >
               {myBoxes.map(b => (
                 <option key={b.player_box_id} value={b.player_box_id}>{b.name}</option>
@@ -32,13 +32,13 @@ export default function TennisLeaderboardScreen() {
             </select>
           )}
         </div>
-        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)', margin: '4px 0 0' }}>
+        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '4px 0 0' }}>
           Grand Slams (all) + Best 4 Masters 1000s + ATP Finals
         </p>
       </div>
 
       {activeBox?.archived && (
-        <div style={{ padding: '8px 16px', background: 'var(--shell-fill)', borderBottom: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)' }}>
+        <div style={{ padding: '8px 16px', background: 'var(--elev)', borderBottom: '1px solid var(--rule)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           ARCHIVED — this player's box is inactive.
         </div>
       )}
@@ -50,7 +50,7 @@ export default function TennisLeaderboardScreen() {
         ) : !activeBox ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 16px' }}>Join a Player's Box to see standings.</p>
-            <button onClick={() => navigate('/tennis/box')} style={{ padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => navigate('/tennis/box')} style={{ padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}>
               Join a box
             </button>
           </div>
@@ -63,7 +63,7 @@ export default function TennisLeaderboardScreen() {
         ) : (
           <>
             {/* Masters Drop Rule note */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 'var(--fs-body-lg)' }}>ℹ️</span>
               <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text2)', margin: 0 }}>
                 <strong>Masters Drop Rule:</strong> Only your best 4 Masters 1000 scores count. The worst score is dropped once 5 or more Masters are complete.
@@ -71,7 +71,7 @@ export default function TennisLeaderboardScreen() {
             </div>
 
             {/* Standings table */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden', marginBottom: 20 }}>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 20 }}>
               <CompetitionResultsHeader
                 rows={standings}
                 columns={[
@@ -89,7 +89,7 @@ export default function TennisLeaderboardScreen() {
                       {row.username}
                     </span>
                     {row.tournaments_scored > 0 && (
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                         {row.tournaments_scored} played
                       </span>
                     )}
@@ -104,7 +104,7 @@ export default function TennisLeaderboardScreen() {
 
             {/* Per-tournament breakdown */}
             {seasonSummary.length > 0 && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden' }}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
                   <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Per-Tournament Breakdown</span>
                 </div>
@@ -114,9 +114,9 @@ export default function TennisLeaderboardScreen() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)' }}>
                     <thead>
                       <tr style={{ background: 'var(--elev)' }}>
-                        <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>Manager</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', fontWeight: 400 }}>Manager</th>
                         {seasonSummary[0]?.tournament_scores?.map(ts => (
-                          <th key={ts.tournament_id} style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 400, whiteSpace: 'nowrap', maxWidth: 80 }}>
+                          <th key={ts.tournament_id} style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', fontWeight: 400, whiteSpace: 'nowrap', maxWidth: 80 }}>
                             {ts.tournament_name?.split(' ').slice(0, 1).join(' ')}
                           </th>
                         ))}
@@ -161,9 +161,8 @@ export default function TennisLeaderboardScreen() {
                           <span
                             key={ts.tournament_id}
                             style={{
-                              fontFamily: 'JetBrains Mono, monospace',
-                              fontSize: 'var(--fs-micro)',
-                              letterSpacing: '0.06em',
+                              fontFamily: 'Archivo, sans-serif',
+                              fontSize: 'var(--fs-label)',
                               color: 'var(--ten)',
                               background: 'color-mix(in srgb, var(--ten) 10%, transparent)',
                               border: '1px solid color-mix(in srgb, var(--ten) 25%, transparent)',
@@ -176,7 +175,7 @@ export default function TennisLeaderboardScreen() {
                           </span>
                         ))}
                         {!row.tournament_scores?.some(ts => ts.total_points > 0) && (
-                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+                          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                             No scores yet
                           </span>
                         )}
