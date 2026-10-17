@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+import { useNavigate } from 'react-router-dom';
 // Shared chrome primitives for the League Hub.
 // All components use inline styles + CSS custom properties to match the design spec exactly.
 //
@@ -93,10 +94,16 @@ export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '�
   return <HubHeaderBar title={leagueName} sub={`${memberCount} members · GW${gw}`} cupPhase={cupPhase} leagueMode={leagueMode} isLive={isLive} rightSlot={rightSlot} onBack={onBack} />;
 }
 
-// League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5)
-export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
-  const tabs = [
+// League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5).
+// squad / market / live are separate routes; callers navigate when one is picked.
+export const ROUTE_TABS = ['squad', 'market', 'live'];
+
+function hubTabList({ isCommissioner, notifyBets, notifyTrading, h2hEnabled, isDraftLeague }) {
+  return [
     { id: 'leaderboard', label: 'Standings' },
+    { id: 'squad',       label: 'Squad' },
+    { id: 'market',      label: 'Market' },
+    { id: 'live',        label: 'Live' },
     ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H' }] : []),
     { id: 'recap',       label: 'Recap' },
     { id: 'market_report', label: 'Market report' },
@@ -108,7 +115,22 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
     { id: 'stats',       label: 'Stats' },
     ...(isCommissioner ? [{ id: 'admin', label: 'Admin' }] : []),
   ];
-  return <HubTabRow tabs={tabs} active={active} onTab={onTab} />;
+}
+
+export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
+  return <HubTabRow tabs={hubTabList({ isCommissioner, notifyBets, notifyTrading, h2hEnabled, isDraftLeague })} active={active} onTab={onTab} />;
+}
+
+// Same tab row for the Squad / Market / Live routes, scoped to one league.
+export function LeagueRouteTabs({ active, leagueId }) {
+  const navigate = useNavigate();
+  if (!leagueId) return null;
+  const go = (t) => {
+    if (t === active) return;
+    if (ROUTE_TABS.includes(t)) navigate(`/${t}?leagueId=${leagueId}`);
+    else navigate(`/league/${leagueId}?tab=${t}`);
+  };
+  return <HubTabRow tabs={hubTabList({})} active={active} onTab={go} />;
 }
 
 // Rank trend chip (▲2 / ▼1 / =)

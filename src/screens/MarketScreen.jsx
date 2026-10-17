@@ -24,6 +24,7 @@ import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useRelaxationState } from '../hooks/useRelaxationState';
 import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
+import { LeagueRouteTabs } from '../components/league/HubShared';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import RelaxationBanner from '../components/RelaxationBanner';
 import WishlistDraftBanner from '../components/WishlistDraftBanner';
@@ -725,6 +726,7 @@ export default function MarketScreen() {
       )}
 
       {/* â"€â"€ Transfer Window Status Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+      <LeagueRouteTabs active="market" leagueId={activeLeague} />
       <TransferWindowBanner
         {...transferWindow}
         isDraftLeague={isDraftLeague}

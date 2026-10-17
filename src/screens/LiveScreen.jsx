@@ -1,6 +1,7 @@
 import { LoadingRows } from '../components/Skeleton';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { LeagueRouteTabs } from '../components/league/HubShared';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -921,6 +922,7 @@ export default function LiveScreen() {
 
   return (
     <div style={{ display: 'flex', flex: 1, flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', minHeight: 0 }}>
+      <LeagueRouteTabs active="live" leagueId={urlLeagueId} />
 
       {/* Live data error banner */}
       {liveError && (
@@ -934,7 +936,7 @@ export default function LiveScreen() {
       )}
 
       {/* ── DESKTOP ─────────────────────────────────────────────────────────── */}
-      <div className="hidden lg:flex flex-col" style={{ height: '100dvh', overflow: 'hidden' }}>
+      <div className="hidden lg:flex flex-col" style={{ height: urlLeagueId ? 'calc(100dvh - 45px)' : '100dvh', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '24px 32px 16px', borderBottom: '1px solid var(--rule)' }}>
