@@ -58,7 +58,7 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArc
                 borderLeft: '3px solid transparent',
                 cursor: 'pointer', alignItems: 'center',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderLeftColor = tc; e.currentTarget.style.background = 'var(--shell-fill)'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderLeftColor = tc; e.currentTarget.style.background = 'var(--elev)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderLeftColor = 'transparent'; e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{ padding: '18px 16px 18px 0', minWidth: 0 }}>

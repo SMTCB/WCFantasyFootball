@@ -42,7 +42,7 @@ function PerformanceBetRow({ bt }) {
             {wrongPct > 0 && <div style={{ width: `${wrongPct}%`, background: 'var(--danger)', opacity: 0.5, transition: 'width .3s' }} />}
           </>
         ) : (
-          <div style={{ width: '100%', background: 'var(--shell-fill)' }} />
+          <div style={{ width: '100%', background: 'var(--elev)' }} />
         )}
       </div>
     </div>
@@ -84,13 +84,13 @@ function PerformanceByType({ myBetsByType }) {
         const withData = bets.filter(b => b.correct + b.wrong > 0);
         const isOpen  = openCats.has(cat);
         return (
-          <div key={cat} style={{ borderBottom: '1px solid var(--shell-rule)' }}>
+          <div key={cat} style={{ borderBottom: '1px solid var(--rule)' }}>
             {/* Category header — clickable to collapse */}
             <button
               onClick={() => toggleCat(cat)}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 22px', background: 'var(--shell-fill)',
+                padding: '8px 22px', background: 'var(--elev)',
                 border: 'none', cursor: 'pointer', textAlign: 'left',
               }}
             >

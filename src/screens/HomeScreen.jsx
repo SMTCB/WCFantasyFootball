@@ -193,7 +193,7 @@ function CompChip({ comp, active, count, onClick }) {
       display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px',
       border: `1px solid ${active ? comp.tone : 'var(--rule)'}`,
       color: active ? comp.tone : 'var(--paper)',
-      background: active ? 'var(--shell-fill)' : 'transparent',
+      background: active ? 'var(--elev)' : 'transparent',
       fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
       cursor: 'pointer', userSelect: 'none', flexShrink: 0,
     }}>
@@ -408,7 +408,7 @@ function MatchStrip({ f }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'stretch', height: 22,
-      background: isLive ? 'rgba(239,68,68,.07)' : 'var(--shell-fill)',
+      background: isLive ? 'rgba(239,68,68,.07)' : 'var(--elev)',
     }}>
       <div style={{ width: 3, background: barColor, flexShrink: 0 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 6px', flex: 1, minWidth: 0 }}>

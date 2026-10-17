@@ -187,7 +187,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                 if (row.is_bye) {
                   const byeName = usernameOf(row.bye_user_id);
                   return (
-                    <div key={row.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid var(--shell-rule)' }}>
+                    <div key={row.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid var(--rule)' }}>
                       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', }}>BYE</span>
                       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{byeName}</span>
                       {isResolved && (
@@ -203,7 +203,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                 const awayColor = isResolved ? outcomeColor(row.away_h2h_pts, winPts) : 'var(--paper)';
 
                 return (
-                  <div key={row.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', alignItems: 'center', padding: '10px 20px', borderBottom: '1px solid var(--shell-rule)', gap: 4 }}>
+                  <div key={row.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', alignItems: 'center', padding: '10px 20px', borderBottom: '1px solid var(--rule)', gap: 4 }}>
                     {/* Home */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {isResolved && (

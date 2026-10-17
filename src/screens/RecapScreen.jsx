@@ -161,7 +161,7 @@ function LiveMatchdayCard({ card }) {
   const { gwLabel, totalPts, roundComplete, fixtures, noGamePlayers, leagueName } = card;
 
   return (
-    <div style={{ borderBottom: '2px solid var(--rule)', background: 'var(--shell-fill)' }}>
+    <div style={{ borderBottom: '2px solid var(--rule)', background: 'var(--elev)' }}>
 
       {/* Header */}
       <div style={{
@@ -209,7 +209,7 @@ function LiveMatchdayCard({ card }) {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '5px 20px',
-            background: 'var(--shell-fill)',
+            background: 'var(--elev)',
           }}>
             <span style={{
               fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', flexShrink: 0,
@@ -230,7 +230,7 @@ function LiveMatchdayCard({ card }) {
               <div key={p.id} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '7px 20px',
-                borderTop: '1px solid var(--shell-rule)',
+                borderTop: '1px solid var(--rule)',
               }}>
                 <span style={{
                   fontFamily: MONO, fontSize: 'var(--fs-micro)',

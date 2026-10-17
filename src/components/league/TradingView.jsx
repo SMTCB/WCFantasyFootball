@@ -233,7 +233,7 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
               fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)',
-              padding: '5px 10px', border: '1px solid var(--rule)', background: 'var(--shell-fill)',
+              padding: '5px 10px', border: '1px solid var(--rule)', background: 'var(--elev)',
             }}>
               ⏳ WINDOW CLOSED — accept when transfer window reopens
             </div>
@@ -332,9 +332,9 @@ export default function TradingView({
               title="How auctions & trades work"
               style={{
                 flexShrink: 0, width: 20, height: 20, borderRadius: '50%',
-                border: '1px solid var(--shell-rule-strong)',
-                background: 'var(--shell-fill)',
-                color: 'var(--on-shell-dim)',
+                border: '1px solid var(--rule)',
+                background: 'var(--elev)',
+                color: 'var(--mute)',
                 fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 alignSelf: 'center',

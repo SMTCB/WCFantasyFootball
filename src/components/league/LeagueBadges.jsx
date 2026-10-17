@@ -27,7 +27,7 @@ export function ArchivedBadge() {
         display: 'inline-flex', alignItems: 'center', gap: 4,
         padding: '2px 7px',
         border: '1px solid var(--rule)',
-        background: 'var(--shell-fill)',
+        background: 'var(--elev)',
         color: 'var(--mute)',
         fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
         textTransform: 'uppercase', whiteSpace: 'nowrap',
