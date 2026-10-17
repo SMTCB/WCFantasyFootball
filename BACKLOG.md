@@ -23,6 +23,13 @@ Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, r
 
 ---
 
+## ✅ Frontrow redesign — Wave 3 (F1 and tennis) (2026-10-17) — PRs #1075–#1076
+
+- **#1075 3a** F1 screens (Admin, Home, RacePickForm, Report, SeasonBets, Standings, PaddockLobby) · **#1076 3b** tennis screens (Player Box, Admin, ATP Finals, Home, Leaderboard, Profile, Tournament). Light headers with a 4px sport marker, sentence-case labels, tokens only (no `--shell*`), 44px tap targets. Logic unchanged.
+- Open / next: Waves 4–5; the F1 marker falls back to the accent colour (`--sport-marker`) rather than F1 red — consider setting `--f1`; CI Security job still failing on unrelated npm advisories. Wave 3 checked on Vercel previews only.
+
+---
+
 ## ✅ Frontrow redesign — Wave 2 (shell and hubs) (2026-10-17) — PRs #1067–#1073
 
 - **#1067 2a** light mobile top/bottom bars · **#1068 2b** slim light desktop top bar replaces the sidebar · **#1069 2c** Home · **#1070 2d** Clubhouse + Frontrow front page (cream broadsheet kept; labels/tap targets only) · **#1071 2e** Trophy cabinet (navy kept as the design exception), My bets, Coin wallet, Settings · **#1072 2f** ChallengeScreen · **#1073** dark mode exposed (Settings → Appearance, Light/Dark, stored in `ffl-theme`; default stays light).
