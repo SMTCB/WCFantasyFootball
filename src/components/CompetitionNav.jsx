@@ -212,21 +212,23 @@ export function ClubhouseSwitcher({
           <div style={{ padding: '10px 14px 6px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             {clubhouseName ?? 'This clubhouse'}
           </div>
-          <button
-            role="menuitem"
-            onClick={() => { setMenuOpen(false); navigate('/clubhouse'); }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 14px', minHeight: 'var(--tap)', border: 'none', textAlign: 'left', cursor: 'pointer',
-              background: isClubhouseHome ? 'var(--elev)' : 'transparent',
-              color: isClubhouseHome ? 'var(--paper)' : 'var(--mute)',
-              fontSize: 'var(--fs-label)', fontWeight: isClubhouseHome ? 600 : 500,
-            }}
-          >
-            <NavIconClubhouse size={18} />
-            <span style={{ flex: 1 }}>Clubhouse hub</span>
-            <UnreadDot count={unreadCount} />
-          </button>
+          {!active && (
+            <button
+              role="menuitem"
+              onClick={() => { setMenuOpen(false); navigate('/clubhouse'); }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px', minHeight: 'var(--tap)', border: 'none', textAlign: 'left', cursor: 'pointer',
+                background: isClubhouseHome ? 'var(--elev)' : 'transparent',
+                color: isClubhouseHome ? 'var(--paper)' : 'var(--mute)',
+                fontSize: 'var(--fs-label)', fontWeight: isClubhouseHome ? 600 : 500,
+              }}
+            >
+              <NavIconClubhouse size={18} />
+              <span style={{ flex: 1 }}>Clubhouse hub</span>
+              <UnreadDot count={unreadCount} />
+            </button>
+          )}
           {allComps.map(comp => {
             const isActive = active?.id === comp.id && active?.sport === comp.sport;
             const color = SPORT_COLOR[comp.sport] ?? 'var(--mute)';

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
 import { supabase } from '../lib/supabase';
-import { ArchivedBadge } from '../components/league/LeagueBadges';
+import { ArchivedBadge, FinishedBadge } from '../components/league/LeagueBadges';
 import { useShowArchived } from '../hooks/useShowArchived';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
@@ -38,6 +38,7 @@ function CompetitionChip({ item, sport, onClick }) {
       <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
         {item.name}
       </span>
+      {item.finished && <FinishedBadge />}
       {item.archived && <ArchivedBadge />}
       <span style={{ flexShrink: 0, fontSize: 'var(--fs-micro)' }}>{meta.emoji}</span>
     </button>
