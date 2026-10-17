@@ -23,6 +23,13 @@ Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, r
 
 ---
 
+## ✅ Frontrow redesign — Wave 4 (flows) (2026-10-17) — PRs #1078–#1079
+
+- **#1078 4a** sign-in, onboarding wizard, new competition, draft, draft recovery, wishlist draft (+banner, info modal) · **#1079 4b** Bracket plus shared modals/cards (Confirm, invite, shortcuts, scoring info, tour, notifications, competition nav, selectors, BetWidget). Legacy `--shell/--ink/--cyan` tokens swapped for light tokens, sentence-case labels. Logic unchanged.
+- Open / next: Wave 5 (admin: commissioner panel, F1/tennis/seed admin); pitch components (PitchView, MobilePitchField) and some Wave 1 screens still reference legacy tokens (valid in light mode, to be tidied before the tokens are removed); CI Security job still failing on unrelated npm advisories. Wave 4 checked on Vercel previews only.
+
+---
+
 ## ✅ Frontrow redesign — Wave 3 (F1 and tennis) (2026-10-17) — PRs #1075–#1076
 
 - **#1075 3a** F1 screens (Admin, Home, RacePickForm, Report, SeasonBets, Standings, PaddockLobby) · **#1076 3b** tennis screens (Player Box, Admin, ATP Finals, Home, Leaderboard, Profile, Tournament). Light headers with a 4px sport marker, sentence-case labels, tokens only (no `--shell*`), 44px tap targets. Logic unchanged.
