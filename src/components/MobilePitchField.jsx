@@ -83,15 +83,15 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
             >
               <div style={{ position: 'relative' }}>
                 <div style={{
-                  width: 34, height: 34, borderRadius: '50%',
+                  width: 44, height: 44, borderRadius: "50%",
                   background: 'var(--card)',
                   border: `2.5px solid ${ringColor}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   padding: 2,
                 }}>
                   {ClubCrest
-                    ? <ClubCrest name={player.club} size={26} />
-                    : <div style={{ width: 26, height: 26, borderRadius: '50%', border: '1.5px dashed var(--rule)' }} />}
+                    ? <ClubCrest name={player.club} size={36} />
+                    : <div style={{ width: 36, height: 36, borderRadius: "50%", border: '1.5px dashed var(--rule)' }} />}
                 </div>
                 <div style={{
                   position: 'absolute', bottom: -2, right: -2,

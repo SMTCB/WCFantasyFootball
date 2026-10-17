@@ -35,11 +35,13 @@ export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }
 // LEAGUE ACTIVITY -> League activity
 const sentence = (t) => (typeof t === 'string' ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : t);
 
-// Shared light tab row (redesign Wave 1) — underline tabs, 44px tap target, 12px+ labels.
+// Shared light tab row (redesign Wave 1) — underline tabs, 46px tap target, 15px labels.
+// A tab with id '|' renders as a thin divider (Standings Squad Market Live | Recap Bets Stats).
 function HubTabRow({ tabs, active, onTab }) {
   return (
-    <div role="tablist" style={{ display: 'flex', borderBottom: '1px solid var(--rule)', padding: '0 max(12px, 3vw)', background: 'var(--card)', flexShrink: 0, overflowX: 'auto', overflowY: 'hidden' }}>
+    <div role="tablist" style={{ display: 'flex', gap: 2, borderBottom: '1px solid var(--rule)', padding: '0 max(12px, 3vw)', background: 'var(--card)', flexShrink: 0, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none' }}>
       {tabs.map(t => {
+        if (t.id === '|') return <span key="div" aria-hidden="true" style={{ width: 1, background: 'var(--rule)', margin: '10px 6px', flexShrink: 0 }} />;
         const on = t.id === active;
         return (
           <button
@@ -48,8 +50,8 @@ function HubTabRow({ tabs, active, onTab }) {
             aria-selected={on}
             onClick={() => onTab(t.id)}
             style={{
-              minHeight: 'var(--tap)', padding: '0 14px', position: 'relative', flexShrink: 0,
-              fontFamily: 'inherit', fontSize: "14px", fontWeight: on ? 700 : 500,
+              minHeight: 46, padding: '0 12px', position: 'relative', flexShrink: 0,
+              fontFamily: 'inherit', fontSize: '15px', fontWeight: 600,
               color: on ? 'var(--paper)' : 'var(--mute)',
               cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap',
             }}
@@ -58,7 +60,7 @@ function HubTabRow({ tabs, active, onTab }) {
             {t.notify && (
               <span aria-label="new" style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--crit)', marginLeft: 5, verticalAlign: 'middle' }} />
             )}
-            {on && <span style={{ position: 'absolute', left: 8, right: 8, bottom: -1, height: 3, borderRadius: 2, background: 'var(--accent)' }} />}
+            {on && <span style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 3, borderRadius: 2, background: 'var(--accent)' }} />}
           </button>
         );
       })}
@@ -66,32 +68,68 @@ function HubTabRow({ tabs, active, onTab }) {
   );
 }
 
-function HubHeaderBar({ title, sub, cupPhase, leagueMode, isLive, rightSlot, onBack, backLabel, compact }) {
-  const pill = { fontSize: "12px", fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)', flexShrink: 0, whiteSpace: 'nowrap' };
+const crestInitials = (title = '') => {
+  const w = title.replace(/[^\p{L}\p{N} ]/gu, '').trim().split(/\s+/).filter(Boolean);
+  return (w.length > 1 ? w[0][0] + w[1][0] : (w[0] || '?').slice(0, 2)).toUpperCase();
+};
+
+const chipStyle = (tone) => ({
+  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '13px', fontWeight: 600, padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0,
+  background: tone === 'accent' ? 'var(--accent-soft)' : tone === 'crit' ? 'var(--crit-soft)' : 'var(--elev)',
+  color: tone === 'accent' ? 'var(--accent)' : tone === 'crit' ? 'var(--crit)' : 'var(--paper)',
+});
+
+// Competition header (redesign): crest with sport marker, title + chips, your position, then the actions.
+// `stats` = [{ value, label }]; shown right of the title on desktop and as one line under it on mobile.
+function HubHeaderBar({ title, chips = [], stats = [], cupPhase, leagueMode, isLive, rightSlot, onBack, backLabel, compact }) {
+  const all = [
+    ...(leagueMode === 'draft_h2h' ? [{ label: 'Draft · H2H' }] : []),
+    ...(cupPhase && cupPhase !== 'pre_cup' ? [{ label: cupPhase.replace(/_/g, ' ') }] : []),
+    ...chips,
+    ...(isLive ? [{ label: '● Live', tone: 'crit' }] : []),
+  ];
   return (
-    <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--accent)', padding: compact ? '10px max(14px, 4vw)' : '14px max(16px, 3vw)', flexShrink: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-          {onBack && (
-            <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, minHeight: 24, cursor: 'pointer', fontSize: "13px", color: 'var(--mute)' }}>{backLabel || '← Back'}</button>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontFamily: DISPLAY, fontSize: compact ? "20px" : "26px", lineHeight: 1.15, letterSpacing: '-0.01em', color: 'var(--paper)', minWidth: 0 }}>{title}</h1>
-            {cupPhase && cupPhase !== 'pre_cup' && <span style={pill}>{cupPhase.replace(/_/g, ' ')}</span>}
-            {leagueMode === 'draft_h2h' && <span style={pill}>Draft · H2H</span>}
-            {isLive && <span style={{ ...pill, background: 'var(--crit-soft)', color: 'var(--crit)' }}>● Live</span>}
-          </div>
-          {sub && <div className="num" style={{ fontSize: "13px", color: 'var(--mute)', marginTop: 2 }}>{sub}</div>}
+    <div style={{ background: 'var(--card)', padding: compact ? '12px max(14px, 4vw) 8px' : '14px max(16px, 3vw)', flexShrink: 0 }}>
+      {onBack && (
+        <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, minHeight: 24, marginBottom: 6, cursor: 'pointer', fontSize: '13px', color: 'var(--mute)' }}>{backLabel || '← Back'}</button>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div aria-hidden="true" style={{ position: 'relative', width: 46, height: 46, borderRadius: 12, background: 'var(--navy)', color: 'var(--on-navy)', display: 'grid', placeItems: 'center', fontFamily: DISPLAY, fontSize: '16px', flexShrink: 0, marginLeft: 4 }}>
+          {crestInitials(title)}
+          <span style={{ position: 'absolute', left: -4, top: 10, bottom: 10, width: 4, borderRadius: 2, background: 'var(--sport-marker, var(--accent))' }} />
         </div>
-        {rightSlot && <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>{rightSlot}</div>}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h1 style={{ margin: 0, fontFamily: DISPLAY, fontSize: '20px', lineHeight: 1.2, letterSpacing: '-0.01em', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
+          {all.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+              {all.map((c, i) => <span key={i} style={chipStyle(c.tone)}>{c.label}</span>)}
+            </div>
+          )}
+        </div>
+        {stats.length > 0 && (
+          <div className="hidden md:flex" style={{ gap: 18, textAlign: 'right', flexShrink: 0 }}>
+            {stats.map(st => (
+              <div key={st.label}>
+                <b className="num" style={{ display: 'block', fontFamily: DISPLAY, fontWeight: 400, fontSize: '24px', lineHeight: 1.1, color: 'var(--paper)' }}>{st.value}</b>
+                <span style={{ fontSize: '12px', color: 'var(--mute)' }}>{st.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {rightSlot && <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>{rightSlot}</div>}
       </div>
+      {stats.length > 0 && (
+        <div className="md:hidden num" style={{ marginTop: 6, fontSize: '13px', color: 'var(--mute)' }}>
+          {stats.map((st, i) => <span key={st.label}>{i > 0 && ' · '}<b style={{ color: 'var(--paper)' }}>{st.value}</b> {st.label.toLowerCase()}</span>)}
+        </div>
+      )}
     </div>
   );
 }
 
-// Hub topbar (desktop) — league name, members, gameweek.
-export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false, cupPhase, leagueMode }) {
-  return <HubHeaderBar title={leagueName} sub={`${memberCount} members · GW${gw}`} cupPhase={cupPhase} leagueMode={leagueMode} isLive={isLive} rightSlot={rightSlot} onBack={onBack} />;
+// Hub topbar (desktop) — crest, league name, chips, your position.
+export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '—', chips = [], stats = [], rightSlot, onBack, isLive = false, cupPhase, leagueMode }) {
+  return <HubHeaderBar title={leagueName} chips={[...(gw !== '—' ? [{ label: `Gameweek ${gw}`, tone: 'accent' }] : []), { label: `${memberCount} members` }, ...chips]} stats={stats} cupPhase={cupPhase} leagueMode={leagueMode} isLive={isLive} rightSlot={rightSlot} onBack={onBack} />;
 }
 
 // League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5).
@@ -103,19 +141,19 @@ export const ROUTE_TABS = ['squad', 'market', 'live'];
 const HUB_GROUP = { h2h: 'leaderboard', market_report: 'recap', betting: 'bets' };
 export const hubGroupOf = (tab) => HUB_GROUP[tab] ?? tab;
 
-function hubTabList({ isCommissioner, notifyBets, notifyTrading, isDraftLeague }) {
+function hubTabList({ notifyBets, notifyTrading, isDraftLeague }) {
   return [
     { id: 'leaderboard', label: 'Standings' },
     { id: 'squad',       label: 'Squad' },
     { id: 'market',      label: 'Market' },
     { id: 'live',        label: 'Live' },
+    { id: '|' },
     { id: 'recap',       label: 'Recap' },
     { id: 'bets',        label: 'Bets',    notify: notifyBets },
     // TRADING tab (auctions + trade proposals) is draft-only — Classic leagues use
     // shared player pools so exclusive ownership transfers don't apply.
     ...(isDraftLeague ? [{ id: 'trading', label: 'Trading', notify: notifyTrading }] : []),
     { id: 'stats',       label: 'Stats' },
-    ...(isCommissioner ? [{ id: 'admin', label: 'Admin' }] : []),
   ];
 }
 
@@ -256,12 +294,13 @@ export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase()
 // ─── Mobile components ────────────────────────────────────────────────────────
 
 // Mobile hub league header — replaces HubTopbar on mobile viewports.
-export function HubLeagueHeader({ leagueName = 'Loading…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot, cupPhase, leagueMode }) {
+export function HubLeagueHeader({ leagueName = 'Loading…', memberCount = 0, gw = '—', chips = [], stats = [], backable = false, backTitle = '', onBack, rightSlot, cupPhase, leagueMode }) {
   return (
     <HubHeaderBar
       compact
       title={backable ? backTitle : leagueName}
-      sub={backable ? null : `${memberCount} members · GW${gw}`}
+      chips={backable ? [] : [...(gw !== '—' ? [{ label: `Gameweek ${gw}`, tone: 'accent' }] : []), { label: `${memberCount} members` }, ...chips]}
+      stats={backable ? [] : stats}
       onBack={backable ? onBack : null}
       cupPhase={cupPhase}
       leagueMode={leagueMode}

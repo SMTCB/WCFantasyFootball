@@ -76,23 +76,26 @@ export default function NotificationBell({
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
       <button
+        className="hit-44"
         onClick={() => setOpen(o => !o)}
         title="Notifications"
+        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        aria-expanded={open}
         style={{
-          position: 'relative', width: 32, height: 32, borderRadius: 'var(--radius)',
-          background: 'var(--elev)', border: '1px solid var(--rule)',
+          position: 'relative', width: 'var(--tap)', height: 'var(--tap)', borderRadius: '50%',
+          background: open ? 'var(--elev)' : 'transparent', border: 'none', color: 'var(--mute)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
-        {/* Two-tone tray/inbox glyph — CSS-built, not an emoji */}
-        <div style={{ width: 14, height: 11, border: '1.5px solid var(--rule)', borderTop: 'none', borderRadius: '0 0 2px 2px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: -1, left: -1.5, right: -1.5, height: 1.5, background: 'var(--rule)' }} />
-        </div>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 9a6 6 0 0 1 12 0c0 6 2 7.5 2 7.5H4S6 15 6 9Z" />
+          <path d="M10 20a2 2 0 0 0 4 0" />
+        </svg>
         {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute', top: -4, right: -4, minWidth: 15, height: 15, borderRadius: 100,
-            background: 'var(--danger)', color: 'var(--on-accent)', fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+          <span aria-hidden="true" className="num" style={{
+            position: 'absolute', top: 5, right: 4, minWidth: 18, height: 18, borderRadius: 100,
+            background: 'var(--danger)', color: 'var(--on-accent)', fontSize: 'var(--fs-micro)', fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', boxShadow: '0 0 0 2px var(--card)',
           }}>
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
