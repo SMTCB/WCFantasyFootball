@@ -23,6 +23,13 @@ Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, r
 
 ---
 
+## ✅ Frontrow redesign — Wave 5 (admin) (2026-10-17) — PR #1081
+
+- **#1081** CommissionerPanel, BetCreatorPanel, AdminSeedScreen on light tokens, sentence-case labels (F1/tennis admin were done in Wave 3). All six planned waves are now built.
+- Open / next: legacy-token cleanup (Squad, Market, Live, League, Home, Recap and smaller components still reference `--shell/--ink/--cyan`; pitch components need their own dark pitch tokens) before the legacy tokens are deleted from `index.css`; dark-mode audit screen by screen; set `--f1`/`--ten` sport marker colours; CI Security job failing on unrelated npm advisories.
+
+---
+
 ## ✅ Frontrow redesign — Wave 4 (flows) (2026-10-17) — PRs #1078–#1079
 
 - **#1078 4a** sign-in, onboarding wizard, new competition, draft, draft recovery, wishlist draft (+banner, info modal) · **#1079 4b** Bracket plus shared modals/cards (Confirm, invite, shortcuts, scoring info, tour, notifications, competition nav, selectors, BetWidget). Legacy `--shell/--ink/--cyan` tokens swapped for light tokens, sentence-case labels. Logic unchanged.

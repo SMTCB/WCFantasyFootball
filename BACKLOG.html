@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>273</strong><span>closed</span></div>
+      <div class="total-pill"><strong>274</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (190)</span>
+    <span class="chip" data-filter-kind="done">Shipped (191)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">273</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">274</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">190</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">191</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,7 +1396,7 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">190</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">191</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — wave 0 + wave 1 (football league screens) (2026-10-17) — prs #1059–#1065, rollback tag `rollback/pre-redesign-2026-10-17` @ 6b56bfa 
 
@@ -1429,6 +1429,34 @@ built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, r
 <li><strong>#1063 1d</strong> Squad/Market/Live share the league tab row (<code>LeagueRouteTabs</code>).</li>
 <li><strong>#1064 1e</strong> Recap + Market report · <strong>#1065 1f</strong> Bets, Betting leaderboard, Bet creator, Stats, H2H, Trading (sentence-case labels, token colours, pill badges; logic untouched).</li>
 <li>Open / next: Wave 3 (F1 + tennis), then Waves 4–5; dark mode now exposed (Wave 2), CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — wave 5 (admin) (2026-10-17) — pr #1081 
+
+- **#1081** commissionerpanel, betcreatorpanel, adminseedscreen on light tokens, sentence-case labels (f1/tennis admin were done in wave 3). all six planned waves are now built.
+- open / next: legacy-token cleanup (squad, market, live, league, home, recap and smaller components still reference `--shell/--ink/--cyan`; pitch components need their own dark pitch tokens) before the legacy tokens are deleted from `index.css`; dark-mode audit screen by screen; set `--f1`/`--ten` sport marker colours; ci security job failing on unrelated npm advisories.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Frontrow redesign — Wave 5 (admin)</h3>
+        <p class="card-summary">#1081 CommissionerPanel, BetCreatorPanel, AdminSeedScreen on light tokens, sentence-case labels (F1/tennis admin were done in Wave 3). All six planned waves are now…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-17</span><span class="foot-refs">PR #1081</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Frontrow redesign — Wave 5 (admin)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>#1081 CommissionerPanel, BetCreatorPanel, AdminSeedScreen on light tokens, sentence-case labels (F1/tennis admin were done in Wave 3). All six planned waves are now…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1081</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-17</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><ul>
+<li><strong>#1081</strong> CommissionerPanel, BetCreatorPanel, AdminSeedScreen on light tokens, sentence-case labels (F1/tennis admin were done in Wave 3). All six planned waves are now built.</li>
+<li>Open / next: legacy-token cleanup (Squad, Market, Live, League, Home, Recap and smaller components still reference <code>--shell/--ink/--cyan</code>; pitch components need their own dark pitch tokens) before the legacy tokens are deleted from <code>index.css</code>; dark-mode audit screen by screen; set <code>--f1</code>/<code>--ten</code> sport marker colours; CI Security job failing on unrelated npm advisories.</li>
 </ul>
 <hr></dd></div>
       </dl></template>
