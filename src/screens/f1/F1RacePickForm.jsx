@@ -6,14 +6,14 @@ import { DRIVERS, TEAMS, SPECIAL_OPTIONS } from '../../lib/f1/f1-data';
 function DriverSelect({ label, value, onChange, exclude = [], disabled }) {
   return (
     <div>
-      <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 6, textTransform: 'uppercase' }}>
+      <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
         {label}
       </label>
       <select
         value={value ?? ''}
         onChange={e => onChange(e.target.value || null)}
         disabled={disabled}
-        style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: value ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1 }}
+        style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: value ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1 }}
       >
         <option value="">Select driver…</option>
         {DRIVERS.filter(d => !exclude.includes(d) || d === value).map(d => (
@@ -128,31 +128,31 @@ export default function F1RacePickForm({ race, paddock }) {
   return (
     <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderTop: 'none', borderRadius: '0 0 6px 6px', padding: '14px' }}>
       {paddock?.archived && (
-        <div style={{ marginBottom: 10, padding: '8px 12px', background: 'var(--shell-fill)', borderRadius: 6, border: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)' }}>
-          ARCHIVED — this paddock is inactive.
+        <div style={{ marginBottom: 10, padding: '8px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+          Archived — this paddock is inactive.
         </div>
       )}
       {race.status === 'finished' ? (
-        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--shell-fill)', borderRadius: 6, border: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)' }}>
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           🏁 Race finished
         </div>
       ) : isLocked ? (
-        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(185,28,28,0.08)', borderRadius: 6, border: '1px solid rgba(185,28,28,0.2)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(185,28,28,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(185,28,28,0.2)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>
           🔒 Picks locked — qualifying has started
         </div>
       ) : existing ? (
-        <div style={{ marginBottom: 12, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>
+        <div style={{ marginBottom: 12, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>
           ✓ Picks saved — you can update anytime until they lock (5 min before race start)
         </div>
       ) : (
-        <div style={{ marginBottom: 12, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+        <div style={{ marginBottom: 12, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           Picks open — save anytime, edit as often as you like, until they lock 5 min before race start
         </div>
       )}
 
       {race.status === 'finished' && race.result_p1 && (
         <div style={{ background: 'rgba(22,101,52,0.06)', border: '1px solid rgba(22,101,52,0.2)', marginBottom: 12, borderRadius: 8, padding: '12px 14px' }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--positive)', marginBottom: 8 }}>RACE RESULT</div>
+          <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--positive)', marginBottom: 8 }}>Race result</div>
           <div style={{ display: 'flex', gap: 16 }}>
             {[['🥇', race.result_p1], ['🥈', race.result_p2], ['🥉', race.result_p3]].map(([m, d]) => (
               <div key={m} style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{m} {d?.split(' ').pop()}</div>
@@ -166,7 +166,7 @@ export default function F1RacePickForm({ race, paddock }) {
 
           {/* Podium */}
           <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 12 }}>🏆 PODIUM PREDICTIONS</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}>🏆 PODIUM PREDICTIONS</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ borderLeft: '3px solid var(--f1)', paddingLeft: 10, marginLeft: -13 }}>
                 <DriverSelect label="P1 — Race Winner" value={p1} onChange={edited(setP1)} exclude={[p2, p3].filter(Boolean)} disabled={isLocked} />
@@ -178,18 +178,18 @@ export default function F1RacePickForm({ race, paddock }) {
 
           {/* DNF */}
           <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 12 }}>💥 DNF DRIVER <span style={{ color: 'var(--mute)', fontWeight: 400 }}>(optional)</span></div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}>💥 DNF DRIVER <span style={{ color: 'var(--mute)', fontWeight: 400 }}>(optional)</span></div>
             <DriverSelect label="Driver who retires" value={dnf} onChange={edited(setDnf)} disabled={isLocked} />
           </div>
 
           {/* Team */}
           <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 12 }}>🏎 TEAM — MOST POINTS</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}>🏎 TEAM — MOST POINTS</div>
             <select
               value={team ?? ''}
               onChange={e => { editedRef.current = true; setTeam(e.target.value || null); }}
               disabled={isLocked}
-              style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: team ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
+              style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: team ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
             >
               <option value="">Select team…</option>
               {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -199,7 +199,7 @@ export default function F1RacePickForm({ race, paddock }) {
           {/* Special category */}
           {race.special_category_question && (
             <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 6 }}>⭐ SPECIAL CATEGORY</div>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>⭐ SPECIAL CATEGORY</div>
               <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 12, lineHeight: 1.4 }}>{race.special_category_question}</div>
               {race.special_category_type === 'options' && specialOpts ? (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -208,7 +208,7 @@ export default function F1RacePickForm({ race, paddock }) {
                       key={opt}
                       type="button"
                       onClick={() => { if (isLocked) return; editedRef.current = true; setSpecial(special === opt ? null : opt); }}
-                      style={{ padding: '10px 8px', border: `1px solid ${special === opt ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, background: special === opt ? 'var(--f1-bg)' : 'transparent', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: special === opt ? 'var(--f1)' : 'var(--paper)', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
+                      style={{ padding: '10px 8px', border: `1px solid ${special === opt ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', background: special === opt ? 'var(--f1-bg)' : 'transparent', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: special === opt ? 'var(--f1)' : 'var(--paper)', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
                     >
                       {opt}
                     </button>
@@ -221,7 +221,7 @@ export default function F1RacePickForm({ race, paddock }) {
                   value={special ?? ''}
                   onChange={e => { editedRef.current = true; setSpecial(e.target.value || null); }}
                   disabled={isLocked}
-                  style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: special ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
+                  style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: special ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
                 >
                   <option value="">Select team…</option>
                   {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -231,26 +231,26 @@ export default function F1RacePickForm({ race, paddock }) {
           )}
 
           {/* Scoring legend */}
-          <div style={{ padding: '10px 12px', background: 'var(--bg)', borderRadius: 6, borderLeft: '3px solid var(--f1)' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)', marginBottom: 6 }}>SCORING GUIDE</div>
+          <div style={{ padding: '10px 12px', background: 'var(--bg)', borderRadius: 'var(--radius)', borderLeft: '3px solid var(--f1)' }}>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Scoring guide</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
               {[['P1 exact','10 pts'],['P2 exact','8 pts'],['P3 exact','6 pts'],['Wrong podium spot','3 pts'],['DNF correct','5 pts'],['Team correct','5 pts'],['Special correct','5 pts'],['All correct bonus','3 pts']].map(([l, v]) => (
-                <div key={l} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>
+                <div key={l} style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
                   {l} <span style={{ color: 'var(--f1)', fontWeight: 700 }}>{v}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', padding: '8px 12px', background: 'rgba(185,28,28,0.06)', borderRadius: 6 }}>{err}</div>}
+          {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)', padding: '8px 12px', background: 'rgba(185,28,28,0.06)', borderRadius: 'var(--radius)' }}>{err}</div>}
 
           {!isLocked && (
             <button
               type="submit"
               disabled={saving || !p1 || !p2 || !p3}
-              style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : (!p1 || !p2 || !p3) ? 'var(--mute)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', cursor: (saving || !p1 || !p2 || !p3) ? 'default' : 'pointer', transition: 'background 0.2s' }}
+              style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : (!p1 || !p2 || !p3) ? 'var(--mute)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: (saving || !p1 || !p2 || !p3) ? 'default' : 'pointer', transition: 'background 0.2s' }}
             >
-              {saved ? '✓ PICKS SAVED' : saving ? 'SAVING…' : 'SAVE PICKS'}
+              {saved ? '✓ Picks saved' : saving ? 'Saving…' : 'Save picks'}
             </button>
           )}
         </div>

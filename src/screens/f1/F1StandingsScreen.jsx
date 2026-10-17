@@ -32,32 +32,32 @@ export default function F1StandingsScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', marginBottom: 4 }}>
-          PADDOCK STANDINGS · 2026
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--sport-marker, var(--accent))', padding: '16px 16px 12px' }}>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
+          Paddock standings · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>STANDINGS</h1>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>STANDINGS</h1>
       </div>
 
       {paddock?.archived && (
-        <div style={{ padding: '8px 16px', background: 'var(--shell-fill)', borderBottom: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)' }}>
+        <div style={{ padding: '8px 16px', background: 'var(--elev)', borderBottom: '1px solid var(--rule)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           ARCHIVED — this paddock is inactive.
         </div>
       )}
 
       {!yearResults?.is_final && (
-        <div style={{ padding: '8px 16px', background: 'rgba(217,119,6,0.1)', borderBottom: '1px solid rgba(217,119,6,0.25)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--gold)' }}>
+        <div style={{ padding: '8px 16px', background: 'rgba(217,119,6,0.1)', borderBottom: '1px solid rgba(217,119,6,0.25)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>
           ⚠ SEASON PTS ARE PRELIMINARY — not final until season results are confirmed
         </div>
       )}
 
       {/* View toggle */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
-        {[['total', 'TOTAL'], ['race', 'RACE PTS'], ['year', 'SEASON PTS']].map(([key, label]) => (
+        {[['total', 'Total'], ['race', 'Race pts'], ['year', 'Season pts']].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setView(key)}
-            style={{ flex: 1, padding: '11px 0', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: view === key ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: view === key ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}
+            style={{ flex: 1, padding: '11px 0', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', border: 'none', borderBottom: view === key ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: view === key ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}
           >
             {label}
           </button>
@@ -70,7 +70,7 @@ export default function F1StandingsScreen() {
           columns={[
             { key: 'race',  label: 'RACE',   width: '52px', accessor: r => r.race_points,   activeAccent: 'var(--f1)' },
             { key: 'year',  label: 'SEASON', width: '52px', accessor: r => r.year_points,   activeAccent: 'var(--f1)' },
-            { key: 'total', label: 'TOTAL',  width: '52px', accessor: r => r.total_points,  activeAccent: 'var(--paper)' },
+            { key: 'total', label: 'Total',  width: '52px', accessor: r => r.total_points,  activeAccent: 'var(--paper)' },
           ]}
           accent="var(--f1)"
           activeColumnKey={view}
@@ -83,10 +83,10 @@ export default function F1StandingsScreen() {
                   {m.display_name}
                 </span>
                 {isMe && (
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--f1)', letterSpacing: '0.1em' }}>YOU</span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--f1)' }}>YOU</span>
                 )}
               </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 1 }}>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 1 }}>
                 {m.races_scored} race{m.races_scored !== 1 ? 's' : ''} scored
               </div>
             </div>
@@ -100,7 +100,7 @@ export default function F1StandingsScreen() {
         />
 
         {sorted.length > 0 && (
-          <div style={{ margin: '16px 16px 0', padding: '10px 12px', background: 'var(--elev)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
+          <div style={{ margin: '16px 16px 0', padding: '10px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             SCORING: 10 pts exact P1 · 8 exact P2 · 6 exact P3 · 3 wrong podium spot · 5 each for DNF / team / special · 3 all-correct bonus
           </div>
         )}

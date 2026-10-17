@@ -13,7 +13,7 @@ const YEAR_FIELD_KEYS = [
   'most_poles', 'most_podiums_no_win',
 ];
 
-const MONO = { fontFamily: 'JetBrains Mono, monospace' };
+const MONO = { fontFamily: 'Archivo, sans-serif' };
 
 // Older scored rounds were written with a legacy key schema (podium_p1_pts, wrong_spot_pts as a
 // single lump sum, etc.) before the current per-position p1/p2/p3 schema. Map old → new shape so
@@ -85,25 +85,25 @@ export default function F1ReportScreen() {
   const isBetsLocked = yearResults?.is_bets_locked ?? false;
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-micro)' }}>LOADING…</div>;
+    return <div style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-label)' }}>Loading…</div>;
   }
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
-      <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', marginBottom: 4 }}>
-          PADDOCK REPORT · 2026
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--sport-marker, var(--accent))', padding: '16px 16px 12px' }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
+          Paddock report · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>REPORT</h1>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>REPORT</h1>
       </div>
 
       {/* Tab switcher */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
-        {[['race', 'RACE BETS'], ['year', 'YEAR BETS']].map(([key, label]) => (
+        {[['race', 'Race bets'], ['year', 'Year bets']].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            style={{ flex: 1, padding: '11px 0', ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: tab === key ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: tab === key ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}
+            style={{ flex: 1, padding: '11px 0', ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', border: 'none', borderBottom: tab === key ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: tab === key ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}
           >
             {label}
           </button>
@@ -130,25 +130,25 @@ export default function F1ReportScreen() {
                     onClick={() => setExpanded(isOpen ? null : race.round_number)}
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
                   >
-                    <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', minWidth: 24 }}>R{race.round_number}</span>
+                    <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 24 }}>R{race.round_number}</span>
                     <span style={{ fontSize: 'var(--fs-body-lg)' }}>{getFlag(race.gp_name)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {race.gp_name}
                       </div>
-                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 1 }}>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 1 }}>
                         {new Date(race.race_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                        {!myBet && <span style={{ color: 'var(--danger)', marginLeft: 8 }}>NO PICKS</span>}
+                        {!myBet && <span style={{ color: 'var(--danger)', marginLeft: 8 }}>No picks</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       {myScore ? (
                         <>
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--f1)' }}>{myScore.total_points}</div>
-                          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>PTS</div>
+                          <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>PTS</div>
                         </>
                       ) : (
-                        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>—</div>
+                        <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>—</div>
                       )}
                     </div>
                     <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginLeft: 4 }}>{isOpen ? '▴' : '▾'}</span>
@@ -159,7 +159,7 @@ export default function F1ReportScreen() {
                     <div style={{ borderTop: '1px solid var(--rule)', padding: '12px 14px' }}>
                       {/* Results — podium bar-chart viz: P1 tallest/red, P2 mid/slate, P3 shortest/bronze */}
                       <div style={{ marginBottom: 14 }}>
-                        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 6 }}>RACE RESULT</div>
+                        <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Race result</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, alignItems: 'end' }}>
                           {[
                             ['🥇 P1', race.result_p1, 'var(--f1)', 44],
@@ -169,7 +169,7 @@ export default function F1ReportScreen() {
                             <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
                               <div style={{ height: barHeight, background: barColor, borderRadius: '4px 4px 0 0' }} />
                               <div style={{ padding: '8px 10px', background: 'var(--elev)', borderRadius: '0 0 6px 6px' }}>
-                                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 3 }}>{label}</div>
+                                <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 3 }}>{label}</div>
                                 <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)' }}>{val ?? '—'}</div>
                               </div>
                             </div>
@@ -178,7 +178,7 @@ export default function F1ReportScreen() {
                       </div>
 
                       {/* Every paddock member's picks */}
-                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8 }}>PADDOCK PICKS</div>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>Paddock picks</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {sortedMembers.map(member => {
                           const bet = betMap[`${member.user_id}_${race.round_number}`];
@@ -193,7 +193,7 @@ export default function F1ReportScreen() {
                                   {member.display_name}{isMe ? ' (You)' : ''}
                                 </span>
                                 {score && (
-                                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{score.total_points} pts</span>
+                                  <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{score.total_points} pts</span>
                                 )}
                               </div>
 
@@ -207,28 +207,28 @@ export default function F1ReportScreen() {
                                     { key: 'team', label: '🏎 Team', pick: bet.team_most_points, pts: breakdown.team },
                                     { key: 'special', label: '⭐ Special', pick: bet.special_category_answer, pts: breakdown.special },
                                   ].filter(row => row.pick).map(row => (
-                                    <div key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: row.pts > 0 ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 6, border: `1px solid ${row.pts > 0 ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', minWidth: 52 }}>{row.label}</span>
+                                    <div key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: row.pts > 0 ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 'var(--radius)', border: `1px solid ${row.pts > 0 ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 52 }}>{row.label}</span>
                                       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1 }}>{row.pick}</span>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: row.pts > 0 ? 'var(--positive)' : 'var(--danger)' }}>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: row.pts > 0 ? 'var(--positive)' : 'var(--danger)' }}>
                                         {row.pts > 0 ? `+${row.pts}` : '+0'}
                                       </span>
                                     </div>
                                   ))}
                                   {breakdown.wrongSpot > 0 && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 6, border: '1px solid rgba(184,114,14,0.2)' }}>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', flex: 1 }}>🎯 Podium (right driver, wrong spot)</span>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--gold)' }}>+{breakdown.wrongSpot}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)' }}>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)', flex: 1 }}>🎯 Podium (right driver, wrong spot)</span>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold)' }}>+{breakdown.wrongSpot}</span>
                                     </div>
                                   )}
                                   {breakdown.bonus > 0 && (
-                                    <div style={{ padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 6, border: '1px solid rgba(184,114,14,0.2)', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
+                                    <div style={{ padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>
                                       ⭐ All Correct Bonus +{breakdown.bonus}
                                     </div>
                                   )}
                                 </div>
                               ) : (
-                                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '4px 0' }}>No picks submitted.</div>
+                                <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', padding: '4px 0' }}>No picks submitted.</div>
                               )}
                             </div>
                           );
@@ -271,11 +271,11 @@ export default function F1ReportScreen() {
                         const isCorrect = result && pick === result;
                         const isGraded = !!result;
                         return (
-                          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: !isGraded ? 'var(--elev)' : isCorrect ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 6, border: `1px solid ${!isGraded ? 'var(--rule)' : isCorrect ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
-                            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flex: 1 }}>{FIELD_LABELS[key] ?? key}</span>
+                          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: !isGraded ? 'var(--elev)' : isCorrect ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 'var(--radius)', border: `1px solid ${!isGraded ? 'var(--rule)' : isCorrect ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
+                            <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flex: 1 }}>{FIELD_LABELS[key] ?? key}</span>
                             <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{pick}</span>
                             {isGraded && (
-                              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: isCorrect ? 'var(--positive)' : 'var(--danger)' }}>
+                              <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: isCorrect ? 'var(--positive)' : 'var(--danger)' }}>
                                 {isCorrect ? '✓ +10' : '✗'}
                               </span>
                             )}
@@ -284,7 +284,7 @@ export default function F1ReportScreen() {
                       })}
                     </div>
                   ) : (
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No season picks submitted.</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No season picks submitted.</div>
                   )}
                 </div>
               );
