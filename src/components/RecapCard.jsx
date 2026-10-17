@@ -32,7 +32,7 @@ export default function RecapCard({ recap, forwardRef }) {
       ref={forwardRef}
       style={{
         width: '360px',
-        background: 'var(--ink)',
+        background: 'var(--bg)',
         color: 'white',
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
         position: 'relative',
@@ -77,7 +77,7 @@ export default function RecapCard({ recap, forwardRef }) {
         {/* Best Player */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ink-2)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--fs-micro)', fontWeight: 900, color: 'var(--mute)' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--card)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--fs-micro)', fontWeight: 900, color: 'var(--mute)' }}>
               {bestPlayer?.name?.substring(0, 2).toUpperCase()}
             </div>
             <div>
@@ -85,7 +85,7 @@ export default function RecapCard({ recap, forwardRef }) {
               <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700 }}>{bestPlayer?.name}</div>
             </div>
           </div>
-          <div style={{ background: 'white', color: 'var(--ink)', fontSize: 'var(--fs-label)', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
+          <div style={{ background: 'white', color: 'var(--bg)', fontSize: 'var(--fs-label)', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
             {bestPlayer?.points != null ? `${Math.round(bestPlayer.points)} pts` : '— pts'}
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function RecapCard({ recap, forwardRef }) {
               <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700 }}>{captain?.name}</div>
             </div>
           </div>
-          <div style={{ background: 'var(--gold)', color: 'var(--ink)', fontSize: 'var(--fs-label)', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
+          <div style={{ background: 'var(--gold)', color: 'var(--bg)', fontSize: 'var(--fs-label)', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
             {captain?.points != null ? `×2 = ${Math.round(captain.points * 2)} pts` : '×2'}
           </div>
         </div>

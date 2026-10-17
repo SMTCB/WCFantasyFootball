@@ -13,11 +13,11 @@ const ENTRY_META = {
   draft_report:   { badge: 'DRAFT',     color: 'var(--gold)'     },
   breaking_news:  { badge: 'NEWS',      color: 'var(--danger)'   },
   auction_result: { badge: 'AUCTION',   color: 'var(--positive)' },
-  trade_result:   { badge: 'TRADE',     color: 'var(--cyan)'     },
+  trade_result:   { badge: 'TRADE',     color: 'var(--accent)'     },
   p2p_challenge:  { badge: 'CHALLENGE', color: 'var(--gold)'     },
   p2p_result:     { badge: 'P2P',       color: 'var(--gold)'     },
 };
-const TRANSFER_META = { badge: 'TRANSFER', color: 'var(--cyan)' };
+const TRANSFER_META = { badge: 'TRANSFER', color: 'var(--accent)' };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ function DaySeparator({ label }) {
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
       padding: '8px 20px',
-      background: 'var(--ink-2)',
+      background: 'var(--card)',
       borderBottom: '1px solid var(--rule)',
     }}>
       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0 }}>
@@ -81,7 +81,7 @@ function LeagueTag({ name }) {
   return (
     <span style={{
       fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '.12em',
-      color: 'var(--cyan)', padding: '3px 8px',
+      color: 'var(--accent)', padding: '3px 8px',
       border: '1px solid rgba(26,111,168,.35)',
       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       maxWidth: 200, flexShrink: 0,
@@ -155,7 +155,7 @@ function FeedItem({ item }) {
 // Shows the user's starting XI split by fixture (finished or upcoming),
 // with accumulated pts per player and the running GW total.
 
-const POS_COLOR = { GK: 'var(--purple)', DEF: 'var(--cyan)', MID: 'var(--gold)', FWD: 'var(--danger)' };
+const POS_COLOR = { GK: 'var(--purple)', DEF: 'var(--accent)', MID: 'var(--gold)', FWD: 'var(--danger)' };
 
 function LiveMatchdayCard({ card }) {
   const { gwLabel, totalPts, roundComplete, fixtures, noGamePlayers, leagueName } = card;
@@ -248,7 +248,7 @@ function LiveMatchdayCard({ card }) {
                 {p.isCaptain && (
                   <span style={{
                     fontFamily: DISPLAY, fontSize: 'var(--fs-micro)',
-                    background: 'var(--gold)', color: 'var(--ink)',
+                    background: 'var(--gold)', color: 'var(--bg)',
                     padding: '0 4px', flexShrink: 0,
                   }}>C</span>
                 )}
@@ -554,7 +554,7 @@ export default function RecapScreen() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--ink)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)' }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{

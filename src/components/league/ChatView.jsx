@@ -70,7 +70,7 @@ function MessageBody({ text, onHashtagClick }) {
       );
     } else {
       parts.push(
-        <span key={`m${i++}`} style={{ color: 'var(--cyan)', fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '0 2px', background: 'rgba(0,180,216,.08)' }}>{token}</span>
+        <span key={`m${i++}`} style={{ color: 'var(--accent)', fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '0 2px', background: 'rgba(0,180,216,.08)' }}>{token}</span>
       );
     }
     last = match.index + token.length;
@@ -132,18 +132,18 @@ export default function ChatView({
   // ── Desktop layout ──────────────────────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 280px', minHeight: 0, background: 'var(--ink)' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 280px', minHeight: 0, background: 'var(--bg)' }}>
 
         {/* Main chat */}
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <HubSectionLabel
             label="#LEAGUE-CHAT"
-            tone="var(--cyan)"
+            tone="var(--accent)"
             sub={`${members.length} MEMBERS`}
             right={
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {searchTerm && searchTerm.startsWith('#') && (
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.14em' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '.14em' }}>
                     HASHTAG · {searchTerm}
                   </span>
                 )}
@@ -152,7 +152,7 @@ export default function ChatView({
                     {resultCount} RESULT{resultCount !== 1 ? 'S' : ''}
                   </span>
                 )}
-                <div style={{ display: 'flex', gap: 0, alignItems: 'center', background: 'var(--ink)', border: '1px solid var(--rule)' }}>
+                <div style={{ display: 'flex', gap: 0, alignItems: 'center', background: 'var(--bg)', border: '1px solid var(--rule)' }}>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '4px 8px', letterSpacing: '.18em' }}>#</span>
                   <input
                     type="text"
@@ -207,11 +207,11 @@ export default function ChatView({
                   {showDivider && <DateDivider label={formatDateLabel(msg.createdAt)} />}
                 <div style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ paddingTop: 2 }}>
-                    <MgrTag mono={mgrMono(msg.userName || '')} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={22} />
+                    <MgrTag mono={mgrMono(msg.userName || '')} hue={msg.isOwnMessage ? 'var(--accent)' : msgHue} size={22} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.userName}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: msg.isOwnMessage ? 'var(--accent)' : msgHue, letterSpacing: '-0.01em' }}>{msg.userName}</span>
                       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     {editingMessageId === msg.id ? (
@@ -220,10 +220,10 @@ export default function ChatView({
                           type="text"
                           value={editingText}
                           onChange={(e) => setEditingText(e.target.value)}
-                          style={{ flex: 1, background: 'var(--ink-2)', border: '1px solid var(--cyan)', color: 'var(--paper)', padding: '4px 8px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', outline: 'none' }}
+                          style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--accent)', color: 'var(--paper)', padding: '4px 8px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', outline: 'none' }}
                           autoFocus
                         />
-                        <button className="hit-44" onClick={async () => { const r = await editMessage(msg.id, editingText); if (r.ok) setEditingMessageId(null); }} style={{ ...miniBtnStyle('var(--cyan)'), padding: '4px 10px' }}>SAVE</button>
+                        <button className="hit-44" onClick={async () => { const r = await editMessage(msg.id, editingText); if (r.ok) setEditingMessageId(null); }} style={{ ...miniBtnStyle('var(--accent)'), padding: '4px 10px' }}>SAVE</button>
                         <button className="hit-44" onClick={() => setEditingMessageId(null)} style={{ ...miniBtnStyle('var(--mute)'), padding: '4px 10px' }}>CANCEL</button>
                       </div>
                     ) : (
@@ -255,14 +255,14 @@ export default function ChatView({
           </div>
 
           {/* Composer */}
-          <div style={{ borderTop: '1px solid var(--rule)', padding: '14px 20px', background: 'var(--ink-2)', flexShrink: 0 }}>
+          <div style={{ borderTop: '1px solid var(--rule)', padding: '14px 20px', background: 'var(--card)', flexShrink: 0 }}>
             {Object.values(typingUsers).length > 0 && (
               <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8, fontStyle: 'italic' }}>
                 {Object.values(typingUsers).map(t => t.name).join(', ')} {Object.keys(typingUsers).length === 1 ? 'is' : 'are'} typing…
               </div>
             )}
             <div style={{ width: '100%', position: 'relative' }}>
-              <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', padding: '0 14px' }}>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', padding: '0 14px' }}>
                 <input
                   type="text"
                   placeholder="Roast your rivals… (try @username · #hashtag · /bet · /trade)"
@@ -276,15 +276,15 @@ export default function ChatView({
                   type="button"
                   onClick={handleSubmit}
                   disabled={!chatInput.trim() || chatSending}
-                  style={{ background: 'var(--cyan)', color: 'var(--ink)', border: 'none', padding: '8px 14px', fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '.18em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1 }}
+                  style={{ background: 'var(--accent)', color: 'var(--bg)', border: 'none', padding: '8px 14px', fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '.18em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1 }}
                 >
                   {chatSending ? '…' : 'SEND ↵'}
                 </button>
               </div>
               {mentionMatches.length > 0 && mentionSearch && (
-                <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, background: 'var(--ink-3)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 192, overflow: 'auto' }}>
+                <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, background: 'var(--elev)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 192, overflow: 'auto' }}>
                   {mentionMatches.map((member) => (
-                    <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 16px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                    <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 16px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: selectedMention?.id === member.id ? 'var(--bg)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--accent)' : 'transparent', border: 'none', cursor: 'pointer' }}>
                       <span style={{ fontWeight: 700 }}>@{member.name}</span>
                     </button>
                   ))}
@@ -295,10 +295,10 @@ export default function ChatView({
         </div>
 
         {/* Members + Hashtags rail */}
-        <aside style={{ borderLeft: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', minWidth: 0 }}>
+        <aside style={{ borderLeft: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--card)', minWidth: 0 }}>
           {/* Trending Hashtags Section */}
           <div style={{ borderBottom: '1px solid var(--rule)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <HubSectionLabel label={`TRENDING · ${trendingHashtags.length}`} tone="var(--cyan)" />
+            <HubSectionLabel label={`TRENDING · ${trendingHashtags.length}`} tone="var(--accent)" />
             <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflow: 'auto' }}>
               {trendingHashtags.length === 0 ? (
                 <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '8px' }}>No hashtags yet</span>
@@ -311,9 +311,9 @@ export default function ChatView({
                       textAlign: 'left',
                       padding: '6px 8px',
                       background: searchTerm === tag ? 'rgba(0,180,216,.15)' : 'transparent',
-                      border: `1px solid ${searchTerm === tag ? 'var(--cyan)' : 'var(--rule)'}`,
+                      border: `1px solid ${searchTerm === tag ? 'var(--accent)' : 'var(--rule)'}`,
                       borderRadius: 3,
-                      color: searchTerm === tag ? 'var(--cyan)' : 'var(--paper)',
+                      color: searchTerm === tag ? 'var(--accent)' : 'var(--paper)',
                       fontFamily: MONO,
                       fontSize: 'var(--fs-micro)',
                       cursor: 'pointer',
@@ -339,8 +339,8 @@ export default function ChatView({
               {currentUser && members.filter(m => m.user_id === currentUser.id).map(m => (
                 <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
                   <div style={{ position: 'relative' }}>
-                    <MgrTag mono={mgrMono(m.users?.username || 'You')} hue="var(--cyan)" size={22} />
-                    <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--ink-2)' }} />
+                    <MgrTag mono={mgrMono(m.users?.username || 'You')} hue="var(--accent)" size={22} />
+                    <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--card)' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em' }}>{m.users?.username || 'You'}</div>
@@ -373,17 +373,17 @@ export default function ChatView({
 
   // ── Mobile layout ───────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, background: 'var(--ink)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, background: 'var(--bg)' }}>
 
       {/* Channel header pill — single pill since channels feature is removed */}
       <div style={{ display: 'flex', gap: 6, padding: '10px 16px', borderBottom: '1px solid var(--rule)', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        <span style={{ flex: '0 0 auto', padding: '6px 10px', background: 'rgba(0,180,216,.08)', border: '1px solid var(--cyan)', color: 'var(--cyan)', fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '-0.01em', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        <span style={{ flex: '0 0 auto', padding: '6px 10px', background: 'rgba(0,180,216,.08)', border: '1px solid var(--accent)', color: 'var(--accent)', fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '-0.01em', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           #league-chat
           {(unreadCount || 0) > 0 && <span style={{ background: 'var(--danger)', color: 'var(--on-accent)', fontFamily: MONO, fontSize: 'var(--fs-micro)', padding: '0 4px', letterSpacing: '.1em' }}>{unreadCount}</span>}
         </span>
         {/* Hashtag search pill */}
-        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', background: searchTerm ? 'rgba(0,180,216,.08)' : 'transparent', border: `1px solid ${searchTerm ? 'var(--cyan)' : 'var(--rule)'}`, padding: '0 10px', gap: 4 }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: searchTerm ? 'var(--cyan)' : 'var(--mute)', letterSpacing: '.18em' }}>#</span>
+        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', background: searchTerm ? 'rgba(0,180,216,.08)' : 'transparent', border: `1px solid ${searchTerm ? 'var(--accent)' : 'var(--rule)'}`, padding: '0 10px', gap: 4 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: searchTerm ? 'var(--accent)' : 'var(--mute)', letterSpacing: '.18em' }}>#</span>
           <input
             type="text"
             placeholder="search"
@@ -406,9 +406,9 @@ export default function ChatView({
                   flex: '0 0 auto',
                   padding: '4px 8px',
                   background: searchTerm === tag ? 'rgba(0,180,216,.15)' : 'transparent',
-                  border: `1px solid ${searchTerm === tag ? 'var(--cyan)' : 'var(--rule)'}`,
+                  border: `1px solid ${searchTerm === tag ? 'var(--accent)' : 'var(--rule)'}`,
                   borderRadius: 3,
-                  color: searchTerm === tag ? 'var(--cyan)' : 'var(--paper)',
+                  color: searchTerm === tag ? 'var(--accent)' : 'var(--paper)',
                   fontFamily: MONO,
                   fontSize: 'var(--fs-micro)',
                   cursor: 'pointer',
@@ -453,11 +453,11 @@ export default function ChatView({
               {showDivider && <DateDivider label={formatDateLabel(msg.createdAt)} mobile />}
             <div style={{ padding: '6px 16px', display: 'grid', gridTemplateColumns: '30px 1fr', gap: 8, alignItems: 'flex-start' }}>
               <div style={{ paddingTop: 2 }}>
-                <MgrTag mono={mgrMono(msg.userName || '')} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={20} />
+                <MgrTag mono={mgrMono(msg.userName || '')} hue={msg.isOwnMessage ? 'var(--accent)' : msgHue} size={20} />
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.userName}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: msg.isOwnMessage ? 'var(--accent)' : msgHue, letterSpacing: '-0.01em' }}>{msg.userName}</span>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <div style={{ fontFamily: 'Archivo,sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>
@@ -482,7 +482,7 @@ export default function ChatView({
       </div>
 
       {/* Composer — pinned at bottom */}
-      <div style={{ borderTop: '1px solid var(--rule)', padding: '10px 14px', background: 'var(--ink-2)', flexShrink: 0 }}>
+      <div style={{ borderTop: '1px solid var(--rule)', padding: '10px 14px', background: 'var(--card)', flexShrink: 0 }}>
         {Object.values(typingUsers).length > 0 && (
           <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6, fontStyle: 'italic' }}>
             {Object.values(typingUsers).map(t => t.name).join(', ')} typing…
@@ -491,10 +491,10 @@ export default function ChatView({
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', position: 'relative' }}>
           <MgrTag
             mono={mgrMono(currentUser?.username || 'You')}
-            hue="var(--cyan)"
+            hue="var(--accent)"
             size={20}
           />
-          <div style={{ flex: 1, background: 'var(--ink)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', padding: '0 10px' }}>
+          <div style={{ flex: 1, background: 'var(--bg)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', padding: '0 10px' }}>
             <input
               type="text"
               placeholder="Roast your rivals…"
@@ -509,12 +509,12 @@ export default function ChatView({
             type="button"
             onClick={handleSubmit}
             disabled={!chatInput.trim() || chatSending}
-            style={{ padding: '8px 12px', background: 'var(--cyan)', color: 'var(--ink)', border: 0, fontFamily: 'Archivo Black,sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.16em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1, flexShrink: 0 }}
+            style={{ padding: '8px 12px', background: 'var(--accent)', color: 'var(--bg)', border: 0, fontFamily: 'Archivo Black,sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.16em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1, flexShrink: 0 }}
           >↵</button>
           {mentionMatches.length > 0 && mentionSearch && (
-            <div style={{ position: 'absolute', bottom: '100%', left: 30, right: 0, background: 'var(--ink-3)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 160, overflow: 'auto' }}>
+            <div style={{ position: 'absolute', bottom: '100%', left: 30, right: 0, background: 'var(--elev)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 160, overflow: 'auto' }}>
               {mentionMatches.map((member) => (
-                <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 12px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 12px', fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: selectedMention?.id === member.id ? 'var(--bg)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--accent)' : 'transparent', border: 'none', cursor: 'pointer' }}>
                   @{member.name}
                 </button>
               ))}

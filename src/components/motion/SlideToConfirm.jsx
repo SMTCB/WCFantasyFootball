@@ -28,7 +28,7 @@ export default function SlideToConfirm({
   const [maxX, setMaxX] = useState(0);
   const reduced = prefersReducedMotion();
 
-  const tone = danger ? 'var(--danger)' : 'var(--cyan)';
+  const tone = danger ? 'var(--danger)' : 'var(--accent)';
 
   const clamp = (x) => Math.max(0, Math.min(maxX, x));
 
@@ -171,7 +171,7 @@ export default function SlideToConfirm({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--ink)',
+          color: 'var(--bg)',
           transform: `translateX(${dragX}px)`,
           transition: dragging ? 'none' : 'transform 0.25s ease',
           boxShadow: '0 2px 8px rgba(0,0,0,0.35)',

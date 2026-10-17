@@ -116,7 +116,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
 
       {/* ── H2H Standings ─────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'var(--ink-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'var(--card)' }}>
           <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', }}>H2h standings</span>
         </div>
@@ -162,7 +162,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
 
       {/* ── Schedule ──────────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'var(--ink-2)', borderBottom: '1px solid var(--rule)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'var(--card)', borderBottom: '1px solid var(--rule)' }}>
           <span style={{ width: 3, height: 14, background: 'var(--accent)', flexShrink: 0 }} />
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', }}>Schedule</span>
         </div>
@@ -174,7 +174,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
 
           return (
             <div key={mdId} style={{ borderBottom: '1px solid var(--rule)' }}>
-              <div style={{ padding: '8px 20px', background: 'var(--ink-2)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ padding: '8px 20px', background: 'var(--card)', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>ROUND {roundNum}</span>
                 {resolved && (
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', border: '1px solid var(--positive)44', padding: '1px 5px', }}>Done</span>

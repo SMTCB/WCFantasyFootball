@@ -98,8 +98,8 @@ export default memo(function PlayerStatsPanel({
             onClick={onViewStats}
             className="hit-44 fk-mono transition-all active:scale-95"
             style={{
-              padding: '5px 10px', border: '1px solid var(--cyan)',
-              color: 'var(--cyan)', background: 'transparent',
+              padding: '5px 10px', border: '1px solid var(--accent)',
+              color: 'var(--accent)', background: 'transparent',
               fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em', cursor: 'pointer',
             }}
           >
@@ -130,8 +130,8 @@ export default memo(function PlayerStatsPanel({
             className="hit-44 fk-mono transition-all active:scale-95 disabled:opacity-40"
             style={{
               padding: '6px 16px',
-              border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
-              color: canBuy ? 'var(--cyan)' : 'var(--mute)',
+              border: `1px solid ${canBuy ? 'var(--accent)' : 'var(--rule)'}`,
+              color: canBuy ? 'var(--accent)' : 'var(--mute)',
               background: 'transparent',
               fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em',
               cursor: canBuy ? 'pointer' : 'not-allowed',

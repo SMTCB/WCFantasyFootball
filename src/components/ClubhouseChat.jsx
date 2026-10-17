@@ -215,7 +215,7 @@ function RailListItem({ label, active, onClick }) {
       onClick={onClick}
       style={{
         width: '100%', textAlign: 'left', padding: '7px 8px', borderRadius: 6,
-        background: active ? 'var(--accent-bg)' : 'transparent',
+        background: active ? 'var(--accent-soft)' : 'transparent',
         border: 'none', cursor: 'pointer',
         ...MONO, fontSize: 'var(--fs-label)', fontWeight: active ? 600 : 400,
         color: active ? 'var(--accent)' : '#4B5568',
@@ -352,7 +352,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
                 onClick={() => switchMode(mode)}
                 style={{
                   padding: '4px 10px', borderRadius: 100,
-                  background: chatMode === mode ? 'var(--accent-bg)' : 'transparent',
+                  background: chatMode === mode ? 'var(--accent-soft)' : 'transparent',
                   border: 'none', cursor: 'pointer',
                   ...MONO, fontSize: 'var(--fs-micro)', fontWeight: chatMode === mode ? 700 : 400,
                   letterSpacing: '0.06em',
@@ -420,7 +420,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
                   onClick={() => switchMode(mode)}
                   style={{
                     padding: '4px 10px', borderRadius: 100,
-                    background: chatMode === mode ? 'var(--accent-bg)' : 'transparent',
+                    background: chatMode === mode ? 'var(--accent-soft)' : 'transparent',
                     border: 'none', cursor: 'pointer',
                     ...MONO, fontSize: 'var(--fs-micro)', fontWeight: chatMode === mode ? 700 : 400,
                     letterSpacing: '0.06em',

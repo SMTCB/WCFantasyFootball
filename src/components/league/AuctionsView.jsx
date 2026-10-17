@@ -3,9 +3,9 @@ import { MONO, DISPLAY } from './HubConstants';
 
 export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, myUserId, myBudget, placeBid, cancelListing, sellNow, onToast }) {
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       {/* Hero strip — title + stats, responsive */}
-      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 28px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.22em' }}>AUCTION HOUSE · {name.toUpperCase()}</div>
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 24px)', marginTop: 6 }}>Open bids. First manager to win the auction gets exclusive rights.</div>
@@ -14,7 +14,7 @@ export default function AuctionsView({ auctions, auctionsLoading, name, mySquadI
           {[
             { k: 'LIVE',   v: auctions.filter(a => a.highest_bidder_id === myUserId).length, tone: 'var(--danger)' },
             { k: 'LISTED', v: auctions.length,                                    tone: 'var(--gold)'   },
-            { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE',                    tone: 'var(--cyan)'   },
+            { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE',                    tone: 'var(--accent)'   },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 22px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
               <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>

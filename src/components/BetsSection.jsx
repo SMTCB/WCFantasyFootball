@@ -6,7 +6,7 @@ function BetGroup({ title, items, squadId, onSubmitted }) {
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-[3px] h-4 rounded-full" style={{ background: 'var(--cyan)' }} />
+        <div className="w-[3px] h-4 rounded-full" style={{ background: 'var(--accent)' }} />
         <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
           {title}
         </span>

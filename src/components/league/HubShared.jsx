@@ -168,7 +168,7 @@ export function FormDots({ form = [] }) {
 }
 
 // Tiny sparkline SVG
-export function Spark({ data = [], w = 88, h = 22, tone = 'var(--cyan)', zero = true }) {
+export function Spark({ data = [], w = 88, h = 22, tone = 'var(--accent)', zero = true }) {
   if (!data.length) return null;
   const max = Math.max(...data.map(v => Math.abs(v)), 1);
   const pts = data.map((v, i) => {

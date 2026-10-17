@@ -143,7 +143,7 @@ export default function AppLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen flex items-start" style={{ background: 'var(--ink)' }}>
+    <div className="min-h-screen flex items-start" style={{ background: 'var(--bg)' }}>
       <SkipToContent targetId="main-content" />
 
       {/* ── Desktop top bar — Clubhouse spine (never morphs) ── */}

@@ -115,10 +115,10 @@ function MiniTok({ p, activeLeague }) {
         <span style={{
           position: 'absolute', top: -7, left: -7, zIndex: 2,
           width: 16, height: 16, borderRadius: '50%',
-          background: 'var(--gold)', color: 'var(--ink)',
+          background: 'var(--gold)', color: 'var(--bg)',
           fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '2px solid var(--ink)',
+          border: '2px solid var(--bg)',
           pointerEvents: 'none',
         }}>{isTriple ? '3' : 'C'}</span>
       )}
@@ -187,7 +187,7 @@ function DesktopStatsRow({ s }) {
       <span style={{
         width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
         background: s.isCap ? 'var(--gold)' : 'transparent',
-        color: 'var(--ink)', fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)',
+        color: 'var(--bg)', fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>{s.isCap ? (s.isTripleCap ? '3' : 'C') : ''}</span>
       {/* Name + club + tags */}
@@ -255,7 +255,7 @@ function StatsLogRow({ s }) {
           <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{s.position}</span>
           <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: .6 }}>{(s.club || '').split(' ')[0]}</span>
           {s.isCap && (
-            <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', lineHeight: 1 }}>
+            <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--bg)', padding: '1px 4px', lineHeight: 1 }}>
               {s.isTripleCap ? '3×C' : 'C'}
             </span>
           )}
@@ -300,13 +300,13 @@ function MobSquadRow({ p, activeLeague }) {
           {(p.name || '').split(' ').pop().toUpperCase()}
         </span>
         {isCap && (
-          <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '2px 5px', letterSpacing: '.04em', lineHeight: 1 }}>
+          <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--bg)', padding: '2px 5px', letterSpacing: '.04em', lineHeight: 1 }}>
             {isTriple ? '3×C' : 'C'}
           </span>
         )}
         <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 'auto' }}>{p.club || '—'}</span>
       </div>
-      <div style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', letterSpacing: '-0.02em', color: (p.points ?? 0) >= 0 ? 'var(--cyan)' : 'var(--danger)' }}>
+      <div style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', letterSpacing: '-0.02em', color: (p.points ?? 0) >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
         <NumberFlow value={p.displayPoints ?? p.points ?? 0} format={n => { const r = Math.round(n); return r >= 0 ? String(r) : `−${Math.abs(r)}`; }} />
       </div>
     </div>
@@ -921,7 +921,7 @@ export default function LiveScreen() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ display: 'flex', flex: 1, flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', minHeight: 0 }}>
+    <div style={{ display: 'flex', flex: 1, flexDirection: 'column', background: 'var(--bg)', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', minHeight: 0 }}>
       <LeagueRouteTabs active="live" leagueId={urlLeagueId} />
 
       {/* Live data error banner */}
@@ -1003,7 +1003,7 @@ export default function LiveScreen() {
                 <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: statusColor, letterSpacing: '.18em' }}>{isHT ? 'HT' : statusLabel}</span>
                 <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', marginLeft: 'auto' }}>
                   {teamCode(f.home_team)}
-                  <span style={{ color: 'var(--cyan)', margin: '0 8px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
+                  <span style={{ color: 'var(--accent)', margin: '0 8px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
                   {teamCode(f.away_team)}
                 </span>
               </div>
@@ -1021,7 +1021,7 @@ export default function LiveScreen() {
           <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 0, overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 3, height: 14, background: activeLeague?.tone || 'var(--cyan)' }} />
+                <span style={{ width: 3, height: 14, background: activeLeague?.tone || 'var(--accent)' }} />
                 <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>MY XI</span>
                 {activeLeague && (
                   <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>· {activeLeague.name.toUpperCase()}</span>
@@ -1038,7 +1038,7 @@ export default function LiveScreen() {
               if (cap && hasLiveForActiveTournament && cap.live === false && cap.minutes === 0) {
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
-                    <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 5px' }}>C</span>
+                    <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--bg)', padding: '1px 5px' }}>C</span>
                     <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.14em' }}>
                       {(cap.name || '').split(' ').pop().toUpperCase()} — DID NOT PLAY YET
                     </span>
@@ -1066,7 +1066,7 @@ export default function LiveScreen() {
                   {benchPlayers.map((p, idx) => (
                     <div key={p.id} style={{
                       flex: 1, padding: '6px 8px',
-                      background: 'var(--ink-2)',
+                      background: 'var(--card)',
                       border: `1px solid ${p.live ? 'var(--danger)' : 'var(--rule)'}`,
                       borderLeft: `2px solid ${POS_TONE[p.position] || 'var(--mute)'}`,
                       borderRadius: 2, minWidth: 0,
@@ -1173,7 +1173,7 @@ export default function LiveScreen() {
                   style={{
                     flex: '0 0 auto', width: 140,
                     padding: '10px 12px',
-                    background: isActive ? `${lg.tone}14` : 'var(--ink-2)',
+                    background: isActive ? `${lg.tone}14` : 'var(--card)',
                     border: `1px solid ${isActive ? lg.tone : 'var(--rule)'}`,
                     borderLeft: `2px solid ${lg.tone}`,
                     display: 'flex', flexDirection: 'column', gap: 6,
@@ -1248,7 +1248,7 @@ export default function LiveScreen() {
                 <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: isPostponed ? 'var(--gold-text)' : 'var(--mute)', letterSpacing: '.18em' }}>{isHT ? 'HT' : statusLabel}</span>
                 <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', marginLeft: 'auto' }}>
                   {teamCode(f.home_team)}
-                  <span style={{ color: 'var(--cyan)', margin: '0 6px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
+                  <span style={{ color: 'var(--accent)', margin: '0 6px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
                   {teamCode(f.away_team)}
                 </span>
               </div>
@@ -1278,7 +1278,7 @@ export default function LiveScreen() {
               >
                 {t.label}
                 {isActive && (
-                  <span style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, background: 'var(--cyan)' }} />
+                  <span style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, background: 'var(--accent)' }} />
                 )}
               </button>
             );
@@ -1312,7 +1312,7 @@ export default function LiveScreen() {
                     if (cap && hasLiveForActiveTournament && cap.live === false && cap.minutes === 0) {
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', marginBottom: 8, background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
-                          <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px' }}>C</span>
+                          <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--bg)', padding: '1px 4px' }}>C</span>
                           <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.12em' }}>
                             {(cap.name || '').split(' ').pop().toUpperCase()} — DNP
                           </span>
@@ -1401,7 +1401,7 @@ export default function LiveScreen() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>{teamCode(f.home_team)}</span>
                           {(isFT || isLive || isHT) ? (
-                            <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body-lg)', color: 'var(--cyan)', margin: '0 10px' }}>{f.homeGoals}–{f.awayGoals}</span>
+                            <span style={{ fontFamily: 'Archivo Black', fontSize: 'var(--fs-body-lg)', color: 'var(--accent)', margin: '0 10px' }}>{f.homeGoals}–{f.awayGoals}</span>
                           ) : (
                             <span className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: '0 10px' }}>vs</span>
                           )}

@@ -1012,7 +1012,7 @@ export default function LeagueScreen() {
               <div role="presentation"
                 onClick={e => e.stopPropagation()}
                 style={{
-                  background: 'var(--ink-2, #111)',
+                  background: 'var(--card)',
                   border: '1px solid var(--shell-rule-strong)',
                   width: '100%', maxWidth: 520,
                   maxHeight: '82vh', overflowY: 'auto',
@@ -1021,7 +1021,7 @@ export default function LeagueScreen() {
                 }}
               >
                 <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--shell-rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 3, height: 12, background: 'var(--cyan, #00b4d8)', flexShrink: 0 }} />
+                  <span style={{ width: 3, height: 12, background: 'var(--accent)', flexShrink: 0 }} />
                   <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper, #e8e8e8)', flex: 1, textTransform: 'uppercase' }}>League Mode — Classic vs Draft</span>
                   <button onClick={() => setShowModeHelp(false)} style={{ background: 'none', border: 'none', color: 'var(--on-shell-dim)', cursor: 'pointer', fontSize: 'var(--fs-heading)', lineHeight: 1 }}>✕</button>
                 </div>
@@ -1050,7 +1050,7 @@ export default function LeagueScreen() {
                       ],
                     },
                     {
-                      label: 'DRAFT', color: 'var(--cyan, #00b4d8)',
+                      label: 'DRAFT', color: 'var(--accent)',
                       summary: 'Each player belongs to exactly one manager at a time. The season starts with a blind draft.',
                       rows: [
                         ['Draft', 'Managers submit a ranked wishlist of up to 30 players before the deadline — no position, club, or budget constraints during submission. The allocation engine resolves conflicts by lottery and assigns squads.'],
@@ -1176,7 +1176,7 @@ export default function LeagueScreen() {
 
   if (leagueId && needsJoin) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--ink)', color: 'var(--paper)', padding: 24, textAlign: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)', color: 'var(--paper)', padding: 24, textAlign: 'center' }}>
         <div className="fk-eyebrow" style={{ marginBottom: 10 }}>Join To Continue</div>
         <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-title)', textTransform: 'uppercase', letterSpacing: '-0.02em', marginBottom: 10, maxWidth: 480 }}>
           {joinGateLeague?.name || 'This league'}
@@ -1197,7 +1197,7 @@ export default function LeagueScreen() {
             maxLength={8}
             style={{
               flex: 1, minWidth: 0, padding: '11px 16px',
-              background: 'var(--ink-2)',
+              background: 'var(--card)',
               border: `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'var(--rule)'}`,
               borderRight: 'none', color: 'var(--paper)',
               fontSize: 'var(--fs-body)', fontFamily: MONO, fontWeight: 700,
@@ -1247,12 +1247,12 @@ export default function LeagueScreen() {
         style={{
           display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 14px',
           borderBottom: '1px solid var(--rule)',
-          background: !n.is_read ? 'var(--accent-bg)' : 'transparent',
+          background: !n.is_read ? 'var(--accent-soft)' : 'transparent',
           cursor: 'pointer',
         }}
       >
         <div style={{ paddingTop: 5, flexShrink: 0, width: 6 }}>
-          {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)' }} />}
+          {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--paper)', lineHeight: 1.3 }}>
@@ -1271,7 +1271,7 @@ export default function LeagueScreen() {
     );
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
+      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
         {/* â”€â”€ Guided tours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {showLeagueTour && !loading && view === 'detail' && (
@@ -1552,7 +1552,7 @@ export default function LeagueScreen() {
          )}
          {showTradeBuilder && tradeTarget && (
             <div role="presentation" className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
-               <div role="presentation" className="w-full h-[90vh] bg-[var(--ink)] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[var(--rule)] relative" onClick={e => e.stopPropagation()}>
+               <div role="presentation" className="w-full h-[90vh] bg-[var(--bg)] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[var(--rule)] relative" onClick={e => e.stopPropagation()}>
                   <div className="w-full flex justify-center py-3"><div className="w-12 h-1.5 bg-[var(--rule)] rounded-full" /></div>
                   <div className="px-6 py-4 border-b border-[var(--rule)] flex justify-between items-center">
                     <div>
@@ -1570,7 +1570,7 @@ export default function LeagueScreen() {
                         </h3>
                         {incomingTrades.map(p => (
                           <div key={p.id} style={{
-                            background: 'var(--ink-2)', border: '1px solid var(--rule)',
+                            background: 'var(--card)', border: '1px solid var(--rule)',
                             borderRadius: 4, padding: '12px 16px', marginBottom: 8,
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -1622,7 +1622,7 @@ export default function LeagueScreen() {
                                   }
                                 }}
                                 style={{
-                                  background: 'var(--ink-3)', color: 'var(--mute)', fontSize: 'var(--fs-micro)',
+                                  background: 'var(--elev)', color: 'var(--mute)', fontSize: 'var(--fs-micro)',
                                   fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
                                 }}
                               >
@@ -1642,7 +1642,7 @@ export default function LeagueScreen() {
                         </h3>
                         {outgoingTrades.map(p => (
                           <div key={p.id} style={{
-                            background: 'var(--ink-2)', border: '1px solid var(--rule)',
+                            background: 'var(--card)', border: '1px solid var(--rule)',
                             borderRadius: 4, padding: '12px 16px', marginBottom: 8,
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -1749,7 +1749,7 @@ export default function LeagueScreen() {
                       <p className="text-[11px] text-[var(--mute)] italic text-center">Give up raw ranking points to secure a star player.</p>
                     </div>
                   </div>
-                  <div className="p-6 border-t border-[var(--rule)] bg-[var(--ink)] space-y-3">
+                  <div className="p-6 border-t border-[var(--rule)] bg-[var(--bg)] space-y-3">
                     {/* Position mismatch hint */}
                     {tradeMyPlayer && tradeTheirPlayer &&
                       normalizePos(tradeMyPlayer.position) !== normalizePos(tradeTheirPlayer.position) && (
@@ -1775,7 +1775,7 @@ export default function LeagueScreen() {
 
          {managerTeamView && createPortal(
            <div role="presentation" className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setManagerTeamView(null)}>
-             <div role="presentation" className="w-full h-[80vh] bg-[var(--ink)] rounded-t-2xl flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
+             <div role="presentation" className="w-full h-[80vh] bg-[var(--bg)] rounded-t-2xl flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
                <div className="p-6 border-b border-[var(--rule)] flex justify-between items-center">
                  <div>
                     <h2 className="text-[var(--paper)] font-bold text-lg">{managerTeamView.name}'s Roster</h2>
@@ -1788,9 +1788,9 @@ export default function LeagueScreen() {
                    <LoadingRows rows={3} />
                  )}
                  {managerRoster.map((p, i) => {
-                   const posColor = p.position === 'GK' ? 'var(--purple)' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
+                   const posColor = p.position === 'GK' ? 'var(--purple)' : p.position === 'DEF' ? 'var(--accent)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
                    return (
-                   <div key={i} className="flex items-center gap-3 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden" style={{ borderLeft: `2px solid ${posColor}44` }}>
+                   <div key={i} className="flex items-center gap-3 bg-[var(--bg)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden" style={{ borderLeft: `2px solid ${posColor}44` }}>
                      <div className="flex-1 min-w-0">
                        <div className="text-[11px] font-black uppercase tracking-tighter" style={{ color: posColor }}>{p.position} · {p.club}</div>
                        <div className="text-[14px] font-bold text-[var(--paper)] tracking-tight truncate">{p.name}</div>
@@ -1844,7 +1844,7 @@ export default function LeagueScreen() {
           flex:          1,
           minWidth:      0,
           padding:       '11px 16px',
-          background:    'var(--ink-2)',
+          background:    'var(--card)',
           border:        `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'var(--rule)'}`,
           borderRight:   'none',
           color:         'var(--paper)',
@@ -1910,7 +1910,7 @@ export default function LeagueScreen() {
             </div>
             <button
               onClick={() => setView('create')}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', cursor: 'pointer', textTransform: 'uppercase' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', border: '1px solid var(--accent)', color: 'var(--accent)', background: 'transparent', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', cursor: 'pointer', textTransform: 'uppercase' }}
             >
               + Create League
             </button>
@@ -1972,7 +1972,7 @@ export default function LeagueScreen() {
         {/* Invite code — inline at bottom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '20px 40px', borderTop: '1px solid var(--rule)', marginTop: 'auto' }}>
           <div style={{ flexShrink: 0 }}>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
             <div style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>Enter below to join a friend's league</div>
           </div>
           <div style={{ flex: 1, display: 'flex', maxWidth: 440 }}>
@@ -1994,7 +1994,7 @@ export default function LeagueScreen() {
           </div>
           <button
             onClick={() => setView('create')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', cursor: 'pointer', textTransform: 'uppercase' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--accent)', color: 'var(--accent)', background: 'transparent', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', cursor: 'pointer', textTransform: 'uppercase' }}
           >
             + New
           </button>
@@ -2041,7 +2041,7 @@ export default function LeagueScreen() {
 
         {/* Invite row */}
         <div style={{ padding: '16px 18px', borderTop: '2px solid var(--rule)', marginTop: 4 }}>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
           <div style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)', marginBottom: 12 }}>Enter below to join a friend's league</div>
           {inviteForm}
           {joinError && (

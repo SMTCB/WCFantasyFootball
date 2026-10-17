@@ -878,9 +878,9 @@ export default function MarketScreen() {
               title={isLocked ? 'Transfer window closed' : emptySlots === 0 ? 'Squad is full' : `Fill ${emptySlots} empty slot${emptySlots > 1 ? 's' : ''}`}
               style={{
                 padding: '6px 10px',
-                background: isLocked ? 'rgba(185,28,28,0.06)' : 'var(--accent-bg)',
+                background: isLocked ? 'rgba(185,28,28,0.06)' : 'var(--accent-soft)',
                 border: isLocked ? '1px solid rgba(185,28,28,0.25)' : '1px solid rgba(26,111,168,0.25)',
-                color: autoFilling ? 'var(--mute)' : isLocked ? 'var(--danger)' : 'var(--cyan)',
+                color: autoFilling ? 'var(--mute)' : isLocked ? 'var(--danger)' : 'var(--accent)',
                 fontFamily: 'Archivo Black, sans-serif',
                 fontSize: 'var(--fs-micro)',
                 letterSpacing: '0.1em',
@@ -952,7 +952,7 @@ export default function MarketScreen() {
               borderRadius: '4px',
               color: 'var(--paper)',
               fontFamily: 'Archivo, sans-serif',
-              caretColor: 'var(--cyan)',
+              caretColor: 'var(--accent)',
             }}
           />
           {/* Team filter toggle button */}
@@ -963,7 +963,7 @@ export default function MarketScreen() {
               background: selectedTeams.size > 0 ? 'rgba(26,111,168,0.2)' : 'var(--shell-fill-strong)',
               border: selectedTeams.size > 0 ? '1px solid rgba(26,111,168,0.5)' : '1px solid var(--shell-rule-strong)',
               borderRadius: '4px',
-              color: selectedTeams.size > 0 ? 'var(--cyan)' : 'var(--mute)',
+              color: selectedTeams.size > 0 ? 'var(--accent)' : 'var(--mute)',
               fontFamily: 'Archivo Black, sans-serif',
               fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase',
               cursor: 'pointer', whiteSpace: 'nowrap',
@@ -993,7 +993,7 @@ export default function MarketScreen() {
                   width: '100%', padding: '6px 10px', outline: 'none',
                   background: 'var(--elev)', border: '1px solid var(--rule)',
                   borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)',
-                  caretColor: 'var(--cyan)',
+                  caretColor: 'var(--accent)',
                 }}
               />
             </div>
@@ -1014,19 +1014,19 @@ export default function MarketScreen() {
                       style={{
                         width: '100%', textAlign: 'left', padding: '9px 14px',
                         display: 'flex', alignItems: 'center', gap: 10,
-                        background: checked ? 'var(--accent-bg)' : 'transparent',
+                        background: checked ? 'var(--accent-soft)' : 'transparent',
                         border: 'none', borderBottom: '1px solid var(--rule)',
                         cursor: 'pointer',
                       }}
                     >
                       <div style={{
                         width: 14, height: 14, border: checked ? 'none' : '1px solid var(--rule)',
-                        background: checked ? 'var(--cyan)' : 'transparent',
+                        background: checked ? 'var(--accent)' : 'transparent',
                         borderRadius: 2, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        {checked && <span style={{ color: 'var(--ink)', fontSize: 'var(--fs-micro)', fontWeight: 900 }}>✓</span>}
+                        {checked && <span style={{ color: 'var(--bg)', fontSize: 'var(--fs-micro)', fontWeight: 900 }}>✓</span>}
                       </div>
-                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: checked ? 'var(--cyan)' : 'var(--paper)' }}>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: checked ? 'var(--accent)' : 'var(--paper)' }}>
                         {team}
                       </span>
                     </button>
@@ -1049,8 +1049,8 @@ export default function MarketScreen() {
               <button
                 onClick={() => { setShowTeamPicker(false); setTeamSearch(''); }}
                 style={{
-                  flex: 2, padding: '8px', background: 'var(--cyan)', border: 'none',
-                  color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
+                  flex: 2, padding: '8px', background: 'var(--accent)', border: 'none',
+                  color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
                   letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
                 }}
               >
@@ -1151,7 +1151,7 @@ export default function MarketScreen() {
               )}
               {hasScores && (
                 <div className="flex items-center gap-1.5">
-                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', color: filterMinScore > 0 ? 'var(--cyan)' : 'var(--mute)', textTransform: 'uppercase', flexShrink: 0 }}>
+                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', color: filterMinScore > 0 ? 'var(--accent)' : 'var(--mute)', textTransform: 'uppercase', flexShrink: 0 }}>
                     Min pts
                   </span>
                   <input
@@ -1163,7 +1163,7 @@ export default function MarketScreen() {
                       width: 44, padding: '3px 6px', textAlign: 'center',
                       background: filterMinScore > 0 ? 'rgba(0,196,232,0.08)' : 'var(--shell-fill-strong)',
                       border: `1px solid ${filterMinScore > 0 ? 'rgba(0,196,232,0.35)' : 'var(--shell-rule-strong)'}`,
-                      borderRadius: 3, color: filterMinScore > 0 ? 'var(--cyan)' : 'var(--paper)',
+                      borderRadius: 3, color: filterMinScore > 0 ? 'var(--accent)' : 'var(--paper)',
                       fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', outline: 'none',
                     }}
                   />
@@ -1287,7 +1287,7 @@ export default function MarketScreen() {
                 style={{
                   borderBottom: isExpanded ? 'none' : '1px solid var(--rule)',
                   background:   isOwned ? 'rgba(26,111,168,0.05)' : (takenByOther || clubEliminated) ? 'rgba(239,68,68,0.02)' : 'transparent',
-                  borderLeft:   isOwned ? '2px solid var(--cyan)' : (takenByOther || clubEliminated) ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
+                  borderLeft:   isOwned ? '2px solid var(--accent)' : (takenByOther || clubEliminated) ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
                   opacity:      (takenByOther || (clubEliminated && !isOwned)) ? 0.65 : 1,
                 }}
               >
@@ -1308,7 +1308,7 @@ export default function MarketScreen() {
                     >
                       <span
                         className="fk-display truncate"
-                        style={{ fontSize: 'var(--fs-body)', color: isExpanded ? 'var(--cyan)' : 'var(--paper)', letterSpacing: '-0.01em' }}
+                        style={{ fontSize: 'var(--fs-body)', color: isExpanded ? 'var(--accent)' : 'var(--paper)', letterSpacing: '-0.01em' }}
                       >
                         {p.name.toUpperCase()}
                       </span>
@@ -1322,7 +1322,7 @@ export default function MarketScreen() {
                         {isExpanded ? '▲' : '▼'}
                       </span>
                       {isOwned && (
-                        <span className="fk-mono shrink-0" style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '2px 6px' }}>
+                        <span className="fk-mono shrink-0" style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--accent)', border: '1px solid var(--accent)', padding: '2px 6px' }}>
                           {isDraftLeague ? 'OWNED · YOU' : 'OWNED'}
                         </span>
                       )}
@@ -1461,8 +1461,8 @@ export default function MarketScreen() {
                       className="fk-mono transition-all active:scale-95"
                       style={{
                         minWidth: 56, padding: '10px 10px', minHeight: 44,
-                        border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
-                        color: canBuy ? 'var(--cyan)' : 'var(--mute)',
+                        border: `1px solid ${canBuy ? 'var(--accent)' : 'var(--rule)'}`,
+                        color: canBuy ? 'var(--accent)' : 'var(--mute)',
                         background: 'transparent',
                         fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em',
                         cursor: canBuy ? 'pointer' : 'not-allowed',
@@ -1652,7 +1652,7 @@ export default function MarketScreen() {
                     flex: 3, padding: '10px 8px',
                     background: confirming ? 'rgba(240,180,0,0.4)' : 'var(--gold)',
                     border: 'none',
-                    color: 'var(--ink)',
+                    color: 'var(--bg)',
                     fontFamily: 'Archivo Black, sans-serif',
                     fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase',
                     cursor: confirming ? 'wait' : 'pointer',

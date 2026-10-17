@@ -58,11 +58,11 @@ export default function PlayerCard({
 
   /* ── PITCH variant — spec §4.6 horizontal nameplate ──────────── */
   const numBg    = isCaptain ? 'var(--gold)' : 'transparent';
-  const numColor = isCaptain ? 'var(--ink)'  : 'var(--cyan)';
-  const numBorder = isCaptain ? 'none' : '1px solid var(--cyan)';
+  const numColor = isCaptain ? 'var(--bg)'  : 'var(--accent)';
+  const numBorder = isCaptain ? 'none' : '1px solid var(--accent)';
 
   const cardBorder = isSelected
-    ? '1px solid var(--cyan)'
+    ? '1px solid var(--accent)'
     : isSwapTarget
     ? '1px solid var(--positive)'
     : '1px solid var(--rule)';
@@ -139,7 +139,7 @@ export default function PlayerCard({
       }}
       onMouseEnter={e => {
         if (!isSelected && !isSwapTarget)
-          e.currentTarget.style.borderColor = 'var(--cyan)';
+          e.currentTarget.style.borderColor = 'var(--accent)';
       }}
       onMouseLeave={e => {
         if (!isSelected && !isSwapTarget)
