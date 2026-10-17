@@ -23,6 +23,13 @@ Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, r
 
 ---
 
+## ✅ Frontrow redesign — platform-check fixes round 2 (2026-10-17) — PR #1099
+
+- League header per mockup (crest, chips, Rank / Points / Behind 1st), tab row 15px/600 with divider before Recap, Admin moved to a gear; help, gear and bell are 44px icon buttons. Standings: podium + aligned table (# / avatar / Manager / [H2H] / Pts), whole-row tap. Manager sheet rebuilt (avatar, close, Compare with me for H2H leagues, crest rows, Trade kept). Mobile pitch crest 26→36px; bench cards gain a crest.
+- Open: Form and per-GW columns need per-GW data on members; the mockup's commissioner note card; league activity as a card.
+
+---
+
 ## ✅ Frontrow redesign — sweeps and pitch tokens (2026-10-17) — PRs #1096–#1098
 
 - **#1096** sentence-case sweep (11 files). **#1097** mono to Archivo (35 files; mono kept for Live scores, pitch, countdowns, Clubhouse front page, AdminSeed). **#1098** `--shell*`/`--on-shell*` renamed to `--pitch-*`/`--on-pitch-*` (only dark pitch/share-card/chat/action-bar surfaces use them); the unused `--shell` token is gone.
