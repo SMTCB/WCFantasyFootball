@@ -4,7 +4,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useIsMobile } from '../hooks/useViewport';
 import { supabase } from '../lib/supabase';
 
-const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif', letterSpacing: '-0.02em' };
 
 const SPORT_CONFIG = {
@@ -29,10 +28,10 @@ const TIER_ICONS = { gold: '🏆', silver: '🥈', bronze: '🥉', participation
 function TrophyCard({ trophy }) {
   const icon = TIER_ICONS[trophy.tier] ?? '🏅';
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '11px 13px', minWidth: 108 }}>
+    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '11px 13px', minWidth: 108 }}>
       <div style={{ fontSize: 'var(--fs-heading)', marginBottom: 5 }}>{icon}</div>
       <div style={{ ...HEAD, fontSize: 'var(--fs-micro)', lineHeight: 1.25 }}>{trophy.label ?? trophy.reason ?? 'Trophy'}</div>
-      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--mute)', marginTop: 3 }}>
+      <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3 }}>
         {trophy.league_name ? `${trophy.league_name} · ` : ''}{timeAgoShort(trophy.awarded_at)}
       </div>
     </div>
@@ -45,9 +44,9 @@ function SportBreakdownCard({ sport, competitions }) {
   if (!cfg) return null;
   const items = competitions[sport] ?? [];
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '14px 15px' }}>
-      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 7 }}>{cfg.label}</div>
-      <div style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.03em', lineHeight: 1, color: cfg.color }}>
+    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 15px' }}>
+      <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 7 }}>{cfg.label}</div>
+      <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-title)', lineHeight: 1, color: cfg.color }}>
         {items.length > 0 ? `${items.length} ✓` : '—'}
       </div>
       <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--text2)', marginTop: 5 }}>
@@ -63,11 +62,11 @@ function ActivityItem({ item }) {
   const color = SPORT_CONFIG[sport]?.color ?? 'var(--accent)';
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--rule2)' }}>
-      <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, marginTop: 5 }} />
+      <span aria-hidden style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: color, flexShrink: 0 }} />
       <div style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', lineHeight: 1.45, flex: 1 }}>
         {item.headline ?? item.text ?? item.title ?? '—'}
       </div>
-      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--mute)', flexShrink: 0 }}>
+      <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
         {timeAgoShort(item.created_at)}
       </div>
     </div>
@@ -127,20 +126,20 @@ export default function TrophyCabinetScreen() {
 
   // Shareable card — rendered inline on mobile, in sidebar on desktop
   const shareableCard = (
-    <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6 }}>
+    <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
       <div style={{ padding: '16px', textAlign: 'center' }}>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
+        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
           Shareable card
         </div>
-        <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', marginBottom: 4 }}>{username}</div>
+        <div style={{ ...HEAD, fontSize: 'var(--fs-body)', marginBottom: 4 }}>{username}</div>
         <div style={{ fontSize: 'var(--fs-label)', color: 'var(--text2)', marginBottom: 12 }}>
           {myTrophies} trophies · {activeSports.length} sport{activeSports.length !== 1 ? 's' : ''}
           {activeCircle ? ` · ${activeCircle.name}` : ''}
         </div>
         <button
           style={{
-            width: '100%', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase',
-            padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)', background: 'transparent',
+            width: '100%', fontWeight: 700, fontSize: 'var(--fs-label)',
+            padding: '8px 0', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', background: 'transparent',
             color: 'var(--text2)', cursor: 'pointer', minHeight: 44,
           }}
         >
@@ -158,32 +157,32 @@ export default function TrophyCabinetScreen() {
   return (
     <div style={rootStyle}>
 
-      {/* ── Dark header ── */}
+      {/* ── Navy header (design exception: trophy profile) ── */}
       <div style={{
-        background: 'var(--shell)',
+        background: 'var(--navy)', color: 'var(--on-accent)',
         padding: isMobile ? '20px 16px 18px' : '24px 26px 22px',
         display: 'flex', gap: 16, alignItems: 'flex-start', flexShrink: 0,
         flexWrap: isMobile ? 'wrap' : 'nowrap',
       }}>
         {/* Avatar */}
-        <div style={{ width: 52, height: 52, borderRadius: 10, background: 'var(--accent)', display: 'grid', placeItems: 'center', ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', flexShrink: 0 }}>
+        <div style={{ width: 52, height: 52, borderRadius: 'var(--radius)', background: 'var(--accent)', display: 'grid', placeItems: 'center', ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', flexShrink: 0 }}>
           {initial}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', lineHeight: 1 }}>{username}</div>
+            <h1 style={{ ...HEAD, margin: 0, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', lineHeight: 1 }}>{username}</h1>
             <button
               onClick={() => setShowInfo(v => !v)}
               aria-label="How the Trophy Cabinet works"
               title="How the Trophy Cabinet works"
               style={{
-                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                border: `1.5px solid ${showInfo ? 'var(--on-shell-gold)' : 'var(--shell-rule)'}`,
+                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                border: `1.5px solid ${showInfo ? 'var(--gold)' : 'rgba(255,255,255,.2)'}`,
                 background: showInfo ? 'rgba(255,255,255,.08)' : 'transparent', cursor: 'pointer',
                 display: 'grid', placeItems: 'center',
-                ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
-                color: showInfo ? 'var(--on-shell-gold)' : 'var(--on-shell-dim)',
+                fontSize: 'var(--fs-label)', fontWeight: 700,
+                color: showInfo ? 'var(--gold)' : 'rgba(255,255,255,.72)',
               }}
             >?</button>
           </div>
@@ -191,8 +190,8 @@ export default function TrophyCabinetScreen() {
           {/* Per-sport badges */}
           <div style={{ display: 'flex', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
             {activeSports.map(sport => (
-              <div key={sport} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)' }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: SPORT_CONFIG[sport].color, flexShrink: 0 }} />
+              <div key={sport} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--fs-label)', color: 'rgba(255,255,255,.72)' }}>
+                <span aria-hidden style={{ width: 4, height: 12, borderRadius: 2, background: SPORT_CONFIG[sport].color, flexShrink: 0 }} />
                 {SPORT_CONFIG[sport].label}
               </div>
             ))}
@@ -201,17 +200,17 @@ export default function TrophyCabinetScreen() {
           {/* Stats row — wraps on mobile */}
           <div style={{
             display: 'flex', gap: isMobile ? 18 : 26, marginTop: 16, paddingTop: 14,
-            borderTop: '1px solid var(--shell-rule)', flexWrap: 'wrap',
+            borderTop: '1px solid rgba(255,255,255,.2)', flexWrap: 'wrap',
           }}>
             {[
               { value: myTrophies,            label: 'Trophies', color: 'var(--on-accent)' },
               { value: activeSports.length || '—', label: 'Sports',   color: 'var(--on-accent)' },
-              { value: myGold,                label: 'Gold',     color: 'var(--on-shell-gold)' },
-              { value: mySilver,              label: 'Silver',   color: 'var(--on-shell-mid)' },
+              { value: myGold,                label: 'Gold',     color: 'var(--gold)' },
+              { value: mySilver,              label: 'Silver',   color: 'rgba(255,255,255,.88)' },
             ].map(({ value, label, color }) => (
               <div key={label}>
-                <div style={{ ...HEAD, fontSize: 'var(--fs-title)', color, letterSpacing: '-0.02em' }}>{value}</div>
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 1 }}>{label}</div>
+                <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-title)', color }}>{value}</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'rgba(255,255,255,.72)', marginTop: 1 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -222,17 +221,17 @@ export default function TrophyCabinetScreen() {
           <div style={{
             textAlign: isMobile ? 'left' : 'center',
             flexShrink: 0,
-            ...(isMobile ? { width: '100%', paddingTop: 12, borderTop: '1px solid var(--shell-rule)', display: 'flex', alignItems: 'center', gap: 12 } : {}),
+            ...(isMobile ? { width: '100%', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', gap: 12 } : {}),
           }}>
-            <div style={{ ...HEAD, fontSize: isMobile ? 28 : 38, color: 'var(--on-shell-gold)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <div className="num" style={{ ...HEAD, fontSize: isMobile ? 'var(--fs-title)' : 'var(--fs-display)', color: 'var(--gold)', lineHeight: 1 }}>
               #{myRank}
             </div>
             <div>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)' }}>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'rgba(255,255,255,.72)' }}>
                 Group overall
               </div>
               {activeCircle && (
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--on-shell-dim)', marginTop: 2 }}>
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'rgba(255,255,255,.72)', marginTop: 2 }}>
                   {activeCircle.name}
                 </div>
               )}
@@ -244,7 +243,7 @@ export default function TrophyCabinetScreen() {
       {showInfo && (
         <div style={{
           margin: isMobile ? '0 16px 16px' : '0 26px 20px', marginTop: isMobile ? 12 : 16,
-          padding: '12px 14px', borderRadius: 8, background: 'var(--elev)', border: '1px solid var(--rule)',
+          padding: '12px 14px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)',
           fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.55, flexShrink: 0,
         }}>
           <div style={{ marginBottom: 6 }}>
@@ -274,7 +273,7 @@ export default function TrophyCabinetScreen() {
 
           {/* Sport breakdown — auto-fill collapses to 1-col at 375px */}
           <div>
-            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 9 }}>
               Season standing by sport
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
@@ -294,7 +293,7 @@ export default function TrophyCabinetScreen() {
                 return (
                   <div key={sport}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
-                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 100, fontWeight: 600, background: cfg.bg, color: cfg.color }}>
+                      <span style={{ fontSize: 'var(--fs-label)', padding: '2px 7px', borderRadius: 100, fontWeight: 600, background: cfg.bg, color: cfg.color }}>
                         {cfg.label}
                       </span>
                       <div style={{ ...HEAD, fontSize: 'var(--fs-body)' }}>{cfg.label} trophies</div>
@@ -307,7 +306,7 @@ export default function TrophyCabinetScreen() {
               })}
             </div>
           ) : (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '40px 32px', textAlign: 'center' }}>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '40px 32px', textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--fs-display)', marginBottom: 16 }}>🏅</div>
               <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', marginBottom: 8 }}>No trophies yet</div>
               <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}>
@@ -326,7 +325,7 @@ export default function TrophyCabinetScreen() {
 
             {/* Activity history */}
             {feed.length > 0 && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
                 <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)' }}>
                   <div style={{ ...HEAD, fontSize: 'var(--fs-body)' }}>Activity history</div>
                 </div>
