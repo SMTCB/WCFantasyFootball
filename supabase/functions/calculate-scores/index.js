@@ -763,8 +763,10 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     if (roundComplete) {
       const penaltyCount = (squad.penalty_transfers ?? {})[roundMatchdayId] ?? 0;
       if (penaltyCount > 0) {
-        const cfg = penaltyConfigByLeague[squad.league_id];
-        if (cfg != null) {
+        // Leagues created after migration 157 have no transfer_penalty row; default to 4
+        // (same default the Market screen shows) so the penalty it warned about is applied.
+        const cfg = penaltyConfigByLeague[squad.league_id] ?? 4;
+        {
           // Normalise: a plain number becomes a one-element array for uniform handling.
           const costs = Array.isArray(cfg) ? cfg : [cfg];
           for (let i = 0; i < penaltyCount; i++) {
