@@ -111,11 +111,11 @@ function InlineOptions({ options, onSelect, submitting, selectedKey }) {
               disabled={submitting}
               style={{
                 flex: 1, padding: '9px 6px', borderRadius: 4, cursor: submitting ? 'default' : 'pointer',
-                background: isSelected ? 'rgba(0,196,232,0.18)' : 'var(--shell-fill)',
-                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.55)' : 'var(--shell-rule-strong)'}`,
-                color: isSelected ? 'var(--cyan)' : 'var(--paper)',
-                fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 900,
-                letterSpacing: '.04em', textAlign: 'center', transition: 'all 0.12s',
+                background: isSelected ? 'rgba(0,196,232,0.18)' : 'var(--elev)',
+                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.55)' : 'var(--rule)'}`,
+                color: isSelected ? 'var(--accent)' : 'var(--paper)',
+                fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 900,
+               textAlign: 'center', transition: 'all 0.12s',
                 opacity: submitting ? 0.5 : 1,
               }}
             >
@@ -135,15 +135,15 @@ function InlineOptions({ options, onSelect, submitting, selectedKey }) {
         value={search}
         onChange={e => setSearch(e.target.value)}
         style={{
-          width: '100%', marginBottom: 6, background: 'var(--shell-fill)',
-          border: '1px solid var(--shell-rule-strong)', borderRadius: 3,
-          color: 'var(--paper)', fontSize: 'var(--fs-micro)', padding: '7px 10px', outline: 'none',
+          width: '100%', marginBottom: 6, background: 'var(--elev)',
+          border: '1px solid var(--rule)', borderRadius: 3,
+          color: 'var(--paper)', fontSize: 'var(--fs-label)', padding: '7px 10px', outline: 'none',
           boxSizing: 'border-box',
         }}
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 200, overflowY: 'auto' }}>
         {filtered.length === 0 && (
-          <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '10px 0', textAlign: 'center' }}>No results</div>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', padding: '10px 0', textAlign: 'center' }}>No results</div>
         )}
         {filtered.map(opt => {
           const isSelected = selectedKey === opt.key;
@@ -155,28 +155,28 @@ function InlineOptions({ options, onSelect, submitting, selectedKey }) {
               style={{
                 display: 'flex', alignItems: 'center', gap: 8, width: '100%',
                 padding: '7px 9px', textAlign: 'left', cursor: submitting ? 'default' : 'pointer',
-                background: isSelected ? 'rgba(0,196,232,0.1)' : 'var(--shell-fill)',
-                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.4)' : 'var(--shell-rule)'}`,
+                background: isSelected ? 'rgba(0,196,232,0.1)' : 'var(--elev)',
+                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.4)' : 'var(--rule)'}`,
                 borderRadius: 3, transition: 'all 0.1s', opacity: submitting ? 0.5 : 1,
               }}
             >
               <div style={{
                 width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-                background: isSelected ? 'rgba(0,196,232,0.2)' : 'var(--shell-fill-strong)',
-                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.5)' : 'var(--shell-rule-strong)'}`,
+                background: isSelected ? 'rgba(0,196,232,0.2)' : 'var(--elev)',
+                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.5)' : 'var(--rule)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 'var(--fs-micro)', color: isSelected ? 'var(--cyan)' : 'var(--mute)', fontWeight: 700,
+                fontSize: 'var(--fs-label)', color: isSelected ? 'var(--accent)' : 'var(--mute)', fontWeight: 700,
                 fontFamily: 'monospace',
               }}>
                 {opt.meta?.pos?.substring(0, 3) ?? opt.label.substring(0, 2).toUpperCase()}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 'var(--fs-label)', color: isSelected ? 'var(--cyan)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opt.label}</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: isSelected ? 'var(--accent)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opt.label}</div>
                 {opt.meta?.club && (
-                  <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{opt.meta.club}</div>
+                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{opt.meta.club}</div>
                 )}
               </div>
-              {isSelected && <span style={{ color: 'var(--cyan)', fontSize: 'var(--fs-body)', flexShrink: 0 }}>✓</span>}
+              {isSelected && <span style={{ color: 'var(--accent)', fontSize: 'var(--fs-body)', flexShrink: 0 }}>✓</span>}
             </button>
           );
         })}
@@ -261,7 +261,7 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
                 {answerLabel?.substring(0, 2)}
               </div>
               <div>
-                <div className="text-[11px] font-semibold mb-0.5" style={{ color: isResolved ? (submission.is_correct ? 'var(--positive)' : 'var(--danger)') : 'var(--cyan)' }}>
+                <div className="text-[11px] font-semibold mb-0.5" style={{ color: isResolved ? (submission.is_correct ? 'var(--positive)' : 'var(--danger)') : 'var(--accent)' }}>
                   {isResolved ? (submission.is_correct ? '✓ Correct' : '✗ Wrong') : 'Your pick'}
                 </div>
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--paper)' }}>{answerLabel}</div>
@@ -275,7 +275,7 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
 
         {/* No-squad guard — user hasn't completed their team setup */}
         {!isPastDeadline && !squadId && options.length > 0 && (
-          <div className="text-[11px] font-semibold mt-1 px-3 py-2 rounded" style={{ color: 'var(--mute)', background: 'var(--shell-fill)', border: '1px solid var(--rule)' }}>
+          <div className="text-[11px] font-semibold mt-1 px-3 py-2 rounded" style={{ color: 'var(--mute)', background: 'var(--elev)', border: '1px solid var(--rule)' }}>
             Complete your squad setup to place bets.
           </div>
         )}
@@ -284,8 +284,8 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
         {!isPastDeadline && !!squadId && options.length > 0 && (
           <>
             <div className="flex items-center justify-between mt-1">
-              <span style={{ color: deadline.color, fontSize: 'var(--fs-micro)', fontWeight: 600 }}>{deadline.label}</span>
-              {submitting && <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Saving…</span>}
+              <span style={{ color: deadline.color, fontSize: 'var(--fs-label)', fontWeight: 600 }}>{deadline.label}</span>
+              {submitting && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Saving…</span>}
             </div>
             <InlineOptions
               options={options}

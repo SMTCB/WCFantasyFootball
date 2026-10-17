@@ -98,8 +98,6 @@ export default class ErrorBoundary extends Component {
             fontFamily: 'Archivo Black, sans-serif',
             fontSize: 'var(--fs-title)',
             fontWeight: 900,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
             color: 'var(--paper)',
             marginBottom: '8px',
           }}
@@ -139,10 +137,8 @@ export default class ErrorBoundary extends Component {
           >
             <div
               style={{
-                fontSize: 'var(--fs-micro)',
+                fontSize: 'var(--fs-label)',
                 fontWeight: 800,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
                 color: 'var(--danger)',
                 fontFamily: 'Archivo Black, sans-serif',
                 marginBottom: '6px',
@@ -152,7 +148,7 @@ export default class ErrorBoundary extends Component {
             </div>
             <pre
               style={{
-                fontSize: 'var(--fs-micro)',
+                fontSize: 'var(--fs-label)',
                 color: 'var(--danger)',
                 fontFamily: 'monospace',
                 whiteSpace: 'pre-wrap',
@@ -171,14 +167,12 @@ export default class ErrorBoundary extends Component {
             onClick={this.handleReload}
             style={{
               padding: '12px 28px',
-              background: 'var(--cyan)',
+              background: 'var(--accent)',
               color: 'var(--on-accent)',
               border: 'none',
               borderRadius: '4px',
-              fontSize: 'var(--fs-micro)',
+              fontSize: 'var(--fs-label)',
               fontWeight: 800,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
               cursor: 'pointer',
               fontFamily: 'Archivo Black, sans-serif',
             }}
@@ -193,10 +187,8 @@ export default class ErrorBoundary extends Component {
               color: 'var(--mute)',
               border: '1px solid var(--rule)',
               borderRadius: '4px',
-              fontSize: 'var(--fs-micro)',
+              fontSize: 'var(--fs-label)',
               fontWeight: 800,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
               cursor: 'pointer',
               fontFamily: 'Archivo Black, sans-serif',
             }}

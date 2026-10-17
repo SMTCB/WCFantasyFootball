@@ -41,7 +41,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
     >
       <div role="presentation"
         style={{
-          background: 'var(--ink-2)',
+          background: 'var(--card)',
           border: '1px solid var(--rule)',
           borderRadius: 8,
           padding: '32px 28px',
@@ -58,7 +58,6 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
             fontSize: 'var(--fs-heading)',
             color: 'var(--paper)',
             marginBottom: 24,
-            letterSpacing: '0.02em',
           }}
         >
           Keyboard Shortcuts
@@ -69,23 +68,22 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
               <kbd
                 style={{
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 'var(--fs-micro)',
+                  fontFamily: 'Archivo, sans-serif',
+                  fontSize: 'var(--fs-label)',
                   fontWeight: 700,
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                   background: 'rgba(0, 180, 216, 0.12)',
                   border: '1px solid rgba(0, 180, 216, 0.25)',
                   padding: '4px 8px',
                   borderRadius: 2,
                   whiteSpace: 'nowrap',
-                  letterSpacing: '0.05em',
                 }}
               >
                 {s.key}
               </kbd>
               <span
                 style={{
-                  fontFamily: 'JetBrains Mono, monospace',
+                  fontFamily: 'Archivo, sans-serif',
                   fontSize: 'var(--fs-label)',
                   color: 'var(--mute)',
                   flex: 1,
@@ -103,9 +101,9 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
             marginTop: 24,
             paddingTop: 16,
             borderTop: '1px solid var(--rule)',
-            fontSize: 'var(--fs-micro)',
+            fontSize: 'var(--fs-label)',
             color: 'var(--mute)',
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             lineHeight: 1.5,
           }}
         >

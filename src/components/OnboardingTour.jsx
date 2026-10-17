@@ -190,19 +190,17 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
       {/* Tooltip card */}
       <div style={{
         ...tooltipStyle,
-        background:   'var(--ink-2)',
-        border:       '1px solid var(--shell-rule-strong)',
+        background:   'var(--card)',
+        border:       '1px solid var(--rule)',
         borderRadius: '12px',
         padding:      '20px',
         boxShadow:    'none',
       }}>
         {/* Step counter */}
         <div style={{
-          fontSize: 'var(--fs-micro)',
+          fontSize: 'var(--fs-label)',
           fontFamily:    'Archivo Black, sans-serif',
-          letterSpacing: '0.12em',
           color:         'var(--gold)',
-          textTransform: 'uppercase',
           marginBottom:  '6px',
         }}>
           {stepIdx + 1} / {steps.length}
@@ -214,7 +212,6 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
           fontFamily:   'Archivo Black, sans-serif',
           fontWeight:   800,
           color:        'var(--paper)',
-          textTransform: 'uppercase',
           lineHeight:   1.1,
           marginBottom: '8px',
         }}>

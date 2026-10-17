@@ -36,19 +36,19 @@ function FixtureCard({ fixture, prediction, onPredict }) {
     <div
       className="rounded-lg overflow-hidden"
       style={{
-        background: 'var(--ink-2)',
+        background: 'var(--card)',
         border: result === 'correct'
           ? '1px solid rgba(24,201,107,0.35)'
           : result === 'wrong'
           ? '1px solid rgba(240,58,58,0.25)'
-          : '1px solid var(--shell-rule)',
+          : '1px solid var(--rule)',
         boxShadow: isLive ? '0 0 12px rgba(24,201,107,0.08)' : 'none',
       }}
     >
       {/* Status bar */}
       <div
         className="flex items-center justify-between px-3 py-1.5"
-        style={{ borderBottom: '1px solid var(--shell-rule)' }}
+        style={{ borderBottom: '1px solid var(--rule)' }}
       >
         <span
           className="text-[11px] font-black uppercase tracking-widest"
@@ -167,9 +167,9 @@ function FixtureCard({ fixture, prediction, onPredict }) {
                   fontFamily: 'Archivo Black, sans-serif',
                   background: prediction === key
                     ? isLive ? 'rgba(245,158,11,0.15)' : 'rgba(0,180,216,0.15)'
-                    : 'var(--shell-fill)',
+                    : 'var(--elev)',
                   color: prediction === key
-                    ? isLive ? 'var(--warn)' : 'var(--cyan)'
+                    ? isLive ? 'var(--warn)' : 'var(--accent)'
                     : 'var(--mute)',
                   border: prediction === key
                     ? isLive ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(0,180,216,0.3)'
@@ -233,7 +233,7 @@ export default function BracketScreen() {
   const accuracy = predicted.length ? Math.round((correct.length / predicted.length) * 100) : null;
 
   return (
-    <div className="min-h-screen" data-testid="main-content" style={{ background: 'var(--ink)', paddingBottom: '80px' }}>
+    <div className="min-h-screen" data-testid="main-content" style={{ background: 'var(--bg)', paddingBottom: '80px' }}>
 
       {/* Header */}
       <div
@@ -265,7 +265,7 @@ export default function BracketScreen() {
               className="text-[20px] font-black uppercase leading-tight tracking-wider"
               style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
             >
-              FIXTURE CHALLENGE
+              Fixture challenge
             </div>
           </div>
           {/* Score badge */}
@@ -278,7 +278,7 @@ export default function BracketScreen() {
             </div>
             <div
               className="text-[18px] font-black tabular-nums leading-tight"
-              style={{ fontFamily: 'Archivo Black, sans-serif', color: accuracy !== null ? 'var(--cyan)' : 'var(--mute)' }}
+              style={{ fontFamily: 'Archivo Black, sans-serif', color: accuracy !== null ? 'var(--accent)' : 'var(--mute)' }}
             >
               {accuracy !== null ? `${accuracy}%` : '—'}
             </div>
@@ -314,7 +314,7 @@ export default function BracketScreen() {
       {loading ? (
         <div className="flex flex-col gap-3 px-4 mt-2">
           {[1,2,3].map(i => (
-            <div key={i} className="h-[110px] rounded-sm animate-pulse" style={{ background: 'var(--ink-2)' }} />
+            <div key={i} className="h-[110px] rounded-sm animate-pulse" style={{ background: 'var(--card)' }} />
           ))}
         </div>
       ) : (

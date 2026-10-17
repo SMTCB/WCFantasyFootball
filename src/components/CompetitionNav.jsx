@@ -41,7 +41,7 @@ const FOOTBALL_SCREENS = [
   { key: 'squad',  label: 'SQUAD',  path: '/squad',  Icon: NavIconSquad,                   carriesLeagueId: true },
   { key: 'market', label: 'MARKET', path: '/market', Icon: NavIconMarket,                  carriesLeagueId: true },
   // "Digest" here is the cross-league activity feed (RecapScreen, internally
-  // "MY DIGEST") — kept as a distinct label from the in-league "Recap" tab
+  // "My digest") — kept as a distinct label from the in-league "Recap" tab
   // further down the screen (LeagueScreen's HubTabs) so the two aren't confused.
   { key: 'digest', label: 'DIGEST', path: '/recap',  Icon: NavIconRecap,                   carriesLeagueId: true },
 ];
@@ -208,7 +208,7 @@ export function CompetitionNav({
             display: 'flex', alignItems: 'center', gap: 8,
             minWidth: 0, flex: '1 1 auto',
             padding: '6px 10px', borderRadius: 7,
-            background: menuOpen ? 'var(--shell-fill-strong, rgba(255,255,255,0.08))' : 'transparent',
+            background: menuOpen ? 'var(--elev)' : 'transparent',
             border: '1px solid var(--rule)',
             cursor: 'pointer', textAlign: 'left',
           }}
@@ -235,7 +235,7 @@ export function CompetitionNav({
               </span>
             </>
           )}
-          <span aria-hidden="true" style={{ marginLeft: 'auto', fontSize: 'var(--fs-micro)', opacity: 0.6, color: 'var(--mute)', transform: menuOpen ? 'rotate(180deg)' : 'none', transition: 'transform .12s', flexShrink: 0 }}>⌄</span>
+          <span aria-hidden="true" style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', opacity: 0.6, color: 'var(--mute)', transform: menuOpen ? 'rotate(180deg)' : 'none', transition: 'transform .12s', flexShrink: 0 }}>⌄</span>
         </button>
 
         <button
@@ -244,7 +244,7 @@ export function CompetitionNav({
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 30, height: 30, flexShrink: 0,
-            background: 'var(--accent-bg)', border: '1px solid var(--accent)',
+            background: 'var(--accent-soft)', border: '1px solid var(--accent)',
             borderRadius: 20, cursor: 'pointer',
             fontSize: 'var(--fs-body-lg)', fontWeight: 700, lineHeight: 1,
             color: 'var(--accent)',
@@ -265,8 +265,8 @@ export function CompetitionNav({
         >
           {myCircles.length > 1 && (
             <>
-              <div style={{ padding: '9px 14px 5px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)' }}>
-                YOUR CLUBHOUSES
+              <div style={{ padding: '9px 14px 5px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+                Your clubhouses
               </div>
               {myCircles.map((c, i) => {
                 const isActive = c.id === activeCircleId;
@@ -278,14 +278,14 @@ export function CompetitionNav({
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                       padding: '8px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-                      background: isActive ? 'var(--shell-fill-strong, rgba(255,255,255,0.08))' : 'transparent',
+                      background: isActive ? 'var(--elev)' : 'transparent',
                       color: isActive ? 'var(--paper)' : 'var(--mute)',
                       fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
                     }}
                   >
                     <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: IDENTITY_COLORS[i % IDENTITY_COLORS.length] }} />
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-                    {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}>✓</span>}
+                    {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>✓</span>}
                   </button>
                 );
               })}
@@ -293,8 +293,8 @@ export function CompetitionNav({
             </>
           )}
 
-          <div style={{ padding: '9px 14px 5px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)' }}>
-            {(clubhouseName ?? 'THIS CLUBHOUSE').toUpperCase()}
+          <div style={{ padding: '9px 14px 5px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+            {(clubhouseName ?? 'This clubhouse').toUpperCase()}
           </div>
           <button
             role="menuitem"
@@ -302,7 +302,7 @@ export function CompetitionNav({
             style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-              background: isClubhouseHome ? 'var(--shell-fill-strong, rgba(255,255,255,0.08))' : 'transparent',
+              background: isClubhouseHome ? 'var(--elev)' : 'transparent',
               color: isClubhouseHome ? 'var(--paper)' : 'var(--mute)',
               fontSize: 'var(--fs-label)', fontWeight: isClubhouseHome ? 600 : 500,
             }}
@@ -321,14 +321,14 @@ export function CompetitionNav({
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                   padding: '8px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-                  background: isActive ? 'var(--shell-fill-strong, rgba(255,255,255,0.08))' : 'transparent',
+                  background: isActive ? 'var(--elev)' : 'transparent',
                   color: isActive ? 'var(--paper)' : 'var(--mute)',
                   fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
                 }}
               >
                 <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: color }} />
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comp.name}</span>
-                {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}>✓</span>}
+                {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>✓</span>}
               </button>
             );
           })}
@@ -397,8 +397,8 @@ export function CompetitionNav({
                   display: 'flex', alignItems: 'center', gap: 5,
                   background: 'transparent', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
                   borderBottom: isActive ? `2px solid ${color}` : '2px solid transparent',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em',
+                  fontFamily: 'Archivo, sans-serif',
+                  fontSize: 'var(--fs-label)', fontWeight: 700,
                   color,
                   whiteSpace: 'nowrap', cursor: 'pointer',
                   transition: 'color .12s',
