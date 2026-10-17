@@ -1289,7 +1289,7 @@ export default function SquadScreen() {
       {/* ── Fetch error banner ──────────────────────────────────────────────── */}
       {fetchError && (
         <div
-          className="fixed top-0 left-0 right-0 z-[70] flex items-center gap-3 px-4 py-3 lg:left-[220px]"
+          className="fixed top-0 left-0 right-0 z-[70] flex items-center gap-3 px-4 py-3 lg:left-0"
           style={{ background: 'rgba(240,58,58,0.92)', backdropFilter: 'blur(8px)' }}
         >
           <span className="text-white text-[11px] font-bold uppercase tracking-widest flex-1">{fetchError}</span>
@@ -1938,11 +1938,11 @@ export default function SquadScreen() {
         <>
           {/* Tap-outside dismiss — portaled to body so iOS WebKit stacking context doesn't trap z-index */}
           <div role="presentation"
-            className="fixed inset-0 z-[59] lg:left-[220px]"
+            className="fixed inset-0 z-[59] lg:left-0"
             onClick={() => setSelectedPlayer(null)}
           />
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] animate-slide-up"
+          className="fixed bottom-0 left-0 right-0 lg:left-0 z-[60] animate-slide-up"
           style={{
             background: 'var(--card)',
             backdropFilter: 'blur(24px)',
@@ -2121,7 +2121,7 @@ export default function SquadScreen() {
       {/* â•â• SWAP MODE BANNER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {swapMode && (
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] px-5 py-3 flex justify-between items-center"
+          className="fixed bottom-0 left-0 right-0 lg:left-0 z-[60] px-5 py-3 flex justify-between items-center"
           style={{
             background: 'rgba(255,255,255,0.97)',
             backdropFilter: 'blur(20px)',
