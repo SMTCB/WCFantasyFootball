@@ -12,6 +12,19 @@
 
 ---
 
+## ✅ Transfer penalty silently skipped when league has no `transfer_penalty` config row (2026-10-17) — PR #1057, data fix
+
+**Symptom**: Champions Eder 26/27 matchday 2 — a manager bought one transfer over the limit but the Recap showed no penalty and the total was unchanged.
+
+**Root cause**: migration 157 seeded `transfer_penalty` only for leagues that existed then; leagues created afterwards (only 3 of 14 have the row) had none, and `calculate-scores` skipped the deduction when `cfg == null`. MarketScreen defaulted to 4 pts, so the UI warned of a penalty that scoring never applied.
+
+**Fix**: `calculate-scores` now defaults to 4 (matches docs and MarketScreen); deployed 2026-10-17. Rounds are frozen once settled (v31 guard), so matchday 2 was corrected by a direct data edit with a backup in `backups/`: squad `79e12342…` 59 → 55 with `points_breakdown.transfer_penalty_deduction = 4`.
+
+**Open follow-ups**:
+- Champions Eder squad `81227819…` (user "Chuck Norris") has `penalty_transfers = {"1593-r2": 13}` (−52 pts if applied, total 81 → 29). Held — owner to verify whether 13 extra buys is genuine or a counter fault before correcting.
+- RANKS FC World Cup Fantasy, `429-r3`: squads `08088b9e…` (53) and `e7ca3dbb…` (54) each have 1 unapplied penalty (−4). Not corrected.
+- Consider a migration seeding the `transfer_penalty` row for all leagues (and at league creation); not needed for correctness now that the code defaults.
+
 ## 🟡 P2 — DRAFT-20: optional 20-player squads + 5-substitution cap per matchday for draft leagues (2026-10-16) — open, spec only, no PR yet
 
 **Origin**: user suggestion, reviewed 2026-10-16. Draft ("noduplicate") leagues only; classic leagues and in-flight leagues are untouched.

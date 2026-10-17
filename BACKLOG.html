@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-10-16. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-10-17. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>268</strong><span>closed</span></div>
+      <div class="total-pill"><strong>269</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (185)</span>
+    <span class="chip" data-filter-kind="done">Shipped (186)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">268</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">269</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">185</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">186</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,46 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">185</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">186</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ transfer penalty silently skipped when league has no `transfer_penalty` config row (2026-10-17) — pr #1057, data fix 
+
+**symptom**: champions eder 26/27 matchday 2 — a manager bought one transfer over the limit but the recap showed no penalty and the total was unchanged.
+
+**root cause**: migration 157 seeded `transfer_penalty` only for leagues that existed then; leagues created afterwards (only 3 of 14 have the row) had none, and `calculate-scores` skipped the deduction when `cfg == null`. marketscreen defaulted to 4 pts, so the ui warned of a penalty that scoring never applied.
+
+**fix**: `calculate-scores` now defaults to 4 (matches docs and marketscreen); deployed 2026-10-17. rounds are frozen once settled (v31 guard), so matchday 2 was corrected by a direct data edit with a backup in `backups/`: squad `79e12342…` 59 → 55 with `points_breakdown.transfer_penalty_deduction = 4`.
+
+**open follow-ups**:
+- champions eder squad `81227819…` (user &quot;chuck norris&quot;) has `penalty_transfers = {&quot;1593-r2&quot;: 13}` (−52 pts if applied, total 81 → 29). held — owner to verify whether 13 extra buys is genuine or a counter fault before correcting.
+- ranks fc world cup fantasy, `429-r3`: squads `08088b9e…` (53) and `e7ca3dbb…` (54) each have 1 unapplied penalty (−4). not corrected.
+- consider a migration seeding the `transfer_penalty` row for all leagues (and at league creation); not needed for correctness now that the code defaults.
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Transfer penalty silently skipped when league has no <code>transfer_penalty</code> config row</h3>
+        <p class="card-summary">Symptom : Champions Eder 26/27 matchday 2 — a manager bought one transfer over the limit but the Recap showed no penalty and the total was unchanged. Root cause :…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-17</span><span class="foot-refs">PR #1057, data fix</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Transfer penalty silently skipped when league has no <code>transfer_penalty</code> config row</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Symptom : Champions Eder 26/27 matchday 2 — a manager bought one transfer over the limit but the Recap showed no penalty and the total was unchanged. Root cause :…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #1057, data fix</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-17</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><strong>Symptom</strong>: Champions Eder 26/27 matchday 2 — a manager bought one transfer over the limit but the Recap showed no penalty and the total was unchanged.</p>
+<p><strong>Root cause</strong>: migration 157 seeded <code>transfer_penalty</code> only for leagues that existed then; leagues created afterwards (only 3 of 14 have the row) had none, and <code>calculate-scores</code> skipped the deduction when <code>cfg == null</code>. MarketScreen defaulted to 4 pts, so the UI warned of a penalty that scoring never applied.</p>
+<p><strong>Fix</strong>: <code>calculate-scores</code> now defaults to 4 (matches docs and MarketScreen); deployed 2026-10-17. Rounds are frozen once settled (v31 guard), so matchday 2 was corrected by a direct data edit with a backup in <code>backups/</code>: squad <code>79e12342…</code> 59 → 55 with <code>points_breakdown.transfer_penalty_deduction = 4</code>.</p>
+<p><strong>Open follow-ups</strong>:</p>
+<ul>
+<li>Champions Eder squad <code>81227819…</code> (user "Chuck Norris") has <code>penalty_transfers = {"1593-r2": 13}</code> (−52 pts if applied, total 81 → 29). Held — owner to verify whether 13 extra buys is genuine or a counter fault before correcting.</li>
+<li>RANKS FC World Cup Fantasy, <code>429-r3</code>: squads <code>08088b9e…</code> (53) and <code>e7ca3dbb…</code> (54) each have 1 unapplied penalty (−4). Not corrected.</li>
+<li>Consider a migration seeding the <code>transfer_penalty</code> row for all leagues (and at league creation); not needed for correctness now that the code defaults.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ui audit finish — step 1 (mechanical items) (2026-10-16) — rollback tag `pre-ui-finish-step1` 
 
 | id | status | what shipped |

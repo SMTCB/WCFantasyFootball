@@ -66,7 +66,7 @@ Every manager in a **Classic** league gets **3 free buy transfers per round** by
 |---|---|---|
 | `transfers_per_round` | `3` | Free BUY transfers allowed between two consecutive deadlines |
 | `transfer_wildcard_round` | `null` | If set: the specified round has unlimited transfers |
-| `transfer_penalty` | `4` | Point cost per extra buy beyond the free limit (see below) |
+| `transfer_penalty` | `4` | Point cost per extra buy beyond the free limit (see below). If a league has no row, `calculate-scores` and MarketScreen both fall back to `4` (fixed 2026-10-17, PR #1057) |
 
 ### What counts
 
