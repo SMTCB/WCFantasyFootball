@@ -65,8 +65,10 @@ export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { unreadCount } = useContext(ClubhouseNotifContext);
+  const { unreadCount: totalUnread, unreadByCircle } = useContext(ClubhouseNotifContext);
   const { myCircles, competitions, activeCircleId, setActiveCircleId, refreshCompetitions, showNewCompFlow, openNewCompetitionFlow, closeNewCompetitionFlow } = useClubhouseContext();
+  // Only the open clubhouse's unread; falls back to the total when none is open.
+  const unreadCount = activeCircleId ? (unreadByCircle[activeCircleId] ?? 0) : totalUnread;
   const { competitionId } = useActiveCompetition();
   const mainRef = useRef(null);
   const [showInvite, setShowInvite] = useState(false);
