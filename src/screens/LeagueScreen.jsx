@@ -13,6 +13,7 @@ import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
 import TransferWindowBanner from '../components/TransferWindowBanner';
+import StatusBar from '../components/ui/StatusBar';
 
 import NotificationBell from '../components/NotificationBell';
 import { useTransferWindow } from '../hooks/useTransferWindow';
@@ -1351,114 +1352,40 @@ export default function LeagueScreen() {
 
         <TransferWindowBanner {...transferWindow} />
 
-        {/* DD-C7: guide commissioner to set draft deadline after creating a Draft league */}
-        {activeLeague?.leagues?.format === 'noduplicate'
-          && !activeLeague?.leagues?.draft_deadline
-          && isCommissioner && (
-          <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => setView('commissioner'))(e); } }}
-            onClick={() => setView('commissioner')}
-            style={{ background: 'rgba(240,180,0,0.12)', borderBottom: '1px solid rgba(240,180,0,0.25)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
-          >
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
-              ⚙ DRAFT LEAGUE — SET A DRAFT DEADLINE IN THE ADMIN TAB TO OPEN SUBMISSIONS
-            </span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)' }}>→</span>
-          </div>
-        )}
-
-        {/* Commissioner overview: deadline set, lottery not yet run */}
-        {isCommissioner && draftDeadlineDate && !draftAllocated && (() => {
-          const msLeft = draftDeadlineDate.getTime() - Date.now();
-          const hoursLeft = msLeft / 3_600_000;
-          const deadlinePassed = hoursLeft <= 0;
-          const fmtDeadline = draftDeadlineDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-          const memberCount = members?.length ?? 0;
-          return (
-            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => setView('commissioner'))(e); } }}
-              onClick={() => setView('commissioner')}
-              style={{ background: 'rgba(240,180,0,0.10)', borderBottom: '1px solid rgba(240,180,0,0.22)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
-            >
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
-                {deadlinePassed ? '⏰' : '📋'} DRAFT SUBMISSIONS — {draftSubmissionCount}/{memberCount} MANAGERS
-                {deadlinePassed
-                  ? ' — DEADLINE PASSED · RUN LOTTERY WHEN READY'
-                  : ` · DEADLINE ${fmtDeadline}`}
-              </span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)' }}>→</span>
-            </div>
-          );
+        {/* One status bar at a time (redesign Wave 1b), highest priority first */}
+        {(() => {
+          const lg = activeLeague?.leagues;
+          const isDraft = lg?.format === 'noduplicate';
+          const goSquad = () => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`);
+          const act = (label, fn) => <button className="hit-44" onClick={fn} style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label} →</button>;
+          const squadChecks = mySquadPlayerCount !== null && !draftOpen && (!isDraft || draftAllocated);
+          if (draftOpen) {
+            const hoursLeft = draftDeadlineDate ? (draftDeadlineDate.getTime() - Date.now()) / 3_600_000 : Infinity;
+            const tone = hoursLeft < 24 ? 'crit' : hoursLeft < 48 ? 'warn' : 'good';
+            const msg = hoursLeft < 24 ? `Draft closes in ${Math.max(0, Math.floor(hoursLeft))}h — submit your ranked list now`
+              : hoursLeft < 48 ? `Draft closes in ${Math.floor(hoursLeft)}h — submit your ranked list`
+              : 'Draft is open — submit your ranked list';
+            return <StatusBar tone={tone} action={act('Draft', () => navigate(`/league/${activeLeague?.league_id}/draft`))}>{msg}</StatusBar>;
+          }
+          if (squadChecks && mySquadPlayerCount < 11) {
+            return <StatusBar tone="crit" action={act('My squad', goSquad)}>Squad too small — {mySquadPlayerCount}/11 players. Need {11 - mySquadPlayerCount} more to field a starting XI.</StatusBar>;
+          }
+          if (draftAllocated && mySquadPlayerCount === null) {
+            return <StatusBar tone="warn" action={act('Market', () => navigate(`/market?leagueId=${activeLeague?.league_id}`))}>No squad yet — head to the market to sign players.</StatusBar>;
+          }
+          if (isDraft && !lg?.draft_deadline && isCommissioner) {
+            return <StatusBar tone="warn" action={act('Admin', () => setView('commissioner'))}>Draft league — set a draft deadline in the Admin tab to open submissions.</StatusBar>;
+          }
+          if (isCommissioner && draftDeadlineDate && !draftAllocated) {
+            const passed = draftDeadlineDate.getTime() <= Date.now();
+            const fmt = draftDeadlineDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            return <StatusBar tone="warn" action={act('Admin', () => setView('commissioner'))}>Draft submissions {draftSubmissionCount}/{members?.length ?? 0} managers{passed ? ' — deadline passed, run the lottery when ready' : ` · deadline ${fmt}`}</StatusBar>;
+          }
+          if (squadChecks && mySquadPlayerCount < 15) {
+            return <StatusBar tone="warn" action={act('My squad', goSquad)}>Squad incomplete — {mySquadPlayerCount}/15 players. {15 - mySquadPlayerCount} empty slot{15 - mySquadPlayerCount !== 1 ? 's' : ''}.</StatusBar>;
+          }
+          return null;
         })()}
-
-        {draftOpen && (() => {
-          const msLeft = draftDeadlineDate ? draftDeadlineDate.getTime() - Date.now() : Infinity;
-          const hoursLeft = msLeft / 3_600_000;
-          const isCritical = hoursLeft < 24;
-          const isWarning = hoursLeft < 48;
-          const bg = isCritical ? '#B71C1C' : isWarning ? '#E65100' : '#1B5E20';
-          return (
-            <div role="button" tabIndex={0} onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/league/${activeLeague?.league_id}/draft`); } }} style={{ background: bg, color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
-                {isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} DRAFT {isCritical ? `${Math.max(0, Math.floor(hoursLeft))}H LEFT — SUBMIT NOW` : isWarning ? `${Math.floor(hoursLeft)}H LEFT` : 'IS OPEN'} — SUBMIT YOUR RANKED LIST
-              </span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>→</span>
-            </div>
-          );
-        })()}
-
-        {/* No-squad banner: draft ran but user has no squad yet → go to market */}
-        {draftAllocated && mySquadPlayerCount === null && !draftOpen && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                No squad yet
-              </div>
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
-                Head to the market to sign players and build your squad
-              </div>
-            </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
-              MARKET →
-            </button>
-          </div>
-        )}
-
-        {/* Incomplete squad warnings — suppressed while draft is open or lottery hasn't run */}
-        {mySquadPlayerCount !== null && !draftOpen
-          && (activeLeague?.leagues?.format !== 'noduplicate' || draftAllocated)
-          && mySquadPlayerCount < 11 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Squad too small — {mySquadPlayerCount}/11 players
-              </div>
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
-                Need {11 - mySquadPlayerCount} more player{11 - mySquadPlayerCount !== 1 ? 's' : ''} to field a starting XI
-              </div>
-            </div>
-            <button className="hit-44" onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
-              MY SQUAD →
-            </button>
-          </div>
-        )}
-        {mySquadPlayerCount !== null && !draftOpen
-          && (activeLeague?.leagues?.format !== 'noduplicate' || draftAllocated)
-          && mySquadPlayerCount >= 11 && mySquadPlayerCount < 15 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Squad incomplete — {mySquadPlayerCount}/15 players
-              </div>
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
-                {15 - mySquadPlayerCount} empty slot{15 - mySquadPlayerCount !== 1 ? 's' : ''} — sign more players to complete your squad
-              </div>
-            </div>
-            <button className="hit-44" onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
-              MY SQUAD →
-            </button>
-          </div>
-        )}
 
 
 {/* Desktop tabs (hidden on mobile) */}
