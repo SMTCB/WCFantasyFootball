@@ -50,7 +50,7 @@ function SportInfoPopover({ sport }) {
         aria-label={`About ${sport}`}
         style={{
           width: 16, height: 16, borderRadius: '50%', border: '1px solid var(--mute)',
-          background: 'transparent', color: 'var(--mute)', fontSize: 'var(--fs-micro)', lineHeight: '14px',
+          background: 'transparent', color: 'var(--mute)', fontSize: 'var(--fs-label)', lineHeight: '14px',
           cursor: 'pointer', padding: 0, fontFamily: 'Georgia, serif', fontStyle: 'italic',
         }}
       >i</button>
@@ -67,12 +67,12 @@ function SportInfoPopover({ sport }) {
             </div>
             {info.modes.map(m => (
               <div key={m.label} style={{ marginTop: 8 }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--accent)', marginBottom: 2 }}>{m.label.toUpperCase()}</div>
-                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.4 }}>{m.text}</div>
+                <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--accent)', marginBottom: 2 }}>{m.label.toUpperCase()}</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.4 }}>{m.text}</div>
               </div>
             ))}
             {info.extra && (
-              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.4, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--rule)' }}>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.4, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--rule)' }}>
                 {info.extra}
               </div>
             )}
@@ -142,7 +142,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         // fallback silently assigned the whole object to newId when the RPC
         // succeeded (no top-level `.error`), producing a `/league/[object Object]`
         // URL that can never resolve — LeagueScreen's header would spin on
-        // "SYNCING..." forever until the user backed out and re-entered.
+        // "Syncing..." forever until the user backed out and re-entered.
         newId = data?.id;
       } else if (sport === 'f1') {
         const { data, error: err } = await supabase.rpc('create_paddock', {
@@ -220,33 +220,33 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
   // ── Shared styles ────────────────────────────────────────────────────────────
   const LABEL_STYLE = {
     display: 'block', marginBottom: 6,
-    fontFamily: 'JetBrains Mono, monospace',
-    fontSize: 'var(--fs-micro)', letterSpacing: '0.1em',
-    textTransform: 'uppercase', color: 'var(--mute)',
+    fontFamily: 'Archivo, sans-serif',
+    fontSize: 'var(--fs-label)',
+   color: 'var(--mute)',
   };
   const INPUT_STYLE = {
-    width: '100%', padding: '11px 13px', borderRadius: 6,
+    width: '100%', padding: '11px 13px', borderRadius: 'var(--radius)',
     background: 'var(--elev)', border: 'none',
     color: 'var(--paper)', fontFamily: 'inherit', fontSize: 'var(--fs-body)',
     outline: 'none', boxSizing: 'border-box',
   };
   const SPORT_TILE = (active) => ({
     flex: 1, border: `1.5px solid ${active ? 'var(--accent)' : 'var(--rule)'}`,
-    background: active ? 'var(--accent-bg)' : 'transparent',
-    borderRadius: 6, padding: '14px 8px', textAlign: 'center',
+    background: active ? 'var(--accent-soft)' : 'transparent',
+    borderRadius: 'var(--radius)', padding: '14px 8px', textAlign: 'center',
     cursor: 'pointer', transition: 'all .12s',
   });
   const GHOST_BTN = {
-    flex: 1, textAlign: 'center', padding: 12, borderRadius: 6,
+    flex: 1, textAlign: 'center', padding: 12, borderRadius: 'var(--radius)',
     border: '1px solid var(--rule)', background: 'transparent', color: 'var(--mute)',
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em',
-    textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer',
+    fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)',
+   fontWeight: 600, cursor: 'pointer',
   };
   const PRIMARY_BTN = {
-    flex: 1, textAlign: 'center', padding: 12, borderRadius: 6,
+    flex: 1, textAlign: 'center', padding: 12, borderRadius: 'var(--radius)',
     border: 'none', background: 'var(--accent)', color: 'var(--on-accent)',
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em',
-    textTransform: 'uppercase', fontWeight: 600,
+    fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)',
+   fontWeight: 600,
     cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
   };
 
@@ -267,7 +267,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         {SPORTS.map(({ sport: s, label, icon }) => (
           <button key={s} onClick={() => setSport(s)} style={SPORT_TILE(s === sport)}>
             <img src={icon} alt="" style={{ width: 48, height: 48, marginBottom: 8, display: 'block', marginInline: 'auto' }} />
-            <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 600, color: 'var(--paper)' }}>{label}</span>
+            <span style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)' }}>{label}</span>
           </button>
         ))}
       </div>
@@ -338,7 +338,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         {!showJoin ? (
           <button
             onClick={() => setShowJoin(true)}
-            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--accent)' }}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--accent)' }}
           >
             Have an invite code instead? →
           </button>
@@ -378,7 +378,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
                 onClick={handleJoin}
                 disabled={loading || !joinCode.trim()}
                 style={{
-                  padding: '9px 16px', borderRadius: 6, border: 'none',
+                  padding: '9px 16px', borderRadius: 'var(--radius)', border: 'none',
                   background: SPORT_COLOR[joinSport], color: 'var(--on-accent)',
                   fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)',
                   cursor: loading || !joinCode.trim() ? 'not-allowed' : 'pointer',
