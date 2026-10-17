@@ -212,11 +212,7 @@ function AllCompetitions({ competitions, onEnter }) {
               <div style={{ height: 3, background: meta.color, flexShrink: 0 }} />
               <div style={{ padding: '13px 15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.25, minWidth: 0, overflowWrap: 'anywhere' }}>{item.name}</div>
-                    {item.finished && <FinishedBadge />}
-                    {item.archived && <ArchivedBadge />}
-                  </div>
+                  <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.25, minWidth: 0, flex: 1, overflowWrap: 'break-word' }}>{item.name}</div>
                   <span style={{
                     flexShrink: 0,
                     fontSize: 'var(--fs-micro)', fontWeight: 700,
@@ -227,11 +223,11 @@ function AllCompetitions({ competitions, onEnter }) {
                     {meta.emoji} {meta.label}
                   </span>
                 </div>
-                {item.format && (
-                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-                    {item.format}
-                  </div>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                  {item.format && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{item.format}</span>}
+                  {item.finished && <FinishedBadge />}
+                  {item.archived && <ArchivedBadge />}
+                </div>
                 <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
                   <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)' }}>Enter →</span>
                 </div>

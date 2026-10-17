@@ -94,9 +94,9 @@ function HubHeaderBar({ title, chips = [], stats = [], cupPhase, leagueMode, isL
         <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, minHeight: 24, marginBottom: 6, cursor: 'pointer', fontSize: '13px', color: 'var(--mute)' }}>{backLabel || '← Back'}</button>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div aria-hidden="true" style={{ position: 'relative', width: 46, height: 46, borderRadius: 12, background: 'var(--navy)', color: 'var(--on-navy)', display: 'grid', placeItems: 'center', fontFamily: DISPLAY, fontSize: '16px', flexShrink: 0, marginLeft: 4 }}>
+        <div aria-hidden="true" style={{ position: 'relative', width: 46, height: 46, borderRadius: 12, background: 'var(--navy)', color: 'var(--on-navy)', display: 'grid', placeItems: 'center', fontFamily: DISPLAY, fontSize: '16px', flexShrink: 0, marginLeft: 10 }}>
           {crestInitials(title)}
-          <span style={{ position: 'absolute', left: -4, top: 10, bottom: 10, width: 4, borderRadius: 2, background: 'var(--sport-marker, var(--accent))' }} />
+          <span style={{ position: 'absolute', left: -10, top: 6, bottom: 6, width: 4, borderRadius: 2, background: 'var(--sport-marker, var(--accent))' }} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <h1 style={{ margin: 0, fontFamily: DISPLAY, fontSize: '20px', lineHeight: 1.2, letterSpacing: '-0.01em', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
