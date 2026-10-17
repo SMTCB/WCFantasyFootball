@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 // Shared chrome primitives for the League Hub.
 // All components use inline styles + CSS custom properties to match the design spec exactly.
-import TabStrip from '../shared/TabStrip';
 //
 // IMPORTANT: string constants (MONO, DISPLAY, mgrMono, miniBtnStyle) live in
 // HubConstants.js (a leaf module with no React). Import constants from there in
@@ -32,97 +31,81 @@ export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }
   );
 }
 
-// Hub topbar — "← BACK · COMPETITIVE CENTER / LEAGUE NAME · N MEMBERS · GWX"
-export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false, cupPhase, leagueMode }) {
+// Shared light tab row (redesign Wave 1) — underline tabs, 44px tap target, 12px+ labels.
+function HubTabRow({ tabs, active, onTab }) {
   return (
-    <div style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap',
-      padding: 'max(12px, 2vw) max(16px, 4vw)', borderBottom: '1px solid var(--shell-rule-strong)',
-      background: 'var(--accent)', flexShrink: 0, gap: 12,
-    }}>
-      <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-        <button
-          onClick={onBack}
-          style={{
-            background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-            fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--on-shell-dim)', letterSpacing: '.2em',
-          }}
-        >← BACK</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'max(8px, 1.5vw)', marginTop: 6, minWidth: 0, flexWrap: 'wrap' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--on-shell)', flexShrink: 0 }} />
-          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 5vw, 28px)', letterSpacing: '-0.02em', color: 'var(--on-shell)', minWidth: 0 }}>
-            {leagueName.toUpperCase()}
+    <div role="tablist" style={{ display: 'flex', borderBottom: '1px solid var(--rule)', padding: '0 max(12px, 3vw)', background: 'var(--card)', flexShrink: 0, overflowX: 'auto', overflowY: 'hidden' }}>
+      {tabs.map(t => {
+        const on = t.id === active;
+        return (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={on}
+            onClick={() => onTab(t.id)}
+            style={{
+              minHeight: 'var(--tap)', padding: '0 14px', position: 'relative', flexShrink: 0,
+              fontFamily: 'inherit', fontSize: "14px", fontWeight: on ? 700 : 500,
+              color: on ? 'var(--paper)' : 'var(--mute)',
+              cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap',
+            }}
+          >
+            {t.label}
+            {t.notify && (
+              <span aria-label="new" style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--crit)', marginLeft: 5, verticalAlign: 'middle' }} />
+            )}
+            {on && <span style={{ position: 'absolute', left: 8, right: 8, bottom: -1, height: 3, borderRadius: 2, background: 'var(--accent)' }} />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function HubHeaderBar({ title, sub, cupPhase, leagueMode, isLive, rightSlot, onBack, backLabel, compact }) {
+  const pill = { fontSize: "12px", fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)', flexShrink: 0, whiteSpace: 'nowrap' };
+  return (
+    <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--accent)', padding: compact ? '10px max(14px, 4vw)' : '14px max(16px, 3vw)', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ minWidth: 0, flex: '1 1 auto' }}>
+          {onBack && (
+            <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, minHeight: 24, cursor: 'pointer', fontSize: "13px", color: 'var(--mute)' }}>{backLabel || '← Back'}</button>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
+            <h1 style={{ margin: 0, fontFamily: DISPLAY, fontSize: compact ? "20px" : "26px", lineHeight: 1.15, letterSpacing: '-0.01em', color: 'var(--paper)', minWidth: 0 }}>{title}</h1>
+            {cupPhase && cupPhase !== 'pre_cup' && <span style={pill}>{cupPhase.replace(/_/g, ' ')}</span>}
+            {leagueMode === 'draft_h2h' && <span style={pill}>Draft · H2H</span>}
+            {isLive && <span style={{ ...pill, background: 'var(--crit-soft)', color: 'var(--crit)' }}>● Live</span>}
           </div>
-          {cupPhase && cupPhase !== 'pre_cup' && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
-              {cupPhase.replace(/_/g, ' ').toUpperCase()}
-            </span>
-          )}
-          {leagueMode === 'draft_h2h' && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
-          )}
-          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--on-shell-dim)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
-            {memberCount}M · GW{gw}
-          </span>
+          {sub && <div className="num" style={{ fontSize: "13px", color: 'var(--mute)', marginTop: 2 }}>{sub}</div>}
         </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-        {rightSlot}
-        {isLive && (
-          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFD9D9', letterSpacing: '.22em', whiteSpace: 'nowrap' }}>● LIVE</span>
-        )}
+        {rightSlot && <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>{rightSlot}</div>}
       </div>
     </div>
   );
 }
 
+// Hub topbar (desktop) — league name, members, gameweek.
+export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false, cupPhase, leagueMode }) {
+  return <HubHeaderBar title={leagueName} sub={`${memberCount} members · GW${gw}`} cupPhase={cupPhase} leagueMode={leagueMode} isLive={isLive} rightSlot={rightSlot} onBack={onBack} />;
+}
+
 // League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5)
 export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
-    { id: 'leaderboard', label: 'LEADERBOARD' },
-    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
-    { id: 'recap',       label: 'RECAP' },
-    { id: 'market_report', label: 'MARKET REPORT' },
-    { id: 'bets',        label: 'BETS',    notify: notifyBets },
-    { id: 'betting',     label: 'BETTING' },
+    { id: 'leaderboard', label: 'Standings' },
+    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H' }] : []),
+    { id: 'recap',       label: 'Recap' },
+    { id: 'market_report', label: 'Market report' },
+    { id: 'bets',        label: 'Bets',    notify: notifyBets },
+    { id: 'betting',     label: 'Betting' },
     // TRADING tab (auctions + trade proposals) is draft-only — Classic leagues use
     // shared player pools so exclusive ownership transfers don't apply.
-    ...(isDraftLeague ? [{ id: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
-    { id: 'stats',       label: 'STATS' },
-    ...(isCommissioner ? [{ id: 'admin', label: '⚙ ADMIN', dim: true }] : []),
+    ...(isDraftLeague ? [{ id: 'trading', label: 'Trading', notify: notifyTrading }] : []),
+    { id: 'stats',       label: 'Stats' },
+    ...(isCommissioner ? [{ id: 'admin', label: 'Admin' }] : []),
   ];
-
-  return (
-    <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)', padding: '0 max(16px, 3vw)', background: 'var(--ink)', flexShrink: 0, overflowX: 'auto', overflowY: 'hidden' }}>
-      {tabs.map(t => (
-        <button
-          key={t.id}
-          onClick={() => onTab(t.id)}
-          style={{
-            padding: 'clamp(10px, 2vw, 14px) clamp(12px, 2.5vw, 22px)', position: 'relative', flexShrink: 0,
-            fontFamily: MONO, fontSize: 'clamp(8px, 1.8vw, 11px)', letterSpacing: '.22em',
-            color: t.id === active ? 'var(--paper)' : 'var(--mute)',
-            fontWeight: t.id === active ? 600 : 400,
-            cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap',
-          }}
-        >
-          {t.label}
-          {!!t.count && (
-            <span style={{ marginLeft: 4, color: 'var(--cyan)', fontSize: 'clamp(7px, 1.5vw, 10px)', fontFamily: MONO }}>{t.count}</span>
-          )}
-          {t.notify && (
-            <span style={{
-              display: 'inline-block', width: 4, height: 4, borderRadius: '50%',
-              background: 'var(--danger)', marginLeft: 4, verticalAlign: 'middle',
-            }} />
-          )}
-          {t.id === active && (
-            <span style={{ position: 'absolute', left: '10%', right: '10%', bottom: -1, height: 2, background: 'var(--cyan)' }} />
-          )}
-        </button>
-      ))}
-    </div>
-  );
+  return <HubTabRow tabs={tabs} active={active} onTab={onTab} />;
 }
 
 // Rank trend chip (▲2 / ▼1 / =)
@@ -220,54 +203,23 @@ export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase()
 // ─── Mobile components ────────────────────────────────────────────────────────
 
 // Mobile hub league header — replaces HubTopbar on mobile viewports.
-export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot, cupPhase, leagueMode }) {
+export function HubLeagueHeader({ leagueName = 'Loading…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot, cupPhase, leagueMode }) {
   return (
-    <div style={{ padding: '10px max(18px, 4vw) 8px', borderBottom: '1px solid var(--shell-rule-strong)', background: 'var(--accent)', flexShrink: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {backable ? (
-          <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>← BACK</button>
-        ) : (
-          <>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>COMPETITIVE</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)' }}>·</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>{memberCount}M</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em', marginLeft: 'auto' }}>GW {gw}</span>
-          </>
-        )}
-        {rightSlot && <div style={{ marginLeft: 'auto' }}>{rightSlot}</div>}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, rowGap: 4, marginTop: 6, flexWrap: 'wrap' }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--on-shell)', flexShrink: 0 }} />
-        <span style={{ fontFamily: DISPLAY, fontSize: backable ? 18 : 22, letterSpacing: '-0.02em', color: 'var(--on-shell)', minWidth: 0, flex: '1 1 auto' }}>
-          {backable ? backTitle : leagueName.toUpperCase()}
-        </span>
-        {cupPhase && cupPhase !== 'pre_cup' && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.16)', border: '1px solid rgba(240,180,0,0.4)', padding: '2px 7px', flexShrink: 0 }}>
-            {cupPhase.replace(/_/g, ' ').toUpperCase()}
-          </span>
-        )}
-        {leagueMode === 'draft_h2h' && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--on-shell-gold)', background: 'rgba(240,180,0,0.14)', border: '1px solid rgba(240,180,0,0.45)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
-        )}
-      </div>
-    </div>
+    <HubHeaderBar
+      compact
+      title={backable ? backTitle : leagueName}
+      sub={backable ? null : `${memberCount} members · GW${gw}`}
+      onBack={backable ? onBack : null}
+      cupPhase={cupPhase}
+      leagueMode={leagueMode}
+      rightSlot={rightSlot}
+    />
   );
 }
 
-// Mobile horizontal-scroll hub tab pills — replaces HubTabs on mobile viewports.
-export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
-  const tabs = [
-    { key: 'leaderboard', label: 'BOARD' },
-    ...(h2hEnabled ? [{ key: 'h2h', label: 'H2H ⚔️' }] : []),
-    { key: 'recap',       label: 'RECAP' },
-    { key: 'market_report', label: 'REPORT' },
-    { key: 'bets',        label: 'BETS',    notify: notifyBets },
-    { key: 'betting',     label: 'BETTING' },
-    ...(isDraftLeague ? [{ key: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
-    { key: 'stats',       label: 'STATS' },
-    ...(isCommissioner ? [{ key: 'admin', label: 'ADMIN' }] : []),
-  ];
-  return <TabStrip variant="pill" accent="var(--cyan)" tabs={tabs} active={active} onTab={onTab} />;
+// Mobile hub tabs — same row as desktop.
+export function HubTabPills(props) {
+  return <HubTabs {...props} />;
 }
 
 // Mobile 3-dot form indicator — compact subset of FormDots for tight rows.
