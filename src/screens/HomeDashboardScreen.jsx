@@ -30,11 +30,11 @@ function CompetitionChip({ item, sport, onClick }) {
       onClick={onClick}
       style={{
         display: 'flex', alignItems: 'center', gap: 7, minWidth: 0,
-        padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)',
-        borderRadius: 7, cursor: 'pointer', textAlign: 'left',
+        minHeight: 'var(--tap)', padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)',
+        borderRadius: 'var(--radius)', cursor: 'pointer', textAlign: 'left',
       }}
     >
-      <span style={{ width: 6, height: 6, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
+      <span style={{ width: 4, height: 18, borderRadius: 2, background: meta.color, flexShrink: 0 }} />
       <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
         {item.name}
       </span>
@@ -54,31 +54,31 @@ function ClubhouseCard({ circle, comps, colorIndex, onEnterClubhouse, onEnterCom
   const color = IDENTITY_COLORS[colorIndex % IDENTITY_COLORS.length];
 
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
       <button
         onClick={onEnterClubhouse}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-          padding: '14px 16px', background: 'transparent', border: 'none',
+          minHeight: 'var(--tap)', padding: '14px 16px', background: 'transparent', border: 'none',
           borderBottom: '1px solid var(--rule)', cursor: 'pointer', textAlign: 'left',
         }}
       >
-        <span style={{ width: 9, height: 9, borderRadius: '50%', background: color, flexShrink: 0 }} />
+        <span style={{ width: 4, height: 24, borderRadius: 2, background: color, flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.2 }}>{circle.name}</div>
             {circle.archived && <ArchivedBadge />}
           </div>
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--mute)', textTransform: 'uppercase', marginTop: 2 }}>
-            {circle.role === 'owner' ? 'OWNER · ' : ''}{allComps.length} {allComps.length === 1 ? 'COMPETITION' : 'COMPETITIONS'}
+          <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
+            {circle.role === 'owner' ? 'Owner · ' : ''}{allComps.length} {allComps.length === 1 ? 'competition' : 'competitions'}
           </div>
         </div>
-        <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '0.08em', flexShrink: 0 }}>ENTER →</span>
+        <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>Enter →</span>
       </button>
 
       <div style={{ padding: 14 }}>
         {allComps.length === 0 ? (
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '8px 0' }}>
+          <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '8px 0' }}>
             No competitions yet.
           </div>
         ) : (
@@ -151,13 +151,13 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
   return (
     <div>
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 20 }}>
-        {/* Create — primary, dark shell fill */}
-        <div style={{ flex: '1 1 240px', background: 'var(--shell)', border: '1px solid var(--shell)', borderRadius: 8, padding: '18px 18px' }}>
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginBottom: 8 }}>
+        {/* Create — primary */}
+        <div style={{ flex: '1 1 240px', background: 'var(--card)', border: '1px solid var(--rule)', borderLeft: '4px solid var(--accent)', borderRadius: 'var(--radius)', padding: '18px 18px' }}>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
             Start fresh
           </div>
-          <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--on-accent)', marginBottom: 6 }}>Create a Clubhouse</div>
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)', marginBottom: 14 }}>
+          <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 6 }}>Create a Clubhouse</div>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 14 }}>
             Name it, invite your group, add competitions as you go
           </div>
 
@@ -169,13 +169,13 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
                 onChange={e => setNewName(e.target.value)}
                 placeholder="e.g. The Friday Night Crew"
                 maxLength={40}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--on-accent)', background: 'var(--shell-fill-strong)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--elev)', minHeight: 'var(--tap)', outline: 'none', boxSizing: 'border-box' }}
               />
-              {createErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: '#FF8A8A' }}>{createErr}</div>}
+              {createErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{createErr}</div>}
               <button
                 type="submit"
                 disabled={createBusy || !newName.trim()}
-                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: createBusy || !newName.trim() ? 'default' : 'pointer', opacity: createBusy || !newName.trim() ? 0.6 : 1 }}
+                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: createBusy || !newName.trim() ? 'default' : 'pointer', opacity: createBusy || !newName.trim() ? 0.6 : 1 }}
               >
                 {createBusy ? 'Creating…' : 'Create Clubhouse'}
               </button>
@@ -183,16 +183,16 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
           ) : (
             <button
               onClick={() => setCreating(true)}
-              style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+              style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: 'pointer' }}
             >
-              + Create a new Clubhouse
+              Create a new Clubhouse
             </button>
           )}
         </div>
 
         {/* Join by code — secondary */}
-        <div style={{ flex: '1 1 240px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '18px 18px' }}>
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
+        <div style={{ flex: '1 1 240px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '18px 18px' }}>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
             Have a code?
           </div>
           <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 6 }}>Join with an invite</div>
@@ -202,13 +202,13 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
               onChange={e => setCode(e.target.value.toUpperCase())}
               placeholder="FK-XXXXX"
               maxLength={8}
-              style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...MONO, fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
             />
-            {joinErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>{joinErr}</div>}
+            {joinErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{joinErr}</div>}
             <button
               type="submit"
               disabled={joinBusy || code.trim().length < 6}
-              style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: joinBusy || code.trim().length < 6 ? 'default' : 'pointer', opacity: joinBusy || code.trim().length < 6 ? 0.6 : 1 }}
+              style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: joinBusy || code.trim().length < 6 ? 'default' : 'pointer', opacity: joinBusy || code.trim().length < 6 ? 0.6 : 1 }}
             >
               {joinBusy ? 'Joining…' : 'Join Clubhouse'}
             </button>
@@ -217,8 +217,8 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
       </div>
 
       {/* Search public clubhouses */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '18px 18px' }}>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 10 }}>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '18px 18px' }}>
+        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
           Search public Clubhouses
         </div>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -226,21 +226,21 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search by name…"
-            style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--elev)', outline: 'none' }}
+            style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--elev)', outline: 'none' }}
           />
           <button
             type="submit"
             disabled={searchBusy || query.trim().length < 2}
-            style={{ padding: '10px 16px', background: searchBusy || query.trim().length < 2 ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            style={{ minHeight: 'var(--tap)', padding: '10px 16px', background: searchBusy || query.trim().length < 2 ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
-            {searchBusy ? '…' : 'SEARCH'}
+            {searchBusy ? '…' : 'Search'}
           </button>
         </form>
 
-        {searchErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginBottom: 12 }}>{searchErr}</div>}
+        {searchErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)', marginBottom: 12 }}>{searchErr}</div>}
 
         {results !== null && results.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '24px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+          <div style={{ textAlign: 'center', padding: '24px 0', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             No public Clubhouses found for "{query}".
           </div>
         )}
@@ -248,22 +248,22 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
         {results !== null && results.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {results.map(r => (
-              <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8 }}>
+              <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
                 <div>
                   <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{r.name}</div>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', marginTop: 2 }}>
+                  <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
                     {r.member_count} {r.member_count === 1 ? 'member' : 'members'}
                   </div>
                 </div>
                 {r.already_member ? (
-                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', fontWeight: 700, letterSpacing: '0.1em' }}>JOINED ✓</span>
+                  <span style={{ fontSize: 'var(--fs-label)', color: 'var(--positive)', fontWeight: 700 }}>Joined ✓</span>
                 ) : (
                   <button
                     onClick={() => handleSearchJoin(r.invite_code)}
                     disabled={searchJoining === r.invite_code}
-                    style={{ padding: '8px 14px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ minHeight: 'var(--tap)', padding: '8px 16px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
-                    {searchJoining === r.invite_code ? 'JOINING…' : 'JOIN'}
+                    {searchJoining === r.invite_code ? 'Joining…' : 'Join'}
                   </button>
                 )}
               </div>
@@ -272,7 +272,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
         )}
 
         {results === null && !searchBusy && (
-          <div style={{ textAlign: 'center', padding: '24px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.8 }}>
+          <div style={{ textAlign: 'center', padding: '24px 0', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.8 }}>
             Search for public Clubhouses by name.<br />
             Private Clubhouses are invite-code only.
           </div>
@@ -355,52 +355,51 @@ export default function HomeDashboardScreen() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 40 }}>
       <PullToRefreshIndicator progress={pullToRefresh.progress} refreshing={pullToRefresh.refreshing} />
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '22px 20px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase' }}>
-            🏠 HOME
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '20px 20px 16px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <span aria-hidden style={{ width: 4, height: 28, borderRadius: 2, background: 'var(--accent)', flexShrink: 0 }} />
+              <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.15 }}>Home</h1>
+            </div>
+            <button
+              onClick={openCreateClubhouse}
+              title="Create a Clubhouse"
+              aria-label="Create a Clubhouse"
+              style={{
+                flexShrink: 0, width: 'var(--tap)', height: 'var(--tap)', borderRadius: '50%',
+                background: 'var(--accent-soft)', border: '1px solid var(--rule)',
+                color: 'var(--accent)', fontSize: 'var(--fs-heading)', fontWeight: 700, lineHeight: 1,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              +
+            </button>
           </div>
-          <button
-            onClick={openCreateClubhouse}
-            title="Create a Clubhouse"
-            style={{
-              flexShrink: 0, width: 28, height: 28, borderRadius: '50%',
-              background: 'transparent', border: '1px solid var(--shell-rule-emphasis)',
-              color: 'var(--on-accent)', fontSize: 'var(--fs-body-lg)', fontWeight: 700, lineHeight: 1,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            +
-          </button>
-        </div>
-        <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-          Every Clubhouse, one page.
-        </h1>
-        <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--on-shell-dim)', lineHeight: 1.5, margin: '10px 0 0', maxWidth: 520 }}>
-          Jump into any competition across every Clubhouse you're part of, or find a new one to join.
-        </p>
+          <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)', lineHeight: 1.5, margin: '10px 0 0', maxWidth: 520 }}>
+            Jump into any competition across every Clubhouse you are part of, or find a new one to join.
+          </p>
 
-        {myCircles.length > 0 && (
-          <div style={{ display: 'flex', gap: 24, marginTop: 18 }}>
-            <div>
-              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{myCircles.length}</div>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>
-                {myCircles.length === 1 ? 'CLUBHOUSE' : 'CLUBHOUSES'}
+          {myCircles.length > 0 && (
+            <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
+              <div>
+                <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{myCircles.length}</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
+                  {myCircles.length === 1 ? 'Clubhouse' : 'Clubhouses'}
+                </div>
+              </div>
+              <div>
+                <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{totalComps}</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Competitions</div>
               </div>
             </div>
-            <div>
-              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>
-                COMPETITIONS
-              </div>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '22px 20px 0' }}>
         {loading && myCircles.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+          <div style={{ textAlign: 'center', padding: 60, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             Loading…
           </div>
         ) : (
@@ -408,15 +407,15 @@ export default function HomeDashboardScreen() {
             {myCircles.length > 0 && (
               <div style={{ marginBottom: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+                  <h2 style={{ margin: 0, fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>
                     Your Clubhouses
-                  </div>
+                  </h2>
                   {archivedCount > 0 && (
                     <button
                       onClick={() => setShowArchived(v => !v)}
-                      style={{ padding: 0, border: 'none', background: 'transparent', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', cursor: 'pointer' }}
+                      style={{ minHeight: 'var(--tap)', padding: '0 4px', border: 'none', background: 'transparent', color: 'var(--mute)', ...BODY, fontSize: 'var(--fs-label)', cursor: 'pointer' }}
                     >
-                      {showArchived ? '▾ HIDE ARCHIVED' : `▸ SHOW ARCHIVED (${archivedCount})`}
+                      {showArchived ? '▾ Hide archived' : `▸ Show archived (${archivedCount})`}
                     </button>
                   )}
                 </div>
@@ -436,9 +435,9 @@ export default function HomeDashboardScreen() {
             )}
 
             <div ref={findOrCreateRef} style={{ marginBottom: 28, scrollMarginTop: 20 }}>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
-                {myCircles.length > 0 ? 'Find Another Clubhouse' : 'Get Started'}
-              </div>
+              <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>
+                {myCircles.length > 0 ? 'Find another Clubhouse' : 'Get started'}
+              </h2>
               <FindOrCreatePanel
                 searchClubhouses={searchClubhouses}
                 joinCircleByCode={joinCircleByCode}
