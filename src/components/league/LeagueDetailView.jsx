@@ -12,9 +12,9 @@ const ENTRY_META = {
   breaking_news:    { filter: 'GAME',   badge: 'NEWS',       color: 'var(--danger)' },
   activity:         { filter: 'GAME',   badge: 'SCORES',     color: 'var(--positive)' },
   auction_result:   { filter: 'TRADES', badge: 'AUCTION',    color: 'var(--positive)' },
-  trade_result:     { filter: 'TRADES', badge: 'TRADE',      color: 'var(--cyan)' },
-  rank_change:      { filter: 'GAME',   badge: 'RANKS',      color: 'var(--cyan)' },
-  relaxation:       { filter: 'GAME',   badge: 'POOL',       color: 'var(--cyan)' },
+  trade_result:     { filter: 'TRADES', badge: 'TRADE',      color: 'var(--accent)' },
+  rank_change:      { filter: 'GAME',   badge: 'RANKS',      color: 'var(--accent)' },
+  relaxation:       { filter: 'GAME',   badge: 'POOL',       color: 'var(--accent)' },
   cup_elimination:  { filter: 'GAME',   badge: 'CUP',        color: 'var(--danger)' },
   transfer:         { filter: 'TRADES', badge: 'TRANSFER',   color: 'var(--positive)' },
   classified:       { filter: 'GAME',   badge: 'CLASSIFIED', color: 'var(--gold-text)' },
@@ -155,7 +155,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               { key: 'total', label: 'TOT', width: '80px', accessor: m => Math.round(m.total_points ?? 0) },
               ...(h2hEnabled ? [{ key: 'h2h', label: 'H2H', width: '60px', accessor: m => h2hMap[m.user_id] ?? '—', color: 'var(--gold-text)' }] : []),
             ]}
-            accent="var(--cyan)"
+            accent="var(--accent)"
             activeColumnKey="total"
             highlightUserId={currentUser?.id}
             rankWidth="48px"
@@ -179,11 +179,11 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                 <>
                   {!isMe && (
                     <>
-                      {onH2h && <button className="hit-44" onClick={() => onH2h({ ...m, name: mName })} style={miniBtnStyle('var(--cyan)')}>H2H</button>}
+                      {onH2h && <button className="hit-44" onClick={() => onH2h({ ...m, name: mName })} style={miniBtnStyle('var(--accent)')}>H2H</button>}
                       <button className="hit-44" onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--mute)')}>VIEW</button>
                     </>
                   )}
-                  {isMe && <button className="hit-44" onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--cyan)')}>VIEW</button>}
+                  {isMe && <button className="hit-44" onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--accent)')}>VIEW</button>}
                 </>
               );
             }}
@@ -319,8 +319,8 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                     style={{
                       fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
                       padding: '3px 6px',
-                      border: `1px solid ${active ? 'var(--cyan)' : 'var(--rule)'}`,
-                      color: active ? 'var(--cyan)' : 'var(--mute)',
+                      border: `1px solid ${active ? 'var(--accent)' : 'var(--rule)'}`,
+                      color: active ? 'var(--accent)' : 'var(--mute)',
                       background: active ? 'rgba(0,180,216,.08)' : 'transparent',
                       cursor: 'pointer',
                     }}
@@ -338,7 +338,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
       <div className="lg:hidden" style={{ flex: 1, overflow: 'auto' }}>
         <MobSection
           label="STANDINGS"
-          tone="var(--cyan)"
+          tone="var(--accent)"
           right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>SORT · TOT</span>}
         />
         {membersLoading && members.length === 0 ? (

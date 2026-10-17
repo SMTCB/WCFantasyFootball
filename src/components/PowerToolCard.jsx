@@ -2,7 +2,7 @@ export default function PowerToolCard({
   label,
   description,
   isActive = false,
-  accentColor = 'var(--cyan)',
+  accentColor = 'var(--accent)',
   onAction,
   actionLabel,
 }) {
@@ -11,7 +11,7 @@ export default function PowerToolCard({
       onClick={onAction}
       className="w-full h-full min-h-[90px] border transition-all duration-200 active:scale-95"
       style={{
-        background:     isActive ? `color-mix(in srgb, ${accentColor} 8%, var(--ink-2))` : 'var(--ink-2)',
+        background:     isActive ? `color-mix(in srgb, ${accentColor} 8%, var(--card))` : 'var(--card)',
         border:         `1px solid ${isActive ? accentColor : 'var(--rule)'}`,
         padding:        '12px',
         display:        'flex',

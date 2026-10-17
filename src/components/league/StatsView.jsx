@@ -231,7 +231,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
             </div>
 
             {/* Stacked bar — total width proportional to official total_points */}
-            <div style={{ height: 22, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1, marginLeft: 38 }}>
+            <div style={{ height: 22, display: 'flex', background: 'var(--elev)', overflow: 'hidden', borderRadius: 1, marginLeft: 38 }}>
               {hasPositionData ? (
                 <>
                   {POS_ORDER.map(pos => {
@@ -305,7 +305,7 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
           <div key={m.user_id} style={{
             display: 'grid', gridTemplateColumns: '28px auto 1fr auto',
             gap: 12, padding: '10px 12px',
-            background: isMe ? `${hue}10` : 'var(--ink-2)',
+            background: isMe ? `${hue}10` : 'var(--card)',
             border: `1px solid ${isMe ? hue + '44' : 'var(--rule)'}`,
             alignItems: 'center',
           }}>
@@ -395,7 +395,7 @@ function CaptainHitRate({ captainHitData }) {
             {activeRound && (
               <div style={{
                 margin: '4px 0 6px', padding: '7px 10px',
-                background: 'var(--ink-2)', border: `1px solid ${activeRound.hit ? 'var(--positive)' : 'var(--danger)'}44`,
+                background: 'var(--card)', border: `1px solid ${activeRound.hit ? 'var(--positive)' : 'var(--danger)'}44`,
                 borderRadius: 3, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
               }}>
                 <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: activeRound.hit ? 'var(--positive)' : 'var(--danger)', flexShrink: 0 }}>
@@ -411,7 +411,7 @@ function CaptainHitRate({ captainHitData }) {
               </div>
             )}
 
-            <div style={{ height: 4, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden' }}>
+            <div style={{ height: 4, background: 'var(--elev)', borderRadius: 1, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${(rate / maxRate) * 100}%`, background: pct >= 50 ? 'var(--positive)' : 'var(--danger)' }} />
             </div>
           </div>
@@ -496,7 +496,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
                 <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 3 }}>Missed</span>
               </div>
             </div>
-            <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
+            <div style={{ height: 6, background: 'var(--elev)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
               <div style={{ height: '100%', width: `${barPct}%`, background: barColor, opacity: isMe ? 1 : 0.75 }} />
             </div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 32, marginTop: 3 }}>
@@ -573,7 +573,7 @@ function RoiPanel({ roiData, currentUser }) {
                         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 3 }}>PTS/£M</span>
                       </div>
                     </div>
-                    <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
+                    <div style={{ height: 6, background: 'var(--elev)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
                       <div style={{
                         height: '100%', width: `${barPct}%`,
                         background: i === 0 ? 'var(--gold)' : isMe ? hue : 'var(--purple)',
@@ -646,7 +646,7 @@ function RoiPanel({ roiData, currentUser }) {
                     style={{
                       display: 'grid', gridTemplateColumns: '22px 28px 1fr auto auto auto',
                       gap: 8, alignItems: 'center', padding: '8px',
-                      background: i % 2 === 0 ? 'var(--ink-2)' : 'transparent',
+                      background: i % 2 === 0 ? 'var(--card)' : 'transparent',
                       borderRadius: 2,
                     }}
                   >
@@ -711,10 +711,10 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
   );
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
 
       {/* ── Hero strip ───────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px,2vw,20px) clamp(14px,3vw,24px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--purple)', }}>
             LEAGUE STATS · {scoredGWs > 0 ? `${scoredGWs} GAMEWEEK${scoredGWs !== 1 ? 'S' : ''} SCORED` : `${members.length} MEMBERS`}

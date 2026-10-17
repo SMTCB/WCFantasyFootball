@@ -48,7 +48,7 @@ export default function PlayerRow({
     : 'transparent';
 
   const leftBorder = isSelected
-    ? '2px solid var(--cyan)'
+    ? '2px solid var(--accent)'
     : isCaptain && !isSelected
     ? '2px solid var(--gold)'
     : '2px solid transparent';
@@ -174,7 +174,7 @@ export default function PlayerRow({
       {showPoints && !isDummy && (
         <div
           className="fk-display shrink-0 tabular-nums"
-          style={{ fontSize: 'var(--fs-heading)', color: 'var(--cyan)', letterSpacing: '-0.02em', minWidth: 28, textAlign: 'right' }}
+          style={{ fontSize: 'var(--fs-heading)', color: 'var(--accent)', letterSpacing: '-0.02em', minWidth: 28, textAlign: 'right' }}
         >
           {Math.round(player.points ?? 0)}
         </div>

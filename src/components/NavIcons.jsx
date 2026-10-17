@@ -4,7 +4,7 @@
  * Schematic set representing formation density and match data.
  */
 
-const CYAN   = 'var(--cyan)';
+const CYAN   = 'var(--accent)';
 const PAPER  = 'var(--paper)';
 const MUTE   = 'var(--mute)';
 const DANGER = 'var(--danger)';

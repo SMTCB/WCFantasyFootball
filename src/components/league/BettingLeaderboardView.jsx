@@ -35,7 +35,7 @@ function PerformanceBetRow({ bt }) {
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.4, }}>—</span>
         )}
       </div>
-      <div style={{ height: 6, borderRadius: 2, overflow: 'hidden', background: 'var(--ink-3)', display: 'flex' }}>
+      <div style={{ height: 6, borderRadius: 2, overflow: 'hidden', background: 'var(--elev)', display: 'flex' }}>
         {hasData ? (
           <>
             {correctPct > 0 && <div style={{ width: `${correctPct}%`, background: 'var(--positive)', opacity: 0.85, transition: 'width .3s' }} />}
@@ -118,9 +118,9 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
   const myIdx   = leaderboard?.findIndex(e => currentUser && e.user_id === currentUser.id) ?? -1;
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       {/* Hero strip */}
-      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', }}>Your betting · season</div>
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 28px)', marginTop: 6, color: 'var(--paper)' }}>
@@ -225,7 +225,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
           </div>
 
           {/* Right rail — desktop only */}
-          <aside className="hidden lg:flex" style={{ flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+          <aside className="hidden lg:flex" style={{ flexDirection: 'column', background: 'var(--card)', overflow: 'auto' }}>
             <HubSectionLabel label="Your performance" sub="By bet type" tone="var(--gold)" />
             <PerformanceByType myBetsByType={myBetsByType} />
             <HubSectionLabel label="Rivals watch" sub="Biggest gap" tone="var(--purple)" />

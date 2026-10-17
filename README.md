@@ -88,7 +88,6 @@ All 109 token references update automatically. No component edits needed.
 | `--warn` | `#B8720E` | Warning |
 | `--danger` | `#B91C1C` | Error / destructive |
 | `--on-shell` | `#ffffff` | Full-brightness text on dark shell surfaces |
-| `--accent-bg` | `color-mix(…8%)` | Accent tint for chips/badges (auto-derives from `--accent`) |
 
 ---
 

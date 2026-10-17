@@ -54,7 +54,7 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
     <div style={{
       margin: '12px 16px',
       border: isWinner ? '1px solid rgba(255,196,0,0.4)' : '1px solid var(--rule)',
-      background: isWinner ? 'rgba(255,196,0,0.04)' : 'var(--ink-2)',
+      background: isWinner ? 'rgba(255,196,0,0.04)' : 'var(--card)',
     }}>
       {/* Header */}
       <div style={{
@@ -118,7 +118,7 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
               style={{
                 padding: '10px 16px',
                 background: busy ? 'rgba(255,196,0,0.1)' : 'var(--gold)',
-                color: busy ? 'var(--mute)' : 'var(--ink)',
+                color: busy ? 'var(--mute)' : 'var(--bg)',
                 border: 'none', cursor: busy ? 'wait' : 'pointer',
                 fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 900,
                 opacity: busy ? 0.6 : 1,
@@ -283,13 +283,13 @@ export default function TradingView({
   const totalActive   = (auctions?.length ?? 0) + (pendingAuctions?.length ?? 0) + allLeagueProposals.length;
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)', overflow: 'hidden' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
 
       {/* ── Help modal ─────────────────────────────────────────────── */}
       {showHelp && (
         <div role="presentation" style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
              onClick={() => setShowHelp(false)}>
-          <div role="presentation" style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', maxWidth: 480, width: '100%', padding: 28, position: 'relative' }}
+          <div role="presentation" style={{ background: 'var(--card)', border: '1px solid var(--rule)', maxWidth: 480, width: '100%', padding: 28, position: 'relative' }}
                onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-heading)', cursor: 'pointer' }}>✕</button>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginBottom: 16 }}>Trading floor · how it works</div>
@@ -318,7 +318,7 @@ export default function TradingView({
       )}
 
       {/* ── Hero strip ─────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px,2vw,20px) clamp(14px,3vw,28px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--gold)', }}>
             TRADING FLOOR · {name.toUpperCase()}

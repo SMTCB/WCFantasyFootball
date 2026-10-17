@@ -6,7 +6,7 @@ import BottomSheet from './shared/BottomSheet';
 
 const POS_CONFIG = {
   GK:  { label: 'GK',  color: 'var(--gold-text)', bg: 'rgba(240,180,0,0.14)'  },
-  DEF: { label: 'DEF', color: 'var(--cyan)', bg: 'rgba(0,196,232,0.14)'  },
+  DEF: { label: 'DEF', color: 'var(--accent)', bg: 'rgba(0,196,232,0.14)'  },
   MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(157,95,245,0.14)' },
   FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(240,58,58,0.14)'  },
 };
@@ -149,7 +149,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                         </span>
                       )}
                       {owned && (
-                        <span className="text-[11px] font-black" style={{ color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}>
+                        <span className="text-[11px] font-black" style={{ color: 'var(--accent)', fontFamily: 'Archivo Black, sans-serif' }}>
                           IN YOUR SQUAD
                         </span>
                       )}

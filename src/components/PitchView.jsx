@@ -54,7 +54,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         <div style={{
           padding:      '3px 7px',
           background:   'var(--card)',
-          border:       `1px solid ${isSelected ? 'var(--cyan)' : posColor}`,
+          border:       `1px solid ${isSelected ? 'var(--accent)' : posColor}`,
           borderRadius: 3,
           fontFamily:   'Archivo Black, sans-serif',
           fontSize: 'var(--fs-micro)',
@@ -80,13 +80,13 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
             width: 14, height: 14,
             borderRadius: '50%',
             background:  'var(--gold)',
-            color:       'var(--ink)',
+            color:       'var(--bg)',
             fontFamily:  'Archivo Black, sans-serif',
             fontSize: 'var(--fs-micro)',
             display:     'flex',
             alignItems:  'center',
             justifyContent: 'center',
-            border:      '1.5px solid var(--ink)',
+            border:      '1.5px solid var(--bg)',
           }}>C</div>
         )}
       </div>
@@ -107,7 +107,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         gap:            10,
         padding:        '8px 12px 8px 10px',
         background:     'var(--card)',
-        border:         `1px solid ${isSelected ? 'var(--cyan)' : 'var(--rule)'}`,
+        border:         `1px solid ${isSelected ? 'var(--accent)' : 'var(--rule)'}`,
         borderRadius:   4,
         minWidth:       148,
         cursor:         'pointer',
@@ -125,8 +125,8 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         alignItems:      'center',
         justifyContent:  'center',
         background:      isCaptain ? 'var(--gold)' : 'transparent',
-        border:          `1.5px solid ${isCaptain ? 'var(--gold)' : 'var(--cyan)'}`,
-        color:           isCaptain ? 'var(--ink)' : 'var(--cyan)',
+        border:          `1.5px solid ${isCaptain ? 'var(--gold)' : 'var(--accent)'}`,
+        color:           isCaptain ? 'var(--bg)' : 'var(--accent)',
         fontFamily:      'Archivo Black, sans-serif',
         fontSize: 'var(--fs-body)',
       }}>
@@ -205,13 +205,13 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           height:         18,
           borderRadius:   '50%',
           background:     'var(--gold)',
-          color:          'var(--ink)',
+          color:          'var(--bg)',
           fontFamily:     'Archivo Black, sans-serif',
           fontSize: 'var(--fs-micro)',
           display:        'flex',
           alignItems:     'center',
           justifyContent: 'center',
-          border:         '2px solid var(--ink)',
+          border:         '2px solid var(--bg)',
         }}>
           C
         </div>

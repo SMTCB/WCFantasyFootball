@@ -68,7 +68,7 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
             : player.position === 'DEF' ? 'var(--pos-def)'
             : player.position === 'MID' ? 'var(--pos-mid)'
             : 'var(--pos-fwd)';
-          const ringColor = isSelected ? 'var(--cyan)' : posColor;
+          const ringColor = isSelected ? 'var(--accent)' : posColor;
 
           return (
             <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => (onPlayerClick ?? (() => {}))(player))(e); } }}
@@ -96,16 +96,16 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
                 <div style={{
                   position: 'absolute', bottom: -2, right: -2,
                   width: 9, height: 9, borderRadius: '50%',
-                  background: sc, border: '1.5px solid var(--ink)',
+                  background: sc, border: '1.5px solid var(--bg)',
                 }} />
                 {isCaptain && (
                   <div style={{
                     position: 'absolute', top: -5, left: -5,
                     width: 15, height: 15, borderRadius: '50%',
-                    background: 'var(--gold)', color: 'var(--ink)',
+                    background: 'var(--gold)', color: 'var(--bg)',
                     fontFamily: 'Archivo Black, sans-serif', fontSize: 11,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '1.5px solid var(--ink)',
+                    border: '1.5px solid var(--bg)',
                   }}>C</div>
                 )}
               </div>

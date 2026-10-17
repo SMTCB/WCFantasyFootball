@@ -100,7 +100,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
   const displayPts = breakdown.map(p => (p.hasStats ? p.pts : null));
 
   return (
-    <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+    <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--card)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid var(--shell-rule)' }}>
         {['POS', 'PLAYER', 'MIN', 'PTS'].map((h, i) => (
           <span key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</span>
@@ -861,7 +861,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           </div>
         )}
       </div>
-      <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+      <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--card)', overflow: 'auto' }}>
         <HubSectionLabel label="Fixtures" sub={roundLabel} tone="var(--accent)" />
         {!fixtures.length
           ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}><span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>No fixtures</span></div>

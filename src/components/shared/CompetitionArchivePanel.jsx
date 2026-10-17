@@ -34,14 +34,14 @@ function ToggleSwitch({ checked, onChange, disabled, labelOn, labelOff }) {
       </span>
       <span style={{
         position: 'relative', width: 44, height: 24, borderRadius: 12, flexShrink: 0,
-        background: checked ? 'var(--positive)' : 'var(--ink)',
+        background: checked ? 'var(--positive)' : 'var(--bg)',
         border: `1px solid ${checked ? 'var(--positive)' : 'var(--rule)'}`,
         transition: 'background 0.15s ease',
       }}>
         <span style={{
           position: 'absolute', top: 2, left: checked ? 22 : 2,
           width: 18, height: 18, borderRadius: '50%',
-          background: checked ? 'var(--ink)' : 'var(--mute)',
+          background: checked ? 'var(--bg)' : 'var(--mute)',
           transition: 'left 0.15s ease',
         }} />
       </span>
@@ -83,7 +83,7 @@ export default function CompetitionArchivePanel({
       </div>
 
       {archived ? (
-        <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
+        <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ARCHIVED · </span>
           {archivedAt ? `Since ${new Date(archivedAt).toLocaleDateString()}. ` : ''}Hidden from your active list.
         </div>

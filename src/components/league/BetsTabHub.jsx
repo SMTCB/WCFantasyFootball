@@ -58,7 +58,7 @@ function BetCard({ bet, squadId, onSubmitted }) {
   return (
     <div style={{
       margin: 'clamp(4px, 1.5vw, 8px) clamp(12px, 4vw, 24px)',
-      background: 'var(--ink-2)',
+      background: 'var(--card)',
       border: '1px solid var(--rule)',
       borderLeft: `3px solid ${accentTone}`,
     }}>
@@ -218,9 +218,9 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
   const ptsBanked = resolved.reduce((sum, b) => sum + (b.mySubmission?.is_correct ? (b.reward_value || 0) : 0), 0);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       {/* Hero strip */}
-      <div data-tour="bets-header" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+      <div data-tour="bets-header" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', }}>
             BETS &amp; PREDICTIONS · GW{currentGW ?? '—'}

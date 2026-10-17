@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const POS_COLOR = { GK: 'var(--gold)', DEF: 'var(--cyan)', MID: 'var(--positive)', FWD: 'var(--danger)' };
+const POS_COLOR = { GK: 'var(--gold)', DEF: 'var(--accent)', MID: 'var(--positive)', FWD: 'var(--danger)' };
 
 function timeLeft(endsAt) {
   const ms = new Date(endsAt) - Date.now();
@@ -145,7 +145,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                 onClick={handleBid}
                 disabled={busy || !amount}
                 className="hit-44 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
-                style={{ background: 'rgba(0,180,216,0.12)', border: '1px solid rgba(0,180,216,0.3)', color: 'var(--cyan)' }}
+                style={{ background: 'rgba(0,180,216,0.12)', border: '1px solid rgba(0,180,216,0.3)', color: 'var(--accent)' }}
               >
                 {busy ? '…' : 'Bid'}
               </button>

@@ -42,7 +42,7 @@ function StatusPill({ f, small }) {
   return (
     <div style={{
       minWidth: small ? 40 : 48, height: small ? 20 : 24, padding: '0 8px',
-      background: isLive ? 'rgba(239,68,68,.12)' : isFT ? 'var(--ink-3)' : 'transparent',
+      background: isLive ? 'rgba(239,68,68,.12)' : isFT ? 'var(--elev)' : 'transparent',
       border: isKO ? '1px solid var(--rule)' : 'none',
       color: isLive ? 'var(--danger)' : isFT ? 'var(--mute)' : 'var(--paper)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -283,7 +283,7 @@ function DayCard({ f }) {
   const awayWon = f.score && a > h;
   return (
     <div style={{
-      background: 'var(--ink-2)',
+      background: 'var(--card)',
       borderLeft: `2px solid ${tone}`,
       padding: '10px 12px',
       display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0,
@@ -449,7 +449,7 @@ function DayCell({ cell, matches, isWeekend }) {
   const bg = isOther
     ? 'transparent'
     : hasMatches
-      ? 'var(--ink-2)'
+      ? 'var(--card)'
       : isWeekend ? 'rgba(26,111,168,.06)' : 'transparent';
 
   return (
@@ -464,12 +464,12 @@ function DayCell({ cell, matches, isWeekend }) {
       opacity: isOther ? 0.35 : 1,
     }}>
       {/* Today cyan top bar */}
-      {isToday && <div style={{ position: 'absolute', inset: '0 0 auto 0', height: 2, background: 'var(--cyan)' }} />}
+      {isToday && <div style={{ position: 'absolute', inset: '0 0 auto 0', height: 2, background: 'var(--accent)' }} />}
 
       {/* Header row: label left, day number right */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
         {isToday
-          ? <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.22em' }}>TODAY</span>
+          ? <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '.22em' }}>TODAY</span>
           : hasMatches
             ? <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{matches.length} MATCH{matches.length > 1 ? 'ES' : ''}</span>
             : <span />
@@ -478,7 +478,7 @@ function DayCell({ cell, matches, isWeekend }) {
           fontFamily: (hasMatches || isToday) ? 'Archivo Black, sans-serif' : 'JetBrains Mono, monospace',
           fontSize: (hasMatches || isToday) ? 15 : 12,
           letterSpacing: (hasMatches || isToday) ? '-0.01em' : '.04em',
-          color: isToday ? 'var(--cyan)' : hasMatches ? 'var(--paper)' : 'var(--mute)',
+          color: isToday ? 'var(--accent)' : hasMatches ? 'var(--paper)' : 'var(--mute)',
         }}>{cell.dnum}</span>
       </div>
 
@@ -712,7 +712,7 @@ export default function HomeScreen() {
         <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', marginTop: 4 }}>Scores</div>
         <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 1 }}>
           {[0.4, 0.55, 0.7].map((op, i) => (
-            <div key={i} style={{ height: 52, background: 'var(--ink-3)', opacity: op }} />
+            <div key={i} style={{ height: 52, background: 'var(--elev)', opacity: op }} />
           ))}
         </div>
       </div>
@@ -747,7 +747,7 @@ export default function HomeScreen() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      height: '100dvh', background: 'var(--ink)', color: 'var(--paper)',
+      height: '100dvh', background: 'var(--bg)', color: 'var(--paper)',
     }}>
       <style>{`@keyframes fkPulse{0%,100%{opacity:1}50%{opacity:.3}}`}</style>
 
@@ -799,8 +799,8 @@ export default function HomeScreen() {
             {[{ id: 'list', label: 'LIST' }, { id: 'week', label: 'WEEK' }, { id: 'month', label: 'MONTH' }].map((o, i) => (
               <button key={o.id} onClick={() => setViewMode(o.id)} style={{
                 padding: '7px 14px',
-                background: viewMode === o.id ? 'var(--accent-bg)' : 'transparent',
-                color: viewMode === o.id ? 'var(--cyan)' : 'var(--mute)',
+                background: viewMode === o.id ? 'var(--accent-soft)' : 'transparent',
+                color: viewMode === o.id ? 'var(--accent)' : 'var(--mute)',
                 border: 'none',
                 borderRight: i < 2 ? '1px solid var(--rule)' : 'none',
                 fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)',
@@ -817,8 +817,8 @@ export default function HomeScreen() {
                 {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMPETITION' }].map((o, i) => (
                   <button key={o.id} onClick={() => setView(o.id)} style={{
                     padding: '7px 14px',
-                    background: view === o.id ? 'var(--accent-bg)' : 'transparent',
-                    color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
+                    background: view === o.id ? 'var(--accent-soft)' : 'transparent',
+                    color: view === o.id ? 'var(--accent)' : 'var(--mute)',
                     border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
                     fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)',
                     letterSpacing: '.18em', cursor: 'pointer',
@@ -883,8 +883,8 @@ export default function HomeScreen() {
             {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMP' }].map((o, i) => (
               <button className="hit-44" key={o.id} onClick={() => setView(o.id)} style={{
                 flex: 1, padding: '6px 0',
-                background: view === o.id ? 'var(--accent-bg)' : 'transparent',
-                color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
+                background: view === o.id ? 'var(--accent-soft)' : 'transparent',
+                color: view === o.id ? 'var(--accent)' : 'var(--mute)',
                 border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
                 fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.18em', cursor: 'pointer',
               }}>{o.label}</button>

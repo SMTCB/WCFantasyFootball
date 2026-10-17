@@ -67,7 +67,7 @@ function StreakBadge({ streak }) {
     <span
       className="text-[11px] font-black uppercase tracking-widest px-2 py-1 rounded-sm ml-2"
       style={{
-        color:           isWin ? 'var(--ink)' : 'white',
+        color:           isWin ? 'var(--bg)' : 'white',
         backgroundColor: isWin ? 'var(--positive)' : 'var(--danger)',
       }}
     >
@@ -166,7 +166,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
   const lossPct = total > 0 ? Math.round((h2h.losses / total) * 100) : 0;
 
   return (
-    <BottomSheet ariaLabel="Head to head" onClose={onClose} background="var(--ink)" maxHeight="90vh" maxWidth={448}>
+    <BottomSheet ariaLabel="Head to head" onClose={onClose} background="var(--bg)" maxHeight="90vh" maxWidth={448}>
         {/* Header */}
         <div className="px-5 pt-2 pb-4 border-b border-white/5 shrink-0">
           <div className="flex items-center justify-between">

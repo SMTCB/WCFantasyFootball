@@ -38,10 +38,10 @@ function MiniChart({ history }) {
         <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
           <div style={{
             width: '100%', height: Math.max(16, (r.totalPts / max) * 32),
-            background: r.totalPts >= 10 ? 'var(--positive)' : r.totalPts >= 5 ? 'var(--cyan)' : 'var(--mute)',
+            background: r.totalPts >= 10 ? 'var(--positive)' : r.totalPts >= 5 ? 'var(--accent)' : 'var(--mute)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <span style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--ink)', letterSpacing: 0 }}>{r.totalPts}</span>
+            <span style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--bg)', letterSpacing: 0 }}>{r.totalPts}</span>
           </div>
           <div style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.06em' }}>{r.gw}</div>
         </div>
@@ -88,7 +88,7 @@ function GWRow({ r, selected, onClick, columns, fontSize }) {
       padding: '10px 16px', borderBottom: '1px solid var(--rule)',
       cursor: 'pointer', alignItems: 'center',
       background: selected ? 'rgba(0,180,216,.07)' : 'transparent',
-      borderLeft: selected ? '2px solid var(--cyan)' : '2px solid transparent',
+      borderLeft: selected ? '2px solid var(--accent)' : '2px solid transparent',
     }}>
       <span style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{r.gw}</span>
       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize }}>
@@ -96,7 +96,7 @@ function GWRow({ r, selected, onClick, columns, fontSize }) {
       </span>
       <span style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{Math.round(r.minutes_played || 0)}'</span>
       <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: fontSize + 2, color: r.goals > 0 ? 'var(--positive)' : 'var(--mute)' }}>{r.goals || 0}</span>
-      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: fontSize + 2, color: r.assists > 0 ? 'var(--cyan)' : 'var(--mute)' }}>{r.assists || 0}</span>
+      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: fontSize + 2, color: r.assists > 0 ? 'var(--accent)' : 'var(--mute)' }}>{r.assists || 0}</span>
       <span style={{ textAlign: 'right', fontFamily: 'Archivo Black, sans-serif', fontSize: fontSize + 4, color: 'var(--positive)' }}>{r.totalPts}</span>
     </div>
   );
@@ -144,7 +144,7 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
   const keyStatsDesktop = [
     { label: 'APPS', value: season.apps },
     { label: 'GOALS', value: season.goals, color: 'var(--positive)' },
-    { label: 'ASSISTS', value: season.assists, color: 'var(--cyan)' },
+    { label: 'ASSISTS', value: season.assists, color: 'var(--accent)' },
     { label: 'TOTAL PTS', value: season.totalPts },
     { label: 'AVG / GW', value: season.apps > 0 ? season.avgPts.toFixed(1) : '—' },
     { label: 'OWNED BY', value: `${ownershipPct ?? 0}%`, color: 'var(--mute)' },
@@ -153,7 +153,7 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
   const keyStatsMobile = [
     { label: 'APPS', value: season.apps },
     { label: 'G', value: season.goals, color: 'var(--positive)' },
-    { label: 'A', value: season.assists, color: 'var(--cyan)' },
+    { label: 'A', value: season.assists, color: 'var(--accent)' },
     { label: 'PTS', value: season.totalPts },
     { label: 'AVG', value: season.apps > 0 ? season.avgPts.toFixed(1) : '—' },
   ];
@@ -165,7 +165,7 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
       <div role="presentation"
         className="hidden lg:flex lg:flex-col"
         onClick={e => e.stopPropagation()}
-        style={{ width: 900, maxHeight: '88vh', background: 'var(--ink)', border: '1px solid var(--rule)', overflow: 'hidden', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif' }}
+        style={{ width: 900, maxHeight: '88vh', background: 'var(--bg)', border: '1px solid var(--rule)', overflow: 'hidden', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif' }}
       >
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 20px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
@@ -199,7 +199,7 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
             <div style={{ display: 'grid', gridTemplateColumns: '44px 1fr 54px 36px 36px 50px', padding: '6px 16px', borderBottom: '1px solid var(--rule)', ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
               <span>GW</span><span>FIXTURE</span><span>MIN</span>
               <span style={{ color: 'var(--positive)' }}>G</span>
-              <span style={{ color: 'var(--cyan)' }}>A</span>
+              <span style={{ color: 'var(--accent)' }}>A</span>
               <span style={{ textAlign: 'right' }}>PTS</span>
             </div>
             <div style={{ flex: 1, overflow: 'auto' }}>
@@ -223,7 +223,7 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
               <span style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>POINT BREAKDOWN</span>
               {sel ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', background: 'rgba(0,180,216,.1)', border: '1px solid rgba(0,180,216,.25)', padding: '3px 8px', letterSpacing: '.12em' }}>{sel.gw}</div>
+                  <div style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', background: 'rgba(0,180,216,.1)', border: '1px solid rgba(0,180,216,.25)', padding: '3px 8px', letterSpacing: '.12em' }}>{sel.gw}</div>
                   <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{sel.opponent}{sel.isHome ? ' (H)' : ' (A)'}</span>
                 </div>
               ) : (
@@ -248,11 +248,11 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
       <div role="presentation"
         className="flex lg:hidden"
         onClick={e => e.stopPropagation()}
-        style={{ width: '100%', height: '100%', background: 'var(--ink)', color: 'var(--paper)', flexDirection: 'column', fontFamily: 'Archivo, sans-serif', overflow: 'hidden' }}
+        style={{ width: '100%', height: '100%', background: 'var(--bg)', color: 'var(--paper)', flexDirection: 'column', fontFamily: 'Archivo, sans-serif', overflow: 'hidden' }}
       >
         {/* back nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-          <button type="button" onClick={onClose} style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>← BACK</button>
+          <button type="button" onClick={onClose} style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>← BACK</button>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <PosBadge pos={player.position} small />
             <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name}</span>
@@ -275,16 +275,16 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
           {['HISTORY', 'BREAKDOWN'].map(t => (
             <div key={t} role="tab" aria-selected={mobileTab === t.toLowerCase()} tabIndex={0} onClick={() => setMobileTab(t.toLowerCase())} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileTab(t.toLowerCase()); } }} style={{ ...MO, fontSize: 'var(--fs-micro)', paddingBottom: 7, cursor: 'pointer', position: 'relative', color: mobileTab === t.toLowerCase() ? 'var(--paper)' : 'var(--mute)' }}>
               {t}
-              {mobileTab === t.toLowerCase() && <span style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, background: 'var(--cyan)' }} />}
+              {mobileTab === t.toLowerCase() && <span style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, background: 'var(--accent)' }} />}
             </div>
           ))}
         </div>
         {/* tab content */}
         <div style={{ flex: 1, overflow: 'auto' }}>
           {mobileTab === 'history' && <>
-            <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 44px 28px 28px 38px', padding: '6px 16px', borderBottom: '1px solid var(--rule)', position: 'sticky', top: 0, background: 'var(--ink)', ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 44px 28px 28px 38px', padding: '6px 16px', borderBottom: '1px solid var(--rule)', position: 'sticky', top: 0, background: 'var(--bg)', ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
               <span>GW</span><span>FIXTURE</span><span>MIN</span>
-              <span style={{ color: 'var(--positive)' }}>G</span><span style={{ color: 'var(--cyan)' }}>A</span>
+              <span style={{ color: 'var(--positive)' }}>G</span><span style={{ color: 'var(--accent)' }}>A</span>
               <span style={{ textAlign: 'right' }}>PTS</span>
             </div>
             {loading && <div style={{ padding: '18px 16px', ...MO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>LOADING…</div>}
@@ -303,7 +303,7 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
             <div style={{ padding: '12px 16px' }}>
               {sel ? <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <div style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', background: 'rgba(0,180,216,.1)', border: '1px solid rgba(0,180,216,.25)', padding: '3px 8px' }}>{sel.gw}</div>
+                  <div style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', background: 'rgba(0,180,216,.1)', border: '1px solid rgba(0,180,216,.25)', padding: '3px 8px' }}>{sel.gw}</div>
                   <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{sel.opponent}{sel.isHome ? ' (H)' : ' (A)'} · {Math.round(sel.minutes_played || 0)}'</span>
                 </div>
                 <BreakdownItems sel={sel} items={breakdownItems} />

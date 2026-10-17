@@ -25,7 +25,7 @@ export const POS_PITCH_Y = { FWD: 14, MID: 38, DEF: 64, GK: 88 };
 // Per-position config for market/transfer badge rows (label, badge colour, bg tint)
 export const POS_CONFIG = {
   GK:  { label: 'GK',  color: 'var(--gold-text)',   bg: 'rgba(240,180,0,0.14)'  },
-  DEF: { label: 'DEF', color: 'var(--cyan)',   bg: 'rgba(0,196,232,0.14)'  },
+  DEF: { label: 'DEF', color: 'var(--accent)',   bg: 'rgba(0,196,232,0.14)'  },
   MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(157,95,245,0.14)' },
   FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(240,58,58,0.14)'  },
 };
@@ -33,7 +33,7 @@ export const POS_CONFIG = {
 // Badge colours for squad section headers (gold for GK, etc.)
 export const POS_BADGE_COLOR = {
   GK:  'var(--gold)',
-  DEF: 'var(--cyan)',
+  DEF: 'var(--accent)',
   MID: 'var(--pos-gk)',
   FWD: 'var(--danger)',
 };

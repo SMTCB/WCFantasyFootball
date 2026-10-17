@@ -10,7 +10,7 @@ export default function CaptainPill({ triple = false }) {
         fontSize: 'var(--fs-micro)',
         fontWeight:    900,
         background:    'var(--gold)',
-        color:         'var(--ink)',
+        color:         'var(--bg)',
         padding:       '2px 6px',
         letterSpacing: '0.04em',
         textTransform: 'uppercase',

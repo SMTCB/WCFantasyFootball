@@ -822,28 +822,28 @@ export default function SquadScreen() {
           </div>
           <div className="text-right">
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--cyan)', lineHeight: 1 }}>€100M</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--accent)', lineHeight: 1 }}>€100M</div>
           </div>
         </div>
-        <div className="lg:hidden flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+        <div className="lg:hidden flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
           {NO_LEAGUE_TABS_MOBILE.map(tab => (
             <button key={tab.id} onClick={() => setMobileTab(tab.id)}
               className="flex-1 py-2.5 text-center transition-all relative"
-              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
+              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
             >
               {tab.label}
-              {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
+              {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />}
             </button>
           ))}
         </div>
-        <div className="hidden lg:flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+        <div className="hidden lg:flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
           {NO_LEAGUE_TABS_DESKTOP.map(tab => (
             <button key={tab.id} onClick={() => setDesktopTab(tab.id)}
               className="relative px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all"
-              style={{ fontFamily: 'Archivo Black, sans-serif', color: desktopTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
+              style={{ fontFamily: 'Archivo Black, sans-serif', color: desktopTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
             >
               {tab.label}
-              {desktopTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
+              {desktopTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />}
             </button>
           ))}
         </div>
@@ -919,38 +919,38 @@ export default function SquadScreen() {
           </div>
           <div className="text-right">
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: budgetLow ? 'var(--danger)' : 'var(--accent)', lineHeight: 1 }}>
               €{budgetLeft}M
             </div>
           </div>
         </div>
 
         {/* ── Mobile tab strip ──────────────────────────────────────── */}
-        <div className="lg:hidden flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+        <div className="lg:hidden flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
           {EMPTY_TABS_MOBILE.map(tab => (
             <button
               key={tab.id}
               onClick={() => setMobileTab(tab.id)}
               className="flex-1 py-2.5 text-center transition-all relative"
-              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
+              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
             >
               {tab.label}
-              {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
+              {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />}
             </button>
           ))}
         </div>
 
         {/* ── Desktop tab strip ─────────────────────────────────────── */}
-        <div className="hidden lg:flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+        <div className="hidden lg:flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
           {EMPTY_TABS_DESKTOP.map(tab => (
             <button
               key={tab.id}
               onClick={() => setDesktopTab(tab.id)}
               className="relative px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all"
-              style={{ fontFamily: 'Archivo Black, sans-serif', color: desktopTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
+              style={{ fontFamily: 'Archivo Black, sans-serif', color: desktopTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
             >
               {tab.label}
-              {desktopTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
+              {desktopTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />}
             </button>
           ))}
         </div>
@@ -965,11 +965,11 @@ export default function SquadScreen() {
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             {cfg.format === 'noduplicate' ? (
-              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
                 Transfer Market →
               </button>
             ) : (
-              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
                 Transfer Market →
               </button>
             )}
@@ -1129,8 +1129,8 @@ export default function SquadScreen() {
                         letterSpacing: '0.1em',
                         padding: '2px 6px',
                         border: '1px solid var(--accent)',
-                        color: 'var(--cyan)',
-                        background: 'var(--accent-bg)',
+                        color: 'var(--accent)',
+                        background: 'var(--accent-soft)',
                         flexShrink: 0,
                         cursor: 'pointer',
                       }}
@@ -1145,8 +1145,8 @@ export default function SquadScreen() {
                         textTransform: 'uppercase',
                         padding: '2px 6px',
                         border: isBench ? '1px solid var(--rule)' : '1px solid rgba(26,111,168,0.4)',
-                        color: isBench ? 'var(--mute)' : 'var(--cyan)',
-                        background: isBench ? 'transparent' : 'var(--accent-bg)',
+                        color: isBench ? 'var(--mute)' : 'var(--accent)',
+                        background: isBench ? 'transparent' : 'var(--accent-soft)',
                         flexShrink: 0,
                         pointerEvents: 'none',
                       }}
@@ -1385,7 +1385,7 @@ export default function SquadScreen() {
           </div>
           <div className="text-right" data-tour="squad-budget">
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: budgetLow ? 'var(--danger)' : 'var(--accent)', lineHeight: 1 }}>
               €{budgetLeft}M
             </div>
           </div>
@@ -1396,7 +1396,7 @@ export default function SquadScreen() {
       <div className="lg:hidden">
 
         {/* Tab strip — 4 tabs matching desktop */}
-        <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+        <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
           {[
             { id: 'pitch',  label: '⚽ PITCH'  },
             { id: 'squad',  label: '📋 LIST'   },
@@ -1411,13 +1411,13 @@ export default function SquadScreen() {
                 fontSize: 'var(--fs-micro)',
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
-                color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)',
+                color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)',
                 background: 'transparent',
               }}
             >
               {tab.label}
               {mobileTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />
               )}
               {tab.id === 'status' && dangerPlayers.length > 0 && (
                 <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
@@ -1525,9 +1525,9 @@ export default function SquadScreen() {
                         style={{
                           width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                           padding: '9px 16px',
-                          background: isSelected ? 'var(--accent-bg)' : isSwapTarget && !isLocked ? 'rgba(26,111,168,0.04)' : 'transparent',
+                          background: isSelected ? 'var(--accent-soft)' : isSwapTarget && !isLocked ? 'rgba(26,111,168,0.04)' : 'transparent',
                           borderBottom: '1px solid var(--rule)',
-                          borderLeft: isSelected ? '2px solid var(--cyan)' : isSwapTarget && !isLocked ? '2px solid rgba(0,180,216,0.3)' : '2px solid transparent',
+                          borderLeft: isSelected ? '2px solid var(--accent)' : isSwapTarget && !isLocked ? '2px solid rgba(0,180,216,0.3)' : '2px solid transparent',
                           opacity: isLocked ? 0.4 : isSwapTarget ? 1 : 0.7,
                           cursor: isLocked ? 'not-allowed' : 'pointer', textAlign: 'left',
                         }}
@@ -1542,7 +1542,7 @@ export default function SquadScreen() {
                             )}
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
                             {isSwapTarget && !isLocked && (
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--cyan)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
                             )}
                             {isLocked && (
                               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
@@ -1659,8 +1659,8 @@ export default function SquadScreen() {
                               letterSpacing: '0.1em',
                               padding: '3px 6px',
                               border: '1px solid var(--accent)',
-                              color: 'var(--cyan)',
-                              background: 'var(--accent-bg)',
+                              color: 'var(--accent)',
+                              background: 'var(--accent-soft)',
                               flexShrink: 0,
                               cursor: 'pointer',
                               whiteSpace: 'nowrap',
@@ -1747,7 +1747,7 @@ export default function SquadScreen() {
                         </div>
                         <button className="hit-44"
                           onClick={() => setPickerPos(pos)}
-                          style={{ padding: '5px 12px', border: '1px solid var(--cyan)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ padding: '5px 12px', border: '1px solid var(--accent)', color: 'var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
                         >
                           SIGN
                         </button>
@@ -1775,7 +1775,7 @@ export default function SquadScreen() {
       <div className="hidden lg:flex flex-col" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
 
         {/* â"€â"€ Sub-tab row: Pitch / List / Chips / Status â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        <div className="flex shrink-0 items-center" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+        <div className="flex shrink-0 items-center" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
           {[
             { id: 'pitch',  label: 'Pitch'  },
             { id: 'list',   label: 'List'   },
@@ -1787,13 +1787,13 @@ export default function SquadScreen() {
               className="relative px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all"
               style={{
                 fontFamily: 'Archivo Black, sans-serif',
-                color: desktopTab === tab.id ? 'var(--cyan)' : 'var(--mute)',
+                color: desktopTab === tab.id ? 'var(--accent)' : 'var(--mute)',
                 background: 'transparent',
               }}
             >
               {tab.label}
               {desktopTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />
               )}
               {tab.id === 'status' && dangerPlayers.length > 0 && (
                 <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
@@ -1867,8 +1867,8 @@ export default function SquadScreen() {
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
                             padding: '6px 10px 6px 8px',
-                            background: selectedPlayer?.id === player.id ? 'var(--accent-bg)' : 'var(--card)',
-                            border: `1px solid ${selectedPlayer?.id === player.id ? 'var(--cyan)' : 'var(--rule)'}`,
+                            background: selectedPlayer?.id === player.id ? 'var(--accent-soft)' : 'var(--card)',
+                            border: `1px solid ${selectedPlayer?.id === player.id ? 'var(--accent)' : 'var(--rule)'}`,
                             borderRadius: 4, cursor: 'pointer', flexShrink: 0,
                           }}
                         >
@@ -2025,7 +2025,7 @@ export default function SquadScreen() {
             <button
               onClick={() => setStatsDashboardPlayer(selectedPlayer)}
               className="w-full mb-3 py-2 rounded-sm transition-all active:scale-95"
-              style={{ background: 'var(--accent-bg)', color: 'var(--cyan)', border: '1px solid rgba(26,111,168,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', textTransform: 'uppercase' }}
+              style={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', textTransform: 'uppercase' }}
             >
               VIEW FULL STATS DASHBOARD ↗
             </button>
@@ -2066,7 +2066,7 @@ export default function SquadScreen() {
                   }}
                   disabled={saving}
                   className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: 'var(--cyan)', color: '#0A0A0A', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                  style={{ background: 'var(--accent)', color: '#0A0A0A', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
                 >
                   ADD TO PITCH
                 </button>
@@ -2076,7 +2076,7 @@ export default function SquadScreen() {
                   onClick={() => setSwapMode(true)}
                   disabled={saving || (selectedIsBench && squadData.players.length >= 11 && squadData.bench.length === 1)}
                   className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: 'transparent', color: 'var(--cyan)', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                  style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
                 >
                   {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
                 </button>
@@ -2126,13 +2126,13 @@ export default function SquadScreen() {
             background: 'rgba(255,255,255,0.97)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            borderTop: '2px solid var(--cyan)',
+            borderTop: '2px solid var(--accent)',
             boxShadow: '0 -4px 24px rgba(26,111,168,0.12)',
             paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
           }}
         >
           <div>
-            <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--cyan)' }}>
+            <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--accent)' }}>
               {selectedIsBench ? 'Select a starter to replace' : 'Select a bench player to bring on'}
             </div>
             <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace' }}>
