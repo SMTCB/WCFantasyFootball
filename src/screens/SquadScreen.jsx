@@ -1864,6 +1864,7 @@ export default function SquadScreen() {
                             border: `1.5px solid ${posColor}`, color: posColor,
                             fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
                           }}>{pos}</div>
+                          <ClubCrest name={player.club} size={26} />
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
                             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>

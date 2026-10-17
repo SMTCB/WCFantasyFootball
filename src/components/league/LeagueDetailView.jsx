@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
-import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
+import { HubSectionLabel, MobSection } from './HubShared';
+import { MONO, DISPLAY, mgrHue } from './HubConstants';
 import { supabase } from '../../lib/supabase';
-import { CompetitionResultsHeader } from '../competition/CompetitionResultsHeader';
 import CompetitionRankBadge from '../CompetitionRankBadge';
 
 // Maps gazette entry_type (DB enum) to a filter category and display label.
@@ -64,7 +63,16 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, currentGW = '—', onH2h, onViewManager, h2hEnabled = false }) {
+function Avatar({ name, size = 34 }) {
+  const hue = mgrHue(name);
+  const w = name.trim().split(/\s+/);
+  const ini = (w.length > 1 ? w[0][0] + w[1][0] : name.slice(0, 2)).toUpperCase();
+  return (
+    <span aria-hidden="true" style={{ width: size, height: size, borderRadius: '50%', background: `${hue}26`, color: hue, display: 'inline-grid', placeItems: 'center', fontWeight: 700, fontSize: size >= 44 ? 'var(--fs-body)' : 'var(--fs-label)', flexShrink: 0 }}>{ini}</span>
+  );
+}
+
+export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, currentGW = '—', onViewManager, h2hEnabled = false }) {
   const [activityFilter, setActivityFilter] = useState('ALL');
   const [activityCollapsed, setActivityCollapsed] = useState(false);
   const [entries, setEntries] = useState([]);
@@ -117,81 +125,68 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
       }
     };
   }, [leagueId]);
-  const myEntry   = members.find(m => currentUser && m.user_id === currentUser.id);
-  const myRank    = myEntry?.rank ?? '—';
-  const myPts     = myEntry?.total_points ?? '—';
-  const leader    = members[0];
-  const leaderName = leader
-    ? (leader.users?.username || 'Unknown')
-    : '—';
+  const nameOf = (m) => m.users?.username || 'Unknown';
+  const open = (m) => onViewManager({ user_id: m.user_id, name: nameOf(m) });
+  const cols = h2hEnabled ? '32px 38px minmax(0,1fr) 56px 64px' : '32px 38px minmax(0,1fr) 64px';
+  const podium = members.length >= 3 ? [members[1], members[0], members[2]] : [];
+  const standings = (
+    <div style={{ padding: '16px max(16px, 3vw) 8px' }}>
+      {podium.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, alignItems: 'end', marginBottom: 16 }}>
+          {podium.map((m, i) => {
+            const first = i === 1;
+            const place = first ? 1 : i === 0 ? 2 : 3;
+            return (
+              <button key={m.user_id} onClick={() => open(m)} aria-label={`${nameOf(m)}, place ${place}, ${Math.round(m.total_points ?? 0)} points`}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0, font: 'inherit', color: 'inherit' }}>
+                <Avatar name={nameOf(m)} size={first ? 52 : 44} />
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nameOf(m)}</span>
+                <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{Math.round(m.total_points ?? 0)} pts</span>
+                <span className="num" style={{ width: '100%', height: first ? 64 : place === 2 ? 48 : 38, borderRadius: '10px 10px 0 0', background: first ? 'var(--gold-soft)' : 'var(--elev)', color: first ? 'var(--gold-text)' : 'var(--mute)', display: 'grid', placeItems: 'center', fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{place}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+        <div role="row" style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, alignItems: 'center', padding: '8px 14px', borderBottom: '1px solid var(--rule)', fontSize: 'var(--fs-micro)', fontWeight: 600, color: 'var(--mute)' }}>
+          <span className="num" style={{ textAlign: 'center' }}>#</span>
+          <span />
+          <span>Manager</span>
+          {h2hEnabled && <span style={{ textAlign: 'right' }}>H2H</span>}
+          <span style={{ textAlign: 'right' }}>Pts</span>
+        </div>
+        {membersLoading && members.length === 0 ? (
+          <div style={{ padding: '28px 18px', textAlign: 'center', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Syncing standings…</div>
+        ) : members.map((m, i) => {
+          const isMe = currentUser && m.user_id === currentUser.id;
+          return (
+            <div key={m.user_id} role="button" tabIndex={0} onClick={() => open(m)}
+              onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(m); } }}
+              style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, alignItems: 'center', minHeight: 56, padding: '6px 14px', cursor: 'pointer', borderBottom: i < members.length - 1 ? '1px solid var(--rule)' : 'none', background: isMe ? 'var(--accent-soft)' : 'transparent' }}>
+              <span className="num" style={{ textAlign: 'center', fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: m.rank === 1 ? 'var(--gold-text)' : 'var(--paper)' }}>{m.rank || '—'}</span>
+              <Avatar name={nameOf(m)} />
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nameOf(m)}</span>
+                {(isMe || m.rank === 1) && <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{isMe ? 'You' : 'Leader'}{isMe && m.rank === 1 ? ' · Leader' : ''}</span>}
+              </span>
+              {h2hEnabled && <span className="num" style={{ textAlign: 'right', color: 'var(--gold-text)', fontWeight: 600 }}>{h2hMap[m.user_id] ?? '—'}</span>}
+              <span className="num" style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{Math.round(m.total_points ?? 0)}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="num" style={{ marginTop: 8, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Gameweek {currentGW} · tap a manager to see their squad</div>
+    </div>
+  );
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── Summary: your rank and leader ───────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, padding: '16px max(16px, 3vw)', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-        <div style={{ padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderLeft: '4px solid var(--accent)', borderRadius: 'var(--radius)' }}>
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Your rank</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
-            <span className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{myRank}</span>
-            <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>of {members.length}</span>
-          </div>
-          <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>{myPts !== '—' ? Math.round(myPts) : '—'} pts</div>
-        </div>
-        <div style={{ padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderLeft: '4px solid var(--gold)', borderRadius: 'var(--radius)' }}>
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Leader</div>
-          <div className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', marginTop: 2 }}>{leader?.total_points != null ? Math.round(leader.total_points) : '—'}</div>
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{leaderName} · GW {currentGW}</div>
-        </div>
-      </div>
-
-      {/* ── DESKTOP: standings table + activity rail ───────────────────── */}
+      {/* ── DESKTOP: standings + activity rail ─────────────────────────── */}
       <div className="hidden lg:grid" style={{ flex: 1, gridTemplateColumns: activityCollapsed ? '1fr 40px' : '1fr 400px', minHeight: 0, transition: 'grid-template-columns 0.15s ease' }}>
-        {/* Standings table */}
         <div data-tour="league-standings" style={{ display: 'flex', flexDirection: 'column', overflow: 'auto', borderRight: '1px solid var(--rule)' }}>
-          <CompetitionResultsHeader
-            rows={members}
-            columns={[
-              { key: 'total', label: 'TOT', width: '80px', accessor: m => Math.round(m.total_points ?? 0) },
-              ...(h2hEnabled ? [{ key: 'h2h', label: 'H2H', width: '60px', accessor: m => h2hMap[m.user_id] ?? '—', color: 'var(--gold-text)' }] : []),
-            ]}
-            accent="var(--accent)"
-            activeColumnKey="total"
-            highlightUserId={currentUser?.id}
-            rankWidth="48px"
-            actionsWidth="100px"
-            renderName={(m) => {
-              const mName = (m.users?.username || 'Unknown');
-              const hue = mgrHue(m.users?.username || '');
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                  <MgrTag mono={mgrMono(mName)} hue={hue} />
-                  <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>{mName}</span>
-                    {m.rank === 1 && <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, background: 'var(--gold-soft)', color: 'var(--gold-text)', padding: '1px 8px', borderRadius: 999 }}>Leader</span>}
-                  </div>
-                </div>
-              );
-            }}
-            renderActions={(m, isMe) => {
-              const mName = (m.users?.username || 'Unknown');
-              return (
-                <>
-                  {!isMe && (
-                    <>
-                      {onH2h && <button className="hit-44" onClick={() => onH2h({ ...m, name: mName })} style={miniBtnStyle('var(--accent)')}>H2H</button>}
-                      <button className="hit-44" onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--mute)')}>VIEW</button>
-                    </>
-                  )}
-                  {isMe && <button className="hit-44" onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--accent)')}>VIEW</button>}
-                </>
-              );
-            }}
-            loading={membersLoading && members.length === 0}
-            emptyMessage="Syncing standings…"
-            gap={14}
-            rowPadding="12px 24px"
-          />
+          {standings}
         </div>
 
         {/* Activity rail */}
@@ -215,8 +210,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           ) : (
           <>
           <HubSectionLabel
-            label="LEAGUE ACTIVITY"
-            sub="LIVE"
+            label="League activity"
             tone="var(--gold)"
             right={
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -336,60 +330,11 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
 
       {/* ── MOBILE: single-col standings list ─────────────────────────── */}
       <div className="lg:hidden" style={{ flex: 1, overflow: 'auto' }}>
-        <MobSection
-          label="STANDINGS"
-          tone="var(--accent)"
-          right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>SORT · TOT</span>}
-        />
-        {membersLoading && members.length === 0 ? (
-          <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING…</div>
-          </div>
-        ) : members.map((m) => {
-          const isMe = currentUser && m.user_id === currentUser.id;
-          const mName = (m.users?.username || 'Unknown');
-          const hue = mgrHue(m.users?.username || '');
-          return (
-            <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => onViewManager({ user_id: m.user_id, name: mName }))(e); } }}
-              key={m.user_id}
-              onClick={() => onViewManager({ user_id: m.user_id, name: mName })}
-              style={{
-                display: 'grid', gridTemplateColumns: '28px auto 1fr auto', gap: 10, alignItems: 'center',
-                minHeight: 'var(--tap)', padding: '10px 16px', borderBottom: '1px solid var(--rule)', cursor: 'pointer',
-                borderLeft: isMe ? '4px solid var(--accent)' : '4px solid transparent',
-                background: isMe ? 'var(--accent-soft)' : 'transparent',
-              }}
-            >
-              {/* Rank + trend */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{m.rank || '—'}</span>
-              </div>
-              {/* Monogram */}
-              <MgrTag mono={mgrMono(mName)} hue={hue} size={20} />
-              {/* Name + captain stub */}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mName}</span>
-                  {m.rank === 1 && <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, background: 'var(--gold-soft)', color: 'var(--gold-text)', padding: '1px 8px', borderRadius: 999, flexShrink: 0 }}>1st</span>}
-                </div>
-              </div>
-              {/* Points */}
-              <div style={{ textAlign: 'right' }}>
-                <div className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{Math.round(m.total_points ?? 0)}</div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>pts</div>
-                {h2hEnabled && (
-                  <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
-                    {h2hMap[m.user_id] ?? '—'} H2H
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        <div data-tour="league-standings">{standings}</div>
 
         {/* ── Mobile activity feed ───────────────────────────────────── */}
         <MobSection
-          label="LEAGUE ACTIVITY"
+          label="League activity"
           tone="var(--gold)"
           right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>RECENT</span>}
         />

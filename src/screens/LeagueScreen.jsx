@@ -12,6 +12,7 @@ import { useLeagueStats } from '../hooks/useLeagueStats';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
+import ClubCrest from '../components/ClubCrest';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import StatusBar from '../components/ui/StatusBar';
 
@@ -27,7 +28,7 @@ import {
   HubLeagueHeader, HubTabPills,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
 } from '../components/league/HubShared';
-import { MONO, DISPLAY } from '../components/league/HubConstants';
+import { MONO, DISPLAY, mgrHue } from '../components/league/HubConstants';
 import { TypeChip, RankBadge, ArchivedBadge } from '../components/league/LeagueBadges';
 import { useShowArchived } from '../hooks/useShowArchived';
 import usePullToRefresh from '../hooks/usePullToRefresh';
@@ -373,6 +374,18 @@ export default function LeagueScreen() {
 
   const isCommissioner = activeLeague?.leagues?.created_by === currentUser?.id
     || activeLeague?.role === 'commissioner';
+
+  const headerStats = (() => {
+    const me = members.find(m => m.user_id === (user?.id ?? currentUser?.id));
+    if (!me) return [];
+    const top = Math.max(...members.map(m => m.total_points ?? 0));
+    const pts = me.total_points ?? 0;
+    return [
+      { value: me.rank ? `#${me.rank}` : '—', label: 'Rank' },
+      { value: pts, label: 'Points' },
+      ...(pts < top ? [{ value: `−${top - pts}`, label: 'Behind 1st' }] : []),
+    ];
+  })();
 
   // commAction, openTransferWindow, closeTransferWindow, triggerScores,
   // setLeagueDraftDeadline, createBetInstance, autoGenerateBetOptions,
@@ -1304,17 +1317,29 @@ export default function LeagueScreen() {
             leagueName={name}
             memberCount={members.length}
             gw={currentGW}
+            stats={headerStats}
             isLive={false}
             onBack={() => navigate('/clubhouse')}
             cupPhase={activeLeague?.leagues?.cup_phase}
             leagueMode={leagueMode}
             rightSlot={
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <button
                   onClick={() => view === 'commissioner' ? replayCommissionerTour() : replayLeagueTour()}
                   title={view === 'commissioner' ? 'Replay admin tour' : 'Replay league tour'}
-                  style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid var(--rule)', background: 'var(--elev)', color: 'var(--mute)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >?</button>
+                  aria-label={view === 'commissioner' ? 'Replay admin tour' : 'Replay league tour'}
+                  className="hit-44" style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'transparent', color: 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+                ><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7" /><circle cx="12" cy="17" r=".6" fill="currentColor" /></svg></button>
+                {isCommissioner && (
+                  <button
+                    onClick={() => setView('commissioner')}
+                    data-tour="admin-tab"
+                    aria-label="League admin"
+                    title="League admin"
+                    aria-pressed={view === 'commissioner'}
+                    className="hit-44" style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: view === 'commissioner' ? 'var(--elev)' : 'transparent', color: view === 'commissioner' ? 'var(--accent)' : 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+                  ><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
+                )}
                 <NotificationBell
                   notifications={notifications}
                   unreadCount={notificationCount + (activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0)}
@@ -1333,11 +1358,22 @@ export default function LeagueScreen() {
             leagueName={name}
             memberCount={members.length}
             gw={currentGW}
+            stats={headerStats}
             onBack={() => navigate('/clubhouse')}
             cupPhase={activeLeague?.leagues?.cup_phase}
             leagueMode={leagueMode}
             rightSlot={
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {isCommissioner && (
+                  <button
+                    onClick={() => setView('commissioner')}
+                    data-tour="admin-tab"
+                    aria-label="League admin"
+                    title="League admin"
+                    aria-pressed={view === 'commissioner'}
+                    className="hit-44" style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: view === 'commissioner' ? 'var(--elev)' : 'transparent', color: view === 'commissioner' ? 'var(--accent)' : 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+                  ><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
+                )}
                 <NotificationBell
                   notifications={notifications}
                   unreadCount={notificationCount + (activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0)}
@@ -1775,46 +1811,67 @@ export default function LeagueScreen() {
             </div>
          )}
 
-         {managerTeamView && createPortal(
-           <div role="presentation" className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setManagerTeamView(null)}>
-             <div role="presentation" className="w-full h-[80vh] bg-[var(--bg)] rounded-t-2xl flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
-               <div className="p-6 border-b border-[var(--rule)] flex justify-between items-center">
-                 <div>
-                    <h2 className="text-[var(--paper)] font-bold text-lg">{managerTeamView.name}'s Roster</h2>
-                    <p className="text-[11px] text-text-tertiary uppercase tracking-widest">Full 11-Man Tactical Squad</p>
+         {managerTeamView && createPortal((() => {
+           const mv = members.find(m => m.user_id === managerTeamView.user_id);
+           const isMeView = managerTeamView.user_id === currentUser?.id;
+           const ord = (n) => { const v = n % 100; return n + (['th', 'st', 'nd', 'rd'][(v - 20) % 10] || ['th', 'st', 'nd', 'rd'][v] || 'th'); };
+           const hue = mgrHue(managerTeamView.name || '');
+           const w = (managerTeamView.name || '?').trim().split(/\s+/);
+           const ini = (w.length > 1 ? w[0][0] + w[1][0] : (managerTeamView.name || '?').slice(0, 2)).toUpperCase();
+           const sub = [mv?.rank ? ord(mv.rank) : null, mv?.total_points != null ? `${Math.round(mv.total_points)} pts` : null].filter(Boolean).join(' · ');
+           const isDraft = activeLeague?.leagues?.format === 'noduplicate';
+           return (
+           <div role="presentation" className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setManagerTeamView(null)}>
+             <div role="dialog" aria-label={`${managerTeamView.name}'s squad`} className="w-full h-[85vh] bg-[var(--bg)] rounded-t-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px 12px' }}>
+                 <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: '50%', background: `${hue}26`, color: hue, display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 'var(--fs-body)', flexShrink: 0 }}>{ini}</span>
+                 <div style={{ minWidth: 0, flex: 1 }}>
+                   <h2 style={{ margin: 0, fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-heading)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{managerTeamView.name}</h2>
+                   {sub && <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{sub}</div>}
                  </div>
-                 <button onClick={() => setManagerTeamView(null)} className="text-[#555]">✕</button>
+                 <button onClick={() => setManagerTeamView(null)} aria-label="Close" className="hit-44" style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--elev)', color: 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                 </button>
                </div>
-               <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
-                 {!managerRoster.length && (
-                   <LoadingRows rows={3} />
-                 )}
-                 {managerRoster.map((p, i) => {
-                   const posColor = p.position === 'GK' ? 'var(--purple)' : p.position === 'DEF' ? 'var(--accent)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
-                   return (
-                   <div key={i} className="flex items-center gap-3 bg-[var(--bg)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden" style={{ borderLeft: `2px solid ${posColor}44` }}>
-                     <div className="flex-1 min-w-0">
-                       <div className="text-[11px] font-black uppercase tracking-tighter" style={{ color: posColor }}>{p.position} · {p.club}</div>
-                       <div className="text-[14px] font-bold text-[var(--paper)] tracking-tight truncate">{p.name}</div>
-                     </div>
-                     <div className="text-right shrink-0 mr-2">
-                       <div className="text-[13px] font-black text-[var(--paper)]">€{p.price}M</div>
-                       <div className="text-[11px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
-                     </div>
-                     {activeLeague?.leagues?.format === 'noduplicate' && managerTeamView.user_id !== currentUser?.id && (
-                       <button className="hit-44"
-                         onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
-                         style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)', background: 'transparent', border: '1px solid rgba(26,111,168,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
-                       >TRADE</button>
-                     )}
+               {h2hEnabled && !isMeView && (
+                 <div style={{ padding: '0 16px 12px' }}>
+                   <button
+                     onClick={() => { setH2hTarget({ user_id: managerTeamView.user_id, name: managerTeamView.name, rank: mv?.rank, total_points: mv?.total_points }); setManagerTeamView(null); }}
+                     style={{ width: '100%', minHeight: 'var(--tap)', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', background: 'var(--card)', color: 'var(--paper)', fontFamily: 'inherit', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
+                   >Compare with me</button>
+                 </div>
+               )}
+               <div className="flex-1 overflow-y-auto no-scrollbar" style={{ padding: '0 16px 24px' }}>
+                 {!managerRoster.length && <LoadingRows rows={3} />}
+                 {managerRoster.length > 0 && (
+                   <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                     {managerRoster.map((p, i) => {
+                       const posColor = p.position === 'GK' ? 'var(--purple)' : p.position === 'DEF' ? 'var(--accent)' : p.position === 'MID' ? 'var(--gold-text)' : 'var(--danger)';
+                       return (
+                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '8px 14px', borderBottom: i < managerRoster.length - 1 ? '1px solid var(--rule)' : 'none' }}>
+                           <span style={{ width: 36, textAlign: 'center', padding: '3px 0', borderRadius: 6, fontSize: 'var(--fs-micro)', fontWeight: 700, color: posColor, background: 'var(--elev)', flexShrink: 0 }}>{p.position}</span>
+                           <ClubCrest name={p.club} size={26} />
+                           <div style={{ minWidth: 0, flex: 1 }}>
+                             <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                             <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{p.club}</div>
+                           </div>
+                           <div className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', flexShrink: 0 }}>€{p.price}M</div>
+                           {isDraft && !isMeView && (
+                             <button className="hit-44"
+                               onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
+                               style={{ fontFamily: 'inherit', fontSize: 'var(--fs-micro)', fontWeight: 600, color: 'var(--accent)', background: 'transparent', border: '1px solid var(--accent)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', flexShrink: 0 }}
+                             >Trade</button>
+                           )}
+                         </div>
+                       );
+                     })}
                    </div>
-                   );
-                 })}
+                 )}
                </div>
              </div>
-           </div>,
-           document.body
-         )}
+           </div>
+           );
+         })(), document.body)}
 
          {h2hTarget && (
            <H2HSheet
