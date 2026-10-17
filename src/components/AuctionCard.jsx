@@ -64,7 +64,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
           <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>
             {player?.club} · €{player?.price}M
           </div>
-          <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)', letterSpacing: '.1em' }}>
+          <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>
             {isMine ? 'Listed by you' : `Listed by ${auction.seller_name ?? 'Unknown'}`}
           </div>
         </div>

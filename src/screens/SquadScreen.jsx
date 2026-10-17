@@ -829,7 +829,7 @@ export default function SquadScreen() {
           {NO_LEAGUE_TABS_MOBILE.map(tab => (
             <button key={tab.id} onClick={() => setMobileTab(tab.id)}
               className="flex-1 py-2.5 text-center transition-all relative"
-              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
+              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
             >
               {tab.label}
               {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />}
@@ -932,7 +932,7 @@ export default function SquadScreen() {
               key={tab.id}
               onClick={() => setMobileTab(tab.id)}
               className="flex-1 py-2.5 text-center transition-all relative"
-              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
+              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)', background: 'transparent' }}
             >
               {tab.label}
               {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />}
@@ -965,18 +965,18 @@ export default function SquadScreen() {
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             {cfg.format === 'noduplicate' ? (
-              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', border: 'none' }}>
                 Transfer Market →
               </button>
             ) : (
-              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', border: 'none' }}>
                 Transfer Market →
               </button>
             )}
             {leagues && leagues.length > 1 && (
               <button
                 onClick={() => setActiveLeague(null)}
-                style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', cursor: 'pointer' }}
+                style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
               >
                 Switch League
               </button>
@@ -1126,7 +1126,6 @@ export default function SquadScreen() {
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
                         fontSize: 'var(--fs-micro)', fontWeight: 800,
-                        letterSpacing: '0.1em',
                         padding: '2px 6px',
                         border: '1px solid var(--accent)',
                         color: 'var(--accent)',
@@ -1135,14 +1134,12 @@ export default function SquadScreen() {
                         cursor: 'pointer',
                       }}
                     >
-                      STATS ↗
+                      Stats ↗
                     </button>
                     <span
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
                         fontSize: 'var(--fs-micro)', fontWeight: 800,
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
                         padding: '2px 6px',
                         border: isBench ? '1px solid var(--rule)' : '1px solid rgba(26,111,168,0.4)',
                         color: isBench ? 'var(--mute)' : 'var(--accent)',
@@ -1173,8 +1170,6 @@ export default function SquadScreen() {
                         style={{
                           fontFamily: 'JetBrains Mono, monospace',
                           fontSize: 'var(--fs-micro)', fontWeight: 800,
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
                           padding: '2px 6px',
                           border: '1px solid rgba(240,180,0,0.4)',
                           color: 'var(--gold)',
@@ -1197,8 +1192,6 @@ export default function SquadScreen() {
                           style={{
                             fontFamily: 'JetBrains Mono, monospace',
                             fontSize: 'var(--fs-micro)', fontWeight: 800,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
                             padding: '2px 6px',
                             border: isConfirming ? '1px solid rgba(185,28,28,0.6)' : '1px solid rgba(240,180,0,0.4)',
                             color: isConfirming ? 'var(--danger)' : 'var(--gold)',
@@ -1208,7 +1201,7 @@ export default function SquadScreen() {
                             opacity: isCancelBusy ? 0.5 : 1,
                           }}
                         >
-                          {isCancelBusy ? '…' : isConfirming ? 'CANCEL?' : 'ON AUCTION'}
+                          {isCancelBusy ? '…' : isConfirming ? 'Cancel?' : 'On auction'}
                         </button>
                       );
                     })()}
@@ -1251,7 +1244,7 @@ export default function SquadScreen() {
                     +
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="text-[12px] font-bold" style={{ color: posColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.06em' }}>
+                    <div className="text-[12px] font-bold" style={{ color: posColor, fontFamily: 'Archivo Black, sans-serif' }}>
                       {activeLeague ? `ADD ${pos}` : `EMPTY SLOT`}
                     </div>
                     <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>
@@ -1380,7 +1373,7 @@ export default function SquadScreen() {
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>Squad</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
               <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1 }}>{allSquadPlayers.length}</span>
-              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '.05em' }}>/15</span>
+              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>/15</span>
             </div>
           </div>
           <div className="text-right" data-tour="squad-budget">
@@ -1409,8 +1402,6 @@ export default function SquadScreen() {
               style={{
                 fontFamily: 'Archivo Black, sans-serif',
                 fontSize: 'var(--fs-micro)',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
                 color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)',
                 background: 'transparent',
               }}
@@ -1431,30 +1422,30 @@ export default function SquadScreen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: 'rgba(240,58,58,0.12)', borderBottom: '1px solid rgba(240,58,58,0.3)' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)' }}>
                 Squad too small — {allSquadPlayers.length}/11 players
               </div>
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
                 Need {11 - allSquadPlayers.length} more to field a starting XI
               </div>
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
-              MARKET →
+            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+              Market →
             </button>
           </div>
         ) : allSquadPlayers.length < 15 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'rgba(240,180,0,0.10)', borderBottom: '1px solid rgba(240,180,0,0.25)' }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)' }}>
                 Squad incomplete — {allSquadPlayers.length}/15 players
               </div>
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.7)', marginTop: 3 }}>
                 {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players
               </div>
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
-              SIGN →
+            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+              Sign →
             </button>
           </div>
         ) : null}
@@ -1478,8 +1469,8 @@ export default function SquadScreen() {
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                   <div>
-                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
-                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>Starting XI</div>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'No squad'}</div>
                   </div>
                   <button
                     onClick={() => setShowScoringModal(true)}
@@ -1487,8 +1478,8 @@ export default function SquadScreen() {
                     style={{ marginTop: 2, background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   >?</button>
                 </div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
-                  {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 6 }}>
+                  {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'No captain'}
                   {squadData.matchdayId ? ` · GW${squadData.matchdayId.split('-r')[1] ?? squadData.matchdayId} PTS` : ''}
                 </div>
               </div>
@@ -1508,7 +1499,7 @@ export default function SquadScreen() {
                 <>
                   {/* Bench divider */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 6px', borderTop: '1px solid var(--rule)', marginTop: 4 }}>
-                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Substitutes</div>
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Substitutes</div>
                     <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{bench.length}</div>
                   </div>
@@ -1536,20 +1527,20 @@ export default function SquadScreen() {
                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(player), flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
                             {player.intel?.status !== 'fit' && (
                               <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                             )}
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0 }}>{player.position}</span>
                             {isSwapTarget && !isLocked && (
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0 }}>SWAP</span>
                             )}
                             {isLocked && (
-                              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
+                              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '1px 4px', flexShrink: 0 }}>LOCKED</span>
                             )}
                           </div>
                           {player.fixtureStatus && (
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
                           )}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, minWidth: 40, justifyContent: 'flex-end' }}>
@@ -1576,13 +1567,13 @@ export default function SquadScreen() {
             <div className="pb-24">
               {/* Section header */}
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>Tactical Sheet</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>My squad</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 6 }}>
                   {totalSigned}/{squadSize} SIGNED{emptySlots > 0 ? ` · ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
                 </div>
               </div>
@@ -1598,7 +1589,7 @@ export default function SquadScreen() {
                   <div key={pos}>
                     {/* Position group header */}
                     <div style={{ padding: '10px 16px 5px', display: 'flex', alignItems: 'center', gap: 8, borderLeft: `3px solid ${posColor}` }}>
-                      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase', flex: 1 }}>{POS_LABEL_LIST[pos]}</span>
+                      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: posColor, flex: 1 }}>{POS_LABEL_LIST[pos]}</span>
                       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{allPos.length}/{limit}</span>
                     </div>
                     {/* Signed players */}
@@ -1626,13 +1617,13 @@ export default function SquadScreen() {
                           }}
                         >
                           {/* Position badge */}
-                          <div style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${posColor}`, color: posColor, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', background: 'transparent' }}>{pos}</div>
+                          <div style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${posColor}`, color: posColor, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', background: 'transparent' }}>{pos}</div>
                           {/* Status dot */}
                           <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc, flexShrink: 0 }} />
                           {/* Name + meta */}
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name.split(' ').slice(-1)[0]}</span>
+                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name.split(' ').slice(-1)[0]}</span>
                               {player.intel?.status !== 'fit' && (
                                 <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                               )}
@@ -1641,10 +1632,10 @@ export default function SquadScreen() {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
                               <ClubCrest name={player.club} size={14} />
-                              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.12em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</span>
+                              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</span>
                             </div>
                             {player.fixtureStatus && (
-                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.12em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
                             <FormStrip rounds={squadStatsMap[player.id]} />
                           </div>
@@ -1656,7 +1647,6 @@ export default function SquadScreen() {
                             style={{
                               fontFamily: 'JetBrains Mono, monospace',
                               fontSize: 'var(--fs-micro)', fontWeight: 800,
-                              letterSpacing: '0.1em',
                               padding: '3px 6px',
                               border: '1px solid var(--accent)',
                               color: 'var(--accent)',
@@ -1666,7 +1656,7 @@ export default function SquadScreen() {
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            STATS ↗
+                            Stats ↗
                           </button>
                           {/* Auction action — draft leagues only (classic allows shared ownership) */}
                           {activeLeague && cfg.format === 'noduplicate' && (
@@ -1681,8 +1671,6 @@ export default function SquadScreen() {
                                     style={{
                                       fontFamily: 'JetBrains Mono, monospace',
                                       fontSize: 'var(--fs-micro)', fontWeight: 800,
-                                      letterSpacing: '0.1em',
-                                      textTransform: 'uppercase',
                                       padding: '3px 6px',
                                       border: isConfirming ? '1px solid rgba(185,28,28,0.6)' : '1px solid rgba(240,180,0,0.4)',
                                       color: isConfirming ? 'var(--danger)' : 'var(--gold)',
@@ -1692,7 +1680,7 @@ export default function SquadScreen() {
                                       opacity: isCancelBusy ? 0.5 : 1,
                                     }}
                                   >
-                                    {isCancelBusy ? '…' : isConfirming ? 'CANCEL?' : 'ON AUCTION'}
+                                    {isCancelBusy ? '…' : isConfirming ? 'Cancel?' : 'On auction'}
                                   </button>
                                 );
                               })() : (
@@ -1709,8 +1697,6 @@ export default function SquadScreen() {
                                   style={{
                                     fontFamily: 'JetBrains Mono, monospace',
                                     fontSize: 'var(--fs-micro)', fontWeight: 800,
-                                    letterSpacing: '0.1em',
-                                    textTransform: 'uppercase',
                                     padding: '3px 6px',
                                     border: '1px solid rgba(240,180,0,0.4)',
                                     color: 'var(--gold)',
@@ -1742,12 +1728,12 @@ export default function SquadScreen() {
                       >
                         <div style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px dashed ${posColor}40`, color: `${posColor}60`, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}>{pos}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Empty Slot</div>
-                          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.1em', marginTop: 1, opacity: 0.6 }}>Open Market to Sign</div>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Empty Slot</div>
+                          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 1, opacity: 0.6 }}>Open Market to Sign</div>
                         </div>
                         <button className="hit-44"
                           onClick={() => setPickerPos(pos)}
-                          style={{ padding: '5px 12px', border: '1px solid var(--accent)', color: 'var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', textTransform: 'uppercase', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ padding: '5px 12px', border: '1px solid var(--accent)', color: 'var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
                         >
                           SIGN
                         </button>
@@ -1806,27 +1792,27 @@ export default function SquadScreen() {
         {allSquadPlayers.length < 11 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)' }}>
               Squad too small — {allSquadPlayers.length}/11 players
             </div>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)' }}>
               Need {11 - allSquadPlayers.length} more to field a starting XI
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
-              GO TO MARKET →
+            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+              Go to market →
             </button>
           </div>
         ) : allSquadPlayers.length < 15 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)' }}>
               Squad incomplete — {allSquadPlayers.length}/15 players
             </div>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)' }}>
               {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players to complete your squad
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
-              SIGN PLAYERS →
+            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+              Sign players →
             </button>
           </div>
         ) : null}
@@ -1854,7 +1840,7 @@ export default function SquadScreen() {
                   background: 'rgba(8,9,12,0.95)', padding: '12px 40px',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
-                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.18em', flexShrink: 0 }}>BENCH</div>
+                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', flexShrink: 0 }}>BENCH</div>
                   <div style={{ flex: 1, display: 'flex', gap: 10, flexWrap: 'nowrap', overflow: 'hidden' }}>
                     {bench.map((player) => {
                       const pos = player.position;
@@ -1880,9 +1866,9 @@ export default function SquadScreen() {
                           }}>{pos}</div>
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
-                            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.1em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
+                            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
                             {player.fixtureStatus && (
-                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
                           </div>
                         </button>
@@ -1899,7 +1885,7 @@ export default function SquadScreen() {
             <>
               <div className="flex-1 min-w-0 overflow-y-auto">
                 <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--rule)' }}>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', letterSpacing: '0.02em' }}>Squad List</div>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Squad List</div>
                   <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
                 </div>
                 {PlayerList()}
@@ -1981,7 +1967,6 @@ export default function SquadScreen() {
                     'var(--pos-fwd)',
                   fontFamily: 'Archivo Black, sans-serif',
                   fontSize: 'var(--fs-micro)',
-                  letterSpacing: '0.08em',
                 }}>
                   {selectedPlayer.position}
                 </div>
@@ -1989,12 +1974,12 @@ export default function SquadScreen() {
                   <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1.1, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                     {selectedPlayer.name}
                     {selectedPlayer.price > 0 && (
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--paper)', letterSpacing: '0.04em' }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
                         €{Number(selectedPlayer.price).toFixed(1)}M
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <ClubCrest name={selectedPlayer.club} size={16} />
                     {selectedPlayer.club}
                     {selectedPlayer.id === captainId && (
@@ -2011,13 +1996,13 @@ export default function SquadScreen() {
             {/* Form + next fixture + ownership context strip */}
             <div className="flex items-stretch gap-3 mb-3" style={{ borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', padding: '10px 0' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>FORM</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>FORM</div>
                 <FormStrip rounds={squadStatsMap[selectedPlayer.id]} />
               </div>
               <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid var(--rule)', paddingLeft: 12 }}>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>NEXT FIXTURE</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Next fixture</div>
                 <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: selectedPlayer.fixtureStatus?.color || 'var(--paper)', letterSpacing: '-0.01em' }}>
-                  {selectedPlayer.fixtureStatus?.label || 'NO FIXTURE'}
+                  {selectedPlayer.fixtureStatus?.label || 'No fixture'}
                 </div>
               </div>
             </div>
@@ -2025,9 +2010,9 @@ export default function SquadScreen() {
             <button
               onClick={() => setStatsDashboardPlayer(selectedPlayer)}
               className="w-full mb-3 py-2 rounded-sm transition-all active:scale-95"
-              style={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', textTransform: 'uppercase' }}
+              style={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
             >
-              VIEW FULL STATS DASHBOARD ↗
+              View full stats dashboard ↗
             </button>
             {/* Actions */}
             <div className="flex gap-2 mb-3">
@@ -2040,10 +2025,10 @@ export default function SquadScreen() {
                     background: captainId === selectedPlayer.id ? 'rgba(224,168,0,0.12)' : 'var(--gold)',
                     color: captainId === selectedPlayer.id ? 'var(--gold)' : '#0A0A0A',
                     border: captainId === selectedPlayer.id ? '1px solid rgba(224,168,0,0.35)' : '1px solid var(--gold)',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
                   }}
                 >
-                  {captainId === selectedPlayer.id ? 'CURRENT CAPTAIN' : 'MAKE CAPTAIN'}
+                  {captainId === selectedPlayer.id ? 'Current captain' : 'Make captain'}
                 </button>
               )}
               {selectedIsBench && squadData.players.length < 11 ? (
@@ -2066,9 +2051,9 @@ export default function SquadScreen() {
                   }}
                   disabled={saving}
                   className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: 'var(--accent)', color: '#0A0A0A', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                  style={{ background: 'var(--accent)', color: '#0A0A0A', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
                 >
-                  ADD TO PITCH
+                  Add to pitch
                 </button>
               ) : (
                 // Swap mode: only if starters = 11 and user wants to swap
@@ -2076,16 +2061,16 @@ export default function SquadScreen() {
                   onClick={() => setSwapMode(true)}
                   disabled={saving || (selectedIsBench && squadData.players.length >= 11 && squadData.bench.length === 1)}
                   className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                  style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
                 >
-                  {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
+                  {selectedIsBench ? 'Sub in' : 'Sub out'}
                 </button>
               )}
               <button
                 onClick={handleSellPlayer}
                 disabled={saving}
                 className="px-5 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
               >
                 SELL
               </button>
