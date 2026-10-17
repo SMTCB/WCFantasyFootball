@@ -25,12 +25,11 @@ export function ArchivedBadge() {
     <span
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 4,
-        padding: '2px 7px',
-        border: '1px solid var(--rule)',
+        padding: '2px 10px', borderRadius: 20,
+        border: 'none',
         background: 'var(--elev)',
         color: 'var(--mute)',
-        fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
-        textTransform: 'uppercase', whiteSpace: 'nowrap',
+        fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', fontWeight: 600, whiteSpace: 'nowrap',
       }}
     >
       Archived
@@ -43,12 +42,11 @@ export function FinishedBadge() {
     <span
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 4,
-        padding: '2px 7px',
-        border: '1px solid color-mix(in srgb, var(--gold) 40%, transparent)',
-        background: 'color-mix(in srgb, var(--gold) 12%, transparent)',
-        color: 'var(--gold)',
-        fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
-        textTransform: 'uppercase', whiteSpace: 'nowrap',
+        padding: '2px 10px', borderRadius: 20,
+        border: 'none',
+        background: 'var(--gold-soft)',
+        color: 'var(--gold-text)',
+        fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', fontWeight: 600, whiteSpace: 'nowrap',
       }}
     >
       Finished
