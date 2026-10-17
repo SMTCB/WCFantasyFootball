@@ -82,11 +82,11 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForContent(page);
 
-    // Use data-testid to find the desktop sidebar specifically
+    // Use data-testid to find the desktop top bar specifically
     const sidebar = page.locator('[data-testid="desktop-nav"]');
     await expect(sidebar).toBeVisible();
 
-    // Sidebar is now clubhouse-centric — always shows these items
+    // Top bar is clubhouse-centric — always shows these items
     // Use .first() — strict mode: both "Clubhouse" heading and "My Clubhouse" link match
     await expect(sidebar.getByText(/clubhouse/i).first()).toBeVisible();
     await expect(sidebar.getByText(/settings/i)).toBeVisible();
@@ -416,17 +416,16 @@ test.describe('BracketScreen', () => {
 
 // ── 10. Layout consistency ────────────────────────────────────────────────────
 test.describe('Layout consistency', () => {
-  test('desktop — sidebar left offset applied (content not behind sidebar)', async ({ page }) => {
+  test('desktop — top bar offset applied (content not behind top bar)', async ({ page }) => {
     await skipOnboarding(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     await waitForContent(page);
 
-    // Main content wrapper should be offset to the right of the 220px sidebar
+    // Main content wrapper sits below the 56px top bar
     const mainContent = page.locator('[data-testid="main-content"]');
     const box = await mainContent.boundingBox();
-    // Should start at x >= 200 (sidebar is 220px wide)
-    expect(box?.x ?? 0).toBeGreaterThan(150);
+    expect(box?.y ?? 0).toBeGreaterThanOrEqual(50);
   });
 
   test('mobile — bottom nav does not obscure content', async ({ page }) => {
