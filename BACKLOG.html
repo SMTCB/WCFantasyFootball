@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>269</strong><span>closed</span></div>
+      <div class="total-pill"><strong>270</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (186)</span>
+    <span class="chip" data-filter-kind="done">Shipped (187)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">269</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">270</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">186</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">187</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,44 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">186</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">187</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — wave 0 + wave 1 (football league screens) (2026-10-17) — prs #1059–#1065, rollback tag `rollback/pre-redesign-2026-10-17` @ 6b56bfa 
+
+built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, revertible pr per slice:
+- **#1059 wave 0** — dark-mode tokens (not exposed to users until after wave 2; preview with `?theme=dark`), 12px type floor, ui kit (`src/components/ui/`: card, statpill, statusbar, pageheader, emptystate, errorstate), dev-only `/dev/kit`.
+- **#1060 1a** light league header + tabs · **#1061 1b** single statusbar replaces stacked league banners · **#1062 1c** standings summary/rows/activity feed.
+- **#1063 1d** squad/market/live share the league tab row (`leagueroutetabs`).
+- **#1064 1e** recap + market report · **#1065 1f** bets, betting leaderboard, bet creator, stats, h2h, trading (sentence-case labels, token colours, pill badges; logic untouched).
+- open / next: wave 2 (other sports + frontrow front page), dark-mode exposure after wave 2, ci security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. wave 1 was not visually verified locally (no league data in dev); checked on vercel previews.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Frontrow redesign — Wave 0 + Wave 1 (football league screens)</h3>
+        <p class="card-summary">Built from docs/design/REDESIGN_PROPOSAL_2026-10.html (approved). One small, revertible PR per slice: #1059 Wave 0 — dark-mode tokens (not exposed to users until after…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-17</span><span class="foot-refs">PRs #1059–#1065, rollback tag <code>rollback/pre-redesign-2026-10-17</code> @ 6b56bfa</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Frontrow redesign — Wave 0 + Wave 1 (football league screens)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Built from docs/design/REDESIGN_PROPOSAL_2026-10.html (approved). One small, revertible PR per slice: #1059 Wave 0 — dark-mode tokens (not exposed to users until after…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #1059–#1065, rollback tag <code>rollback/pre-redesign-2026-10-17</code> @ 6b56bfa</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-17</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Built from <code>docs/design/REDESIGN_PROPOSAL_2026-10.html</code> (approved). One small, revertible PR per slice:</p>
+<ul>
+<li><strong>#1059 Wave 0</strong> — dark-mode tokens (not exposed to users until after Wave 2; preview with <code>?theme=dark</code>), 12px type floor, UI kit (<code>src/components/ui/</code>: Card, StatPill, StatusBar, PageHeader, EmptyState, ErrorState), dev-only <code>/dev/kit</code>.</li>
+<li><strong>#1060 1a</strong> light league header + tabs · <strong>#1061 1b</strong> single StatusBar replaces stacked league banners · <strong>#1062 1c</strong> Standings summary/rows/activity feed.</li>
+<li><strong>#1063 1d</strong> Squad/Market/Live share the league tab row (<code>LeagueRouteTabs</code>).</li>
+<li><strong>#1064 1e</strong> Recap + Market report · <strong>#1065 1f</strong> Bets, Betting leaderboard, Bet creator, Stats, H2H, Trading (sentence-case labels, token colours, pill badges; logic untouched).</li>
+<li>Open / next: Wave 2 (other sports + Frontrow front page), dark-mode exposure after Wave 2, CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ transfer penalty silently skipped when league has no `transfer_penalty` config row (2026-10-17) — pr #1057, data fix 
 
 **symptom**: champions eder 26/27 matchday 2 — a manager bought one transfer over the limit but the recap showed no penalty and the total was unchanged.
