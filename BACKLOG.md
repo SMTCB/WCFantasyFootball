@@ -19,7 +19,14 @@ Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, r
 - **#1060 1a** light league header + tabs · **#1061 1b** single StatusBar replaces stacked league banners · **#1062 1c** Standings summary/rows/activity feed.
 - **#1063 1d** Squad/Market/Live share the league tab row (`LeagueRouteTabs`).
 - **#1064 1e** Recap + Market report · **#1065 1f** Bets, Betting leaderboard, Bet creator, Stats, H2H, Trading (sentence-case labels, token colours, pill badges; logic untouched).
-- Open / next: Wave 2 (other sports + Frontrow front page), dark-mode exposure after Wave 2, CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.
+- Open / next: Wave 3 (F1 + tennis), then Waves 4–5; dark mode now exposed (Wave 2), CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.
+
+---
+
+## ✅ Frontrow redesign — Wave 2 (shell and hubs) (2026-10-17) — PRs #1067–#1073
+
+- **#1067 2a** light mobile top/bottom bars · **#1068 2b** slim light desktop top bar replaces the sidebar · **#1069 2c** Home · **#1070 2d** Clubhouse + Frontrow front page (cream broadsheet kept; labels/tap targets only) · **#1071 2e** Trophy cabinet (navy kept as the design exception), My bets, Coin wallet, Settings · **#1072 2f** ChallengeScreen · **#1073** dark mode exposed (Settings → Appearance, Light/Dark, stored in `ffl-theme`; default stays light).
+- Open / next: Wave 3 (F1 + tennis), Waves 4–5; CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated. Wave 2 checked on Vercel previews only; dark mode not yet audited screen by screen.
 
 ---
 

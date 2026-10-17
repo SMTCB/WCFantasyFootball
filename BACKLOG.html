@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>270</strong><span>closed</span></div>
+      <div class="total-pill"><strong>271</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (187)</span>
+    <span class="chip" data-filter-kind="done">Shipped (188)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">270</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">271</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">187</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">188</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,7 +1396,7 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">187</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">188</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — wave 0 + wave 1 (football league screens) (2026-10-17) — prs #1059–#1065, rollback tag `rollback/pre-redesign-2026-10-17` @ 6b56bfa 
 
@@ -1405,7 +1405,7 @@ built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, r
 - **#1060 1a** light league header + tabs · **#1061 1b** single statusbar replaces stacked league banners · **#1062 1c** standings summary/rows/activity feed.
 - **#1063 1d** squad/market/live share the league tab row (`leagueroutetabs`).
 - **#1064 1e** recap + market report · **#1065 1f** bets, betting leaderboard, bet creator, stats, h2h, trading (sentence-case labels, token colours, pill badges; logic untouched).
-- open / next: wave 2 (other sports + frontrow front page), dark-mode exposure after wave 2, ci security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. wave 1 was not visually verified locally (no league data in dev); checked on vercel previews.
+- open / next: wave 3 (f1 + tennis), then waves 4–5; dark mode now exposed (wave 2), ci security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. wave 1 was not visually verified locally (no league data in dev); checked on vercel previews.
 
 ---
 
@@ -1428,7 +1428,35 @@ built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, r
 <li><strong>#1060 1a</strong> light league header + tabs · <strong>#1061 1b</strong> single StatusBar replaces stacked league banners · <strong>#1062 1c</strong> Standings summary/rows/activity feed.</li>
 <li><strong>#1063 1d</strong> Squad/Market/Live share the league tab row (<code>LeagueRouteTabs</code>).</li>
 <li><strong>#1064 1e</strong> Recap + Market report · <strong>#1065 1f</strong> Bets, Betting leaderboard, Bet creator, Stats, H2H, Trading (sentence-case labels, token colours, pill badges; logic untouched).</li>
-<li>Open / next: Wave 2 (other sports + Frontrow front page), dark-mode exposure after Wave 2, CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.</li>
+<li>Open / next: Wave 3 (F1 + tennis), then Waves 4–5; dark mode now exposed (Wave 2), CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — wave 2 (shell and hubs) (2026-10-17) — prs #1067–#1073 
+
+- **#1067 2a** light mobile top/bottom bars · **#1068 2b** slim light desktop top bar replaces the sidebar · **#1069 2c** home · **#1070 2d** clubhouse + frontrow front page (cream broadsheet kept; labels/tap targets only) · **#1071 2e** trophy cabinet (navy kept as the design exception), my bets, coin wallet, settings · **#1072 2f** challengescreen · **#1073** dark mode exposed (settings → appearance, light/dark, stored in `ffl-theme`; default stays light).
+- open / next: wave 3 (f1 + tennis), waves 4–5; ci security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated. wave 2 checked on vercel previews only; dark mode not yet audited screen by screen.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Frontrow redesign — Wave 2 (shell and hubs)</h3>
+        <p class="card-summary">#1067 2a light mobile top/bottom bars · #1068 2b slim light desktop top bar replaces the sidebar · #1069 2c Home · #1070 2d Clubhouse + Frontrow front page (cream…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-17</span><span class="foot-refs">PRs #1067–#1073</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Frontrow redesign — Wave 2 (shell and hubs)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>#1067 2a light mobile top/bottom bars · #1068 2b slim light desktop top bar replaces the sidebar · #1069 2c Home · #1070 2d Clubhouse + Frontrow front page (cream…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #1067–#1073</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-17</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><ul>
+<li><strong>#1067 2a</strong> light mobile top/bottom bars · <strong>#1068 2b</strong> slim light desktop top bar replaces the sidebar · <strong>#1069 2c</strong> Home · <strong>#1070 2d</strong> Clubhouse + Frontrow front page (cream broadsheet kept; labels/tap targets only) · <strong>#1071 2e</strong> Trophy cabinet (navy kept as the design exception), My bets, Coin wallet, Settings · <strong>#1072 2f</strong> ChallengeScreen · <strong>#1073</strong> dark mode exposed (Settings → Appearance, Light/Dark, stored in <code>ffl-theme</code>; default stays light).</li>
+<li>Open / next: Wave 3 (F1 + tennis), Waves 4–5; CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated. Wave 2 checked on Vercel previews only; dark mode not yet audited screen by screen.</li>
 </ul>
 <hr></dd></div>
       </dl></template>
