@@ -834,6 +834,7 @@ export default function ClubhouseScreen() {
   const MAIN_TABS = [
     { key: 'home',      label: 'Home' },
     { key: 'frontrow',  label: 'The Frontrow' },
+    { key: 'digest',    label: 'Digest' },
     ...(!isDesktop ? [{ key: 'chat', label: 'Chat' }] : []),
     { key: 'members',   label: 'Members' },
     ...(isOwner ? [{ key: 'settings', label: 'Settings' }] : []),
@@ -951,7 +952,7 @@ export default function ClubhouseScreen() {
         <ClubhouseLobby createCircle={createCircle} joinCircleByCode={joinCircleByCode} />
       ) : (
         <>
-          <TabStrip variant="underline" tabs={MAIN_TABS} active={tab} onTab={setTab} />
+          <TabStrip variant="underline" tabs={MAIN_TABS} active={tab} onTab={(k) => (k === 'digest' ? navigate('/recap') : setTab(k))} />
 
           {/* Full-width tabs — rendered outside the max-width container */}
           {tab === 'frontrow' && (

@@ -33,19 +33,6 @@ function extractActiveCompId(pathname) {
   return null;
 }
 
-// All four carry the current league id in the query string — Live uses it to
-// scope its board to this league; Digest's content stays cross-league but still
-// carries it so the back button (AppLayout) knows which league to return to.
-const FOOTBALL_SCREENS = [
-  { key: 'live',   label: 'LIVE',   path: '/live',   Icon: NavIconLive,      isLive: true, carriesLeagueId: true },
-  { key: 'squad',  label: 'SQUAD',  path: '/squad',  Icon: NavIconSquad,                   carriesLeagueId: true },
-  { key: 'market', label: 'MARKET', path: '/market', Icon: NavIconMarket,                  carriesLeagueId: true },
-  // "Digest" here is the cross-league activity feed (RecapScreen, internally
-  // "My digest") — kept as a distinct label from the in-league "Recap" tab
-  // further down the screen (LeagueScreen's HubTabs) so the two aren't confused.
-  { key: 'digest', label: 'DIGEST', path: '/recap',  Icon: NavIconRecap,                   carriesLeagueId: true },
-];
-
 function buildF1Screens(paddockId) {
   const base = paddockId ? `/f1/${paddockId}` : '/f1';
   return [
@@ -151,12 +138,9 @@ export function CompetitionNav({
     active?.sport === 'football' ? active.id
     : activeComp?.sport === 'football' ? activeComp.id
     : (isFoot ? searchParams.get('leagueId') : null);
+  // Football: Squad/Market/Live live in the league's own tab row, so no second strip here.
   let screens = isFoot
-    ? FOOTBALL_SCREENS.map(s =>
-        footballLeagueId && s.carriesLeagueId
-          ? { ...s, href: `${s.path}?leagueId=${footballLeagueId}` }
-          : s
-      )
+    ? []
     : isF1 ? buildF1Screens(paddockId) : isTennis ? TENNIS_SCREENS : [];
 
   // Wishlist Draft tab — draft-mode football leagues only. Nested under
@@ -175,12 +159,7 @@ export function CompetitionNav({
   const isDraftLeague = draftLeagueComp?.format === 'noduplicate';
   if (isFoot && isDraftLeague && footballLeagueId) {
     const wishlistPath = `/league/${footballLeagueId}/wishlist`;
-    const marketIdx = screens.findIndex(s => s.key === 'market');
-    screens = [
-      ...screens.slice(0, marketIdx + 1),
-      { key: 'wishlist', label: 'WISHLIST', path: wishlistPath, href: wishlistPath, Icon: NavIconWishlist },
-      ...screens.slice(marketIdx + 1),
-    ];
+    screens = [{ key: 'wishlist', label: 'Wishlist', path: wishlistPath, href: wishlistPath, Icon: NavIconWishlist }];
   }
   const activeColor = isF1 ? 'var(--f1)' : isTennis ? 'var(--ten)' : 'var(--accent)';
   const homePath     = isFoot ? null : isF1 ? (paddockId ? `/f1/${paddockId}` : '/f1') : '/tennis';
