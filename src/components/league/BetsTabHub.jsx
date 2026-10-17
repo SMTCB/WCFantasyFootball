@@ -27,10 +27,10 @@ const SLUG_STYLE = {
   total_offsides_ou:  { g: '≷', tone: 'var(--gold)'     },
   total_subs_ou:      { g: '≷', tone: 'var(--gold)'     },
   goal_interval:      { g: '⏰', tone: 'var(--gold)'     },
-  top_scorer:         { g: '🎯', tone: 'var(--cyan)'     },
-  anytime_goalscorer: { g: '⚽', tone: 'var(--cyan)'     },
-  yellow_card:        { g: '🟨', tone: 'var(--cyan)'     },
-  man_of_match:       { g: '★', tone: 'var(--cyan)'      },
+  top_scorer:         { g: '🎯', tone: 'var(--accent)'     },
+  anytime_goalscorer: { g: '⚽', tone: 'var(--accent)'     },
+  yellow_card:        { g: '🟨', tone: 'var(--accent)'     },
+  man_of_match:       { g: '★', tone: 'var(--accent)'      },
   free_bet:           { g: '✏', tone: 'var(--mute)'     },
   player_block:       { g: '◈', tone: 'var(--mute)'     },
 };
@@ -38,7 +38,7 @@ const SLUG_STYLE = {
 const CAT_META = {
   match:   { label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
   stats:   { label: 'STATS',   color: 'var(--gold-text)',  icon: '📊' },
-  players: { label: 'PLAYERS', color: 'var(--cyan)',  icon: '🎯' },
+  players: { label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
   custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏' },
 };
 
@@ -67,14 +67,14 @@ function BetCard({ bet, squadId, onSubmitted }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: k.tone, fontFamily: DISPLAY, fontSize: 'var(--fs-body)', background: `${k.tone}15`, border: `1px solid ${k.tone}55`, flexShrink: 0 }}>{k.g}</span>
           <span style={{ fontFamily: DISPLAY, fontSize: 'clamp(12px, 3vw, 14px)', color: k.tone, letterSpacing: '-0.01em', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{bet.title?.toUpperCase()}</span>
-          {bet.scope_ref && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', flexShrink: 0 }}>· MD{bet.scope_ref}</span>}
+          {bet.scope_ref && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>· MD{bet.scope_ref}</span>}
           {bet.status !== 'resolved' && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', padding: '3px 7px', border: '1px solid rgba(34,197,94,.55)', background: 'rgba(34,197,94,.08)', letterSpacing: '.18em', flexShrink: 0 }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', padding: '3px 7px', border: '1px solid rgba(34,197,94,.55)', background: 'rgba(34,197,94,.08)', flexShrink: 0 }}>
               +{bet.reward_type === 'budget' ? '€' : ''}{bet.reward_value} {bet.reward_type === 'budget' ? 'M' : 'PTS'}
             </span>
           )}
           {bet.status === 'resolved' && bet.winners_count != null && bet.total_submissions != null && (
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', flexShrink: 0 }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
               {bet.winners_count}/{bet.total_submissions} correct
             </span>
           )}
@@ -109,8 +109,8 @@ function CategoryStrip({ category, bets, squadId, onSubmitted, collapsible }) {
         }}
       >
         <span style={{ fontSize: 'var(--fs-micro)' }}>{meta.icon}</span>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: meta.color, letterSpacing: '.2em', flex: 1 }}>{meta.label}</span>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>{bets.length}</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: meta.color, flex: 1 }}>{meta.label}</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{bets.length}</span>
         {collapsible && (
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 8 }}>{open ? '−' : '+'}</span>
         )}
@@ -155,11 +155,11 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible,
           tone={tone}
           right={
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>{bets.length} TOTAL</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{bets.length} TOTAL</span>
               {collapsible && (
                 <button className="hit-44"
                   onClick={() => setOpen(o => !o)}
-                  style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+                  style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
                 >
                   {open ? 'COLLAPSE −' : 'EXPAND +'}
                 </button>
@@ -176,7 +176,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible,
           tone={tone}
           right={
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>{bets.length}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{bets.length}</span>
               {collapsible && (
                 <button className="hit-44"
                   onClick={() => setOpen(o => !o)}
@@ -222,7 +222,7 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
       {/* Hero strip */}
       <div data-tour="bets-header" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--cyan)', letterSpacing: '.22em' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', }}>
             BETS &amp; PREDICTIONS · GW{currentGW ?? '—'}
           </div>
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 26px)', marginTop: 6, lineHeight: 1.1 }}>
@@ -232,12 +232,12 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
           {[
-            { k: 'OPEN',    v: open.length,     tone: 'var(--cyan)'     },
+            { k: 'OPEN',    v: open.length,     tone: 'var(--accent)'     },
             { k: 'PENDING', v: pending.length,  tone: 'var(--gold)'     },
             { k: 'BANKED',  v: `+${ptsBanked}`, tone: 'var(--positive)' },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 20px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{c.k}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 30px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
             </div>
           ))}
@@ -247,15 +247,15 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
       {/* Content */}
       <div data-tour="bets-list" style={{ flex: 1, minHeight: 60, overflow: 'auto', paddingBottom: 80 }}>
         {loading && (
-          <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING BETS…</div>
+          <div style={{ padding: '48px 24px', textAlign: 'center', fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading bets…</div>
         )}
         {error && (
-          <div style={{ padding: '24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.18em' }}>FAILED TO LOAD: {error}</div>
+          <div style={{ padding: '24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', }}>FAILED TO LOAD: {error}</div>
         )}
         {!loading && !error && bets.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
             <div style={{ fontSize: 'var(--fs-title)' }}>🎯</div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO BETS YET</div>
+            <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>No bets yet</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>
               The commissioner can create prediction widgets from the Admin tab.
             </div>
@@ -266,9 +266,9 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
           <>
             {/* OPEN — always visible, never collapsible */}
             <BetSection
-              label="OPEN"
-              sub="MAKE YOUR PICKS"
-              tone="var(--cyan)"
+              label="Open"
+              sub="Make your picks"
+              tone="var(--accent)"
               bets={open}
               squadId={squadId}
               onSubmitted={refetch}
@@ -278,8 +278,8 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
 
             {/* PENDING RESULTS — collapsible, default collapsed */}
             <BetSection
-              label="PENDING RESULTS"
-              sub="WAITING ON THE PITCH"
+              label="Pending results"
+              sub="Waiting on the pitch"
               tone="var(--gold)"
               bets={pending}
               squadId={squadId}
@@ -290,8 +290,8 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
 
             {/* RESULTS — collapsible section + collapsible categories within */}
             <BetSection
-              label="RESULTS"
-              sub="HISTORY"
+              label="Results"
+              sub="History"
               tone="var(--mute)"
               bets={resolved}
               squadId={squadId}
