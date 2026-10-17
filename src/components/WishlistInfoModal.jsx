@@ -3,10 +3,10 @@ import BottomSheet from './shared/BottomSheet';
 const MONO    = 'var(--font-mono, monospace)';
 const DISPLAY = 'Archivo Black, sans-serif';
 
-function Section({ title, children, accent = 'var(--cyan)' }) {
+function Section({ title, children, accent = 'var(--accent)' }) {
   return (
     <div style={{ padding: '14px 20px 0' }}>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: accent, marginBottom: 8 }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: accent, marginBottom: 8 }}>
         {title}
       </div>
       {children}
@@ -17,8 +17,8 @@ function Section({ title, children, accent = 'var(--cyan)' }) {
 function InfoBox({ children }) {
   return (
     <div style={{
-      background: 'var(--shell-fill)', borderRadius: 6, padding: '10px 14px',
-      fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
+      background: 'var(--elev)', borderRadius: 'var(--radius)', padding: '10px 14px',
+      fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.8,
     }}>
       {children}
     </div>
@@ -29,14 +29,14 @@ export default function WishlistInfoModal({ onClose }) {
   return (
     <BottomSheet ariaLabel="Wishlist draft info"
       onClose={onClose}
-      background="var(--ink)"
+      background="var(--card)"
       maxWidth={480}
       showHandle={false}
       contentStyle={{ padding: '0 0 32px' }}
     >
       {/* Sticky header */}
       <div style={{
-        position: 'sticky', top: 0, background: 'var(--ink)', zIndex: 1,
+        position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1,
         borderBottom: '1px solid var(--rule)',
       }}>
         <div style={{
@@ -45,17 +45,17 @@ export default function WishlistInfoModal({ onClose }) {
         }}>
           <div>
             <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>
-              WISHLIST DRAFT
+              Wishlist draft
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>
-              WHAT IT IS · HOW IT WORKS
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
+              What it is · how it works
             </div>
           </div>
           <button
             onClick={onClose}
             style={{
               background: 'none', border: 'none', color: 'var(--mute)',
-              fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', cursor: 'pointer', padding: 4,
+              fontFamily: MONO, fontSize: 'var(--fs-label)', cursor: 'pointer', padding: 4,
             }}
           >
             CLOSE
@@ -63,7 +63,7 @@ export default function WishlistInfoModal({ onClose }) {
         </div>
       </div>
 
-      <Section title="WHAT IT IS">
+      <Section title="What it is">
         <InfoBox>
           <div>
             A recurring pick list, exclusive to draft-mode leagues. Each round, every manager
@@ -73,7 +73,7 @@ export default function WishlistInfoModal({ onClose }) {
         </InfoBox>
       </Section>
 
-      <Section title="WHY IT EXISTS">
+      <Section title="Why it exists">
         <InfoBox>
           <div>
             In a draft league every player belongs to at most one manager. The Wishlist Draft
@@ -84,10 +84,10 @@ export default function WishlistInfoModal({ onClose }) {
         </InfoBox>
       </Section>
 
-      <Section title="HOW IT RESOLVES">
+      <Section title="How it resolves">
         <InfoBox>
           <div style={{ marginBottom: 8 }}>
-            Submissions are worked through in a <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>rotating snake order</span> —
+            Submissions are worked through in a <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>rotating snake order</span> —
             the manager who picks first shifts by one seat every round, so no one gets stuck
             last every time.
           </div>
@@ -97,38 +97,38 @@ export default function WishlistInfoModal({ onClose }) {
             nominated. This continues until every manager's list is exhausted or no eligible
             targets remain.
           </div>
-          <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>
+          <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>
             Only players not already on any roster in the league are eligible targets — the
             list below is automatically filtered to exclude anyone already owned.
           </div>
         </InfoBox>
       </Section>
 
-      <Section title="WHEN IT RUNS">
+      <Section title="When it runs">
         <InfoBox>
           <div style={{ marginBottom: 8 }}>
             Your commissioner picks one of three settings for each round:
           </div>
           <div style={{ marginBottom: 6 }}>
-            <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>AUTO</span> — the draft runs at a set
+            <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>AUTO</span> — the draft runs at a set
             date and time, shown on the league banner (announced at least 6 hours ahead).
           </div>
           <div style={{ marginBottom: 6 }}>
-            <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>MANUAL</span> — the commissioner runs it.
+            <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>MANUAL</span> — the commissioner runs it.
             If they don't, it runs automatically 8 hours before the round's first kickoff.
           </div>
           <div style={{ marginBottom: 8 }}>
-            <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>DISABLED</span> — no draft this round:
+            <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>DISABLED</span> — no draft this round:
             the market is open, first come, first served. Your list is kept for when the draft returns.
           </div>
-          <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>
+          <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>
             While a draft is pending the market is locked, but player-to-player trades still work.
             The market opens right after the draft runs.
           </div>
         </InfoBox>
       </Section>
 
-      <Section title="IF A TARGET IS GONE">
+      <Section title="If a target is gone">
         <InfoBox>
           <div>
             If someone else owns one of your targets by the time the draft runs (for example,
@@ -139,11 +139,11 @@ export default function WishlistInfoModal({ onClose }) {
         </InfoBox>
       </Section>
 
-      <Section title="EDITING YOUR LIST">
+      <Section title="Editing your list">
         <InfoBox>
           <div>
             You can keep changing your targets and releases right up until the draft runs.
-            Changes auto-save as you go — use <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>SAVE</span> to
+            Changes auto-save as you go — use <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>SAVE</span> to
             checkpoint your list, or <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>SUBMIT</span> once
             you're happy with it. Submitting doesn't lock anything — you can still return and
             adjust your list until the draft runs.

@@ -140,13 +140,11 @@ export default function AuthScreen() {
 
   const labelStyle = {
     display: 'block',
-    fontSize: 'var(--fs-micro)',
+    fontSize: 'var(--fs-label)',
     fontWeight: 700,
-    letterSpacing: '0.15em',
-    textTransform: 'uppercase',
     color: 'var(--mute)',
     marginBottom: '6px',
-    fontFamily: 'JetBrains Mono, monospace',
+    fontFamily: 'Archivo, sans-serif',
   };
 
 
@@ -154,7 +152,7 @@ export default function AuthScreen() {
   if (tab === TAB_RECOVER) {
     return (
       <AuthShell>
-        <h2 style={{ fontSize: 'var(--fs-heading)', fontWeight: 900, color: 'var(--paper)', marginBottom: '24px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <h2 style={{ fontSize: 'var(--fs-heading)', fontWeight: 900, color: 'var(--paper)', marginBottom: '24px', fontFamily: 'Archivo Black, sans-serif' }}>
           Set New Password
         </h2>
         <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -180,7 +178,7 @@ export default function AuthScreen() {
       <AuthShell>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{ fontSize: 'var(--fs-display)', marginBottom: '16px' }}>✉️</div>
-          <h2 style={{ fontSize: 'var(--fs-heading)', fontWeight: 900, color: 'var(--paper)', marginBottom: '10px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <h2 style={{ fontSize: 'var(--fs-heading)', fontWeight: 900, color: 'var(--paper)', marginBottom: '10px', fontFamily: 'Archivo Black, sans-serif' }}>
             Check Your Inbox
           </h2>
           <p style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)', lineHeight: 1.6 }}>
@@ -213,7 +211,7 @@ export default function AuthScreen() {
           </Button>
         </div>
 
-        <p style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', marginTop: '20px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', marginTop: '20px', lineHeight: 1.5 }}>
           Can't find it? Check your spam folder, or resend after the cooldown.
         </p>
       </AuthShell>
@@ -233,7 +231,7 @@ export default function AuthScreen() {
         >
           Back to Sign In
         </Button>
-        <h2 style={{ fontSize: 'var(--fs-heading)', fontWeight: 900, color: 'var(--paper)', marginBottom: '8px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <h2 style={{ fontSize: 'var(--fs-heading)', fontWeight: 900, color: 'var(--paper)', marginBottom: '8px', fontFamily: 'Archivo Black, sans-serif' }}>
           Reset Password
         </h2>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--mute)', marginBottom: '24px' }}>
@@ -257,7 +255,7 @@ export default function AuthScreen() {
   return (
     <AuthShell>
       {/* Tab strip */}
-      <div role="tablist" aria-label="Account" style={{ display: 'flex', borderBottom: '1px solid var(--shell-rule)', marginBottom: '28px' }}>
+      <div role="tablist" aria-label="Account" style={{ display: 'flex', borderBottom: '1px solid var(--rule)', marginBottom: '28px' }}>
         {[{ id: TAB_SIGNIN, label: 'Sign In' }, { id: TAB_SIGNUP, label: 'Create Account' }].map(t => (
           <button
             key={t.id}
@@ -273,12 +271,10 @@ export default function AuthScreen() {
               padding: '10px',
               background: 'none',
               border: 'none',
-              borderBottom: tab === t.id ? '2px solid var(--cyan)' : '2px solid transparent',
+              borderBottom: tab === t.id ? '2px solid var(--accent)' : '2px solid transparent',
               color: tab === t.id ? 'var(--paper)' : 'var(--mute)',
-              fontSize: 'var(--fs-micro)',
+              fontSize: 'var(--fs-label)',
               fontWeight: 800,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
               cursor: 'pointer',
               fontFamily: 'Archivo Black, sans-serif',
               transition: 'color 0.15s',
@@ -343,14 +339,14 @@ export default function AuthScreen() {
 // ── Sub-components ────────────────────────────────────────────────────────────
 function AuthShell({ children }) {
   return (
-    <div style={{ minHeight: '100svh', background: 'var(--shell)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+    <div style={{ minHeight: '100svh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       {/* Brandmark */}
       <div style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-        <BrandMark theme="dark" scale={0.9} compact={false} />
+        <BrandMark theme="light" scale={0.9} compact={false} />
       </div>
 
       {/* Card */}
-      <div style={{ width: '100%', maxWidth: '400px', background: 'var(--card)', border: '1px solid var(--shell-rule)', borderRadius: '6px', padding: '32px' }}>
+      <div style={{ width: '100%', maxWidth: '400px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: '6px', padding: '32px' }}>
         {children}
       </div>
     </div>

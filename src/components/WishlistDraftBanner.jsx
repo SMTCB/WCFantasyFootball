@@ -15,12 +15,12 @@ export default function WishlistDraftBanner({ leagueId }) {
   const { phase, mode, scheduledAt, hardDeadlineAt } = draft;
 
   let icon = hasSubmission ? '✅' : '📋';
-  let tone = hasSubmission ? 'var(--positive)' : 'var(--cyan)';
-  let bg   = hasSubmission ? 'var(--pos-bg)' : 'var(--accent-bg)';
+  let tone = hasSubmission ? 'var(--positive)' : 'var(--accent)';
+  let bg   = hasSubmission ? 'var(--pos-bg)' : 'var(--accent-soft)';
   let msg;
 
   if (phase === 'running') {
-    icon = '⏳'; tone = 'var(--gold)'; bg = 'var(--accent-bg)';
+    icon = '⏳'; tone = 'var(--gold)'; bg = 'var(--accent-soft)';
     msg = `Round ${roundNumber} wishlist draft running — market opens in a moment`;
   } else if (phase === 'free_market') {
     icon = '🛒'; tone = 'var(--mute)'; bg = 'var(--card)';
@@ -45,9 +45,9 @@ export default function WishlistDraftBanner({ leagueId }) {
     >
       <div className="flex items-center gap-2 min-w-0">
         <span style={{ fontSize: 'var(--fs-body)' }}>{icon}</span>
-        <span className="text-[11px] font-bold" style={{ color: tone }}>{msg}</span>
+        <span className="text-[length:var(--fs-micro)] font-bold" style={{ color: tone }}>{msg}</span>
       </div>
-      <span className="text-[11px] font-black uppercase tracking-widest shrink-0" style={{ color: 'var(--mute)' }}>
+      <span className="text-[length:var(--fs-micro)] font-black shrink-0" style={{ color: 'var(--mute)' }}>
         {hasSubmission ? 'Edit' : 'Open'} ›
       </span>
     </button>

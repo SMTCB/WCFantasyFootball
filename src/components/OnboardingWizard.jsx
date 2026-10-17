@@ -312,9 +312,8 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             <button className="hit-44"
               onClick={handleSkip}
               style={{
-                fontSize: 'var(--fs-micro)',
+                fontSize: 'var(--fs-label)',
                 color:         'var(--mute)',
-                letterSpacing: '0.05em',
                 fontFamily:    'Archivo Black, sans-serif',
                 background:    'none',
                 border:        'none',
@@ -343,11 +342,9 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         {/* Kicker */}
         <div
           style={{
-            fontSize: 'var(--fs-micro)',
+            fontSize: 'var(--fs-label)',
             fontFamily:    'Archivo Black, sans-serif',
-            letterSpacing: '0.15em',
             color:         'var(--gold-text)',
-            textTransform: 'uppercase',
             marginBottom:  '8px',
           }}
         >
@@ -362,7 +359,6 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             fontWeight:   900,
             lineHeight:   1.05,
             color:        'var(--paper)',
-            textTransform: 'uppercase',
             letterSpacing: '-0.01em',
             marginBottom: '20px',
             whiteSpace:   'pre-line',
@@ -396,7 +392,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
               autoFocus
               style={{
                 width: '100%',
-                fontFamily: 'JetBrains Mono, monospace',
+                fontFamily: 'Archivo, sans-serif',
                 fontSize: 'var(--fs-body-lg)',
                 color: 'var(--paper)',
                 textAlign: 'center',
@@ -406,15 +402,14 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 borderRadius: 8,
                 outline: 'none',
                 boxSizing: 'border-box',
-                letterSpacing: '0.04em',
               }}
             />
             {usernameError && (
-              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', textAlign: 'center', letterSpacing: '.08em' }}>
+              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)', textAlign: 'center' }}>
                 {usernameError}
               </p>
             )}
-            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', letterSpacing: '.08em' }}>
+            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
               3–30 characters · can be changed later in Settings
             </p>
           </div>
@@ -424,7 +419,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         {current.isClubhouseStep && (
           <div style={{ width: '100%', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {/* Mode toggle */}
-            <div style={{ display: 'flex', gap: 0, border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', gap: 0, border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
               {['create', 'join'].map(m => (
                 <button
                   key={m}
@@ -432,8 +427,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                   onClick={() => { setClubhouseMode(m); setClubhouseError(''); }}
                   style={{
                     flex: 1, padding: '9px 0', border: 'none', cursor: 'pointer',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)',
                     background: clubhouseMode === m ? 'var(--accent)' : 'transparent',
                     color: clubhouseMode === m ? 'var(--on-accent)' : 'var(--mute)',
                   }}
@@ -455,7 +449,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 style={{
                   width: '100%', padding: '12px 14px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)',
                   color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
-                  borderRadius: 6, outline: 'none', boxSizing: 'border-box',
+                  borderRadius: 'var(--radius)', outline: 'none', boxSizing: 'border-box',
                 }}
               />
             ) : (
@@ -463,20 +457,20 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 type="text"
                 value={clubhouseCode}
                 onChange={e => { setClubhouseCode(e.target.value.toUpperCase()); setClubhouseError(''); }}
-                placeholder="INVITE CODE"
+                placeholder="Invite code"
                 maxLength={8}
                 autoFocus
                 style={{
-                  width: '100%', padding: '12px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-heading)',
-                  fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
+                  width: '100%', padding: '12px 14px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-heading)',
+                  fontWeight: 700,
                   color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
-                  borderRadius: 6, outline: 'none', boxSizing: 'border-box',
+                  borderRadius: 'var(--radius)', outline: 'none', boxSizing: 'border-box',
                 }}
               />
             )}
 
             {clubhouseError && (
-              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.08em', margin: 0 }}>
+              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)', margin: 0 }}>
                 {clubhouseError}
               </p>
             )}
@@ -495,8 +489,6 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             fontSize: 'var(--fs-body)',
             fontFamily:    'Archivo Black, sans-serif',
             fontWeight:    800,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
             border:        'none',
             borderRadius:  '8px',
             cursor:        'pointer',
@@ -516,10 +508,9 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           style={{
             textAlign:     'center',
             marginTop:     '20px',
-            fontSize: 'var(--fs-micro)',
+            fontSize: 'var(--fs-label)',
             color:         'var(--mute)',
             fontFamily:    'Archivo Black, sans-serif',
-            letterSpacing: '0.1em',
           }}
         >
           {step + 1} / {STEPS.length}
@@ -530,10 +521,9 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
       <div
         style={{
           marginTop:     '20px',
-          fontSize: 'var(--fs-micro)',
+          fontSize: 'var(--fs-label)',
           color:         'var(--mute)',
           fontFamily:    'Archivo Black, sans-serif',
-          letterSpacing: '0.08em',
         }}
       >
         Press <kbd style={{ background: 'var(--rule)', padding: '1px 5px', borderRadius: '3px' }}>→</kbd> to advance
