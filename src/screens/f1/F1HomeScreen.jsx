@@ -56,18 +56,17 @@ function RaceStatusBadge({ race, isNext, isPast }) {
   } else if (race.status === 'qualifying') {
     bg = 'rgba(26,111,168,0.12)'; color = 'var(--accent)'; label = 'QUALIFYING';
   } else if (isNext) {
-    bg = 'var(--f1)'; color = '#fff'; label = 'PICKS OPEN';
+    bg = 'var(--f1)'; color = '#fff'; label = 'Picks open';
   } else if (isPast) {
-    bg = 'var(--elev)'; color = 'var(--mute)'; label = 'RESULTS PENDING';
+    bg = 'var(--elev)'; color = 'var(--mute)'; label = 'Results pending';
   } else {
     bg = 'var(--elev)'; color = 'var(--mute)'; label = 'UPCOMING';
   }
   return (
     <span style={{
-      fontFamily: 'JetBrains Mono, monospace',
-      fontSize: 'var(--fs-micro)',
+      fontFamily: 'Archivo, sans-serif',
+      fontSize: 'var(--fs-label)',
       fontWeight: 700,
-      letterSpacing: '0.12em',
       padding: '2px 7px',
       borderRadius: 3,
       background: bg,
@@ -123,12 +122,12 @@ export default function F1HomeScreen() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.12em' }}>LOADING…</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
       </div>
     );
   }
 
-  const MONO = { fontFamily: 'JetBrains Mono, monospace' };
+  const MONO = { fontFamily: 'Archivo, sans-serif' };
   const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
 
   const PADDOCK_CARDS = [
@@ -148,22 +147,22 @@ export default function F1HomeScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
 
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '20px 16px 16px' }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--sport-marker, var(--accent))', padding: '20px 16px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 4 }}>
+            <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
               🏎 Formula 1 · 2026
             </div>
             <button
               onClick={() => setShowSelector(s => !s)}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
             >
-              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-shell)', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 8 }}>
-                {activePaddock?.name ?? 'SELECT PADDOCK'} <span style={{ fontSize: 'var(--fs-label)', opacity: 0.5 }}>▾</span>
+              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                {activePaddock?.name ?? 'Select paddock'} <span style={{ fontSize: 'var(--fs-label)', opacity: 0.5 }}>▾</span>
                 {activePaddock?.archived && <ArchivedBadge />}
               </div>
             </button>
-            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '0.12em', marginTop: 2 }}>
+            <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
               {activePaddock?.member_count ?? 0} members · {finished.length}/{races.length} races
             </div>
           </div>
@@ -173,7 +172,7 @@ export default function F1HomeScreen() {
               <button
                 onClick={() => setShowSettings(true)}
                 aria-label="Paddock settings"
-                style={{ padding: '8px 10px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--on-shell)' }}
+                style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--text)' }}
               >
                 ⚙
               </button>
@@ -182,9 +181,9 @@ export default function F1HomeScreen() {
             {paddockId && (
               <button
                 onClick={() => navigate(`/f1/${paddockId}/admin`)}
-                style={{ padding: '8px 14px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--on-shell)', whiteSpace: 'nowrap' }}
+                style={{ padding: '8px 14px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap' }}
               >
-                ADMIN
+                Admin
               </button>
             )}
           </div>
@@ -192,31 +191,31 @@ export default function F1HomeScreen() {
 
         {/* Paddock switcher dropdown */}
         {showSelector && myPaddocks.length > 1 && (
-          <div style={{ marginTop: 10, background: 'rgba(0,0,0,0.25)', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--shell-rule-strong)' }}>
+          <div style={{ marginTop: 10, background: 'var(--elev)', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--rule)' }}>
             {visiblePaddocks.map(p => (
               <button
                 key={p.paddock_id}
                 onClick={() => { switchPaddock(p.paddock_id); navigate(`/f1/${p.paddock_id}`); setShowSelector(false); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(225,6,0,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid var(--shell-rule)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: p.paddock_id === paddockId ? 'var(--f1)' : 'var(--on-shell)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(225,6,0,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid var(--rule)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: p.paddock_id === paddockId ? 'var(--f1)' : 'var(--text)' }}
               >
                 {p.name}
-                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)' }}>{p.member_count}m</span>
+                <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{p.member_count}m</span>
                 {p.archived && <ArchivedBadge />}
               </button>
             ))}
             {archivedPaddockCount > 0 && (
               <button
                 onClick={() => setShowArchived(v => !v)}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--shell-rule)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '0.1em' }}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--rule)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
               >
-                {showArchived ? '▾ HIDE' : '▸ SHOW'} ARCHIVED ({archivedPaddockCount})
+                {showArchived ? '▾ Hide' : '▸ Show'} archived ({archivedPaddockCount})
               </button>
             )}
             <button
               onClick={() => { navigate('/f1'); setShowSelector(false); }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '0.1em' }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
             >
-              + JOIN OR CREATE PADDOCK
+              + Join or create paddock
             </button>
           </div>
         )}
@@ -240,32 +239,32 @@ export default function F1HomeScreen() {
           {/* Next Race countdown — solid f1-red fill, the module's single highest-priority element */}
           {nextRace && nextRace.status !== 'finished' && (
             <div style={{ background: 'var(--f1)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--on-shell)', textTransform: 'uppercase', marginBottom: 8 }}>
-                R{nextRace.round_number} · Next Race
+              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--on-accent)', marginBottom: 8 }}>
+                R{nextRace.round_number} · Next race
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                 <div>
                   <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)' }}>
                     {getFlag(nextRace.gp_name)} {nextRace.gp_name}
                   </div>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell)', marginTop: 3 }}>
+                  <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--on-accent)', marginTop: 3 }}>
                     {nextRace.circuit}
                   </div>
                 </div>
                 {countdown && (
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-accent)' }}>
+                    <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-accent)' }}>
                       {countdown.d > 0 ? `${countdown.d}d ${countdown.h}h` : `${countdown.h}h ${countdown.m}m`}
                     </div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell)', letterSpacing: '0.12em' }}>TO RACE</div>
+                    <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--on-accent)' }}>To race</div>
                   </div>
                 )}
               </div>
               <button
                 onClick={() => goToPicks(nextRace.round_number)}
-                style={{ display: 'block', width: '100%', padding: '10px', background: 'var(--on-accent)', color: 'var(--f1)', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
+                style={{ display: 'block', width: '100%', minHeight: 'var(--tap)', padding: '10px', background: 'var(--on-accent)', color: 'var(--f1)', borderRadius: 'var(--radius)', ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
               >
-                SUBMIT PICKS FOR R{nextRace.round_number} →
+                Submit picks for R{nextRace.round_number} →
               </button>
             </div>
           )}
@@ -273,35 +272,35 @@ export default function F1HomeScreen() {
           {/* Leaderboard preview */}
           {leaderboard.length > 0 && (
             <>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
+              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
                 Top of the Paddock
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {leaderboard.slice(0, 5).map(m => {
                   const isMe = user && m.user_id === user.id;
                   return (
-                    <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isMe ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isMe ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, padding: '10px 12px' }}>
+                    <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isMe ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isMe ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', padding: '10px 12px' }}>
                       <CompetitionRankBadge rank={m.rank} accent="var(--f1)" size="sm" />
                       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)', fontWeight: isMe ? 700 : 400, flex: 1 }}>
                         {m.display_name}{isMe ? ' (You)' : ''}
                       </span>
                       <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)' }}>{m.total_points}</span>
-                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>PTS</span>
+                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>PTS</span>
                     </div>
                   );
                 })}
               </div>
               <button
                 onClick={() => navigate(`/f1/${paddockId}/standings`)}
-                style={{ display: 'block', width: '100%', marginBottom: 20, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--f1)', letterSpacing: '0.12em', textAlign: 'center' }}
+                style={{ display: 'block', width: '100%', marginBottom: 20, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--f1)', textAlign: 'center' }}
               >
-                FULL STANDINGS →
+                Full standings →
               </button>
             </>
           )}
 
           {/* Full calendar */}
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
+          <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
             2026 Season Calendar
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -317,7 +316,7 @@ export default function F1HomeScreen() {
                     onClick={() => setExpandedRound(isExpanded ? null : race.round_number)}
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'var(--f1-bg)' : 'var(--card)', border: isNext ? '2px solid var(--f1)' : '1px solid var(--rule)', borderBottom: isExpanded ? 'none' : undefined, borderRadius: isExpanded ? '6px 6px 0 0' : 6, cursor: 'pointer', opacity: isDimmed && !isExpanded ? 0.42 : 1, textAlign: 'left', width: '100%' }}
                   >
-                    <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', minWidth: 24, textAlign: 'right' }}>
+                    <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 24, textAlign: 'right' }}>
                       R{race.round_number}
                     </span>
                     <span style={{ fontSize: 'var(--fs-body-lg)' }}>{getFlag(race.gp_name)}</span>
@@ -325,13 +324,13 @@ export default function F1HomeScreen() {
                       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {race.gp_name}
                       </div>
-                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 1 }}>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 1 }}>
                         {new Date(race.race_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                        {race.is_saturday ? ' · SPRINT' : ''}
+                        {race.is_saturday ? ' · Sprint' : ''}
                       </div>
                     </div>
                     {race.status === 'finished' && race.result_p1 && !isExpanded ? (
-                      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>
+                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'right' }}>
                         🏆 {race.result_p1.split(' ').pop()}
                       </span>
                     ) : race.status === 'finished' && race.result_p1 ? null : (
@@ -345,7 +344,7 @@ export default function F1HomeScreen() {
           </div>
 
           {/* Shortcuts */}
-          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', margin: '20px 0 10px' }}>
+          <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '20px 0 10px' }}>
             Paddock Shortcuts
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
@@ -356,10 +355,10 @@ export default function F1HomeScreen() {
                 style={{ padding: '18px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}
               >
                 <span style={{ fontSize: 'var(--fs-title)' }}>{card.icon}</span>
-                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--paper)', whiteSpace: 'pre-line' }}>
+                <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)', whiteSpace: 'pre-line' }}>
                   {card.label}
                 </span>
-                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--f1)', letterSpacing: '0.08em' }}>VIEW →</span>
+                <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--f1)' }}>View →</span>
               </button>
             ))}
           </div>
