@@ -104,7 +104,7 @@ function CategoryStrip({ category, bets, squadId, onSubmitted, collapsible }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: 'clamp(5px, 1.5vw, 8px) clamp(12px, 4vw, 24px)',
-          borderBottom: '1px solid var(--shell-rule)',
+          borderBottom: '1px solid var(--rule)',
           cursor: collapsible ? 'pointer' : 'default',
         }}
       >

@@ -42,7 +42,7 @@ function Sparkline({ data, myColor = 'var(--positive)', rivalColor = 'var(--dang
     <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ height }}>
       {/* Grid lines */}
       {[0.25, 0.5, 0.75].map(f => (
-        <line key={f} x1={0} y1={height * f} x2={width} y2={height * f} stroke="var(--shell-rule)" strokeWidth={1} />
+        <line key={f} x1={0} y1={height * f} x2={width} y2={height * f} stroke="var(--rule)" strokeWidth={1} />
       ))}
 
       {/* Rival line */}

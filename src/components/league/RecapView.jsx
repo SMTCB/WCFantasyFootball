@@ -101,7 +101,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
 
   return (
     <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--card)' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid var(--shell-rule)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid var(--rule)' }}>
         {['POS', 'PLAYER', 'MIN', 'PTS'].map((h, i) => (
           <span key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</span>
         ))}
@@ -135,8 +135,8 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
               onClick={() => p.hasStats && setExpandedPid(isExpanded ? null : p.id)}
               style={{
                 display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
-                padding: '7px 24px', borderBottom: isExpanded ? 'none' : '1px solid var(--shell-rule)',
-                background: isExpanded ? 'var(--shell-fill)' : i % 2 === 0 ? 'transparent' : 'var(--shell-fill)',
+                padding: '7px 24px', borderBottom: isExpanded ? 'none' : '1px solid var(--rule)',
+                background: isExpanded ? 'var(--elev)' : i % 2 === 0 ? 'transparent' : 'var(--elev)',
                 cursor: p.hasStats ? 'pointer' : 'default',
               }}>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: posColor, }}>{p.position}</span>
@@ -150,7 +150,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
               </span>
             </div>
             {isExpanded && (
-              <div style={{ padding: '4px 24px 10px 56px', borderBottom: '1px solid var(--shell-rule)', background: 'var(--shell-fill)' }}>
+              <div style={{ padding: '4px 24px 10px 56px', borderBottom: '1px solid var(--rule)', background: 'var(--elev)' }}>
                 {items.map((item, ii) => (
                   <div key={ii} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0' }}>
                     <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{item.label}</span>
@@ -163,7 +163,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
                   <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '4px 0', }}>No scoring data</div>
                 )}
                 {mult > 1 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0 0', marginTop: 2, borderTop: '1px solid var(--shell-rule)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0 0', marginTop: 2, borderTop: '1px solid var(--rule)' }}>
                     <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', }}>{p.triple ? 'TRIPLE CAPTAIN ×3' : 'CAPTAIN ×2'}</span>
                     <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>{displayPts[i]}</span>
                   </div>
@@ -224,14 +224,14 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
       )}
       {benchBreakdown.length > 0 && (
         <div>
-          <div style={{ height: 1, background: 'var(--shell-fill)', margin: '0 24px' }} />
+          <div style={{ height: 1, background: 'var(--elev)', margin: '0 24px' }} />
           <div style={{ padding: '5px 24px 2px', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Bench</span>
           </div>
           {benchBreakdown.map((p) => (
             <div key={p.id} style={{
               display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
-              padding: '5px 24px', borderBottom: '1px solid var(--shell-rule)',
+              padding: '5px 24px', borderBottom: '1px solid var(--rule)',
               opacity: 0.45,
             }}>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{p.position}</span>

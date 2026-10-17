@@ -34,7 +34,7 @@ export default memo(function PlayerStatsPanel({
     return (
       <div style={{
         padding: '8px 16px 10px', borderBottom: '1px solid var(--rule)',
-        background: 'var(--shell-fill)',
+        background: 'var(--elev)',
       }}>
         <div className="fk-mono animate-pulse" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.18em' }}>
           LOADING STATS…
@@ -48,7 +48,7 @@ export default memo(function PlayerStatsPanel({
   return (
     <div style={{
       borderBottom: '1px solid var(--rule)',
-      background: 'var(--shell-fill)',
+      background: 'var(--elev)',
       padding: '10px 16px 12px 52px', // indent past position chip
     }}>
 
@@ -68,7 +68,7 @@ export default memo(function PlayerStatsPanel({
           </thead>
           <tbody>
             {rounds.map((r, i) => (
-              <tr key={i} style={{ borderTop: '1px solid var(--shell-rule)' }}>
+              <tr key={i} style={{ borderTop: '1px solid var(--rule)' }}>
                 <TD color="var(--mute)">{r.gw}</TD>
                 <TD>{r.fixture}</TD>
                 <TD right color="var(--mute)">{r.mins ?? 0}'</TD>
