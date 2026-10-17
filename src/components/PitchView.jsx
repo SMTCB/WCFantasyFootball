@@ -305,7 +305,7 @@ export default function PitchView({
             right:      24,
             top:        `${y}%`,
             height:     1,
-            background: 'var(--shell-fill-active)',
+            background: 'var(--pitch-line)',
           }} />
         ))}
 
@@ -336,7 +336,7 @@ export default function PitchView({
             transform:     'translateY(-50%)',
             fontFamily:    'JetBrains Mono, monospace',
             fontSize: 'var(--fs-micro)',
-            color:         'var(--on-shell-mid)',
+            color:         'var(--on-pitch-mid)',
             background:    'rgba(0,0,0,0.3)',
             padding:       '2px 4px',
             letterSpacing: '.18em',
@@ -353,7 +353,7 @@ export default function PitchView({
           right:      '10%',
           top:        '50%',
           height:     1,
-          background: 'var(--shell-fill-active)',
+          background: 'var(--pitch-line)',
         }} />
         <div style={{
           position:     'absolute',
@@ -363,7 +363,7 @@ export default function PitchView({
           width:        160,
           height:       160,
           borderRadius: '50%',
-          border:       '1px solid var(--shell-rule-emphasis)',
+          border:       '1px solid var(--pitch-line-strong)',
         }} />
 
         {/* ── Fixture context strip ───────────────────────────────── */}

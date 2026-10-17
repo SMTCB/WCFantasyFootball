@@ -36,14 +36,14 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
       >
         {/* Lane lines */}
         {[22, 46, 70, 92].map(y => (
-          <div key={y} style={{ position: 'absolute', left: 12, right: 12, top: `${y}%`, height: 1, background: 'var(--shell-fill-active)' }} />
+          <div key={y} style={{ position: 'absolute', left: 12, right: 12, top: `${y}%`, height: 1, background: 'var(--pitch-line)' }} />
         ))}
 
         {/* Halfway line + centre circle */}
-        <div style={{ position: 'absolute', left: '8%', right: '8%', top: '50%', height: 1, background: 'var(--shell-fill-active)' }} />
+        <div style={{ position: 'absolute', left: '8%', right: '8%', top: '50%', height: 1, background: 'var(--pitch-line)' }} />
         <div style={{
           position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)',
-          width: 104, height: 104, borderRadius: '50%', border: '1px solid var(--shell-rule-emphasis)',
+          width: 104, height: 104, borderRadius: '50%', border: '1px solid var(--pitch-line-strong)',
         }} />
 
         {/* Fixture context strip */}

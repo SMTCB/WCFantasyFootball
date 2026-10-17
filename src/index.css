@@ -75,7 +75,6 @@
   --bg:       #F7F3ED;   /* page background  */
   --card:     #FFFFFF;   /* card surface     */
   --elev:     #EDEAE2;   /* elevated panels  */
-  --shell:    #18202E;   /* sidebar — the ONE dark element */
 
   /* Backward-compat surface aliases */
   --rule:     #E2DDD5;
@@ -89,29 +88,29 @@
   --brand-accent: #1A6FA8;
   --accent:         var(--brand-accent);
   --gold:           #B8720E;
-  /* Text on --shell (dark navy) surfaces */
-  --on-shell:       #ffffff;               /* full-brightness text on shell/nav headers */
+  /* Text on dark pitch / share-card surfaces */
+  --on-pitch:       #ffffff;               /* full-brightness text on dark pitch/share surfaces */
   --on-accent:      #ffffff;               /* text/icons on solid accent, danger, success fills */
   --purple:         #a855f7;               /* tennis / special-event accent */
   --medal-silver:   #c0c0c0;
   --medal-bronze:   #cd7f32;
-  --on-shell-faint: rgba(255,255,255,.3);  /* lowest-emphasis text on shell — placeholders, disabled */
-  --on-shell-dim:   rgba(255,255,255,.55); /* muted eyebrow labels on shell — raised from .45 for WCAG AA (~5.3:1) */
-  --on-shell-mid:   rgba(255,255,255,.7);  /* mid-emphasis text on shell — between dim and full */
-  --on-shell-accent: #5FB3E5; /* --accent retuned for text on --shell — WCAG AA (was 3.02:1) */
-  --on-shell-danger: #F0575A; /* --danger retuned for status text on --shell — WCAG AA (was ~2.53:1) */
-  --on-shell-gold:   #E8A93D; /* --gold retuned for text on --shell — WCAG AA (was ~3.59:1) */
+  --on-pitch-faint: rgba(255,255,255,.3);  /* lowest-emphasis text on dark surfaces — placeholders, disabled */
+  --on-pitch-dim:   rgba(255,255,255,.55); /* muted eyebrow labels on dark surfaces — raised from .45 for WCAG AA (~5.3:1) */
+  --on-pitch-mid:   rgba(255,255,255,.7);  /* mid-emphasis text on dark surfaces — between dim and full */
+  --on-pitch-accent: #5FB3E5; /* --accent retuned for text on dark surfaces — WCAG AA (was 3.02:1) */
+  --on-pitch-danger: #F0575A; /* --danger retuned for status text on dark surfaces — WCAG AA (was ~2.53:1) */
+  --on-pitch-gold:   #E8A93D; /* --gold retuned for text on dark surfaces — WCAG AA (was ~3.59:1) */
   --gold-text:       #925A0A; /* --gold retuned for text on light surfaces — WCAG AA (was 3.49:1) */
 
-  /* Borders/fills on --shell (dark navy) surfaces — B1: consolidates ~250
+  /* Borders/fills on dark pitch / share-card surfaces — B1: consolidates ~250
      ad-hoc rgba(255,255,255,…) literals used for glass-on-navy dividers and
      panels (sticky headers, chips, pills) onto a small named ramp. */
-  --shell-rule:          rgba(255,255,255,.08); /* subtle divider/border on shell */
-  --shell-rule-strong:   rgba(255,255,255,.15); /* emphasized border — inputs, selected pills */
-  --shell-rule-emphasis: rgba(255,255,255,.3);  /* high-contrast border — active tab/card outline */
-  --shell-fill:          rgba(255,255,255,.04); /* faintest background wash on shell */
-  --shell-fill-strong:   rgba(255,255,255,.08); /* visible fill — buttons, hover/active chips */
-  --shell-fill-active:   rgba(255,255,255,.18); /* drag handles, selected/active states */
+  --pitch-rule:          rgba(255,255,255,.08); /* subtle divider/border on dark surfaces */
+  --pitch-rule-strong:   rgba(255,255,255,.15); /* emphasized border — inputs, selected pills */
+  --pitch-line-strong: rgba(255,255,255,.3);  /* high-contrast border — active tab/card outline */
+  --pitch-fill:          rgba(255,255,255,.04); /* faintest background wash on dark surfaces */
+  --pitch-fill-strong:   rgba(255,255,255,.08); /* visible fill — buttons, hover/active chips */
+  --pitch-line:   rgba(255,255,255,.18); /* drag handles, selected/active states */
 
   /* ── Type ramp — B2: 7-step scale replacing ad-hoc raw fontSize values.
      See docs/design/DESIGN_AUDIT_2026-08.html for the source spec. */
