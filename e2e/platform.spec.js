@@ -89,7 +89,7 @@ test.describe('Navigation', () => {
     // Top bar is clubhouse-centric — always shows these items
     // Use .first() — strict mode: both "Clubhouse" heading and "My Clubhouse" link match
     await expect(sidebar.getByText(/clubhouse/i).first()).toBeVisible();
-    await expect(sidebar.getByText(/settings/i)).toBeVisible();
+    await expect(sidebar.locator('a[href="/settings"]')).toBeVisible();
   });
 
   test('mobile bottom nav is visible at 375px', async ({ page }) => {
@@ -105,16 +105,16 @@ test.describe('Navigation', () => {
   test('desktop sidebar navigation works', async ({ page }) => {
     await skipOnboarding(page);
     await page.setViewportSize({ width: 1440, height: 900 });
-    // Start on a football route so the CompetitionScreenNav shows football items
     await page.goto('/live');
     await waitForContent(page);
 
-    await page.getByText(/market/i).first().click();
-    await expect(page).toHaveURL('/market');
+    const topBar = page.locator('[data-testid="desktop-nav"]');
+    await topBar.getByText(/^trophies$/i).click();
+    await expect(page).toHaveURL('/trophy');
     await waitForContent(page);
 
-    await page.getByText(/squad/i).first().click();
-    await expect(page).toHaveURL('/squad');
+    await topBar.getByText(/^coins$/i).click();
+    await expect(page).toHaveURL('/challenges');
   });
 
   test('mobile bottom nav navigation works', async ({ page }) => {

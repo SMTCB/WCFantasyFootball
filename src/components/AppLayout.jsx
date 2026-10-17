@@ -31,19 +31,20 @@ const CLUBHOUSE_NAV = [
 ];
 
 // ── Desktop top bar ───────────────────────────────────────────────────────────
-function TopBarLink({ label, path, active, badge }) {
+function TopBarLink({ label, path, active, badge, Icon }) {
   return (
     <Link
       to={path}
       aria-current={active ? 'page' : undefined}
       style={{
-        position: 'relative', display: 'flex', alignItems: 'center', gap: 6,
-        minHeight: 'var(--tap)', padding: '0 12px',
+        position: 'relative', display: 'flex', alignItems: 'center', gap: 8,
+        minHeight: 'var(--tap)', padding: '0 14px', borderRadius: 'var(--radius)',
         fontSize: 'var(--fs-label)', fontWeight: active ? 700 : 500,
-        color: active ? 'var(--paper)' : 'var(--mute)', textDecoration: 'none',
-        borderBottom: `3px solid ${active ? 'var(--accent)' : 'transparent'}`,
+        color: active ? 'var(--accent)' : 'var(--mute)', textDecoration: 'none',
+        background: active ? 'var(--accent-soft)' : 'transparent',
       }}
     >
+      {Icon && <Icon size={18} />}
       {label}
       {badge > 0 && (
         <span className="num" style={{
@@ -156,19 +157,18 @@ export default function AppLayout({ children }) {
         <Link to="/home" aria-label="Home" style={{ display: 'flex', alignItems: 'center', marginRight: 16 }}>
           <BrandMark theme="light" compact />
         </Link>
-        <TopBarLink label="Home" path="/home" active={location.pathname === '/home'} />
+        <TopBarLink label="Home" path="/home" Icon={NavIconHome} active={location.pathname === '/home'} />
         <TopBarLink
           label="Clubhouse"
           path="/clubhouse"
-          active={location.pathname.startsWith('/clubhouse') && !location.search.includes('tab=frontrow')}
+          Icon={NavIconClubhouse}
+          active={location.pathname.startsWith('/clubhouse')}
           badge={unreadCount}
         />
-        <TopBarLink label="The FrontRow" path="/clubhouse?tab=frontrow" active={location.pathname.startsWith('/clubhouse') && location.search.includes('tab=frontrow')} />
-        <TopBarLink label="Trophy cabinet" path="/trophy" active={location.pathname === '/trophy'} />
-        <TopBarLink label="My bets" path="/my-bets" active={location.pathname === '/my-bets'} />
-        <TopBarLink label="Coin challenges" path="/challenges" active={location.pathname === '/challenges'} />
+        <TopBarLink label="Trophies" path="/trophy" Icon={NavIconTrophy} active={location.pathname === '/trophy'} />
+        <TopBarLink label="Bets" path="/my-bets" Icon={NavIconMyBets} active={location.pathname === '/my-bets'} />
+        <TopBarLink label="Coins" path="/challenges" Icon={NavIconChallenges} active={location.pathname === '/challenges'} />
         <span style={{ flex: 1 }} />
-        <TopBarLink label="Settings" path="/settings" active={location.pathname === '/settings'} />
         <Link to="/settings" aria-label={username ?? 'Account'} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-accent)', marginLeft: 8, textDecoration: 'none' }}>
           {username ? username[0].toUpperCase() : 'M'}
         </Link>
