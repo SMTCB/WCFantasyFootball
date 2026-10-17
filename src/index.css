@@ -893,16 +893,16 @@ button, a {
 .fk-sysbar.info    { --msg-color: var(--accent); }
 .fk-sysbar-dot { width: 6px; height: 6px; background: var(--msg-color); flex-shrink: 0; border-radius: 50%; }
 .fk-sysbar-tag {
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
-  letter-spacing: .22em; text-transform: uppercase; color: var(--msg-color); flex-shrink: 0;
+  font-family: 'Archivo', sans-serif; font-size: var(--fs-label); font-weight: 700;
+  color: var(--msg-color); flex-shrink: 0;
 }
 .fk-sysbar-msg {
-  font-family: 'Archivo', sans-serif; font-size: 12px; color: var(--paper); flex: 1;
+  font-family: 'Archivo', sans-serif; font-size: var(--fs-label); color: var(--paper); flex: 1;
 }
 .fk-sysbar-msg span { color: var(--mute); margin-left: 6px; }
 .fk-sysbar-action {
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
-  letter-spacing: .18em; text-transform: uppercase;
+  font-family: 'Archivo', sans-serif; font-size: var(--fs-label); font-weight: 700;
+  min-height: var(--tap);
   color: var(--msg-color); cursor: pointer; text-decoration: underline; flex-shrink: 0;
   background: transparent; border: none; padding: 0;
 }

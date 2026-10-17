@@ -98,17 +98,19 @@ export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '�
 // squad / market / live are separate routes; callers navigate when one is picked.
 export const ROUTE_TABS = ['squad', 'market', 'live'];
 
-function hubTabList({ isCommissioner, notifyBets, notifyTrading, h2hEnabled, isDraftLeague }) {
+// One tab row (redesign): H2H sits under Standings, Market report under Recap, Betting under Bets.
+// Those views stay separate; HubSubSwitch moves between them.
+const HUB_GROUP = { h2h: 'leaderboard', market_report: 'recap', betting: 'bets' };
+export const hubGroupOf = (tab) => HUB_GROUP[tab] ?? tab;
+
+function hubTabList({ isCommissioner, notifyBets, notifyTrading, isDraftLeague }) {
   return [
     { id: 'leaderboard', label: 'Standings' },
     { id: 'squad',       label: 'Squad' },
     { id: 'market',      label: 'Market' },
     { id: 'live',        label: 'Live' },
-    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H' }] : []),
     { id: 'recap',       label: 'Recap' },
-    { id: 'market_report', label: 'Market report' },
     { id: 'bets',        label: 'Bets',    notify: notifyBets },
-    { id: 'betting',     label: 'Betting' },
     // TRADING tab (auctions + trade proposals) is draft-only — Classic leagues use
     // shared player pools so exclusive ownership transfers don't apply.
     ...(isDraftLeague ? [{ id: 'trading', label: 'Trading', notify: notifyTrading }] : []),
@@ -117,8 +119,34 @@ function hubTabList({ isCommissioner, notifyBets, notifyTrading, h2hEnabled, isD
   ];
 }
 
-export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
-  return <HubTabRow tabs={hubTabList({ isCommissioner, notifyBets, notifyTrading, h2hEnabled, isDraftLeague })} active={active} onTab={onTab} />;
+export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, isDraftLeague = false }) {
+  return <HubTabRow tabs={hubTabList({ isCommissioner, notifyBets, notifyTrading, isDraftLeague })} active={hubGroupOf(active)} onTab={onTab} />;
+}
+
+// Second-level switch for the grouped views. Renders nothing when the group has one view.
+export function HubSubSwitch({ active, onTab, h2hEnabled = false }) {
+  const group = hubGroupOf(active);
+  const options = {
+    leaderboard: [{ id: 'leaderboard', label: 'Table' }, ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H fixtures' }] : [])],
+    recap: [{ id: 'recap', label: 'Scores' }, { id: 'market_report', label: 'Transfers' }],
+    bets: [{ id: 'bets', label: 'My bets' }, { id: 'betting', label: 'Leaderboard' }],
+  }[group];
+  if (!options || options.length < 2) return null;
+  return (
+    <div role="group" aria-label="View" style={{ display: 'flex', gap: 6, padding: '10px max(12px, 3vw)', background: 'var(--bg)', flexShrink: 0 }}>
+      {options.map(o => {
+        const on = o.id === active;
+        return (
+          <button key={o.id} aria-pressed={on} onClick={() => onTab(o.id)} style={{
+            minHeight: 'var(--tap)', padding: '0 16px', borderRadius: 999, cursor: 'pointer',
+            fontFamily: 'inherit', fontSize: 'var(--fs-label)', fontWeight: on ? 700 : 500,
+            background: on ? 'var(--accent-soft)' : 'var(--card)', color: on ? 'var(--accent)' : 'var(--mute)',
+            border: `1px solid ${on ? 'var(--accent)' : 'var(--rule)'}`,
+          }}>{o.label}</button>
+        );
+      })}
+    </div>
+  );
 }
 
 // Same tab row for the Squad / Market / Live routes, scoped to one league.
@@ -130,7 +158,7 @@ export function LeagueRouteTabs({ active, leagueId }) {
     if (ROUTE_TABS.includes(t)) navigate(`/${t}?leagueId=${leagueId}`);
     else navigate(`/league/${leagueId}?tab=${t}`);
   };
-  return <HubTabRow tabs={hubTabList({})} active={active} onTab={go} />;
+  return <HubTabRow tabs={hubTabList({})} active={hubGroupOf(active)} onTab={go} />;
 }
 
 // Rank trend chip (▲2 / ▼1 / =)

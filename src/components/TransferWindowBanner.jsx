@@ -55,10 +55,10 @@ export default function TransferWindowBanner({ status, closesAt, opensAt, transf
     return (
       <div className="fk-sysbar success">
         <span className="fk-sysbar-dot" />
-        <span className="fk-sysbar-tag">Window Open</span>
+        <span className="fk-sysbar-tag">Window open</span>
         <span className="fk-sysbar-msg">
           {transferLabel}
-          {closesIn && <span>· Closes in {closesIn}</span>}
+          {closesIn && <span>· Closes in <span className="num" style={{ marginLeft: 0 }}>{closesIn}</span></span>}
         </span>
       </div>
     );
@@ -79,7 +79,7 @@ export default function TransferWindowBanner({ status, closesAt, opensAt, transf
     return (
       <div className="fk-sysbar warning">
         <span className="fk-sysbar-dot" />
-        <span className="fk-sysbar-tag">Market Locked</span>
+        <span className="fk-sysbar-tag">Market locked</span>
         <span className="fk-sysbar-msg">{msg}</span>
       </div>
     );
@@ -89,10 +89,10 @@ export default function TransferWindowBanner({ status, closesAt, opensAt, transf
     return (
       <div className="fk-sysbar warning">
         <span className="fk-sysbar-dot" />
-        <span className="fk-sysbar-tag">Window Closed</span>
+        <span className="fk-sysbar-tag">Window closed</span>
         <span className="fk-sysbar-msg">
           Transfers locked
-          {opensIn && <span>· Opens in {opensIn}</span>}
+          {opensIn && <span>· Opens in <span className="num" style={{ marginLeft: 0 }}>{opensIn}</span></span>}
         </span>
       </div>
     );

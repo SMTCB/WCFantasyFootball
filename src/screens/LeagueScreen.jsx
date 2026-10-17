@@ -23,7 +23,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { useBettingLeaderboard } from '../hooks/useBettingLeaderboard';
 import OnboardingTour from '../components/OnboardingTour';
 import {
-  HubTopbar, HubTabs, ROUTE_TABS,
+  HubTopbar, HubTabs, HubSubSwitch, ROUTE_TABS,
   HubLeagueHeader, HubTabPills,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
 } from '../components/league/HubShared';
@@ -1414,6 +1414,9 @@ export default function LeagueScreen() {
             isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
           />
         </div>
+
+        <HubSubSwitch active={viewToTab(view)} onTab={setTab} h2hEnabled={h2hEnabled} />
+
 
          {/* â”€â”€ VIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
