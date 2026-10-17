@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const MONO = "'JetBrains Mono', monospace";
+const MONO = "Archivo, sans-serif";
 const HEAD = "'Archivo Black', sans-serif";
 const BODY = "'Archivo', sans-serif";
 

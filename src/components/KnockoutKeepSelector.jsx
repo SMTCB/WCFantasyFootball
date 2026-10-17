@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useKnockoutKeep } from '../hooks/useKnockoutKeep';
 
-const MONO    = "'JetBrains Mono', monospace";
+const MONO    = "Archivo, sans-serif";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
 

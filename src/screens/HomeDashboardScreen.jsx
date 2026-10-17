@@ -8,7 +8,7 @@ import { useShowArchived } from '../hooks/useShowArchived';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
 
-const MONO = { fontFamily: 'JetBrains Mono, monospace' };
+const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
 

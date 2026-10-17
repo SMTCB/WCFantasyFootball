@@ -50,7 +50,7 @@ export default function TextInput({
         <label
           htmlFor={inputId}
           style={{
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             fontSize: 'var(--fs-micro)',
             color: hasError ? 'var(--danger)' : 'var(--mute)',
             textTransform: 'uppercase',
@@ -78,7 +78,7 @@ export default function TextInput({
         aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
         style={{
           width: '100%',
-          fontFamily: 'JetBrains Mono, monospace',
+          fontFamily: 'Archivo, sans-serif',
           fontSize: 'var(--fs-label)',
           color: disabled ? 'var(--mute)' : 'var(--paper)',
           padding: '8px 12px',
@@ -107,7 +107,7 @@ export default function TextInput({
         <div
           id={`${inputId}-error`}
           style={{
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             fontSize: 'var(--fs-micro)',
             color: 'var(--danger)',
             textTransform: 'uppercase',
@@ -122,7 +122,7 @@ export default function TextInput({
         <div
           id={`${inputId}-helper`}
           style={{
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             fontSize: 'var(--fs-micro)',
             color: 'var(--mute)',
             letterSpacing: '0.05em',

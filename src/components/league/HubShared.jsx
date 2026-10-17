@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 // ChatView, LeagueDetailView, StatsView) also import HubShared. This multi-depth
 // pattern causes Rolldown to sometimes evaluate a child module before HubShared,
 // putting const MONO/DISPLAY in TDZ. var is hoisted and can never TDZ.
-var MONO = "'JetBrains Mono', monospace";
+var MONO = "Archivo, sans-serif";
 var DISPLAY = "'Archivo Black', sans-serif";
 var BODY = "'Archivo', sans-serif";
 

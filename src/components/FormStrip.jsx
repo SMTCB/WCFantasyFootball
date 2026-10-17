@@ -39,7 +39,7 @@ export default memo(function FormStrip({ rounds }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             fontSize: 'var(--fs-micro)',
             fontWeight: 700,
             color: cellColor(pts),

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 
-const MONO = "'JetBrains Mono', monospace";
+const MONO = "Archivo, sans-serif";
 
 /**
  * Shared scrollable tab bar. Two visual variants:

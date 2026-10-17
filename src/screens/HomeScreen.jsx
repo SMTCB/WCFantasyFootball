@@ -46,7 +46,7 @@ function StatusPill({ f, small }) {
       border: isKO ? '1px solid var(--rule)' : 'none',
       color: isLive ? 'var(--danger)' : isFT ? 'var(--mute)' : 'var(--paper)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-      fontFamily: 'JetBrains Mono, monospace', fontSize: small ? 9 : 10, flexShrink: 0,
+      fontFamily: 'Archivo, sans-serif', fontSize: small ? 9 : 10, flexShrink: 0,
     }}>
       {isLive && <span style={{ width: 5, height: 5, background: 'var(--danger)', borderRadius: '50%', animation: 'fkPulse 1.2s infinite' }} />}
       <span>{isLive ? f.live : isFT ? 'FT' : f.kickoff}</span>
@@ -59,7 +59,7 @@ function ScoreBlock({ f, big }) {
     return (
       <div style={{
         minWidth: big ? 96 : 60, textAlign: 'center',
-        fontFamily: 'JetBrains Mono, monospace', fontSize: big ? 11 : 10, color: 'var(--mute)',
+        fontFamily: 'Archivo, sans-serif', fontSize: big ? 11 : 10, color: 'var(--mute)',
       }}>{f.kickoff}</div>
     );
   }
@@ -101,7 +101,7 @@ function FixtureRow({ f, showComp = false }) {
           color: homeWon ? 'var(--paper)' : f.score ? 'var(--mute)' : 'var(--paper)',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>{f.home.name}</div>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>{f.home.code}</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>{f.home.code}</div>
       </div>
       <ScoreBlock f={f} big />
       <div style={{ minWidth: 0, overflow: 'hidden' }}>
@@ -110,10 +110,10 @@ function FixtureRow({ f, showComp = false }) {
           color: awayWon ? 'var(--paper)' : f.score ? 'var(--mute)' : 'var(--paper)',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>{f.away.name}</div>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>{f.away.code}</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>{f.away.code}</div>
       </div>
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>{f.kickoff}</div>
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>GW{f.gw}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>{f.kickoff}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>GW{f.gw}</div>
       {showComp && (
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <div title={(COMPS[f.comp] || COMPS.EPL).name} style={{
@@ -156,7 +156,7 @@ function MobileFixtureRow({ f }) {
         }}>{f.away.code}</div>
         <span style={{ width: 2, height: 14, background: tone, marginLeft: 'auto', flexShrink: 0 }} />
       </div>
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>GW{f.gw}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>GW{f.gw}</div>
     </div>
   );
 }
@@ -166,9 +166,9 @@ function DateBand({ g, mini }) {
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, padding: mini ? '12px 18px 6px' : '20px 18px 10px' }}>
       <div style={{ width: 3, height: mini ? 14 : 18, background: 'var(--paper)', flexShrink: 0 }} />
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: mini ? 16 : 20, letterSpacing: '-0.01em' }}>{g.day}</div>
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.dlong}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.dlong}</div>
       <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.fixtures.length} MATCH{g.fixtures.length > 1 ? 'ES' : ''}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.fixtures.length} MATCH{g.fixtures.length > 1 ? 'ES' : ''}</div>
     </div>
   );
 }
@@ -178,9 +178,9 @@ function CompBand({ comp, count, mini }) {
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, padding: mini ? '12px 18px 6px' : '20px 18px 10px' }}>
       <div style={{ width: 3, height: mini ? 14 : 18, background: comp.tone, flexShrink: 0 }} />
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: mini ? 14 : 16, color: 'var(--paper)' }}>{comp.name}</div>
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: comp.tone }}>{comp.code}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: comp.tone }}>{comp.code}</div>
       <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{count} MATCH{count > 1 ? 'ES' : ''}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{count} MATCH{count > 1 ? 'ES' : ''}</div>
     </div>
   );
 }
@@ -192,7 +192,7 @@ function CompChip({ comp, active, count, onClick }) {
       border: `1px solid ${active ? comp.tone : 'var(--rule)'}`,
       color: active ? comp.tone : 'var(--paper)',
       background: active ? 'var(--elev)' : 'transparent',
-      fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)',
+      fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)',
       cursor: 'pointer', userSelect: 'none', flexShrink: 0,
     }}>
       <span style={{ width: 6, height: 6, background: comp.tone, flexShrink: 0 }} />
@@ -208,7 +208,7 @@ function AllChip({ active, count, onClick }) {
       display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px',
       border: `1px solid ${active ? 'var(--paper)' : 'var(--rule)'}`,
       color: active ? 'var(--paper)' : 'var(--mute)',
-      fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)',
+      fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)',
       cursor: 'pointer', userSelect: 'none', flexShrink: 0,
     }}>
       <span>ALL</span>
@@ -225,21 +225,21 @@ function GameweekPager({ gw, onPrev, onNext, disablePrev, disableNext }) {
         width: 34, height: 34, background: 'transparent', border: 'none',
         borderRight: '1px solid var(--rule)',
         color: disablePrev ? 'var(--mute)' : 'var(--paper)',
-        fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)',
+        fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)',
         cursor: disablePrev ? 'default' : 'pointer',
       }}>‹</button>
       <div style={{
         padding: '0 16px', height: 34,
         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minWidth: 96,
       }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>GAMEWEEK</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>GAMEWEEK</div>
         <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', marginTop: 2 }}>GW {gw}</div>
       </div>
       <button onClick={onNext} disabled={disableNext} style={{
         width: 34, height: 34, background: 'transparent', border: 'none',
         borderLeft: '1px solid var(--rule)',
         color: disableNext ? 'var(--mute)' : 'var(--paper)',
-        fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)',
+        fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)',
         cursor: disableNext ? 'default' : 'pointer',
       }}>›</button>
     </div>
@@ -253,19 +253,19 @@ function MonthPager({ year, monthIndex, onPrev, onNext }) {
       <button onClick={onPrev} style={{
         width: 34, height: 34, background: 'transparent', border: 'none',
         borderRight: '1px solid var(--rule)',
-        color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', cursor: 'pointer',
+        color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer',
       }}>‹</button>
       <div style={{
         padding: '0 18px', height: 34,
         display: 'flex', alignItems: 'center', gap: 10, minWidth: 170, justifyContent: 'center',
       }}>
         <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>{MONTHS_LONG[monthIndex]}</span>
-        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{year}</span>
+        <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{year}</span>
       </div>
       <button onClick={onNext} style={{
         width: 34, height: 34, background: 'transparent', border: 'none',
         borderLeft: '1px solid var(--rule)',
-        color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', cursor: 'pointer',
+        color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer',
       }}>›</button>
     </div>
   );
@@ -287,13 +287,13 @@ function DayCard({ f }) {
       display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: tone }}>{f.comp}</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: tone }}>{f.comp}</div>
         {isLive
-          ? <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: 4 }}>
+          ? <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ width: 5, height: 5, background: 'var(--danger)', borderRadius: '50%', animation: 'fkPulse 1.2s infinite' }} />
               {f.live}
             </div>
-          : <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{f.status === 'FT' ? 'FT' : f.kickoff}</div>
+          : <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{f.status === 'FT' ? 'FT' : f.kickoff}</div>
         }
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -314,7 +314,7 @@ function DayCard({ f }) {
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: homeWon ? 'var(--paper)' : 'var(--mute)', lineHeight: 1 }}>{h}</div>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: awayWon ? 'var(--paper)' : 'var(--mute)', lineHeight: 1, marginTop: 3 }}>{a}</div>
             </div>
-          : <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>{f.kickoff}</div>
+          : <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>{f.kickoff}</div>
         }
       </div>
     </div>
@@ -328,7 +328,7 @@ function WeekView({ fixtures }) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 10 }}>No fixtures</div>
+          <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 10 }}>No fixtures</div>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', letterSpacing: '-0.02em' }}>Nothing scheduled</div>
         </div>
       </div>
@@ -348,12 +348,12 @@ function WeekView({ fixtures }) {
         }}>
           {/* Day column header */}
           <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.day}</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.day}</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', letterSpacing: '-0.02em' }}>{g.dnum}</div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.dlong.split(' ')[1]}</div>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{g.dlong.split(' ')[1]}</div>
             </div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6 }}>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6 }}>
               {g.fixtures.length} FIXTURE{g.fixtures.length > 1 ? 'S' : ''}
             </div>
           </div>
@@ -418,17 +418,17 @@ function MatchStrip({ f }) {
             <span style={{ color: codeColor(awayWon) }}>{f.score[1]}</span>
           </span>
         ) : (
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>VS</span>
+          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>VS</span>
         )}
         <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: codeColor(awayWon), flexShrink: 0 }}>{f.away.code}</span>
         <span style={{ flex: 1 }} />
         {isLive ? (
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
             <span style={{ width: 4, height: 4, background: 'var(--danger)', borderRadius: '50%', animation: 'fkPulse 1.2s infinite' }} />
             {f.live}
           </span>
         ) : !f.score ? (
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>{f.kickoff}</span>
+          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>{f.kickoff}</span>
         ) : null}
       </div>
     </div>
@@ -467,13 +467,13 @@ function DayCell({ cell, matches, isWeekend }) {
       {/* Header row: label left, day number right */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
         {isToday
-          ? <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}>TODAY</span>
+          ? <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}>TODAY</span>
           : hasMatches
-            ? <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{matches.length} MATCH{matches.length > 1 ? 'ES' : ''}</span>
+            ? <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{matches.length} MATCH{matches.length > 1 ? 'ES' : ''}</span>
             : <span />
         }
         <span style={{
-          fontFamily: (hasMatches || isToday) ? 'Archivo Black, sans-serif' : 'JetBrains Mono, monospace',
+          fontFamily: (hasMatches || isToday) ? 'Archivo Black, sans-serif' : 'Archivo, sans-serif',
           fontSize: (hasMatches || isToday) ? 15 : 12,
           letterSpacing: (hasMatches || isToday) ? '-0.01em' : '.04em',
           color: isToday ? 'var(--accent)' : hasMatches ? 'var(--paper)' : 'var(--mute)',
@@ -484,7 +484,7 @@ function DayCell({ cell, matches, isWeekend }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1, minHeight: 0 }}>
         {visible.map(f => <MatchStrip key={f.id} f={f} />)}
         {overflow > 0 && (
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '2px 0 0 6px' }}>+{overflow} MORE</div>
+          <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '2px 0 0 6px' }}>+{overflow} MORE</div>
         )}
       </div>
     </div>
@@ -521,7 +521,7 @@ function MonthView({ fixtures, month, year }) {
         {['MON','TUE','WED','THU','FRI','SAT','SUN'].map((d, i) => (
           <div key={d} style={{
             padding: '10px 12px',
-            fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)',
+            fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)',
             color: i >= 5 ? 'var(--paper)' : 'var(--mute)',
             borderRight: i < 6 ? '1px solid var(--rule)' : 'none',
           }}>{d}</div>
@@ -706,7 +706,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <div style={{ padding: '24px 32px', color: 'var(--paper)' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Match centre</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Match centre</div>
         <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', marginTop: 4 }}>Scores</div>
         <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 1 }}>
           {[0.4, 0.55, 0.7].map((op, i) => (
@@ -722,7 +722,7 @@ export default function HomeScreen() {
     <>
       {filtered.length === 0 && (
         <div style={{ padding: '48px 32px', textAlign: 'center' }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 10 }}>No fixtures</div>
+          <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 10 }}>No fixtures</div>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', letterSpacing: '-0.02em' }}>Nothing scheduled</div>
         </div>
       )}
@@ -755,16 +755,16 @@ export default function HomeScreen() {
         padding: '24px 32px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0,
       }}>
         <div>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Match centre</div>
+          <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Match centre</div>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', marginTop: 4, letterSpacing: '-0.02em' }}>Scores</div>
         </div>
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>FIXTURES</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>FIXTURES</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', marginTop: 2 }}>{filtered.length}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Live now</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Live now</div>
             <div style={{
               fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', marginTop: 2,
               color: liveCount > 0 ? 'var(--danger)' : 'var(--mute)',
@@ -801,7 +801,7 @@ export default function HomeScreen() {
                 color: viewMode === o.id ? 'var(--accent)' : 'var(--mute)',
                 border: 'none',
                 borderRight: i < 2 ? '1px solid var(--rule)' : 'none',
-                fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', cursor: 'pointer',
+                fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer',
               }}>{o.label}</button>
             ))}
           </div>
@@ -817,7 +817,7 @@ export default function HomeScreen() {
                     background: view === o.id ? 'var(--accent-soft)' : 'transparent',
                     color: view === o.id ? 'var(--accent)' : 'var(--mute)',
                     border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
-                    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', cursor: 'pointer',
+                    fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer',
                   }}>{o.label}</button>
                 ))}
               </div>
@@ -841,17 +841,17 @@ export default function HomeScreen() {
             <button onClick={datePrev} style={{
               width: 34, height: 34, background: 'transparent', border: 'none',
               borderRight: '1px solid var(--rule)',
-              color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', cursor: 'pointer',
+              color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer',
             }}>‹</button>
             <div style={{ padding: '0 14px', height: 34, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minWidth: 140 }}>
               {viewMode === 'week' ? (
                 <>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>WEEK</div>
+                  <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>WEEK</div>
                   <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', letterSpacing: '-0.01em', marginTop: 2 }}>{weekRange}</div>
                 </>
               ) : (
                 <>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>DATE</div>
+                  <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>DATE</div>
                   <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => calInputRef.current?.showPicker?.() || calInputRef.current?.click())(e); } }}
                     onClick={() => calInputRef.current?.showPicker?.() || calInputRef.current?.click()}
                     style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', letterSpacing: '-0.01em', marginTop: 2, cursor: 'pointer' }}
@@ -862,7 +862,7 @@ export default function HomeScreen() {
             <button onClick={dateNext} style={{
               width: 34, height: 34, background: 'transparent', border: 'none',
               borderLeft: '1px solid var(--rule)',
-              color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', cursor: 'pointer',
+              color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer',
             }}>›</button>
           </div>
         )}
@@ -882,7 +882,7 @@ export default function HomeScreen() {
                 background: view === o.id ? 'var(--accent-soft)' : 'transparent',
                 color: view === o.id ? 'var(--accent)' : 'var(--mute)',
                 border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
-                fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', cursor: 'pointer',
+                fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer',
               }}>{o.label}</button>
             ))}
           </div>
@@ -891,7 +891,7 @@ export default function HomeScreen() {
               <button onClick={datePrev} style={{
                 width: 28, height: 28, background: 'transparent', border: 'none',
                 borderRight: '1px solid var(--rule)',
-                color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', cursor: 'pointer',
+                color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer',
               }}>‹</button>
               <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => mobCalInputRef.current?.showPicker?.() || mobCalInputRef.current?.click())(e); } }}
                 onClick={() => mobCalInputRef.current?.showPicker?.() || mobCalInputRef.current?.click()}
@@ -902,7 +902,7 @@ export default function HomeScreen() {
               <button onClick={dateNext} style={{
                 width: 28, height: 28, background: 'transparent', border: 'none',
                 borderLeft: '1px solid var(--rule)',
-                color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', cursor: 'pointer',
+                color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer',
               }}>›</button>
             </div>
           )}

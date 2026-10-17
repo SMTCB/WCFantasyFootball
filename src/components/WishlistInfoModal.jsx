@@ -1,6 +1,6 @@
 import BottomSheet from './shared/BottomSheet';
 
-const MONO    = 'var(--font-mono, monospace)';
+const MONO    = 'Archivo, sans-serif';
 const DISPLAY = 'Archivo Black, sans-serif';
 
 function Section({ title, children, accent = 'var(--accent)' }) {

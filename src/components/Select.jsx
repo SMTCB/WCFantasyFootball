@@ -54,7 +54,7 @@ export default function Select({
         <label
           htmlFor={selectId}
           style={{
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             fontSize: 'var(--fs-micro)',
             color: hasError ? 'var(--danger)' : 'var(--mute)',
             textTransform: 'uppercase',
@@ -79,7 +79,7 @@ export default function Select({
         aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
         style={{
           width: '100%',
-          fontFamily: 'JetBrains Mono, monospace',
+          fontFamily: 'Archivo, sans-serif',
           fontSize: 'var(--fs-label)',
           color: disabled ? 'var(--mute)' : 'var(--paper)',
           padding: '8px 12px',
@@ -115,7 +115,7 @@ export default function Select({
         <div
           id={`${selectId}-error`}
           style={{
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             fontSize: 'var(--fs-micro)',
             color: 'var(--danger)',
             textTransform: 'uppercase',
@@ -130,7 +130,7 @@ export default function Select({
         <div
           id={`${selectId}-helper`}
           style={{
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'Archivo, sans-serif',
             fontSize: 'var(--fs-micro)',
             color: 'var(--mute)',
             letterSpacing: '0.05em',

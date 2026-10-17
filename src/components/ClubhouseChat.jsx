@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
 import { useDirectMessages } from '../hooks/useDirectMessages';
 
-const MONO = { fontFamily: 'JetBrains Mono, monospace' };
+const MONO = { fontFamily: 'Archivo, sans-serif' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
 
 function timeAgo(iso) {

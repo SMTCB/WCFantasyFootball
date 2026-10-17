@@ -46,7 +46,7 @@ function DateDivider({ label, mobile }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: mobile ? '10px 16px 4px' : '10px 0 4px' }}>
       <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{label}</span>
+      <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{label}</span>
       <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
     </div>
   );

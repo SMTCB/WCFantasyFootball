@@ -333,7 +333,7 @@ export default function AppLayout({ children }) {
                 {key === 'clubhouse' && unreadCount > 0 && (
                   <div
                     className="absolute top-1.5 right-[calc(50%-18px)] flex items-center justify-center rounded-full"
-                    style={{ minWidth: 14, height: 14, background: 'var(--danger)', padding: '0 3px', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--on-accent)' }}
+                    style={{ minWidth: 14, height: 14, background: 'var(--danger)', padding: '0 3px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--on-accent)' }}
                   >
                     {unreadCount > 99 ? '99' : unreadCount}
                   </div>

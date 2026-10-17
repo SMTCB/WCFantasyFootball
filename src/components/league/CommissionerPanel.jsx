@@ -14,7 +14,7 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 // Design tokens (mirrors docs/brand/ADMIN TAB/tokens.css)
 // ─────────────────────────────────────────────────────────────────────────────
-const MONO    = "'JetBrains Mono', monospace";
+const MONO    = "Archivo, sans-serif";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
 

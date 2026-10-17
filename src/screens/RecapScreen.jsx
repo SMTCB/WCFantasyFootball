@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
 // ── Design tokens — mirror the league hub exactly ─────────────────────────────
-const MONO    = "'JetBrains Mono', monospace";
+const MONO    = "Archivo, sans-serif";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
 

@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 
-const MONO = 'JetBrains Mono, monospace';
+const MONO = 'Archivo, sans-serif';
 const DISP = 'Archivo Black, sans-serif';
 
 /**

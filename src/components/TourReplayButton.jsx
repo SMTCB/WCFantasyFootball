@@ -7,7 +7,7 @@
  * Used by: CommissionerPanel, BetsTabHub
  */
 
-const MONO = "'JetBrains Mono', monospace";
+const MONO = "Archivo, sans-serif";
 
 export default function TourReplayButton({ onReplay, label = 'Replay guide', title = 'Replay the guide' }) {
   if (!onReplay) return null;
