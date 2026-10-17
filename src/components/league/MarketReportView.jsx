@@ -10,15 +10,15 @@ import ClubCrest from '../ClubCrest';
 // Unlike RecapScreen's "My Digest" (own transfers only), this shows every
 // manager's activity — it's the league's shared market history.
 
-const POSITION_COLOR = { GK: 'var(--gold)', DEF: 'var(--cyan)', MID: 'var(--positive)', FWD: 'var(--danger)' };
+const POSITION_COLOR = { GK: 'var(--gold)', DEF: 'var(--accent)', MID: 'var(--positive)', FWD: 'var(--danger)' };
 
 function pillStyle(active) {
   return {
     padding: '8px 10px', minHeight: 36, flexShrink: 0,
-    border: active ? '1px solid var(--cyan)' : '1px solid var(--rule)',
-    background: active ? 'rgba(0,180,216,.14)' : 'transparent',
-    color: active ? 'var(--cyan)' : 'var(--mute)',
-    fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', cursor: 'pointer',
+    border: active ? '1px solid var(--accent)' : '1px solid var(--rule)',
+    background: active ? 'var(--accent-soft)' : 'transparent',
+    color: active ? 'var(--accent)' : 'var(--mute)',
+    fontFamily: MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer',
   };
 }
 
@@ -27,10 +27,10 @@ function RoundNav({ rounds, lastRound, selected, onSelect }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 4,
-      padding: '8px 20px', borderBottom: '1px solid var(--rule)', background: 'var(--ink)',
+      padding: '8px 20px', borderBottom: '1px solid var(--rule)', background: 'var(--card)',
       overflowX: 'auto', flexShrink: 0,
     }}>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
         WINDOW
       </span>
       <button className="hit-44" onClick={() => onSelect('all')} style={pillStyle(selected === 'all')}>ALL</button>
@@ -55,7 +55,7 @@ function HeatMapPanel({ items, playerMap }) {
   const max = items[0].count;
   return (
     <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--rule)' }}>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 10 }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 10 }}>
         MOST WANTED
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -78,7 +78,7 @@ function HeatMapPanel({ items, playerMap }) {
                 {p?.name ?? player_id}
               </span>
               <div style={{ flex: 1, height: 6, background: 'var(--rule)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: 'var(--cyan)' }} />
+                <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)' }} />
               </div>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 20, textAlign: 'right', flexShrink: 0 }}>
                 {count}
@@ -102,8 +102,8 @@ function TransferRow({ t, playerMap, username, isMe }) {
     <div style={{
       display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8,
       padding: '10px 20px', borderBottom: '1px solid var(--rule)',
-      borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent',
-      background: isMe ? 'rgba(0,180,216,.04)' : 'transparent',
+      borderLeft: isMe ? '2px solid var(--accent)' : '2px solid transparent',
+      background: isMe ? 'var(--accent-soft)' : 'transparent',
     }}>
       <MgrTag mono={mgrMono(username)} hue={mgrHue(username)} size={18} />
       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)', flexShrink: 0 }}>
@@ -298,13 +298,13 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
 
   if (loading) return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING MARKET REPORT…</span>
+      <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading market report…</span>
     </div>
   );
 
   return (
     <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <HubSectionLabel label="MARKET REPORT" sub="LEAGUE TRANSFER ACTIVITY" tone="var(--cyan)" />
+      <HubSectionLabel label="Market report" sub="League transfer activity" tone="var(--accent)" />
       <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--rule)' }}>
         <p style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5, margin: 0 }}>
           Every transfer made across the league, grouped by matchday. Pick a single window below to see just the last transfer window, or view All for the full season.
@@ -318,7 +318,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
       {grouped.length === 0 ? (
         <div style={{ padding: '48px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>📰</div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 8 }}>NO TRANSFERS YET</div>
+          <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>No transfers yet</div>
           <div style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.7, lineHeight: 1.5, maxWidth: 320, margin: '0 auto' }}>
             Transfer activity will appear here once managers start making moves.
           </div>
@@ -326,7 +326,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
       ) : (
         grouped.map(g => (
           <div key={g.round}>
-            <MobSection label={`MATCHDAY ${g.round}`} sub={formatWindowSub(windowMeta[g.round])} tone="var(--gold)" />
+            <MobSection label={`Matchday ${g.round}`} sub={formatWindowSub(windowMeta[g.round])} tone="var(--gold)" />
             {g.list.map(t => (
               <TransferRow
                 key={t.id}
@@ -350,8 +350,8 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
       {hasDraftReport && (
         <>
           <HubSectionLabel
-            label="DRAFT AUDIT"
-            sub="PICKING ORDER & FULL LOG"
+            label="Draft audit"
+            sub="Picking order & FULL LOG"
             tone="var(--gold)"
             right={
               <button className="hit-44" onClick={() => setDraftAuditOpen(o => !o)} style={miniBtnStyle('var(--gold)')}>
