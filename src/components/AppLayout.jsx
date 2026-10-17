@@ -24,11 +24,11 @@ import {
 // live in CompetitionNav at the top of the screen, on both mobile and
 // desktop, so the bottom bar no longer duplicates them per-sport.
 const CLUBHOUSE_NAV = [
-  { key: 'home',       label: 'HOME',   path: '/home',       Icon: NavIconHome },
-  { key: 'clubhouse',  label: 'CLUB',   path: '/clubhouse',  Icon: NavIconClubhouse },
-  { key: 'trophy',     label: 'TROPHY', path: '/trophy',     Icon: NavIconTrophy },
-  { key: 'bets',       label: 'BETS',   path: '/my-bets',    Icon: NavIconMyBets },
-  { key: 'challenges', label: 'COINS',  path: '/challenges', Icon: NavIconChallenges },
+  { key: 'home',       label: 'Home',   path: '/home',       Icon: NavIconHome },
+  { key: 'clubhouse',  label: 'Club',   path: '/clubhouse',  Icon: NavIconClubhouse },
+  { key: 'trophy',     label: 'Trophy', path: '/trophy',     Icon: NavIconTrophy },
+  { key: 'bets',       label: 'Bets',   path: '/my-bets',    Icon: NavIconMyBets },
+  { key: 'challenges', label: 'Coins',  path: '/challenges', Icon: NavIconChallenges },
 ];
 
 // ── Desktop sidebar helpers ───────────────────────────────────────────────────
@@ -388,26 +388,26 @@ export default function AppLayout({ children }) {
         {/* Mobile top bar */}
         <div
           className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4"
-          style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)', minHeight: 44, paddingTop: 'env(safe-area-inset-top)' }}
+          style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', minHeight: 'var(--tap)', paddingTop: 'env(safe-area-inset-top)' }}
         >
           {showBackButton ? (
             <button
               onClick={handleBack}
               aria-label="Go back"
               className="hit-44 flex items-center gap-2 px-2 py-1.5 transition-colors"
-              style={{ color: 'var(--cyan)', cursor: 'pointer' }}
+              style={{ color: 'var(--accent)', cursor: 'pointer' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--paper)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--cyan)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--accent)'}
             >
               <span style={{ fontSize: 'var(--fs-body-lg)' }}>←</span>
-              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 800 }}>
                 Back
               </span>
             </button>
           ) : username ? (
             <Link
               to="/home"
-              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase', textDecoration: 'none' }}
+              style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', textDecoration: 'none' }}
             >
               {username}
             </Link>
@@ -418,7 +418,7 @@ export default function AppLayout({ children }) {
             to="/settings"
             aria-label="Settings"
             style={{ color: 'var(--mute)', fontSize: 'var(--fs-heading)', padding: '8px', lineHeight: 1 }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--cyan)'}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'var(--mute)'}
           >
             ⚙
@@ -431,18 +431,18 @@ export default function AppLayout({ children }) {
         {backLeagueId && (
           <div
             className="hidden lg:flex items-center px-4"
-            style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)', minHeight: 40 }}
+            style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', minHeight: 'var(--tap)' }}
           >
             <button
               onClick={handleBack}
               aria-label="Back to league"
               className="hit-44 flex items-center gap-2 py-1.5 transition-colors"
-              style={{ color: 'var(--cyan)', cursor: 'pointer' }}
+              style={{ color: 'var(--accent)', cursor: 'pointer' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--paper)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--cyan)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--accent)'}
             >
               <span style={{ fontSize: 'var(--fs-body-lg)' }}>←</span>
-              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 800 }}>
                 Back to League
               </span>
             </button>
@@ -493,39 +493,35 @@ export default function AppLayout({ children }) {
         data-testid="mobile-nav"
         className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
         style={{
-          background: 'var(--shell)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderTop: '1px solid var(--shell-rule)',
+          background: 'var(--card)',
+          borderTop: '1px solid var(--rule)',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        <div className="flex items-stretch h-16">
+        <div className="flex items-stretch" style={{ minHeight: 64 }}>
           {CLUBHOUSE_NAV.map(({ key, label, path, Icon }) => {
             const isActive = location.pathname === path || location.pathname.startsWith(path + '/');
-            const activeColor = 'var(--on-shell-accent)';
+            const activeColor = 'var(--accent)';
 
             return (
               <Link
                 key={key}
                 to={path}
                 className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-all"
-                style={{ color: isActive ? activeColor : 'var(--on-shell-dim)' }}
+                style={{ color: isActive ? activeColor : 'var(--mute)' }}
               >
                 {/* Top active bar */}
                 {isActive && (
                   <div
                     className="absolute top-0 left-1/2 -translate-x-1/2"
-                    style={{ width: '28px', height: '2px', background: activeColor }}
+                    style={{ width: '28px', height: '3px', borderRadius: 2, background: activeColor }}
                   />
                 )}
 
                 {Icon && <Icon size={20} />}
 
                 <span style={{
-                  fontFamily:    'JetBrains Mono, monospace',
                   fontSize: 'var(--fs-micro)',
-                  letterSpacing: '0.15em',
                   fontWeight:    600,
                   lineHeight:    1,
                 }}>
