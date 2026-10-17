@@ -25,6 +25,7 @@ import { ClubhouseProvider } from './context/ClubhouseProvider';
 // Each screen is loaded only when its route is first visited. This shrinks the
 // initial JS bundle and eliminates the shared-module surface that causes
 // Rolldown TDZ crashes in production (CODE-1).
+const DesignKitScreen       = import.meta.env.DEV ? lazy(() => import('./screens/DesignKitScreen')) : null;
 const TrophyCabinetScreen   = lazy(() => import('./screens/TrophyCabinetScreen'));
 const HomeScreen            = lazy(() => import('./screens/HomeScreen'));
 const SquadScreen           = lazy(() => import('./screens/SquadScreen'));
@@ -125,6 +126,7 @@ function AppRoutes() {
       <Routes>
         {/* Public route — only reachable when auth is enabled */}
         <Route path="/auth" element={<AuthScreen />} />
+        {import.meta.env.DEV && <Route path="/dev/kit" element={<DesignKitScreen />} />}
 
         {/* All other routes are protected.
             In demo mode (VITE_AUTH_ENABLED=false), ProtectedRoute always
