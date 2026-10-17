@@ -32,11 +32,11 @@ function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
     <div style={{
       display: 'flex', alignItems: 'center', gap: 4,
       padding: mobile ? '8px 18px' : '8px 20px',
-      borderBottom: '1px solid var(--rule)', background: 'var(--ink)',
+      borderBottom: '1px solid var(--rule)', background: 'var(--card)',
       overflowX: 'auto', flexShrink: 0,
     }}>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
-        {mobile ? 'GW' : 'ROUND'}
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
+        {mobile ? 'GW' : 'Round'}
       </span>
       {allMatchdays.map(md => {
         const n = String(md.matchday_id).replace(/^.*-r/, '');
@@ -45,10 +45,10 @@ function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
         return (
           <button key={md.matchday_id} onClick={() => onSelect(md.matchday_id)} style={{
             padding: '8px 9px', minHeight: 44, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
-            border: active ? `1px solid ${isLive ? 'var(--danger)' : 'var(--cyan)'}` : '1px solid var(--rule)',
-            background: active ? (isLive ? 'rgba(239,68,68,.12)' : 'rgba(0,180,216,.14)') : 'transparent',
-            color: active ? (isLive ? 'var(--danger)' : 'var(--cyan)') : 'var(--mute)',
-            fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', cursor: 'pointer',
+            border: active ? `1px solid ${isLive ? 'var(--danger)' : 'var(--accent)'}` : '1px solid var(--rule)',
+            background: active ? (isLive ? 'var(--crit-soft)' : 'var(--accent-soft)') : 'transparent',
+            color: active ? (isLive ? 'var(--danger)' : 'var(--accent)') : 'var(--mute)',
+            fontFamily: MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer',
           }}>
             {isLive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
             {n}
@@ -74,8 +74,8 @@ function FixtureRow({ f }) {
         </span>
         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.away_team}</span>
       </div>
-      {live     && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.18em' }}>● LIVE</span></div>}
-      {finished && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>FT</span></div>}
+      {live     && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', }}>● Live</span></div>}
+      {finished && <div style={{ textAlign: 'center', marginTop: 3 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>FT</span></div>}
     </div>
   );
 }
@@ -85,8 +85,8 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
 
   if (!breakdown || breakdown === 'loading') {
     return (
-      <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
-        {breakdown === 'loading' ? 'LOADING…' : 'NO SQUAD DATA'}
+      <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', borderTop: '1px solid var(--rule)' }}>
+        {breakdown === 'loading' ? 'Loading…' : 'No squad data'}
       </div>
     );
   }
@@ -103,26 +103,26 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
     <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid var(--shell-rule)' }}>
         {['POS', 'PLAYER', 'MIN', 'PTS'].map((h, i) => (
-          <span key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</span>
+          <span key={i} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</span>
         ))}
       </div>
       {breakdown.map((p, i) => {
-        const posColor = p.position === 'GK' ? 'var(--gold)' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--positive)' : 'var(--danger)';
+        const posColor = p.position === 'GK' ? 'var(--gold)' : p.position === 'DEF' ? 'var(--accent)' : p.position === 'MID' ? 'var(--positive)' : 'var(--danger)';
         const badges = [];
         if (p.triple)        badges.push({ s: '3×C',               c: 'var(--gold)' });
         else if (p.captain)  badges.push({ s: '©',                 c: 'var(--gold)' });
         if (p.joker)         badges.push({ s: 'JOKER',             c: 'var(--purple)' });
-        if (p.autoSub)       badges.push({ s: 'AUTO-SUB',          c: 'var(--cyan)' });
+        if (p.autoSub)       badges.push({ s: 'AUTO-SUB',          c: 'var(--accent)' });
         if (p.captainMoved)  badges.push({ s: 'C MOVED',           c: 'var(--mute)' });
         if (p.goals)         badges.push({ s: `⚽×${p.goals}`,     c: 'var(--positive)' });
-        if (p.assists)       badges.push({ s: `🅰×${p.assists}`,   c: 'var(--cyan)' });
-        if (p.saves > 0)     badges.push({ s: `${p.saves}SV`,      c: 'var(--cyan)' });
+        if (p.assists)       badges.push({ s: `🅰×${p.assists}`,   c: 'var(--accent)' });
+        if (p.saves > 0)     badges.push({ s: `${p.saves}SV`,      c: 'var(--accent)' });
         if (p.keyPasses > 0) badges.push({ s: `${p.keyPasses}KP`,  c: 'var(--positive)' });
         if (p.sot > 0)       badges.push({ s: `${p.sot}SoT`,       c: 'var(--positive)' });
         if (p.bigChances > 0) badges.push({ s: `${p.bigChances}BC`, c: 'var(--gold)' });
         if (p.shootoutScored > 0) badges.push({ s: `PK✓×${p.shootoutScored}`, c: 'var(--positive)' });
         if (p.shootoutMissed > 0) badges.push({ s: `PK✗×${p.shootoutMissed}`, c: 'var(--danger)' });
-        if (p.shootoutSaved > 0)  badges.push({ s: `${p.shootoutSaved}PK SV`,  c: 'var(--cyan)' });
+        if (p.shootoutSaved > 0)  badges.push({ s: `${p.shootoutSaved}PK SV`,  c: 'var(--accent)' });
         if (p.goalsConceded > 1)  badges.push({ s: `GA×${p.goalsConceded}`,    c: 'var(--danger)' });
         if (p.yellow)        badges.push({ s: '🟨',                c: 'var(--warn)' });
         if (p.red)           badges.push({ s: '🟥',                c: 'var(--danger)' });
@@ -139,7 +139,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
                 background: isExpanded ? 'var(--shell-fill)' : i % 2 === 0 ? 'transparent' : 'var(--shell-fill)',
                 cursor: p.hasStats ? 'pointer' : 'default',
               }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: posColor, letterSpacing: '.1em' }}>{p.position}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: posColor, }}>{p.position}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
                 <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
                 {badges.map((b, bi) => <span key={bi} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: b.c, flexShrink: 0 }}>{b.s}</span>)}
@@ -153,18 +153,18 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
               <div style={{ padding: '4px 24px 10px 56px', borderBottom: '1px solid var(--shell-rule)', background: 'var(--shell-fill)' }}>
                 {items.map((item, ii) => (
                   <div key={ii} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0' }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{item.label}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{item.label}</span>
                     <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: item.kind === 'pos' ? 'var(--positive)' : item.kind === 'bonus' ? 'var(--gold)' : 'var(--danger)' }}>
                       {fmtPts(item.pts)}
                     </span>
                   </div>
                 ))}
                 {!items.length && (
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '4px 0', letterSpacing: '.1em' }}>NO SCORING DATA</div>
+                  <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '4px 0', }}>No scoring data</div>
                 )}
                 {mult > 1 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0 0', marginTop: 2, borderTop: '1px solid var(--shell-rule)' }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.1em' }}>{p.triple ? 'TRIPLE CAPTAIN ×3' : 'CAPTAIN ×2'}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', }}>{p.triple ? 'TRIPLE CAPTAIN ×3' : 'CAPTAIN ×2'}</span>
                     <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>{displayPts[i]}</span>
                   </div>
                 )}
@@ -179,10 +179,10 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           padding: '7px 24px', borderTop: '1px solid rgba(240,58,58,0.25)',
           background: 'rgba(240,58,58,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.1em' }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>Transfer Penalty</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.6)', letterSpacing: '.08em' }}>extra buys</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.6)', }}>extra buys</span>
           </div>
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>—</span>
           <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--danger)' }}>−{penaltyDeduction}</span>
@@ -194,10 +194,10 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           padding: '7px 24px', borderTop: '1px solid rgba(240,180,0,0.25)',
           background: 'rgba(240,180,0,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.1em' }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Bet won</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.6)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</span>
           </div>
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>—</span>
           <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--gold)' }}>+{b.amount}</span>
@@ -210,7 +210,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           borderTop: tradeNet > 0 ? '1px solid rgba(240,180,0,0.25)' : '1px solid rgba(240,58,58,0.25)',
           background: tradeNet > 0 ? 'rgba(240,180,0,0.06)' : 'rgba(240,58,58,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.1em' }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {tradeNet > 0 ? 'Trade received' : 'Trade given'}
@@ -226,7 +226,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
         <div>
           <div style={{ height: 1, background: 'var(--shell-fill)', margin: '0 24px' }} />
           <div style={{ padding: '5px 24px 2px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>BENCH</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Bench</span>
           </div>
           {benchBreakdown.map((p) => (
             <div key={p.id} style={{
@@ -234,7 +234,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
               padding: '5px 24px', borderBottom: '1px solid var(--shell-rule)',
               opacity: 0.45,
             }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{p.position}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{p.position}</span>
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--mute)' }}>
@@ -733,8 +733,8 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       alignItems: 'center',
       padding: desktop ? '11px 24px' : '10px 18px',
       borderBottom: isOpen ? 'none' : '1px solid var(--rule)',
-      borderLeft: isMe ? '2px solid var(--cyan)' : isTop ? '2px solid var(--gold)' : '2px solid transparent',
-      background: isMe ? 'rgba(0,180,216,.04)' : isTop ? 'rgba(240,180,0,.02)' : 'transparent',
+      borderLeft: isMe ? '2px solid var(--accent)' : isTop ? '2px solid var(--gold)' : '2px solid transparent',
+      background: isMe ? 'var(--accent-soft)' : isTop ? 'transparent' : 'transparent',
       cursor: 'pointer',
     };
 
@@ -746,24 +746,24 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <MgrTag mono={mgrMono(name)} hue={hue} />
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
-              {isTop && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em', flexShrink: 0 }}>TOP</span>}
+              {isTop && <span style={{ fontSize: 'var(--fs-micro)', background: 'var(--gold-soft)', color: 'var(--gold-text)', padding: '1px 8px', borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>Top</span>}
             </div>
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </span>
               {betPts > 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>+{betPts} BET</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginTop: 1 }}>+{betPts} bet</div>
               )}
               {tradeNet !== 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', marginTop: 1 }}>
                   {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
                 </div>
               )}
               {s.penalty > 0 ? (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>−{s.penalty} PENALTY</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 1 }}>−{s.penalty} penalty</div>
               ) : isLiveRound && s.pts !== null ? (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.14em', marginTop: 1 }}>LIVE</div>
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 1 }}>Live</div>
               ) : null}
             </div>
             <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
@@ -782,7 +782,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             <MgrTag mono={mgrMono(name)} hue={hue} size={20} />
             <div style={{ minWidth: 0 }}>
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{name}</span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>
                 TOTAL {totalPts !== null ? Math.round(totalPts) : '—'}{h2hEnabled ? ` · H2H ${h2hMap[s.user_id] ?? '—'}` : ''} · TAP FOR BREAKDOWN
               </span>
             </div>
@@ -791,14 +791,14 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </div>
               {betPts > 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--gold)' }}>+{betPts} BET</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>+{betPts} bet</div>
               )}
               {tradeNet !== 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
                   {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
                 </div>
               )}
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: s.penalty > 0 ? 'var(--danger)' : isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)' }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: s.penalty > 0 ? 'var(--danger)' : isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)' }}>
                 {s.penalty > 0 ? `−${s.penalty} XFER` : isLiveRound && s.pts !== null ? 'LIVE' : 'GW'}
               </div>
             </div>
@@ -813,14 +813,14 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   // ── Early returns ────────────────────────────────────────────────────────────
   if (loadingMds) return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING RECAP…</div>
+      <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading recap…</div>
     </div>
   );
 
   if (!allMatchdays.length) return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
       <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>📋</div>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 8 }}>NO COMPLETED MATCHDAY</div>
+      <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>No completed matchday</div>
       <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.7, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
         The recap will appear once the first matchday deadline passes and scores are calculated.
       </div>
@@ -832,10 +832,10 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 380px', minHeight: 0 }}>
       <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)', minHeight: 0 }}>
         <HubSectionLabel
-          label={`RECAP · ${roundLabel}`}
-          sub="MATCHDAY SCORES"
+          label={`Recap · ${roundLabel}`}
+          sub="Matchday scores"
           tone="var(--gold)"
-          right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>CLICK ROW FOR BREAKDOWN</span>}
+          right={<span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Click row for breakdown</span>}
         />
         <MatchdayNav allMatchdays={allMatchdays} selected={selectedMatchday} onSelect={setSelectedMatchday} />
         <div style={{ display: 'grid', gridTemplateColumns: h2hEnabled ? '40px 1fr 80px 80px 60px 24px' : '40px 1fr 80px 80px 24px', gap: 12, padding: '10px 24px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
@@ -845,12 +845,12 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         </div>
         {loading ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
+            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</span>
           </div>
         ) : !hasScores ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 8 }}>
             <div style={{ fontSize: 'var(--fs-title)' }}><IconHourglass size={28} /></div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>SCORES PENDING</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Scores pending</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
               Points are calculated after each match completes.
             </div>
@@ -862,9 +862,9 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         )}
       </div>
       <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
-        <HubSectionLabel label="FIXTURES" sub={roundLabel} tone="var(--cyan)" />
+        <HubSectionLabel label="Fixtures" sub={roundLabel} tone="var(--accent)" />
         {!fixtures.length
-          ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}><span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO FIXTURES</span></div>
+          ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}><span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>No fixtures</span></div>
           : fixtures.map(f => <FixtureRow key={f.id} f={f} />)
         }
       </aside>
@@ -874,17 +874,17 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   // ── Mobile ───────────────────────────────────────────────────────────────────
   return (
     <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <MobSection label={`RECAP · ${roundLabel}`} tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>GW SCORES</span>} />
+      <MobSection label={`Recap · ${roundLabel}`} tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Gw scores</span>} />
       <MatchdayNav allMatchdays={allMatchdays} selected={selectedMatchday} onSelect={setSelectedMatchday} mobile />
 
       {loading ? (
         <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
+          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</span>
         </div>
       ) : !hasScores ? (
         <div style={{ padding: '32px 18px', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--fs-title)', marginBottom: 8 }}><IconHourglass size={28} /></div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 6 }}>SCORES PENDING</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6 }}>Scores pending</div>
           <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5 }}>
             Points are calculated after each match completes.
           </div>
@@ -895,7 +895,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
 
       {fixtures.length > 0 && (
         <>
-          <MobSection label="FIXTURES" sub={roundLabel} tone="var(--cyan)" />
+          <MobSection label="Fixtures" sub={roundLabel} tone="var(--accent)" />
           {fixtures.map(f => <FixtureRow key={f.id} f={f} />)}
         </>
       )}
