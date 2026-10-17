@@ -1,6 +1,5 @@
-// Light/dark theme. Wave 0 ships the tokens only: dark mode is not exposed in the UI until
-// after Wave 2. `?theme=dark|light` previews it (and is remembered); with nothing stored the
-// app stays light regardless of the OS setting.
+// Light/dark theme. Chosen in Settings → Appearance (stored in localStorage); `?theme=dark|light`
+// also sets and remembers it. With nothing stored the app stays light regardless of the OS setting.
 const KEY = 'ffl-theme';
 
 export function getStoredTheme() {
@@ -23,4 +22,10 @@ export function initTheme() {
     }
   } catch { /* storage unavailable — stay on default */ }
   return applyTheme(t);
+}
+
+export function setTheme(theme) {
+  const t = applyTheme(theme);
+  try { localStorage.setItem(KEY, t); } catch { /* storage unavailable — applies for this session only */ }
+  return t;
 }

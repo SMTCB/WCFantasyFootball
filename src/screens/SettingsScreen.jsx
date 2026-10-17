@@ -5,12 +5,14 @@ import { useToast } from '../hooks/useToast';
 import { useOnboarding } from '../hooks/useOnboarding';
 import TextInput from '../components/TextInput';
 import { supabase } from '../lib/supabase';
+import { getStoredTheme, setTheme } from '../lib/theme';
 
 export default function SettingsScreen() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { show: showToast } = useToast();
   const { replayWizard } = useOnboarding();
+  const [theme, setThemeState] = useState(getStoredTheme() === 'dark' ? 'dark' : 'light');
 
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -285,6 +287,41 @@ export default function SettingsScreen() {
               {isChangingPassword ? 'Updating...' : 'Update password'}
             </button>
           </form>
+        </div>
+
+        {/* Appearance */}
+        <div style={{
+          background: 'var(--card)',
+          border: '1px solid var(--rule)',
+          borderRadius: 'var(--radius)',
+          padding: '20px 16px',
+          marginBottom: 24,
+        }}>
+          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text)', marginBottom: 12 }}>
+            Appearance
+          </div>
+          <div role="radiogroup" aria-label="Theme" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[['light', 'Light'], ['dark', 'Dark']].map(([key, label]) => (
+              <button
+                key={key}
+                role="radio"
+                aria-checked={theme === key}
+                onClick={() => setThemeState(setTheme(key))}
+                style={{
+                  minHeight: 'var(--tap)',
+                  fontFamily: 'Archivo Black, sans-serif',
+                  fontSize: 'var(--fs-label)',
+                  background: theme === key ? 'var(--accent-soft)' : 'var(--elev)',
+                  color: theme === key ? 'var(--accent)' : 'var(--mute)',
+                  border: `1px solid ${theme === key ? 'var(--accent)' : 'var(--rule)'}`,
+                  borderRadius: 'var(--radius)',
+                  cursor: 'pointer',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tour & Account Section */}
