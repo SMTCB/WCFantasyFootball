@@ -7,7 +7,7 @@ import { memo } from 'react';
 // visually indistinguishable at a glance. Cyan gives every tier its own hue.)
 
 function cellBg(pts) {
-  if (pts === null || pts === undefined) return 'var(--shell-fill-strong)';
+  if (pts === null || pts === undefined) return 'var(--pitch-fill-strong)';
   if (pts === 0)  return 'rgba(240,58,58,0.45)';
   if (pts < 5)   return 'rgba(240,180,0,0.4)';
   if (pts < 10)  return 'rgba(24,201,107,0.4)';
@@ -15,7 +15,7 @@ function cellBg(pts) {
 }
 
 function cellColor(pts) {
-  if (pts === null || pts === undefined) return 'var(--on-shell-faint)';
+  if (pts === null || pts === undefined) return 'var(--on-pitch-faint)';
   if (pts === 0)  return 'rgba(240,58,58,0.9)';
   if (pts < 5)   return 'rgba(240,180,0,0.95)';
   if (pts < 10)  return 'rgba(24,201,107,0.95)';

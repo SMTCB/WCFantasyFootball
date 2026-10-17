@@ -103,7 +103,7 @@ function DmBubble({ msg }) {
         <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: msg.isOwn ? 'var(--on-accent)' : 'var(--paper)', lineHeight: 1.4, wordBreak: 'break-word' }}>
           {msg.content}
         </p>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: msg.isOwn ? 'var(--on-shell-dim)' : 'var(--mute)', marginTop: 4, textAlign: 'right' }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: msg.isOwn ? 'var(--on-pitch-dim)' : 'var(--mute)', marginTop: 4, textAlign: 'right' }}>
           {timeAgo(msg.createdAt)}
           {msg.isOwn && msg.readAt && <span style={{ marginLeft: 4 }}>· read</span>}
         </div>

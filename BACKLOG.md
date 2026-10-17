@@ -23,6 +23,13 @@ Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, r
 
 ---
 
+## ✅ Frontrow redesign — sweeps and pitch tokens (2026-10-17) — PRs #1096–#1098
+
+- **#1096** sentence-case sweep (11 files). **#1097** mono to Archivo (35 files; mono kept for Live scores, pitch, countdowns, Clubhouse front page, AdminSeed). **#1098** `--shell*`/`--on-shell*` renamed to `--pitch-*`/`--on-pitch-*` (only dark pitch/share-card/chat/action-bar surfaces use them); the unused `--shell` token is gone.
+- Open / next: Gazette/share-card/pitch/AdminSeed uppercase+mono, ~63 Tailwind fixed colours, lint baseline (512), Trading into Market, commissioner gear. Tier 3 E2E fails on main already (baseline).
+
+---
+
 ## ✅ Frontrow redesign — shell, top bar and league hub (2026-10-17) — PRs #1090–#1094
 
 - **#1090** top bar per mockup; duplicate Live/Squad/Market strip removed; Digest and Wishlist re-homed. **#1091** league hub: one tab row (H2H, Market report, Betting become sub-views), sentence-case window banner. **#1092–#1094** Market, Squad, League and 12 light-surface components moved off `--shell*` onto `--card`/`--elev`/`--rule`/`--mute` with a 4px marker.

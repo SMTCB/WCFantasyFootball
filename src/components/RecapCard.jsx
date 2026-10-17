@@ -38,7 +38,7 @@ export default function RecapCard({ recap, forwardRef }) {
         position: 'relative',
         overflow: 'hidden',
         borderRadius: '12px',
-        border: '1px solid var(--shell-rule)',
+        border: '1px solid var(--pitch-rule)',
         padding: '0',
       }}
     >
@@ -46,7 +46,7 @@ export default function RecapCard({ recap, forwardRef }) {
       <div style={{ height: '3px', background: 'linear-gradient(90deg, var(--positive), #16a34a)', width: '100%' }} />
 
       {/* Header */}
-      <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid var(--shell-rule)' }}>
+      <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid var(--pitch-rule)' }}>
         <div style={{ fontSize: 'var(--fs-micro)', letterSpacing: '0.25em', color: 'var(--mute)', textTransform: 'uppercase', fontWeight: 900, marginBottom: '4px' }}>
           {leagueName}
         </div>
@@ -57,7 +57,7 @@ export default function RecapCard({ recap, forwardRef }) {
       </div>
 
       {/* Rank Highlight */}
-      <div style={{ padding: '28px 24px', borderBottom: '1px solid var(--shell-rule)', textAlign: 'center', background: 'var(--shell-fill)' }}>
+      <div style={{ padding: '28px 24px', borderBottom: '1px solid var(--pitch-rule)', textAlign: 'center', background: 'var(--pitch-fill)' }}>
         <div style={{ fontSize: 'var(--fs-micro)', letterSpacing: '0.2em', color: 'var(--mute)', textTransform: 'uppercase', fontWeight: 900, marginBottom: '8px' }}>
           Final Rank
         </div>
@@ -127,7 +127,7 @@ export default function RecapCard({ recap, forwardRef }) {
       </div>
 
       {/* Footer / Branding */}
-      <div style={{ padding: '14px 24px', background: '#080808', borderTop: '1px solid var(--shell-rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '14px 24px', background: '#080808', borderTop: '1px solid var(--pitch-rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 'var(--fs-micro)', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#333' }}>
           Forza Fantasy League
         </div>

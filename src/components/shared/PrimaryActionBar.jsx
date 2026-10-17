@@ -94,11 +94,11 @@ export default function PrimaryActionBar({
         {isAction && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 12 }}>
             {countdown && (
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-pitch-mid)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
                 {countdown}
               </span>
             )}
-            <span style={{ color: 'var(--on-shell)', fontSize: 'var(--fs-body-lg)', lineHeight: 1 }}>→</span>
+            <span style={{ color: 'var(--on-pitch)', fontSize: 'var(--fs-body-lg)', lineHeight: 1 }}>→</span>
           </div>
         )}
       </button>

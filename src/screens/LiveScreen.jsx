@@ -80,17 +80,17 @@ function MiniPitch({ players, activeLeague, gwLabel }) {
       ))}
       {/* position guide lines */}
       {[14, 38, 64, 88].map(y => (
-        <div key={y} style={{ position: 'absolute', left: 18, right: 18, top: `${y}%`, height: 1, background: 'var(--shell-fill-active)' }} />
+        <div key={y} style={{ position: 'absolute', left: 18, right: 18, top: `${y}%`, height: 1, background: 'var(--pitch-line)' }} />
       ))}
       {[{ y: 14, label: 'FWD' }, { y: 38, label: 'MID' }, { y: 64, label: 'DEF' }, { y: 88, label: 'GK' }].map(l => (
-        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', background: 'rgba(0,0,0,0.3)', padding: '1px 3px' }}>{l.label}</div>
+        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 'var(--fs-micro)', color: 'var(--on-pitch-mid)', background: 'rgba(0,0,0,0.3)', padding: '1px 3px' }}>{l.label}</div>
       ))}
       {/* centre circle */}
-      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid var(--shell-rule-emphasis)' }} />
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid var(--pitch-line-strong)' }} />
       {/* header */}
       <div style={{ position: 'absolute', top: 10, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.22em' }}>STARTING XI · {formation}</div>
-        <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: activeLeague ? 'var(--on-shell)' : 'var(--on-shell-dim)', letterSpacing: '.22em' }}>
+        <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-pitch-dim)', letterSpacing: '.22em' }}>STARTING XI · {formation}</div>
+        <div className="font-mono" style={{ fontSize: 'var(--fs-micro)', color: activeLeague ? 'var(--on-pitch)' : 'var(--on-pitch-dim)', letterSpacing: '.22em' }}>
           {activeLeague ? activeLeague.name.toUpperCase() : (gwLabel || 'GW —')}
         </div>
       </div>
