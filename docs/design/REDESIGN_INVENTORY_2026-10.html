@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redesign Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F3ED; --card:#FFFFFF; --raised:#EFEAE2; --rule:#E2DDD5; --ink:#18202E; --ink-2:#3F4A5C; --mute:#5C6878;
+  --accent:#1A6FA8; --accent-bg:#E6F0F7; --gold:#925A0A; --gold-bg:#FAF0DE;
+  --good:#166534; --good-bg:#E3F0E6; --crit:#B91C1C; --crit-bg:#FBE9E9; --med-bg:#E7E9EE;
+  --display:'Archivo Black',sans-serif; --sans:'Archivo',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B0F14; --card:#141A22; --raised:#1C242E; --rule:#2E3846; --ink:#F2EEE5; --ink-2:#C3CAD6; --mute:#93A0B1;
+  --accent:#5FB3E5; --accent-bg:#14283A; --gold:#E5B45C; --gold-bg:#2C2312; --good:#7FDCA4; --good-bg:#14261C;
+  --crit:#F08B8B; --crit-bg:#2E1616; --med-bg:#222B36; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0B0F14; --card:#141A22; --raised:#1C242E; --rule:#2E3846; --ink:#F2EEE5; --ink-2:#C3CAD6; --mute:#93A0B1;
+  --accent:#5FB3E5; --accent-bg:#14283A; --gold:#E5B45C; --gold-bg:#2C2312; --good:#7FDCA4; --good-bg:#14261C;
+  --crit:#F08B8B; --crit-bg:#2E1616; --med-bg:#222B36; color-scheme:dark;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px 96px}
+h1,h2{font-family:var(--display);font-weight:400;letter-spacing:-.015em;line-height:1.1;text-wrap:balance}
+h1{font-size:clamp(32px,6vw,52px)}
+h2{font-size:clamp(22px,3.4vw,30px);margin-bottom:6px}
+h3{font-size:17px;font-weight:700}
+p{max-width:72ch}
+.lede{font-size:18px;color:var(--ink-2);margin-top:14px}
+.eyebrow{font-size:13px;font-weight:700;color:var(--accent)}
+.muted{color:var(--mute)}
+section{padding:44px 0 8px;border-top:1px solid var(--rule);margin-top:40px}
+header.mast{padding:48px 0 8px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:18px;font-size:14px;color:var(--mute)}
+code{font-family:var(--mono);font-size:.85em;background:var(--raised);padding:1px 5px;border-radius:4px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:24px}
+.stat{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px}
+.stat b{display:block;font-family:var(--display);font-weight:400;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:14px;color:var(--ink-2)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:20px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:18px}
+.card h3{display:flex;gap:10px;align-items:baseline}
+.card h3 .n{font-family:var(--mono);font-size:13px;color:var(--mute);font-weight:500}
+.card p{font-size:15px;color:var(--ink-2);margin-top:6px}
+.card .fix{margin-top:10px;font-size:14px;padding-top:10px;border-top:1px dashed var(--rule)}
+.card .fix b{color:var(--good)}
+
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.t-a{background:var(--accent-bg);color:var(--accent)}
+.t-b{background:var(--good-bg);color:var(--good)}
+.t-c{background:var(--gold-bg);color:var(--gold)}
+.t-d{background:var(--med-bg);color:var(--ink-2)}
+.t-e{background:var(--crit-bg);color:var(--crit)}
+.s{font-family:var(--mono);font-size:12px;font-weight:500;padding:2px 7px;border-radius:5px;background:var(--raised)}
+
+.tbl-wrap{overflow-x:auto;margin-top:20px;border:1px solid var(--rule);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:14px}
+th{text-align:left;font-size:13px;font-weight:600;color:var(--mute);padding:10px 14px;border-bottom:1px solid var(--rule);background:var(--raised);position:sticky;top:0}
+td{padding:11px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.scr b{display:block;font-weight:700}
+td.scr code{font-size:12px}
+tr.grp td{background:var(--bg);font-weight:700;font-size:13px;color:var(--ink-2);padding:8px 14px}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.filters button{font:inherit;font-size:14px;font-weight:600;padding:7px 12px;border-radius:20px;border:1px solid var(--rule);background:var(--card);color:var(--ink-2);cursor:pointer;min-height:36px}
+.filters button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.headers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:20px}
+.hs{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--card)}
+.hs .sw{height:58px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center}
+.hs .sw small{font-family:var(--mono);font-size:10px;letter-spacing:.18em;opacity:.7}
+.hs .sw strong{font-family:var(--display);font-weight:400;font-size:17px}
+.hs p{font-size:13px;color:var(--ink-2);padding:10px 12px}
+
+.waves{display:grid;gap:10px;margin-top:20px}
+.wave{display:grid;grid-template-columns:120px 1fr;gap:16px;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px}
+.wave .w{font-family:var(--display);font-size:22px}
+.wave .w small{display:block;font-family:var(--sans);font-size:13px;color:var(--mute)}
+.wave ul{margin:6px 0 0 18px;font-size:15px;color:var(--ink-2)}
+.wave ul li{margin:2px 0}
+
+.q{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--accent);border-radius:10px;padding:14px 16px;margin-top:10px}
+.q h3{font-size:16px}
+.q p{font-size:15px;color:var(--ink-2);margin-top:4px}
+.q .rec{font-size:14px;margin-top:6px}
+.q .rec b{color:var(--accent)}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}
+.rule{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px}
+.rule h3{font-size:15px}
+.rule ul{margin:8px 0 0 18px;font-size:14px;color:var(--ink-2)}
+footer{margin-top:56px;font-size:13px;color:var(--mute)}
+@media (max-width:640px){.wave{grid-template-columns:1fr;gap:4px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <div class="eyebrow">Frontrow · Redesign inventory</div>
+  <h1>Every screen, what's wrong with it, and where it goes</h1>
+  <p class="lede">This inventory comes before any build. It lists all 34 screens and the eight habits that make the app look dated. It proposes six page templates that every screen will move onto, a rollout in waves, and the decisions I need from you before mocking them up.</p>
+  <div class="meta"><span>Assessed 2026-10-17 against <code>main @ 3f8ab11</code></span><span>Source scan of 198 UI files + live review of 11 screens</span><span>Builds on the Aug-2026 design audit</span></div>
+</header>
+
+<section>
+  <h2>The picture in numbers</h2>
+  <p class="muted">Repository counts across <code>src/</code>. They measure how widespread each habit is, so the cleanup can be scoped honestly.</p>
+  <div class="stats">
+    <div class="stat"><b>34</b><span>screens / routes (+ ~20 large sub-views and sheets)</span></div>
+    <div class="stat"><b>1,552</b><span>uses of the 11px "micro" size: the single biggest cause of the cramped, dated feel</span></div>
+    <div class="stat"><b>430</b><span>wide-tracked ALL-CAPS labels (letter-spacing ≥ .15em)</span></div>
+    <div class="stat"><b>1,216</b><span>places using the typewriter (mono) font for ordinary labels</span></div>
+    <div class="stat"><b>370</b><span>emoji used as icons (🏠 ⚔️ 🏁 🎾 💰 …), which render differently on every device</span></div>
+    <div class="stat"><b>4,497</b><span>one-off inline style blocks, so no screen shares a component with another</span></div>
+    <div class="stat"><b>6</b><span>different page-header styles in use today (below)</span></div>
+    <div class="stat"><b>2</b><span>styling systems side by side: inline styles vs Tailwind (Draft, Wishlist, Admin, Gazette)</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Six headers, no system</h2>
+  <p class="muted">What a user sees when moving between screens today. Each screen invented its own top section.</p>
+  <div class="headers">
+    <div class="hs"><div class="sw" style="background:#1A6FA8;color:#fff"><small>← BACK</small><strong>CHAMPIONS EDER 26/27</strong></div><p><b>Blue slab, all caps</b>: league screen. About 150px tall and nearly empty.</p></div>
+    <div class="hs"><div class="sw" style="background:#18202E;color:#fff"><small>TACTICAL SHEET</small><strong>My Squad</strong></div><p><b>Navy slab, sentence case</b>: Squad, Home, Tennis, Trophy (profile variant).</p></div>
+    <div class="hs"><div class="sw" style="background:#18202E;color:#fff"><small>TRANSFER WINDOW</small><strong>PLAYER MARKET</strong></div><p><b>Navy slab, all caps, dense</b>: Market, Clubhouse.</p></div>
+    <div class="hs"><div class="sw" style="background:#F7F3ED;color:#18202E;border-bottom:1px solid #E2DDD5"><small>MATCH DAY · GW 2</small><strong>Live Centre <span style="color:#B91C1C;font-size:11px">● LIVE</span></strong></div><p><b>Light, no slab</b>: Live, My Bets, Wallet.</p></div>
+    <div class="hs"><div class="sw" style="background:#fff;color:#18202E;border-bottom:2px solid #DC2626"><small>FORMULA 1 · 2026</small><strong>PADDOCK</strong></div><p><b>Light with red accent</b>: F1 screens, with red tabs and red buttons.</p></div>
+    <div class="hs"><div class="sw" style="background:#18202E;color:#fff;border-left:4px solid #16A34A"><small>TENNIS · 2026 ATP SEASON</small><strong>Tennis</strong></div><p><b>Navy with a green edge</b>: Tennis, with blue buttons.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The eight habits behind "dated"</h2>
+  <p class="muted">Every screen shows some mix of these. Fixing them once, in shared components, fixes them everywhere.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="n">01</span>Tiny tracked typewriter labels</h3><p>Section titles, tabs, buttons and metadata are set in 9–11px mono capitals with wide spacing. They read as a 2015 "tactical" aesthetic and are hard to scan.</p><div class="fix"><b>Fix:</b> sentence-case labels in Archivo at 13–14px. Mono is kept only for numbers, timers and codes.</div></div>
+    <div class="card"><h3><span class="n">02</span>Stacked chrome before content</h3><p>The league screen has 5 bands (switcher, sport nav, slab, window bar, tabs), about 350px, before the first standing. Squad and Market have 4.</p><div class="fix"><b>Fix:</b> one compact header plus one tab row (the Direction 2 pattern) on every competition screen.</div></div>
+    <div class="card"><h3><span class="n">03</span>Two navigation layers that look alike</h3><p>The sport row (Live / Squad / Market / Digest) and the league tabs use the same style, so it's unclear which level you're on. F1 and Tennis repeat it with their own sets.</p><div class="fix"><b>Fix:</b> a single tab row per competition. Digest moves to the clubhouse.</div></div>
+    <div class="card"><h3><span class="n">04</span>"← Back" on top-level screens</h3><p>Home, Squad, Market, Live, Trophy, Bets and Coins all show a Back link even though they're top-level destinations reached from the bottom bar.</p><div class="fix"><b>Fix:</b> Back appears only on genuinely nested pages (a player, a tournament, settings).</div></div>
+    <div class="card"><h3><span class="n">05</span>Emoji as icons</h3><p>370 emoji serve as UI icons: 🏠 in the switcher, ⚔️ on H2H, 🏁 for F1, ⚙ for Admin. They look different on iOS, Android and Windows and clash with the line icons in <code>UiIcons.jsx</code>.</p><div class="fix"><b>Fix:</b> one SVG line-icon set. Emoji only inside user content (chat, bets).</div></div>
+    <div class="card"><h3><span class="n">06</span>Colour without a rule</h3><p>Blue, navy, red, green and gold all act as "primary" somewhere. F1's buttons are red, Tennis's are blue, and the join button is pale blue.</p><div class="fix"><b>Fix:</b> blue is the only action colour. Sport colours become small markers, and gold is reserved for rank and trophies.</div></div>
+    <div class="card"><h3><span class="n">07</span>Tables that hide the story</h3><p>Standings show only a total, with placeholder "C · —" and empty form dots on mobile. The leader appears three times, and rows aren't clickable.</p><div class="fix"><b>Fix:</b> a shared standings row with GW points, movement and gap. Your row is highlighted, and tapping a row opens that squad (with a Compare button).</div></div>
+    <div class="card"><h3><span class="n">08</span>Rough empty and error states</h3><p>Raw messages like "FAILED TO LOAD: permission denied for function…", "No leagues" in grey mono, and empty skeleton rows that never resolve.</p><div class="fix"><b>Fix:</b> a shared empty state (icon, one sentence, one action) and a friendly error with a retry.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>The target: six templates</h2>
+  <p class="muted">Every screen lands on one of these. The template sets the header, spacing and navigation, and screens differ only in their content.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="tag t-a">A</span>Competition page</h3><p>The Direction 2 header: switcher, crest and name, meta chips, your position, one tab row, and an optional status bar (window open, race lock, draw). Used for the football league, F1 paddock and tennis box, so all three sports feel like one product.</p></div>
+    <div class="card"><h3><span class="tag t-b">B</span>Hub page</h3><p>A light header with a title, one line of context and at most one primary action, then cards. Used by Home, Clubhouse, Trophy, Bets, Coins and Digest. No slabs.</p></div>
+    <div class="card"><h3><span class="tag t-c">C</span>Detail page</h3><p>Back, title and content. Used for a player, a fixture, a tournament, F1 race picks and settings.</p></div>
+    <div class="card"><h3><span class="tag t-d">D</span>Focus flow</h3><p>A full-screen stepper with progress, one decision per step and a sticky action. Used for sign-in, onboarding, new competition, draft, wishlist and draft recovery.</p></div>
+    <div class="card"><h3><span class="tag t-e">E</span>Admin console</h3><p>A dense, utilitarian layout with grouped settings and clear destructive zones. Used for the commissioner panel and the F1, tennis and seed admin screens. Lower priority, since only admins see it.</p></div>
+    <div class="card"><h3><span class="tag t-d">F</span>Sheets &amp; modals</h3><p>A bottom sheet on mobile and a centred dialog on desktop, with one shell. Used for H2H, player picker, confirmations, scoring info and invites.</p></div>
+  </div>
+  <h3 style="margin-top:28px">Shared building blocks (wave 0)</h3>
+  <div class="rules">
+    <div class="rule"><h3>Type</h3><ul><li>Title 28 / Heading 20 / Body 15–16 / Label 13–14</li><li>12px is the floor, for metadata only</li><li>Sentence case everywhere; capitals only for codes</li><li>Mono only for numbers, timers and invite codes</li></ul></div>
+    <div class="rule"><h3>Colour</h3><ul><li>Blue = action and selection</li><li>Gold = rank, trophies, leader</li><li>Green / red = up/down, open/closed, live</li><li>Sport colour = 4px marker or crest only</li></ul></div>
+    <div class="rule"><h3>Shape &amp; space</h3><ul><li>Cards: white, 1px rule, 12px radius</li><li>Controls: 8px radius, 44px tall touch targets</li><li>8-pt spacing scale; 16px mobile gutter</li></ul></div>
+    <div class="rule"><h3>Components</h3><ul><li>PageHeader (A/B/C variants), Tabs, StatusBar</li><li>StandingsRow, StatPill, Card, EmptyState, ErrorState</li><li>Button (primary / secondary / ghost / danger), IconButton</li><li>Icon set replacing emoji</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>Screen by screen</h2>
+  <p class="muted">Size: S ≈ header and labels only · M ≈ header plus a couple of sections · L ≈ a large screen rebuilt onto the template. "Lines" is file size, a proxy for effort.</p>
+  <div class="filters" role="group" aria-label="Filter by wave">
+    <button data-f="all" aria-pressed="true">All</button>
+    <button data-f="1" aria-pressed="false">Wave 1</button>
+    <button data-f="2" aria-pressed="false">Wave 2</button>
+    <button data-f="3" aria-pressed="false">Wave 3</button>
+    <button data-f="4" aria-pressed="false">Wave 4</button>
+    <button data-f="5" aria-pressed="false">Wave 5</button>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Screen</th><th>Today</th><th>Main issues</th><th>Template</th><th>Wave</th><th>Size</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Rollout in waves</h2>
+  <p class="muted">Each wave ships on its own, so the app is never half-styled in a confusing way. Within a wave, the screens a user moves between change together.</p>
+  <div class="waves">
+    <div class="wave"><div class="w">Wave 0<small>Foundation</small></div><div>Shared tokens, the type scale, the icon set and the components listed above. Nothing visible changes yet; this is what makes everything after it fast and consistent.</div></div>
+    <div class="wave"><div class="w">Wave 1<small>Football league</small></div><div>Template A on the league: Standings (Direction 2), then Squad, Market and Live as tabs of the same header, then Recap (with Market Report), Bets (merged), Stats, H2H and Trading.<ul><li>This is where users spend most of their time, so it's the biggest visible win.</li></ul></div></div>
+    <div class="wave"><div class="w">Wave 2<small>Hubs &amp; shell</small></div><div>The global top bar and bottom nav (sentence case, SVG icons, no Back on top-level screens), then Home, Clubhouse with its Frontrow front page and Digest, Trophy, Bets, Coins, Challenges and Settings.</div></div>
+    <div class="wave"><div class="w">Wave 3<small>F1 &amp; Tennis</small></div><div>Paddock and Player Box move onto Template A, with race picks, season bets, standings, report, tournaments and finals. Red and green buttons become the shared blue; sport colour stays as an accent marker.</div></div>
+    <div class="wave"><div class="w">Wave 4<small>Flows</small></div><div>Template D for sign-in, onboarding, new competition, draft, wishlist and recovery. This also moves the Tailwind screens onto the shared components.</div></div>
+    <div class="wave"><div class="w">Wave 5<small>Admin</small></div><div>Template E for the commissioner panel (3,265 lines, the biggest single file) and the F1, tennis and seed admin screens. Admin-only, so it goes last.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Decisions I need before the mockups</h2>
+  <p class="muted">Each has a recommendation. Once these are settled, the next step is a mockup of each template applied to a real screen, so you see the full redesign before anything is built.</p>
+  <div class="q"><h3>1 · Desktop navigation</h3><p>Today desktop shows the mobile bottom bar (Home / Club / Trophy / Bets / Coins) stretched wide.</p><div class="rec"><b>Recommend:</b> a slim top bar on desktop (logo, those 5 destinations, clubhouse switcher, notifications, profile), with the bottom bar kept on mobile.</div></div>
+  <div class="q"><h3>2 · Dark heroes or light headers</h3><p>Navy and blue slabs are the most "dated" element but also the most branded one.</p><div class="rec"><b>Recommend:</b> light headers everywhere (as in Direction 2), with navy kept for one hero moment only: the Frontrow front page and the trophy profile.</div></div>
+  <div class="q"><h3>3 · How loud the sport colours are</h3><p>F1 red buttons and tabs, tennis green edges, football blue slab.</p><div class="rec"><b>Recommend:</b> sport colour only on the crest and a small marker. All buttons and tabs use the shared blue.</div></div>
+  <div class="q"><h3>4 · Dark mode</h3><p>The tokens partly support it, but no screen has been checked in dark mode.</p><div class="rec"><b>Recommend:</b> design for it in wave 0 (it's cheap at the token level) and switch it on after wave 2.</div></div>
+  <div class="q"><h3>5 · Brand character</h3><p>Dropping the mono capitals removes much of the current "editorial / tactical" voice.</p><div class="rec"><b>Recommend:</b> keep the voice through Archivo Black titles, the Frontrow newspaper and tabular numbers. Mono survives for scores, prices and countdowns.</div></div>
+</section>
+
+<footer>
+  Method: the counts come from a scan of every <code>.js/.jsx</code> file under <code>src/</code>. The live review covered Home, Squad, Market, Live, Clubhouse, Trophy, My Bets, Coins, F1 and Tennis in local demo mode, which has no seeded league. League screens were assessed from production screenshots and source. Builds on <a href="DESIGN_AUDIT_2026-08.html" style="color:var(--accent)">DESIGN_AUDIT_2026-08</a>.<br>Last Updated: 2026-10-17
+</footer>
+</div>
+
+<script>
+const T = {A:'<span class="tag t-a">A · Competition</span>',B:'<span class="tag t-b">B · Hub</span>',C:'<span class="tag t-c">C · Detail</span>',D:'<span class="tag t-d">D · Flow</span>',E:'<span class="tag t-e">E · Admin</span>',F:'<span class="tag t-d">F · Sheet</span>'};
+const G = [
+ ['Football league',[
+  ['League · Standings','/league/:id','LeagueScreen + LeagueDetailView · 2,640','Blue slab, 2 tab rows','5 chrome bands; only a TOT column; leader shown 3×; placeholder mobile rows','A',1,'L'],
+  ['League · Recap + Market report','tab','RecapView + MarketReportView · 1,280','Mono tab content','Two tabs for one idea; tiny labels','A',1,'M'],
+  ['League · Bets + Betting','tab','BetsTabHub + BettingLeaderboardView · 560','"BETS" vs "BETTING"','Confusing pair; emoji-heavy (15)','A',1,'M'],
+  ['League · Stats','tab','StatsView · 800','Mono tables','11px labels throughout','A',1,'M'],
+  ['League · H2H','tab + sheet','H2HView + H2HSheet · 550','⚔️ tab, own colours','13 hard-coded colours','A / F',1,'M'],
+  ['League · Trading (draft)','tab','TradingView · 530','Mono cards','Tiny labels; 8 emoji','A',1,'M'],
+  ['Squad','/squad','SquadScreen · 2,170','Navy slab + 3 sub-tabs','Separate header from league; 46 caps labels','A',1,'L'],
+  ['Market','/market','MarketScreen · 1,670','Navy dense slab','Red position bars read as errors; skeletons never resolve when empty','A',1,'L'],
+  ['Live','/live','LiveScreen · 1,470','Light, no slab','28 tracked labels; "No leagues" grey mono empty state','A',1,'L'],
+  ['Wishlist (draft prep)','/league/:id/wishlist','WishlistDraftScreen · 750','Tailwind, own look','Second styling system','D',4,'M'],
+  ['Draft room','/league/:id/draft','DraftScreen · 840','Tailwind, own look','Second styling system','D',4,'L'],
+  ['Draft recovery','…/draft/recover','DraftRecoveryScreen · 440','Tailwind','Second styling system','D',4,'S'],
+ ]],
+ ['Hubs & shell',[
+  ['App shell (top bar + bottom nav)','all','AppLayout + CompetitionNav · 970','Back + switcher + sport row; mono bottom nav','Back on top-level screens; 🏠 emoji; unlabelled "+"','—',2,'M'],
+  ['Home','/home','HomeDashboardScreen · 460','Navy slab, sentence case','Duplicates Clubhouse empty state','B',2,'M'],
+  ['Clubhouse + Frontrow','/clubhouse/:id','ClubhouseScreen + Frontpage · 1,450','Navy slab, ALL CAPS','63 mono labels; 11 emoji','B',2,'L'],
+  ['Digest','/recap','RecapScreen · 620','Sport-row tab','Belongs at clubhouse level, not inside football','B',2,'M'],
+  ['Trophy cabinet','/trophy','TrophyCabinetScreen · 350','Navy profile slab','Keep as hero; tidy labels','B',2,'S'],
+  ['My bets','/my-bets','MyBetsScreen · 170','Light, big headline','Raw error text; 4 tiny sizes','B',2,'S'],
+  ['Coins / wallet','/wallet','WalletScreen · 270','Light, narrow column','23 mono labels','B',2,'S'],
+  ['Challenges (P2P)','/challenges','ChallengeScreen · 2,850','Mono-heavy','155 mono uses; 23 emoji — biggest consumer screen','B',2,'L'],
+  ['Predictions bracket','/predictions','BracketScreen · 360','Tailwind','Second styling system','B',2,'M'],
+  ['Settings','/settings','SettingsScreen · 390','Light','Mono section labels','C',2,'S'],
+ ]],
+ ['F1 & Tennis',[
+  ['Paddock lobby','/f1','PaddockLobbyScreen · 300','Light + red','Red primary buttons; ALL CAPS title','B',3,'S'],
+  ['Paddock home + picks','/f1/:id','F1HomeScreen + F1RacePickForm · 630','Red tabs','Own nav row; 18 emoji','A',3,'L'],
+  ['Paddock standings / report / season','/f1/:id/…','3 screens · 640','Red tabs','14 emoji in report','A',3,'M'],
+  ['Tennis home','/tennis','TennisHomeScreen · 250','Navy + green edge','Blue CTA vs F1 red; emoji icon','B',3,'S'],
+  ['Player box','/tennis/box','PlayerBoxScreen · 290','Light','Should match Paddock / League','A',3,'M'],
+  ['Tennis tournament / finals / leaderboard','/tennis/…','3 screens · 790','Mixed','11 caps labels; 8 emoji','C',3,'M'],
+ ]],
+ ['Entry flows',[
+  ['Sign in / sign up','/auth','AuthScreen · 390','Own look','First impression; already contrast-fixed in Aug','D',4,'M'],
+  ['Onboarding wizard + tour','overlay','OnboardingWizard + Tour · 790','Gold, ALL CAPS card','Heavy caps; "GO" eyebrow','D',4,'M'],
+  ['New competition','sheet','NewCompetitionFlow · 450','Mixed','Reached via unlabelled "+"','D',4,'M'],
+  ['Not found / error','*','NotFound + ErrorBoundary · 260','Mono','Tone','C',4,'S'],
+ ]],
+ ['Admin',[
+  ['Commissioner panel','league tab','CommissionerPanel + BetCreatorPanel · 4,210','⚙ tab, mono','93 tracked labels; 21 emoji; largest file','E',5,'L'],
+  ['F1 admin / Tennis admin','/f1/:id/admin, /tennis/admin','2 screens · 590','Mixed','Admin-only','E',5,'M'],
+  ['Seed admin','/admin','AdminSeedScreen · 1,330','Tailwind','Internal tool','E',5,'S'],
+ ]],
+];
+const tb = document.getElementById('rows');
+function render(f){
+  tb.innerHTML = G.map(([g,rs])=>{
+    const vis = rs.filter(r=>f==='all'||String(r[6])===f);
+    if(!vis.length) return '';
+    return `<tr class="grp"><td colspan="6">${g}</td></tr>` + vis.map(r=>`<tr>
+      <td class="scr"><b>${r[0]}</b><code>${r[1]}</code><div class="muted" style="font-size:12px;margin-top:2px">${r[2]} lines</div></td>
+      <td>${r[3]}</td><td>${r[4]}</td>
+      <td>${r[5].split(' / ').map(x=>T[x]||'<span class="muted">shell</span>').join(' ')}</td>
+      <td><span class="s">W${r[6]}</span></td><td><span class="s">${r[7]}</span></td></tr>`).join('');
+  }).join('');
+}
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  render(b.dataset.f);
+});
+render('all');
+</script>
+</body>
+</html>

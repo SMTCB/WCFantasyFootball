@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redesign Templates</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F3ED;--card:#fff;--raised:#EFEAE2;--rule:#E2DDD5;--ink:#18202E;--ink2:#3F4A5C;--mute:#5C6878;
+  --accent:#1A6FA8;--accent-bg:#E6F0F7;--on-accent:#fff;--gold:#925A0A;--gold-bg:#FAF0DE;
+  --good:#166534;--good-bg:#E3F0E6;--crit:#B91C1C;--crit-bg:#FBE9E9;--navy:#18202E;--on-navy:#F2EEE5;
+  --display:'Archivo Black',sans-serif;--sans:'Archivo',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+  --page:#E9E4DB;color-scheme:light;
+}
+:root[data-theme=dark]{
+  --bg:#0B0F14;--card:#141A22;--raised:#1C242E;--rule:#2E3846;--ink:#F2EEE5;--ink2:#C3CAD6;--mute:#93A0B1;
+  --accent:#5FB3E5;--accent-bg:#14283A;--on-accent:#0B0F14;--gold:#E5B45C;--gold-bg:#2C2312;--good:#7FDCA4;--good-bg:#14261C;
+  --crit:#F08B8B;--crit-bg:#2E1616;--navy:#0F151D;--page:#05080B;color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono);font-weight:500}
+
+/* --- review chrome --- */
+.ctl{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--rule);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.ctl b{font-family:var(--display);font-weight:400;font-size:17px;margin-right:6px}
+.seg{display:flex;gap:2px;background:var(--raised);padding:3px;border-radius:10px}
+.seg button{padding:7px 12px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink2);min-height:36px}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg .k{font-family:var(--mono);font-size:12px;margin-right:5px;color:var(--accent)}
+.note{max-width:1100px;margin:18px auto 0;padding:0 16px;font-size:14px;color:var(--ink2)}
+.note b{color:var(--ink)}
+.stage{padding:16px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:var(--bg);border:1px solid var(--rule);border-radius:14px;overflow:hidden;width:100%;max-width:1100px;position:relative;min-height:640px}
+.frame.m{max-width:390px}
+.why{max-width:1100px;margin:0 auto;padding:4px 16px 64px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.why div{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px;font-size:14px;color:var(--ink2)}
+.why h4{font-size:13px;color:var(--accent);margin-bottom:4px}
+.tpl{display:none}.tpl.on{display:block}
+
+/* --- app shell --- */
+.top{display:flex;align-items:center;gap:16px;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--rule)}
+.logo{font-family:var(--display);font-size:18px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.logo i{width:26px;height:26px;border-radius:7px;background:var(--navy);color:var(--on-navy);display:grid;place-items:center;font-style:normal;font-size:13px}
+.topnav{display:flex;gap:2px;margin-left:8px}
+.topnav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:8px;font-weight:600;font-size:14px;color:var(--ink2);text-decoration:none;min-height:40px}
+.topnav a.on{background:var(--accent-bg);color:var(--accent)}
+.sp{flex:1}
+.switch{display:flex;align-items:center;gap:8px;border:1px solid var(--rule);border-radius:10px;padding:6px 10px;font-weight:600;font-size:14px;background:var(--card);min-height:40px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold-bg);color:var(--gold);display:grid;place-items:center;font-weight:700;font-size:13px}
+.ibtn{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;color:var(--ink2)}
+.bot{display:none;position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--rule);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
+.bot a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--mute);padding:4px 10px;min-width:60px;min-height:44px;text-decoration:none}
+.bot a.on{color:var(--accent)}
+@container (max-width:700px){
+  .topnav{display:none}.bot{display:flex}.switch .lbl{display:none}
+  .grid2,.grid3{grid-template-columns:1fr!important}
+  .rail{order:3}
+  .hide-m{display:none!important}
+}
+@container (min-width:701px){.show-m{display:none!important}}
+
+/* --- shared parts --- */
+.pad{padding:16px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px}
+.cardp{padding:16px}
+.h-title{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:-.015em;line-height:1.15}
+.h2{font-size:17px;font-weight:700}
+.sub{font-size:14px;color:var(--mute)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 16px;border-radius:10px;font-weight:700;font-size:15px;background:var(--accent);color:var(--on-accent)}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
+.btn.gh{background:transparent;color:var(--accent)}
+.btn.dn{background:var(--crit-bg);color:var(--crit)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--raised);color:var(--ink2)}
+.chip.g{background:var(--good-bg);color:var(--good)}.chip.a{background:var(--accent-bg);color:var(--accent)}.chip.y{background:var(--gold-bg);color:var(--gold)}.chip.r{background:var(--crit-bg);color:var(--crit)}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--rule);padding:0 8px;background:var(--card)}
+.tabs a{padding:13px 12px;font-weight:600;font-size:15px;color:var(--mute);white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px;min-height:46px;text-decoration:none}
+.tabs a.on{color:var(--ink);border-color:var(--accent)}
+.tabs .div{width:1px;background:var(--rule);margin:10px 6px}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--good-bg);color:var(--good);font-size:14px;font-weight:600}
+.bar .btn{margin-left:auto}
+.mk{width:4px;height:100%;border-radius:2px}
+
+/* competition header */
+.chead{background:var(--card);padding:14px 16px 0;display:grid;gap:12px}
+.crow{display:flex;gap:12px;align-items:center}
+.crest{width:46px;height:46px;border-radius:12px;background:var(--navy);color:var(--on-navy);display:grid;place-items:center;font-family:var(--display);font-size:16px;position:relative;flex:none}
+.crest::after{content:"";position:absolute;left:-4px;top:10px;bottom:10px;width:4px;border-radius:2px;background:var(--accent)}
+.crest.f1::after{background:#DC2626}.crest.tn::after{background:#16A34A}
+.pos{display:flex;gap:18px;margin-left:auto;text-align:right}
+.pos b{display:block;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.1}
+.pos span{font-size:12px;color:var(--mute)}
+@container (max-width:700px){.pos{display:none}.posm{display:flex!important}}
+.posm{display:none;gap:0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.posm div{flex:1;padding:8px 10px;border-right:1px solid var(--rule)}.posm div:last-child{border:0}
+.posm b{display:block;font-family:var(--display);font-weight:400;font-size:19px}
+.posm span{font-size:12px;color:var(--mute)}
+
+/* standings */
+.grid2{display:grid;grid-template-columns:1fr 300px;gap:14px;padding:16px;align-items:start}
+.pod{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pod>div{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:12px;text-align:center}
+.pod>div.f{border-color:var(--gold);background:var(--gold-bg)}
+.pod .r{font-size:12px;font-weight:700;color:var(--gold)}
+.pod b{display:block;font-size:15px;margin-top:2px}
+.pod .p{font-family:var(--display);font-size:22px;margin-top:2px}
+.tbl{width:100%;border-collapse:collapse;font-size:15px}
+.tbl th{font-size:12px;font-weight:600;color:var(--mute);text-align:right;padding:8px 10px;border-bottom:1px solid var(--rule)}
+.tbl th:nth-child(3),.tbl td:nth-child(3){text-align:left}
+.tbl td{padding:10px;border-bottom:1px solid var(--rule);text-align:right;min-height:48px;cursor:pointer}
+.tbl tr:last-child td{border:0}
+.tbl tr.me td{background:var(--accent-bg)}
+.tbl tr:hover td{background:var(--raised)}.tbl tr.me:hover td{background:var(--accent-bg)}
+.tbl .mv{font-size:13px;font-weight:700}.up{color:var(--good)}.dn_{color:var(--crit)}.eq{color:var(--mute)}
+.tbl .nm{display:flex;align-items:center;gap:9px;font-weight:600}
+.dot{width:28px;height:28px;border-radius:50%;background:var(--raised);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--ink2)}
+.me .dot{background:var(--accent);color:var(--on-accent)}
+.form{display:inline-flex;gap:3px}.form i{width:7px;height:7px;border-radius:50%;background:var(--rule)}.form i.w{background:var(--good)}.form i.l{background:var(--crit)}
+@container (max-width:700px){.tbl .hm{display:none}}
+.feed{display:grid;gap:0}
+.feed div{padding:10px 0;border-bottom:1px solid var(--rule);font-size:14px;display:flex;gap:10px}
+.feed div:last-child{border:0}
+.notice{border-left:4px solid var(--gold);background:var(--gold-bg)}
+
+/* hub */
+.hero{background:var(--navy);color:var(--on-navy);border-radius:14px;padding:20px;display:grid;gap:8px}
+.hero .e{font-size:13px;font-weight:700;color:#E5B45C}
+.hero h2{font-family:var(--display);font-weight:400;font-size:24px;line-height:1.15;letter-spacing:-.01em}
+.hero p{font-size:14px;color:#C3CAD6;max-width:60ch}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tile{display:grid;gap:10px;padding:16px;background:var(--card);border:1px solid var(--rule);border-radius:12px;min-height:130px;position:relative}
+.tile .t{display:flex;gap:10px;align-items:center}
+.tile .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--accent-bg);color:var(--accent)}
+.tile.f1 .ic{background:#FBE9E9;color:#B91C1C}.tile.tn .ic{background:#E3F0E6;color:#166534}
+:root[data-theme=dark] .tile.f1 .ic{background:#2E1616;color:#F08B8B}:root[data-theme=dark] .tile.tn .ic{background:#14261C;color:#7FDCA4}
+.tile .big{font-family:var(--display);font-size:22px}
+.empty{text-align:center;padding:28px 16px;display:grid;gap:8px;justify-items:center}
+.empty .ic{width:48px;height:48px;border-radius:14px;background:var(--raised);display:grid;place-items:center;color:var(--mute)}
+
+/* detail / settings */
+.back{display:flex;align-items:center;gap:6px;padding:12px 16px;font-weight:600;color:var(--accent);font-size:15px}
+.set{display:grid;gap:0}
+.set .row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--rule);min-height:56px}
+.set .row:last-child{border:0}
+.set .row small{display:block;font-size:13px;color:var(--mute)}
+.tog{width:44px;height:26px;border-radius:20px;background:var(--rule);position:relative;margin-left:auto;flex:none}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff}
+.tog.on{background:var(--accent)}.tog.on::after{left:21px}
+.sect{font-size:13px;font-weight:700;color:var(--mute);padding:18px 16px 6px}
+.field{display:grid;gap:5px;padding:12px 16px}
+.field label{font-size:14px;font-weight:600}
+.field .in{border:1px solid var(--rule);background:var(--card);border-radius:10px;padding:0 12px;min-height:46px;display:flex;align-items:center;color:var(--ink)}
+.field small{font-size:13px;color:var(--mute)}
+
+/* flow */
+.steps{display:flex;gap:6px;padding:16px 16px 0}
+.steps i{flex:1;height:4px;border-radius:3px;background:var(--rule)}.steps i.d{background:var(--accent)}
+.opt{display:flex;gap:14px;align-items:center;padding:16px;border:2px solid var(--rule);border-radius:14px;background:var(--card)}
+.opt.sel{border-color:var(--accent);background:var(--accent-bg)}
+.opt .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--raised);color:var(--ink2);flex:none}
+.opt.sel .ic{background:var(--accent);color:var(--on-accent)}
+.opt b{display:block;font-size:16px}
+.stick{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--rule);padding:12px 16px;display:flex;gap:10px}
+.stick .btn{flex:1}
+
+/* admin */
+.adm{display:grid;grid-template-columns:210px 1fr;min-height:560px}
+.adm nav{border-right:1px solid var(--rule);padding:12px 8px;background:var(--card);display:grid;gap:2px;align-content:start}
+.adm nav a{padding:9px 12px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink2);display:flex;gap:9px;align-items:center;min-height:40px;text-decoration:none}
+.adm nav a.on{background:var(--accent-bg);color:var(--accent)}
+.adm nav .g{font-size:12px;font-weight:700;color:var(--mute);padding:12px 12px 4px}
+.adm main{padding:18px;display:grid;gap:14px;align-content:start}
+.grp{background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.grp h3{font-size:15px;padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--raised)}
+.dz{border-color:var(--crit)}.dz h3{background:var(--crit-bg);color:var(--crit)}
+@container (max-width:700px){.adm{grid-template-columns:1fr}.adm nav{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--rule)}.adm nav .g{display:none}}
+
+/* sheet */
+.scrim{background:rgba(10,14,20,.5);position:relative;min-height:640px;display:flex;align-items:flex-end;justify-content:center}
+.scrim .bg{position:absolute;inset:0;filter:blur(1px);opacity:.55;pointer-events:none}
+.sheet{position:relative;background:var(--card);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:10px 16px 20px;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+@container (min-width:701px){.scrim{align-items:center}.sheet{border-radius:18px}}
+.grab{width:40px;height:4px;border-radius:3px;background:var(--rule);margin:0 auto 12px}
+.cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:6px 12px;align-items:center;text-align:center}
+.cmp .v{font-family:var(--display);font-size:20px}.cmp .l{font-size:13px;color:var(--mute)}
+.cmp .w{color:var(--good)}
+.cmp hr{grid-column:1/-1;border:0;border-top:1px solid var(--rule)}
+.pl{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--rule)}
+.pl:last-child{border:0}
+.pl .pp{margin-left:auto;font-weight:700}
+.kit{width:30px;height:30px;border-radius:8px;background:var(--raised);display:grid;place-items:center;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol>
+<symbol id="club" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3-5.5 6.5-5.5s6 2 6.5 5.5M16 5a3.5 3.5 0 010 7M18 14.5c2 .6 3.3 2.4 3.5 5.5"/></symbol>
+<symbol id="trophy" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 01-8 0V4zM8 6H4v1a3 3 0 003 3M16 6h4v1a3 3 0 01-3 3M12 14v4M8 21h8M10 18h4"/></symbol>
+<symbol id="bets" viewBox="0 0 24 24"><path d="M4 18l5-6 4 3 7-9M15 6h5v5"/></symbol>
+<symbol id="coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5c-.6-1-1.6-1.5-2.7-1.5-1.6 0-2.8.9-2.8 2.1 0 3 5.7 1.4 5.7 4.3 0 1.2-1.2 2.1-2.9 2.1-1.2 0-2.3-.6-2.8-1.6M12 6v2M12 16v2"/></symbol>
+<symbol id="bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0112 0v6l1.5 2h-15L6 17zM10 21h4"/></symbol>
+<symbol id="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8l3.5 2.5-1.3 4h-4.4l-1.3-4L12 8zM12 3v5M20 9.5l-4.5 1M17 19l-2.8-4.500M7 19l2.800-4.500M4 9.500l4.500 1"/></symbol>
+<symbol id="flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+<symbol id="racket" viewBox="0 0 24 24"><ellipse cx="14" cy="9" rx="6" ry="7" transform="rotate(35 14 9)"/><path d="M9.500 14.500L4 20M11 5l6 6"/></symbol>
+<symbol id="swords" viewBox="0 0 24 24"><path d="M5 5l9 9M19 5l-9 9M4 20l3-3M20 20l-3-3M3 17l4 4M21 17l-4 4"/></symbol>
+<symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="check" viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7"/></symbol>
+<symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="inbox" viewBox="0 0 24 24"><path d="M3 13l3-8h12l3 8v6H3v-6zM3 13h5l1 3h6l1-3h5"/></symbol>
+<symbol id="users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20c.5-3.500 3-5.500 6.500-5.500s6 2 6.500 5.500"/></symbol>
+<symbol id="shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.500-3.300 8-8 9-4.700-1-8-4.500-8-9V6l8-3z"/></symbol>
+<symbol id="mega" viewBox="0 0 24 24"><path d="M4 10v4h3l8 4V6L7 10H4zM18 9a4 4 0 010 6"/></symbol>
+<symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="news" viewBox="0 0 24 24"><path d="M4 5h13v14H6a2 2 0 01-2-2V5zM17 9h3v8a2 2 0 01-2 2M7 9h7M7 13h7"/></symbol>
+</defs>
+</svg>
+
+<div class="ctl">
+  <b>Redesign templates</b>
+  <div class="seg" id="tplSeg" role="group" aria-label="Template">
+    <button aria-pressed="true" data-t="A"><span class="k">A</span>Competition</button>
+    <button aria-pressed="false" data-t="A2"><span class="k">A</span>F1 paddock</button>
+    <button aria-pressed="false" data-t="B"><span class="k">B</span>Hub</button>
+    <button aria-pressed="false" data-t="C"><span class="k">C</span>Detail</button>
+    <button aria-pressed="false" data-t="D"><span class="k">D</span>Flow</button>
+    <button aria-pressed="false" data-t="E"><span class="k">E</span>Admin</button>
+    <button aria-pressed="false" data-t="F"><span class="k">F</span>Sheet</button>
+  </div>
+  <div class="seg" id="devSeg" role="group" aria-label="Device">
+    <button aria-pressed="true" data-d="d">Desktop</button>
+    <button aria-pressed="false" data-d="m">Mobile</button>
+  </div>
+  <div class="seg" id="thSeg" role="group" aria-label="Theme">
+    <button aria-pressed="true" data-th="light">Light</button>
+    <button aria-pressed="false" data-th="dark">Dark</button>
+  </div>
+</div>
+
+<p class="note" id="note"></p>
+
+<div class="stage"><div class="frame" id="frame">
+
+<!-- ============ A · Competition (football league standings) ============ -->
+<div class="tpl on" id="tA">
+  <div class="top">
+    <div class="logo"><i>F</i>Frontrow</div>
+    <nav class="topnav"><a href="#"><svg class="i"><use href="#home"/></svg>Home</a><a class="on" href="#"><svg class="i"><use href="#club"/></svg>Clubhouse</a><a href="#"><svg class="i"><use href="#trophy"/></svg>Trophies</a><a href="#"><svg class="i"><use href="#bets"/></svg>Bets</a><a href="#"><svg class="i"><use href="#coin"/></svg>Coins</a></nav>
+    <div class="sp"></div>
+    <button class="ibtn" aria-label="Notifications"><svg class="i"><use href="#bell"/></svg></button>
+    <div class="avatar">ST</div>
+  </div>
+  <div class="chead">
+    <div class="crow">
+      <div class="crest">CE</div>
+      <div style="min-width:0">
+        <button class="switch" style="border:0;padding:0;min-height:0;background:none;font-size:20px;font-family:var(--display);font-weight:400">Champions Eder 26/27 <svg class="i"><use href="#chev"/></svg></button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="chip">Draft · H2H</span><span class="chip">8 managers</span><span class="chip a">Gameweek 3</span></div>
+      </div>
+      <div class="pos">
+        <div><b class="num">2nd</b><span>Your rank</span></div>
+        <div><b class="num">187</b><span>Points</span></div>
+        <div><b class="num up">−12</b><span>To 1st</span></div>
+      </div>
+    </div>
+    <div class="posm">
+      <div><b class="num">2nd</b><span>Rank</span></div><div><b class="num">187</b><span>Points</span></div><div><b class="num up">−12</b><span>To 1st</span></div>
+    </div>
+    <div class="tabs" style="margin:0 -16px;padding:0 16px">
+      <a class="on" href="#">Standings</a><a href="#">Squad</a><a href="#">Market</a><a href="#">Live</a><span class="div"></span><a href="#">Recap</a><a href="#">Bets</a><a href="#">Stats</a>
+    </div>
+  </div>
+  <div class="bar"><svg class="i"><use href="#check"/></svg><span>Transfer window open · closes in <span class="mono">2d 4h</span></span><button class="btn sm">Go to market</button></div>
+  <div class="grid2">
+    <div style="display:grid;gap:14px">
+      <div class="pod"><div class="f"><div class="r">1st</div><b>Marco</b><div class="p num">199</div></div><div><div class="r" style="color:var(--mute)">2nd · you</div><b>Sam</b><div class="p num">187</div></div><div><div class="r" style="color:var(--mute)">3rd</div><b>Ines</b><div class="p num">181</div></div></div>
+      <div class="card" style="overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>#</th><th></th><th>Manager</th><th>GW 3</th><th class="hm">Form</th><th>Total</th><th>Gap</th></tr></thead>
+          <tbody>
+            <tr><td class="num"><b>1</b></td><td class="mv up">▲1</td><td><div class="nm"><span class="dot">M</span>Marco</div></td><td class="num">62</td><td class="hm"><span class="form"><i class="w"></i><i class="w"></i><i class="w"></i></span></td><td class="num"><b>199</b></td><td class="num eq">—</td></tr>
+            <tr class="me"><td class="num"><b>2</b></td><td class="mv dn_">▼1</td><td><div class="nm"><span class="dot">S</span>Sam <span class="chip y">You</span></div></td><td class="num">55</td><td class="hm"><span class="form"><i class="w"></i><i class="l"></i><i class="w"></i></span></td><td class="num"><b>187</b></td><td class="num">−12</td></tr>
+            <tr><td class="num"><b>3</b></td><td class="mv eq">–</td><td><div class="nm"><span class="dot">I</span>Ines</div></td><td class="num">58</td><td class="hm"><span class="form"><i class="w"></i><i class="w"></i><i class="l"></i></span></td><td class="num"><b>181</b></td><td class="num">−18</td></tr>
+            <tr><td class="num"><b>4</b></td><td class="mv up">▲2</td><td><div class="nm"><span class="dot">R</span>Rui</div></td><td class="num">61</td><td class="hm"><span class="form"><i class="l"></i><i class="w"></i><i class="w"></i></span></td><td class="num"><b>166</b></td><td class="num">−33</td></tr>
+            <tr><td class="num"><b>5</b></td><td class="mv dn_">▼1</td><td><div class="nm"><span class="dot">A</span>Ana</div></td><td class="num">47</td><td class="hm"><span class="form"><i class="l"></i><i class="l"></i><i class="w"></i></span></td><td class="num"><b>158</b></td><td class="num">−41</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="rail" style="display:grid;gap:14px">
+      <div class="card notice cardp"><div style="display:flex;gap:8px;align-items:center;font-weight:700;font-size:14px"><svg class="i"><use href="#mega"/></svg>From the commissioner</div><p style="font-size:14px;margin-top:6px">Window closes Thursday 18:00 — wishlist picks are locked after that.</p></div>
+      <div class="card cardp"><div class="h2" style="margin-bottom:6px">League activity</div>
+        <div class="feed">
+          <div><span class="chip g">Transfer</span><span>Marco signed Saka for £8.4m</span></div>
+          <div><span class="chip a">Result</span><span>You beat Ines 55–48</span></div>
+          <div><span class="chip y">Bet</span><span>Rui won 40 coins on GW3 top scorer</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <div class="bot"><a href="#"><svg class="i"><use href="#home"/></svg>Home</a><a class="on" href="#"><svg class="i"><use href="#club"/></svg>Clubhouse</a><a href="#"><svg class="i"><use href="#trophy"/></svg>Trophies</a><a href="#"><svg class="i"><use href="#bets"/></svg>Bets</a><a href="#"><svg class="i"><use href="#coin"/></svg>Coins</a></div>
+</div>
+
+<!-- ============ A2 · F1 paddock on same template ============ -->
+<div class="tpl" id="tA2">
+  <div class="top">
+    <div class="logo"><i>F</i>Frontrow</div>
+    <nav class="topnav"><a href="#"><svg class="i"><use href="#home"/></svg>Home</a><a class="on" href="#"><svg class="i"><use href="#club"/></svg>Clubhouse</a><a href="#"><svg class="i"><use href="#trophy"/></svg>Trophies</a><a href="#"><svg class="i"><use href="#bets"/></svg>Bets</a><a href="#"><svg class="i"><use href="#coin"/></svg>Coins</a></nav>
+    <div class="sp"></div><button class="ibtn" aria-label="Notifications"><svg class="i"><use href="#bell"/></svg></button><div class="avatar">ST</div>
+  </div>
+  <div class="chead">
+    <div class="crow">
+      <div class="crest f1">PD</div>
+      <div><button class="switch" style="border:0;padding:0;min-height:0;background:none;font-size:20px;font-family:var(--display);font-weight:400">Paddock Club <svg class="i"><use href="#chev"/></svg></button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="chip">Formula 1 · 2026</span><span class="chip">6 drivers' managers</span><span class="chip a">Round 17</span></div></div>
+      <div class="pos"><div><b class="num">1st</b><span>Your rank</span></div><div><b class="num">412</b><span>Points</span></div><div><b class="num">+9</b><span>Lead</span></div></div>
+    </div>
+    <div class="posm"><div><b class="num">1st</b><span>Rank</span></div><div><b class="num">412</b><span>Points</span></div><div><b class="num">+9</b><span>Lead</span></div></div>
+    <div class="tabs" style="margin:0 -16px;padding:0 16px"><a class="on" href="#">Standings</a><a href="#">Race picks</a><a href="#">Calendar</a><a href="#">Report</a><a href="#">Season</a><span class="div"></span><a href="#">Bets</a></div>
+  </div>
+  <div class="bar" style="background:var(--gold-bg);color:var(--gold)"><svg class="i"><use href="#flag"/></svg><span>Picks lock in <span class="mono">1d 6h</span> · Qualifying Sat 15:00</span><button class="btn sm">Make picks</button></div>
+  <div class="grid2">
+    <div class="card" style="overflow:hidden"><table class="tbl">
+      <thead><tr><th>#</th><th></th><th>Manager</th><th>Last race</th><th class="hm">Form</th><th>Total</th><th>Gap</th></tr></thead>
+      <tbody>
+        <tr class="me"><td class="num"><b>1</b></td><td class="mv up">▲1</td><td><div class="nm"><span class="dot">S</span>Sam <span class="chip y">You</span></div></td><td class="num">38</td><td class="hm"><span class="form"><i class="w"></i><i class="w"></i><i class="l"></i></span></td><td class="num"><b>412</b></td><td class="num eq">—</td></tr>
+        <tr><td class="num"><b>2</b></td><td class="mv dn_">▼1</td><td><div class="nm"><span class="dot">L</span>Lena</div></td><td class="num">29</td><td class="hm"><span class="form"><i class="w"></i><i class="l"></i><i class="w"></i></span></td><td class="num"><b>403</b></td><td class="num">−9</td></tr>
+        <tr><td class="num"><b>3</b></td><td class="mv eq">–</td><td><div class="nm"><span class="dot">T</span>Tomás</div></td><td class="num">33</td><td class="hm"><span class="form"><i class="l"></i><i class="w"></i><i class="w"></i></span></td><td class="num"><b>377</b></td><td class="num">−35</td></tr>
+      </tbody></table></div>
+    <aside class="rail" style="display:grid;gap:14px"><div class="card cardp"><div class="h2">Next race</div><p class="sub" style="margin-top:4px">Singapore GP · Sun 13:00</p><div style="margin-top:10px"><span class="chip r">Picks open</span></div></div></aside>
+  </div>
+  <div class="bot"><a href="#"><svg class="i"><use href="#home"/></svg>Home</a><a class="on" href="#"><svg class="i"><use href="#club"/></svg>Clubhouse</a><a href="#"><svg class="i"><use href="#trophy"/></svg>Trophies</a><a href="#"><svg class="i"><use href="#bets"/></svg>Bets</a><a href="#"><svg class="i"><use href="#coin"/></svg>Coins</a></div>
+</div>
+
+<!-- ============ B · Hub (Clubhouse) ============ -->
+<div class="tpl" id="tB">
+  <div class="top">
+    <div class="logo"><i>F</i>Frontrow</div>
+    <nav class="topnav"><a href="#"><svg class="i"><use href="#home"/></svg>Home</a><a class="on" href="#"><svg class="i"><use href="#club"/></svg>Clubhouse</a><a href="#"><svg class="i"><use href="#trophy"/></svg>Trophies</a><a href="#"><svg class="i"><use href="#bets"/></svg>Bets</a><a href="#"><svg class="i"><use href="#coin"/></svg>Coins</a></nav>
+    <div class="sp"></div><button class="ibtn" aria-label="Notifications"><svg class="i"><use href="#bell"/></svg></button><div class="avatar">ST</div>
+  </div>
+  <div class="pad" style="display:grid;gap:16px">
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+      <div><button class="switch" style="border:0;padding:0;min-height:0;background:none;font-size:26px;font-family:var(--display);font-weight:400">The Eder Gang <svg class="i"><use href="#chev"/></svg></button><div class="sub">12 members · 3 competitions</div></div>
+      <div class="sp"></div>
+      <button class="btn sec"><svg class="i"><use href="#users"/></svg>Invite</button>
+      <button class="btn"><svg class="i"><use href="#plus"/></svg>New competition</button>
+    </div>
+    <div class="hero">
+      <div class="e">Frontrow · Edition 3</div>
+      <h2>Marco takes the lead as Sam closes within twelve</h2>
+      <p>Commissioner notice: window closes Thursday at 18:00. Wishlist picks lock after that.</p>
+      <div><button class="btn sm" style="background:#F2EEE5;color:#18202E">Read the front page</button></div>
+    </div>
+    <div>
+      <div class="h2" style="margin-bottom:8px">Your competitions</div>
+      <div class="grid3">
+        <div class="tile"><div class="t"><span class="ic"><svg class="i"><use href="#ball"/></svg></span><div><b>Champions Eder</b><div class="sub">Football · GW 3</div></div></div><div style="display:flex;justify-content:space-between;align-items:end"><div><div class="big num">2nd</div><div class="sub">187 pts · −12</div></div><span class="chip g">Window open</span></div></div>
+        <div class="tile f1"><div class="t"><span class="ic"><svg class="i"><use href="#flag"/></svg></span><div><b>Paddock Club</b><div class="sub">Formula 1 · Round 17</div></div></div><div style="display:flex;justify-content:space-between;align-items:end"><div><div class="big num">1st</div><div class="sub">412 pts · +9</div></div><span class="chip y">Picks lock 1d</span></div></div>
+        <div class="tile tn"><div class="t"><span class="ic"><svg class="i"><use href="#racket"/></svg></span><div><b>Player Box</b><div class="sub">Tennis · US Open</div></div></div><div style="display:flex;justify-content:space-between;align-items:end"><div><div class="big num">4th</div><div class="sub">96 pts</div></div><span class="chip">R3 today</span></div></div>
+      </div>
+    </div>
+    <div class="grid2" style="padding:0">
+      <div class="card cardp"><div class="h2" style="margin-bottom:6px">Digest · this week</div><div class="feed"><div><span class="chip g">Transfer</span>Marco signed Saka for £8.4m</div><div><span class="chip a">Result</span>Sam beat Ines 55–48</div><div><span class="chip y">Bet</span>Rui won 40 coins</div></div></div>
+      <div class="card"><div class="empty"><span class="ic"><svg class="i"><use href="#inbox"/></svg></span><b>No open challenges</b><p class="sub">Dare a clubhouse member to a coin bet.</p><button class="btn sec sm">Create a challenge</button></div></div>
+    </div>
+  </div>
+  <div class="bot"><a href="#"><svg class="i"><use href="#home"/></svg>Home</a><a class="on" href="#"><svg class="i"><use href="#club"/></svg>Clubhouse</a><a href="#"><svg class="i"><use href="#trophy"/></svg>Trophies</a><a href="#"><svg class="i"><use href="#bets"/></svg>Bets</a><a href="#"><svg class="i"><use href="#coin"/></svg>Coins</a></div>
+</div>
+
+<!-- ============ C · Detail (Settings) ============ -->
+<div class="tpl" id="tC">
+  <div class="top"><button class="ibtn" aria-label="Back"><svg class="i"><use href="#back"/></svg></button><b style="font-size:17px">Settings</b><div class="sp"></div><div class="avatar">ST</div></div>
+  <div style="max-width:640px;margin:0 auto;padding-bottom:24px">
+    <div class="sect">Profile</div>
+    <div class="card" style="margin:0 16px">
+      <div class="field"><label>Display name</label><div class="in">Sam</div><small>Shown in standings, chat and the Frontrow.</small></div>
+      <div class="field" style="border-top:1px solid var(--rule)"><label>Email</label><div class="in" style="color:var(--mute)">s.t.c.braganca@gmail.com</div></div>
+    </div>
+    <div class="sect">Notifications</div>
+    <div class="card set" style="margin:0 16px;overflow:hidden">
+      <div class="row"><div>Match results<small>When your gameweek is scored</small></div><span class="tog on"></span></div>
+      <div class="row"><div>Window deadlines<small>24 hours before it closes</small></div><span class="tog on"></span></div>
+      <div class="row"><div>Chat mentions<small>Only when someone tags you</small></div><span class="tog"></span></div>
+    </div>
+    <div class="sect">Appearance</div>
+    <div class="card set" style="margin:0 16px;overflow:hidden"><div class="row"><div>Theme<small>Match your device or pick one</small></div><span class="chip" style="margin-left:auto">System</span></div></div>
+    <div class="sect">Account</div>
+    <div class="card set" style="margin:0 16px;overflow:hidden"><div class="row" style="color:var(--crit);font-weight:600">Sign out</div></div>
+  </div>
+</div>
+
+<!-- ============ D · Flow (new competition) ============ -->
+<div class="tpl" id="tD">
+  <div class="top"><button class="ibtn" aria-label="Close"><svg class="i"><use href="#x"/></svg></button><b style="font-size:17px">New competition</b><div class="sp"></div><span class="sub">Step 1 of 4</span></div>
+  <div class="steps"><i class="d"></i><i></i><i></i><i></i></div>
+  <div style="max-width:560px;margin:0 auto;padding:24px 16px 8px;display:grid;gap:14px">
+    <div><div class="h-title">What are you playing?</div><p class="sub" style="margin-top:6px">Pick a sport. You can run several in the same clubhouse.</p></div>
+    <div class="opt sel"><span class="ic"><svg class="i"><use href="#ball"/></svg></span><div><b>Football league</b><span class="sub">Draft your squad, play head-to-head</span></div><svg class="i" style="margin-left:auto;color:var(--accent)"><use href="#check"/></svg></div>
+    <div class="opt"><span class="ic"><svg class="i"><use href="#flag"/></svg></span><div><b>Formula 1 paddock</b><span class="sub">Pick drivers and race results each round</span></div></div>
+    <div class="opt"><span class="ic"><svg class="i"><use href="#racket"/></svg></span><div><b>Tennis player box</b><span class="sub">Follow a tournament, pick winners</span></div></div>
+  </div>
+  <div class="stick"><button class="btn sec" style="flex:0 0 auto">Cancel</button><button class="btn">Continue</button></div>
+</div>
+
+<!-- ============ E · Admin (commissioner) ============ -->
+<div class="tpl" id="tE">
+  <div class="chead" style="padding-bottom:0">
+    <div class="crow"><div class="crest">CE</div><div><div style="font-family:var(--display);font-size:20px">Champions Eder 26/27</div><div class="sub">Commissioner console</div></div><div class="sp"></div><button class="btn sec sm">Back to league</button></div>
+    <div style="height:12px"></div>
+  </div>
+  <div class="adm">
+    <nav>
+      <div class="g">League</div>
+      <a class="on" href="#"><svg class="i"><use href="#gear"/></svg>Rules</a><a href="#"><svg class="i"><use href="#users"/></svg>Members</a><a href="#"><svg class="i"><use href="#cal"/></svg>Windows</a>
+      <div class="g">Communication</div>
+      <a href="#"><svg class="i"><use href="#mega"/></svg>Announcements</a><a href="#"><svg class="i"><use href="#bets"/></svg>Bets</a>
+      <div class="g">Safety</div>
+      <a href="#"><svg class="i"><use href="#shield"/></svg>Danger zone</a>
+    </nav>
+    <main>
+      <div><div class="h-title" style="font-size:22px">Rules</div><p class="sub">Changes apply from the next gameweek.</p></div>
+      <div class="grp"><h3>Transfers</h3>
+        <div class="set"><div class="row"><div>Transfer penalty<small>Points deducted per extra transfer</small></div><span class="chip" style="margin-left:auto">4 pts</span></div>
+        <div class="row"><div>Free transfers per window<small>Unused ones carry over</small></div><span class="chip" style="margin-left:auto">1</span></div>
+        <div class="row"><div>Wishlist draft mode<small>Manual, auto or disabled</small></div><span class="chip a" style="margin-left:auto">Manual</span></div></div></div>
+      <div class="grp"><h3>Announcement</h3><div class="field"><div class="in" style="min-height:70px;align-items:flex-start;padding-top:12px;color:var(--mute)">Write a notice for the league — it can become the lead story in Frontrow…</div><small>Posted to the league feed and offered to the Frontrow editor.</small></div><div style="padding:0 16px 14px"><button class="btn sm">Post announcement</button></div></div>
+      <div class="grp dz"><h3>Danger zone</h3><div class="set"><div class="row"><div>Archive league<small>Hidden from members; standings are kept</small></div><button class="btn dn sm" style="margin-left:auto">Archive…</button></div></div></div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ F · Sheet (H2H compare) ============ -->
+<div class="tpl" id="tF">
+  <div class="scrim">
+    <div class="bg">
+      <div class="chead"><div class="crow"><div class="crest">CE</div><div style="font-family:var(--display);font-size:20px">Champions Eder 26/27</div></div><div class="tabs" style="margin:12px -16px 0"><a class="on" href="#">Standings</a><a href="#">Squad</a></div></div>
+      <div class="pad"><div class="card" style="height:260px"></div></div>
+    </div>
+    <div class="sheet" role="dialog" aria-label="Compare with Marco">
+      <div class="grab"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span class="dot" style="width:40px;height:40px;font-size:15px">M</span>
+        <div><div class="h2">Marco's squad</div><div class="sub">1st · 199 pts · 4-3-3</div></div>
+        <div class="sp"></div><button class="ibtn" aria-label="Close"><svg class="i"><use href="#x"/></svg></button>
+      </div>
+      <div class="card" style="padding:4px 14px">
+        <div class="pl"><span class="kit">GK</span><div><b>Raya</b><div class="sub">Arsenal</div></div><span class="pp num">8</span></div>
+        <div class="pl"><span class="kit">DEF</span><div><b>Gabriel</b><div class="sub">Arsenal</div></div><span class="pp num">11</span></div>
+        <div class="pl"><span class="kit">MID</span><div><b>Saka</b><div class="sub">Arsenal · Captain</div></div><span class="pp num">24</span></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px"><button class="btn sec" style="flex:1">Full squad</button><button class="btn" style="flex:1"><svg class="i"><use href="#swords"/></svg>Compare with me</button></div>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<div class="why" id="why"></div>
+
+<script>
+const NOTES={
+ A:['<b>Template A · Competition page, football league.</b> One compact light header (switcher, crest, chips, your position), one tab row, one status bar, then content. Rows are tappable and open that manager\'s squad (sheet F).',[['Down from 5 bands to 3','Before the first standing: header, tab row, status bar. About 200px instead of 350px.'],['Quiet type','Sentence case, Archivo 13–15px. Mono is only for the countdown.'],['Rows tell a story','Movement, GW points, form (hidden on mobile) and gap to the leader. Your row is highlighted, and the row-level H2H icon is gone.']]],
+ A2:['<b>Template A on F1.</b> Same header, tabs, bar and row as football. The only sport signal is a 4px red marker on the crest. Buttons stay blue, and the bar turns gold for a lock warning.',[['One product','Football, F1 and tennis share the layout, so people learn it once.'],['Sport colour as a marker','Red (F1) and green (tennis) appear only on crests and tile icons.'],['Bar states','Green = open, gold = locking soon, red = closed.']]],
+ B:['<b>Template B · Hub page, the Clubhouse.</b> A light header with the clubhouse switcher, Invite and New competition in plain words (replaces the unlabelled "+"). Navy is kept for one hero: the Frontrow lead story.',[['Competitions as tiles','Each shows rank, points, gap and one status chip, so Digest and Clubhouse overlap less.'],['Digest moves here','The cross-sport feed lives at clubhouse level, not inside football.'],['Real empty state','Icon, one sentence, one action.']]],
+ C:['<b>Template C · Detail page, Settings.</b> A Back arrow appears because this is a nested page. Labelled fields, helper text under each, and 44px+ rows. Destructive actions are plain red text.',[['Back only when nested','Top-level screens show no Back arrow.'],['Visible labels','No placeholder-only fields.'],['Narrow column','Max 640px so lines stay readable on desktop.']]],
+ D:['<b>Template D · Focus flow, New competition.</b> No navigation chrome: close button, a progress bar, one decision per step and a sticky action bar. This also replaces the unlabelled "+" menu.',[['One decision per step','Sport, then name, then rules, then invite.'],['Sticky actions','Continue is always in reach on mobile.'],['Big targets','Each option is a 72px card with an icon, a title and one line.']]],
+ E:['<b>Template E · Admin console, Commissioner.</b> A side list of sections instead of one 3,265-line scroll. Grouped settings, and the destructive actions in their own red-edged zone. It turns into a scrolling tab strip on mobile.',[['Sections, not a scroll','Rules, Members, Windows, Announcements, Bets, Danger zone.'],['Plain language','"Transfer penalty" with a one-line explanation, not a code label.'],['Safe by default','Anything destructive is separated, red and says "…" because it confirms.']]],
+ F:['<b>Template F · Sheet, H2H squad view.</b> Tapping a standings row opens this. It is a bottom sheet on mobile and a centred dialog on desktop, with a grab handle, a close button and "Compare with me" as the primary action.',[['One shell','Player picker, invites, confirmations and scoring info all reuse it.'],['Dismiss three ways','Close button, swipe down, tap outside.'],['Primary action on the right','Full squad is secondary, Compare is primary.']]]
+};
+let cur='A';
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+function show(t){cur=t;$$('.tpl').forEach(e=>e.classList.toggle('on',e.id==='t'+t));
+ $$('#tplSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
+ const n=NOTES[t];$('#note').innerHTML=n[0];
+ $('#why').innerHTML=n[1].map(x=>`<div><h4>${x[0]}</h4>${x[1]}</div>`).join('');}
+$$('#tplSeg button').forEach(b=>b.onclick=()=>show(b.dataset.t));
+$$('#devSeg button').forEach(b=>b.onclick=()=>{$$('#devSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#frame').classList.toggle('m',b.dataset.d==='m')});
+$$('#thSeg button').forEach(b=>b.onclick=()=>{$$('#thSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));document.documentElement.dataset.theme=b.dataset.th});
+show('A');
+</script>
+</body>
+</html>

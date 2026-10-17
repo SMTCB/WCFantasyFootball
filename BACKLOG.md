@@ -12,6 +12,17 @@
 
 ---
 
+## ✅ Frontrow redesign — Wave 0 + Wave 1 (football league screens) (2026-10-17) — PRs #1059–#1065, rollback tag `rollback/pre-redesign-2026-10-17` @ 6b56bfa
+
+Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, revertible PR per slice:
+- **#1059 Wave 0** — dark-mode tokens (not exposed to users until after Wave 2; preview with `?theme=dark`), 12px type floor, UI kit (`src/components/ui/`: Card, StatPill, StatusBar, PageHeader, EmptyState, ErrorState), dev-only `/dev/kit`.
+- **#1060 1a** light league header + tabs · **#1061 1b** single StatusBar replaces stacked league banners · **#1062 1c** Standings summary/rows/activity feed.
+- **#1063 1d** Squad/Market/Live share the league tab row (`LeagueRouteTabs`).
+- **#1064 1e** Recap + Market report · **#1065 1f** Bets, Betting leaderboard, Bet creator, Stats, H2H, Trading (sentence-case labels, token colours, pill badges; logic untouched).
+- Open / next: Wave 2 (other sports + Frontrow front page), dark-mode exposure after Wave 2, CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.
+
+---
+
 ## ✅ Transfer penalty silently skipped when league has no `transfer_penalty` config row (2026-10-17) — PR #1057, data fix
 
 **Symptom**: Champions Eder 26/27 matchday 2 — a manager bought one transfer over the limit but the Recap showed no penalty and the total was unchanged.
