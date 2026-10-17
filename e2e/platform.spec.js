@@ -86,9 +86,8 @@ test.describe('Navigation', () => {
     const sidebar = page.locator('[data-testid="desktop-nav"]');
     await expect(sidebar).toBeVisible();
 
-    // Top bar is clubhouse-centric — always shows these items
-    // Use .first() — strict mode: both "Clubhouse" heading and "My Clubhouse" link match
-    await expect(sidebar.getByText(/clubhouse/i).first()).toBeVisible();
+    // The clubhouse switcher pill is hidden on /home, so assert the always-present spine links
+    await expect(sidebar.getByText(/^home$/i).first()).toBeVisible();
     await expect(sidebar.locator('a[href="/settings"]')).toBeVisible();
   });
 

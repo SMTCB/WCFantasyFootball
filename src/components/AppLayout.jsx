@@ -158,17 +158,19 @@ export default function AppLayout({ children }) {
           <BrandMark theme="light" compact />
         </Link>
         <TopBarLink label="Home" path="/home" Icon={NavIconHome} active={location.pathname === '/home'} />
-        <ClubhouseSwitcher
-          myCircles={myCircles}
-          activeCircleId={activeCircleId}
-          onSelectCircle={(id) => { setActiveCircleId(id); navigate(`/clubhouse/${id}`); }}
-          competitions={competitions}
-          pathname={location.pathname}
-          onAdd={openNewCompetitionFlow}
-          onInvite={activeCircle?.invite_code ? () => setShowInvite(true) : undefined}
-          clubhouseName={activeCircle?.name}
-          unreadCount={unreadCount}
-        />
+        {location.pathname !== '/home' && (
+          <ClubhouseSwitcher
+            myCircles={myCircles}
+            activeCircleId={activeCircleId}
+            onSelectCircle={(id) => { setActiveCircleId(id); navigate(`/clubhouse/${id}`); }}
+            competitions={competitions}
+            pathname={location.pathname}
+            onAdd={openNewCompetitionFlow}
+            onInvite={activeCircle?.invite_code ? () => setShowInvite(true) : undefined}
+            clubhouseName={activeCircle?.name}
+            unreadCount={unreadCount}
+          />
+        )}
         <TopBarLink label="Trophies" path="/trophy" Icon={NavIconTrophy} active={location.pathname === '/trophy'} />
         <TopBarLink label="Bets" path="/my-bets" Icon={NavIconMyBets} active={location.pathname === '/my-bets'} />
         <TopBarLink label="Coins" path="/challenges" Icon={NavIconChallenges} active={location.pathname === '/challenges'} />
