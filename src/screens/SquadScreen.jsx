@@ -2123,7 +2123,7 @@ export default function SquadScreen() {
         <div
           className="fixed bottom-0 left-0 right-0 lg:left-0 z-[60] px-5 py-3 flex justify-between items-center"
           style={{
-            background: 'rgba(255,255,255,0.97)',
+            background: 'var(--card)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderTop: '2px solid var(--accent)',
