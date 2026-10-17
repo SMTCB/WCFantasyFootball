@@ -923,7 +923,7 @@ export default function MarketScreen() {
                   style={{ width: `${pct}%`, background: statusColor }}
                 />
                 <div className="px-1.5 py-1 flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}>
+                  <span className="text-[11px] font-black uppercase" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif' }}>
                     {pos}
                   </span>
                   <span className="text-[11px] font-black tabular-nums" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif' }}>
@@ -963,7 +963,7 @@ export default function MarketScreen() {
               borderRadius: '4px',
               color: selectedTeams.size > 0 ? 'var(--accent)' : 'var(--mute)',
               fontFamily: 'Archivo Black, sans-serif',
-              fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase',
+              fontSize: 'var(--fs-micro)',
               cursor: 'pointer', whiteSpace: 'nowrap',
             }}
           >
@@ -1038,8 +1038,7 @@ export default function MarketScreen() {
                 style={{
                   flex: 1, padding: '8px', background: 'transparent',
                   border: '1px solid var(--rule)', color: 'var(--mute)',
-                  fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em',
-                  textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
+                  fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', borderRadius: 3,
                 }}
               >
                 Clear
@@ -1048,8 +1047,7 @@ export default function MarketScreen() {
                 onClick={() => { setShowTeamPicker(false); setTeamSearch(''); }}
                 style={{
                   flex: 2, padding: '8px', background: 'var(--accent)', border: 'none',
-                  color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
-                  letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
+                  color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', borderRadius: 3,
                 }}
               >
                 {selectedTeams.size > 0 ? `Show ${selectedTeams.size} Club${selectedTeams.size > 1 ? 's' : ''}` : 'Apply'}
@@ -1060,7 +1058,7 @@ export default function MarketScreen() {
 
         {/* Price range filter */}
         <div className="px-5 pb-2 flex items-center gap-3" style={{ borderTop: 'none' }}>
-          <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: 'var(--mute)', textTransform: 'uppercase', flexShrink: 0 }}>
+          <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
             Price
           </span>
           <div className="flex items-center gap-2 flex-1">
@@ -1101,8 +1099,7 @@ export default function MarketScreen() {
               onClick={() => { setPriceMin(0); setPriceMax(15); }}
               style={{
                 background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer',
-                fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em',
-                textTransform: 'uppercase', flexShrink: 0,
+                fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', flexShrink: 0,
               }}
             >
               Reset
@@ -1124,7 +1121,7 @@ export default function MarketScreen() {
                   onClick={() => setFilterHideEliminated(v => !v)}
                   style={{
                     padding: '4px 9px', borderRadius: 3, cursor: 'pointer', fontSize: 'var(--fs-micro)', fontWeight: 700,
-                    fontFamily: 'Archivo Black, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase',
+                    fontFamily: 'Archivo Black, sans-serif',
                     background: filterHideEliminated ? 'rgba(239,68,68,0.15)' : 'var(--elev)',
                     border: `1px solid ${filterHideEliminated ? 'rgba(239,68,68,0.5)' : 'var(--rule)'}`,
                     color: filterHideEliminated ? 'var(--danger)' : 'var(--mute)',
@@ -1138,7 +1135,7 @@ export default function MarketScreen() {
                   onClick={() => setFilterHideTaken(v => !v)}
                   style={{
                     padding: '4px 9px', borderRadius: 3, cursor: 'pointer', fontSize: 'var(--fs-micro)', fontWeight: 700,
-                    fontFamily: 'Archivo Black, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase',
+                    fontFamily: 'Archivo Black, sans-serif',
                     background: filterHideTaken ? 'rgba(239,68,68,0.15)' : 'var(--elev)',
                     border: `1px solid ${filterHideTaken ? 'rgba(239,68,68,0.5)' : 'var(--rule)'}`,
                     color: filterHideTaken ? 'var(--danger)' : 'var(--mute)',
@@ -1149,7 +1146,7 @@ export default function MarketScreen() {
               )}
               {hasScores && (
                 <div className="flex items-center gap-1.5">
-                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', color: filterMinScore > 0 ? 'var(--accent)' : 'var(--mute)', textTransform: 'uppercase', flexShrink: 0 }}>
+                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: filterMinScore > 0 ? 'var(--accent)' : 'var(--mute)', flexShrink: 0 }}>
                     Min pts
                   </span>
                   <input
@@ -1172,8 +1169,7 @@ export default function MarketScreen() {
                   onClick={() => { setFilterHideEliminated(false); setFilterHideTaken(false); setFilterMinScore(0); }}
                   style={{
                     background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em',
-                    textTransform: 'uppercase',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
                   }}
                 >
                   Reset
@@ -1209,8 +1205,6 @@ export default function MarketScreen() {
                   fontFamily: 'Archivo Black, sans-serif',
                   fontSize: 'var(--fs-micro)',
                   fontWeight: 800,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
                   color: activeColor,
                   background: isActive ? `${posColor}0F` : 'transparent',
                 }}
@@ -1321,7 +1315,7 @@ export default function MarketScreen() {
                       </span>
                       {isOwned && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--accent)', border: '1px solid var(--accent)', padding: '2px 6px' }}>
-                          {isDraftLeague ? 'OWNED · YOU' : 'OWNED'}
+                          {isDraftLeague ? 'Owned · you' : 'OWNED'}
                         </span>
                       )}
                       {isDraftLeague && (isOwned || canShareBuy) && otherOwners.map(o => (
@@ -1346,14 +1340,14 @@ export default function MarketScreen() {
                       )}
                     </div>
                     {/* Metadata */}
-                    <div className="fk-mono mt-0.5" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em' }}>
+                    <div className="fk-mono mt-0.5" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                       {p.club}{p.country ? ` · ${p.country}` : ''}
                     </div>
                     {/* Fixture timing — active matchday only */}
                     {(() => {
                       const fs = formatFixtureStatus(buildFixtureInfo(p, activeRoundFixtures));
                       return fs ? (
-                        <div className="fk-mono mt-0.5" style={{ fontSize: 'var(--fs-micro)', color: fs.color, letterSpacing: '0.14em' }}>
+                        <div className="fk-mono mt-0.5" style={{ fontSize: 'var(--fs-micro)', color: fs.color }}>
                           {fs.label}
                         </div>
                       ) : null;
@@ -1397,7 +1391,7 @@ export default function MarketScreen() {
                         border: '1px solid var(--gold)',
                         color: 'var(--gold)',
                         background: 'rgba(240,180,0,0.08)',
-                        fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.1em',
+                        fontSize: 'var(--fs-micro)', fontWeight: 800,
                       }}
                       title="Remove from basket"
                     >
@@ -1413,7 +1407,7 @@ export default function MarketScreen() {
                         border: '1px solid var(--gold)',
                         color: 'var(--gold)',
                         background: 'rgba(240,180,0,0.08)',
-                        fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.1em',
+                        fontSize: 'var(--fs-micro)', fontWeight: 800,
                       }}
                       title="Remove from basket"
                     >
@@ -1429,7 +1423,7 @@ export default function MarketScreen() {
                         border: '1px solid var(--danger)',
                         color: 'var(--danger)',
                         background: 'transparent',
-                        fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em',
+                        fontSize: 'var(--fs-micro)', fontWeight: 800,
                       }}
                     >
                       SELL
@@ -1440,11 +1434,11 @@ export default function MarketScreen() {
                       style={{
                         minWidth: 56, padding: '10px 10px', minHeight: 44, textAlign: 'center',
                         border: '1px solid rgba(240,58,58,0.4)', color: 'var(--danger)',
-                        fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.1em', opacity: 0.85,
+                        fontSize: 'var(--fs-micro)', fontWeight: 800, opacity: 0.85,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
-                      CLUB FULL
+                      Club full
                     </div>
                   ) : (
                     <button
@@ -1462,7 +1456,7 @@ export default function MarketScreen() {
                         border: `1px solid ${canBuy ? 'var(--accent)' : 'var(--rule)'}`,
                         color: canBuy ? 'var(--accent)' : 'var(--mute)',
                         background: 'transparent',
-                        fontSize: 'var(--fs-micro)', fontWeight: 800, letterSpacing: '0.14em',
+                        fontSize: 'var(--fs-micro)', fontWeight: 800,
                         cursor: canBuy ? 'pointer' : 'not-allowed',
                         opacity: confirming ? 0.5 : 1,
                       }}
@@ -1490,7 +1484,7 @@ export default function MarketScreen() {
 
           {filteredPlayers.length === 0 && !loading && (
             <div className="p-12 text-center">
-              <div className="fk-mono mb-3" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>NO RESULTS</div>
+              <div className="fk-mono mb-3" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No results</div>
               <p className="text-sm font-medium" style={{ color: 'var(--mute)' }}>
                 No players found for this position.
               </p>
@@ -1548,7 +1542,7 @@ export default function MarketScreen() {
             <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 16px 0' }}>
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--gold)', textTransform: 'uppercase' }}>
+                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
                   Transfer Basket · {numTransfers} transfer{numTransfers !== 1 ? 's' : ''}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1586,7 +1580,7 @@ export default function MarketScreen() {
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
                         {sell ? (
                           <>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: 'var(--neg)', border: '1px solid var(--neg)', padding: '1px 4px', flexShrink: 0 }}>OUT</span>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--neg)', border: '1px solid var(--neg)', padding: '1px 4px', flexShrink: 0 }}>OUT</span>
                             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sell.player.name}</span>
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{sell.player.price}M</span>
                             <button
@@ -1606,7 +1600,7 @@ export default function MarketScreen() {
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
                         {buy ? (
                           <>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '1px 4px', flexShrink: 0 }}>IN</span>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '1px 4px', flexShrink: 0 }}>IN</span>
                             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{buy.player.name}</span>
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{buy.player.price}M</span>
                             <button
@@ -1636,7 +1630,7 @@ export default function MarketScreen() {
                     border: '1px solid var(--rule)',
                     color: 'var(--mute)',
                     fontFamily: 'Archivo Black, sans-serif',
-                    fontSize: 'var(--fs-micro)', letterSpacing: '.12em', textTransform: 'uppercase',
+                    fontSize: 'var(--fs-micro)',
                     cursor: confirming ? 'not-allowed' : 'pointer',
                     opacity: confirming ? 0.4 : 1,
                   }}
@@ -1652,7 +1646,7 @@ export default function MarketScreen() {
                     border: 'none',
                     color: 'var(--bg)',
                     fontFamily: 'Archivo Black, sans-serif',
-                    fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textTransform: 'uppercase',
+                    fontSize: 'var(--fs-micro)',
                     cursor: confirming ? 'wait' : 'pointer',
                     fontWeight: 900,
                   }}

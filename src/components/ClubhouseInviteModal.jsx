@@ -70,7 +70,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
         }}
       >
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 6 }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', marginBottom: 6 }}>
           Invite to your Clubhouse
         </div>
         <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', letterSpacing: '-0.01em', marginBottom: 18, overflowWrap: 'anywhere' }}>
@@ -78,7 +78,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
         </div>
 
         {/* Invite code */}
-        <div style={{ marginBottom: 6, ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+        <div style={{ marginBottom: 6, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
           Invite code
         </div>
         <button
@@ -90,7 +90,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
             borderRadius: 10, cursor: 'pointer', marginBottom: 18,
           }}
         >
-          <span style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '0.16em', color: 'var(--positive)' }}>
+          <span style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--positive)' }}>
             {circle.invite_code}
           </span>
           <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: codeCopied ? 'var(--positive)' : 'var(--mute)' }}>
@@ -107,8 +107,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               padding: 14, background: '#25D366', borderRadius: 10, color: 'var(--on-accent)',
-              fontSize: 'var(--fs-body)', ...HEAD, fontWeight: 800, letterSpacing: '0.06em',
-              textTransform: 'uppercase', textDecoration: 'none',
+              fontSize: 'var(--fs-body)', ...HEAD, fontWeight: 800, textDecoration: 'none',
             }}
           >
             <span style={{ fontSize: 'var(--fs-heading)' }}>💬</span>
@@ -120,8 +119,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
             style={{
               padding: 12, background: 'var(--elev)', border: '1px solid var(--rule)',
               borderRadius: 10, color: linkCopied ? 'var(--positive)' : 'var(--paper)',
-              fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, letterSpacing: '0.05em',
-              textTransform: 'uppercase', cursor: 'pointer',
+              fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, cursor: 'pointer',
             }}
           >
             {linkCopied ? '✓ Link copied' : '🔗 Copy invite link'}
@@ -133,8 +131,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
             style={{
               padding: 12, background: 'transparent', border: '1px solid var(--rule)',
               borderRadius: 10, color: 'var(--mute)',
-              fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, letterSpacing: '0.05em',
-              textTransform: 'uppercase', cursor: 'pointer',
+              fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, cursor: 'pointer',
             }}
           >
             Done
