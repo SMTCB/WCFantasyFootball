@@ -909,7 +909,7 @@ export default function LeagueScreen() {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '14px 16px',
-                    border: `1px solid ${selectedCircleId === c.id ? 'var(--gold)' : 'var(--shell-rule-strong)'}`,
+                    border: `1px solid ${selectedCircleId === c.id ? 'var(--gold)' : 'var(--rule)'}`,
                     background: selectedCircleId === c.id ? 'rgba(181,147,58,0.07)' : 'var(--surface)',
                     cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s',
                   }}
@@ -930,7 +930,7 @@ export default function LeagueScreen() {
             <div style={{ padding: '20px 0', textAlign: 'center' }}>
               <p style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', lineHeight: 1.6 }}>
                 YOU DON&apos;T HAVE A CLUBHOUSE YET<br />
-                <span style={{ color: 'var(--on-shell-dim)' }}>Every league needs a Clubhouse — create one first.</span>
+                <span style={{ color: 'var(--mute)' }}>Every league needs a Clubhouse — create one first.</span>
               </p>
             </div>
           )}
@@ -1013,17 +1013,17 @@ export default function LeagueScreen() {
                 onClick={e => e.stopPropagation()}
                 style={{
                   background: 'var(--card)',
-                  border: '1px solid var(--shell-rule-strong)',
+                  border: '1px solid var(--rule)',
                   width: '100%', maxWidth: 520,
                   maxHeight: '82vh', overflowY: 'auto',
                   display: 'flex', flexDirection: 'column',
                   boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
                 }}
               >
-                <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--shell-rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 3, height: 12, background: 'var(--accent)', flexShrink: 0 }} />
                   <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper, #e8e8e8)', flex: 1, textTransform: 'uppercase' }}>League Mode — Classic vs Draft</span>
-                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'none', border: 'none', color: 'var(--on-shell-dim)', cursor: 'pointer', fontSize: 'var(--fs-heading)', lineHeight: 1 }}>✕</button>
+                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 'var(--fs-heading)', lineHeight: 1 }}>✕</button>
                 </div>
                 <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {[
@@ -1039,7 +1039,7 @@ export default function LeagueScreen() {
                       ],
                     },
                     {
-                      label: 'CLASSIC', color: 'var(--on-shell-mid)',
+                      label: 'CLASSIC', color: 'var(--mute)',
                       summary: 'All managers build freely. The same player can appear in multiple squads simultaneously.',
                       rows: [
                         ['Market', 'Fully open — buy any player at any time, no uniqueness rules.'],
@@ -1064,25 +1064,25 @@ export default function LeagueScreen() {
                     <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color, fontWeight: 700 }}>{label}</span>
-                        <span style={{ flex: 1, height: 1, background: 'var(--shell-fill-strong)' }} />
+                        <span style={{ flex: 1, height: 1, background: 'var(--elev)' }} />
                       </div>
-                      <p style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell)', lineHeight: 1.5, margin: 0 }}>{summary}</p>
+                      <p style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', lineHeight: 1.5, margin: 0 }}>{summary}</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {rows.map(([k, v]) => (
                           <div key={k} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 10 }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--on-shell-dim)', paddingTop: 2, textTransform: 'uppercase' }}>{k}</span>
-                            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', lineHeight: 1.55 }}>{v}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--mute)', paddingTop: 2, textTransform: 'uppercase' }}>{k}</span>
+                            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.55 }}>{v}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   ))}
-                  <p style={{ fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', lineHeight: 1.5, margin: 0, borderTop: '1px solid var(--shell-rule)', paddingTop: 14 }}>
+                  <p style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5, margin: 0, borderTop: '1px solid var(--rule)', paddingTop: 14 }}>
                     Regardless of mode: position rules always apply (1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD) and the max 3 players per club rule applies to final squads in all formats.
                   </p>
                 </div>
-                <div style={{ padding: '10px 18px', borderTop: '1px solid var(--shell-rule)', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button className="hit-44" onClick={() => setShowModeHelp(false)} style={{ background: 'transparent', border: '1px solid var(--shell-rule-strong)', color: 'var(--on-shell-dim)', padding: '6px 14px', fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}>CLOSE</button>
+                <div style={{ padding: '10px 18px', borderTop: '1px solid var(--rule)', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button className="hit-44" onClick={() => setShowModeHelp(false)} style={{ background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', padding: '6px 14px', fontSize: 'var(--fs-micro)', letterSpacing: '.2em', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}>CLOSE</button>
                 </div>
               </div>
             </div>
@@ -1095,7 +1095,7 @@ export default function LeagueScreen() {
                 type="button"
                 onClick={() => setShowModeHelp(true)}
                 title="What's the difference?"
-                style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid var(--shell-rule-emphasis)', background: 'transparent', color: 'var(--on-shell-dim)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace' }}
+                style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid var(--rule)', background: 'transparent', color: 'var(--mute)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace' }}
               >?</button>
             </div>
             <div className="flex flex-col gap-3">
@@ -1218,7 +1218,7 @@ export default function LeagueScreen() {
         )}
         <button
           onClick={() => navigate('/league')}
-          style={{ marginTop: 28, background: 'none', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', textTransform: 'uppercase', cursor: 'pointer' }}
+          style={{ marginTop: 28, background: 'none', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
         >
           ← Back to My Leagues
         </button>
@@ -1314,7 +1314,7 @@ export default function LeagueScreen() {
                 <button
                   onClick={() => view === 'commissioner' ? replayCommissionerTour() : replayLeagueTour()}
                   title={view === 'commissioner' ? 'Replay admin tour' : 'Replay league tour'}
-                  style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid var(--shell-rule-strong)', background: 'var(--shell-fill)', color: 'var(--on-shell-dim)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid var(--rule)', background: 'var(--elev)', color: 'var(--mute)', fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >?</button>
                 <NotificationBell
                   notifications={notifications}
@@ -1609,7 +1609,7 @@ export default function LeagueScreen() {
                                   }
                                 }}
                                 style={{
-                                  background: 'var(--positive)', color: 'var(--on-shell)', fontSize: 'var(--fs-micro)',
+                                  background: 'var(--positive)', color: 'var(--on-accent)', fontSize: 'var(--fs-micro)',
                                   fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
                                 }}
                               >
@@ -1880,7 +1880,7 @@ export default function LeagueScreen() {
   const visibleLeagues = showArchived ? leagues : leagues.filter(l => !l.leagues?.archived);
 
   const archiveToggle = archivedLeagueCount > 0 && (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)',  }}>
       <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />
       Show archived ({archivedLeagueCount})
     </label>
@@ -1944,7 +1944,7 @@ export default function LeagueScreen() {
                     borderLeft: '3px solid transparent',
                     cursor: 'pointer', alignItems: 'center', transition: 'all .1s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderLeftColor = TYPE_COLOR[type] || 'var(--mute)'; e.currentTarget.style.background = 'var(--shell-fill)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderLeftColor = TYPE_COLOR[type] || 'var(--mute)'; e.currentTarget.style.background = 'var(--elev)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderLeftColor = 'transparent'; e.currentTarget.style.background = 'transparent'; }}
                 >
                   <div style={{ padding: '20px 0' }}>
@@ -2035,7 +2035,7 @@ export default function LeagueScreen() {
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <NumberFlow value={l.total_points || 0} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'var(--fs-heading)', color: 'var(--positive)', lineHeight: 1 }} />
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase', marginTop: 2 }}>Pts Total</div>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>Pts Total</div>
                 </div>
               </div>
             );

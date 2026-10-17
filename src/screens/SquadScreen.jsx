@@ -810,18 +810,18 @@ export default function SquadScreen() {
       <>
         <div
           className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
-          style={{ background: 'var(--shell)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid var(--shell-rule)' }}
+          style={{ background: 'var(--card)', borderLeft: '4px solid var(--sport-marker, var(--accent))', borderBottom: '1px solid var(--rule)' }}
         >
           <div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>
               Tactical Sheet
             </div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
           </div>
           <div className="text-right">
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--accent)', lineHeight: 1 }}>€100M</div>
           </div>
         </div>
@@ -905,20 +905,20 @@ export default function SquadScreen() {
         {/* ── Sticky header ─────────────────────────────────────────── */}
         <div
           className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
-          style={{ background: 'var(--shell)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid var(--shell-rule)' }}
+          style={{ background: 'var(--card)', borderLeft: '4px solid var(--sport-marker, var(--accent))', borderBottom: '1px solid var(--rule)' }}
         >
           <div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>
               Tactical Sheet
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
                 My Squad
               </div>
             </div>
           </div>
           <div className="text-right">
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: budgetLow ? 'var(--danger)' : 'var(--accent)', lineHeight: 1 }}>
               €{budgetLeft}M
             </div>
@@ -1062,7 +1062,7 @@ export default function SquadScreen() {
         <button onClick={() => { setDangerDismissed(true); setMobileTab('tools'); }} className="hit-44 text-[11px] font-black uppercase tracking-widest shrink-0 px-2 py-1 rounded" style={{ color: 'var(--danger)', background: 'rgba(240,58,58,0.12)' }}>
           View
         </button>
-        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'var(--on-shell-dim)' }}>×</button>
+        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'var(--mute)' }}>×</button>
       </div>
     );
   };
@@ -1335,19 +1335,19 @@ export default function SquadScreen() {
       <div
         className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
         style={{
-          background: 'var(--shell)',
+          background: 'var(--card)', borderLeft: '4px solid var(--sport-marker, var(--accent))',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid var(--shell-rule)',
+          borderBottom: '1px solid var(--rule)',
         }}
       >
         {/* Left: eyebrow + title + tour replay */}
         <div>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>
             Tactical Sheet
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+            <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--text)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
             <button
@@ -1355,9 +1355,9 @@ export default function SquadScreen() {
               title="Scoring & game rules"
               style={{
                 width: 22, height: 22, borderRadius: '50%',
-                border: '1px solid var(--shell-rule-strong)',
-                background: 'var(--shell-fill)',
-                color: 'var(--on-shell-dim)',
+                border: '1px solid var(--rule)',
+                background: 'var(--elev)',
+                color: 'var(--mute)',
                 fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, marginTop: 6,
@@ -1370,21 +1370,21 @@ export default function SquadScreen() {
         <div className="flex items-center gap-3 lg:gap-5">
           {windowKpi.text && (
             <div className="text-right hidden lg:block" aria-hidden="true">
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{windowKpi.label}</div>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>{windowKpi.label}</div>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: windowKpi.color, letterSpacing: '-0.01em' }}>
                 {windowKpi.text}
               </div>
             </div>
           )}
           <div className="text-right">
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Squad</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>Squad</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--on-shell)', lineHeight: 1 }}>{allSquadPlayers.length}</span>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.05em' }}>/15</span>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1 }}>{allSquadPlayers.length}</span>
+              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '.05em' }}>/15</span>
             </div>
           </div>
           <div className="text-right" data-tour="squad-budget">
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: budgetLow ? 'var(--danger)' : 'var(--accent)', lineHeight: 1 }}>
               €{budgetLeft}M
             </div>
@@ -1478,7 +1478,7 @@ export default function SquadScreen() {
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                   <div>
-                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
                   </div>
                   <button
@@ -1487,7 +1487,7 @@ export default function SquadScreen() {
                     style={{ marginTop: 2, background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   >?</button>
                 </div>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
                   {squadData.matchdayId ? ` · GW${squadData.matchdayId.split('-r')[1] ?? squadData.matchdayId} PTS` : ''}
                 </div>
@@ -1508,7 +1508,7 @@ export default function SquadScreen() {
                 <>
                   {/* Bench divider */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 6px', borderTop: '1px solid var(--rule)', marginTop: 4 }}>
-                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Substitutes</div>
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Substitutes</div>
                     <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{bench.length}</div>
                   </div>
@@ -1532,7 +1532,7 @@ export default function SquadScreen() {
                           cursor: isLocked ? 'not-allowed' : 'pointer', textAlign: 'left',
                         }}
                       >
-                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>{isLocked ? '🔒' : `S${bi + 1}`}</div>
+                        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>{isLocked ? '🔒' : `S${bi + 1}`}</div>
                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(player), flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1545,7 +1545,7 @@ export default function SquadScreen() {
                               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
                             )}
                             {isLocked && (
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
+                              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
                             )}
                           </div>
                           {player.fixtureStatus && (
@@ -1576,13 +1576,13 @@ export default function SquadScreen() {
             <div className="pb-24">
               {/* Section header */}
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
                   </div>
                 </div>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {totalSigned}/{squadSize} SIGNED{emptySlots > 0 ? ` · ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
                 </div>
               </div>
@@ -1637,11 +1637,11 @@ export default function SquadScreen() {
                                 <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                               )}
                               {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
-                              {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
+                              {!isStarter && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
                               <ClubCrest name={player.club} size={14} />
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.12em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</span>
+                              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.12em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</span>
                             </div>
                             {player.fixtureStatus && (
                               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.12em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
@@ -1743,7 +1743,7 @@ export default function SquadScreen() {
                         <div style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px dashed ${posColor}40`, color: `${posColor}60`, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}>{pos}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Empty Slot</div>
-                          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em', marginTop: 1, opacity: 0.6 }}>Open Market to Sign</div>
+                          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.1em', marginTop: 1, opacity: 0.6 }}>Open Market to Sign</div>
                         </div>
                         <button className="hit-44"
                           onClick={() => setPickerPos(pos)}
@@ -1854,7 +1854,7 @@ export default function SquadScreen() {
                   background: 'rgba(8,9,12,0.95)', padding: '12px 40px',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.18em', flexShrink: 0 }}>BENCH</div>
+                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.18em', flexShrink: 0 }}>BENCH</div>
                   <div style={{ flex: 1, display: 'flex', gap: 10, flexWrap: 'nowrap', overflow: 'hidden' }}>
                     {bench.map((player) => {
                       const pos = player.position;
@@ -1880,7 +1880,7 @@ export default function SquadScreen() {
                           }}>{pos}</div>
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
+                            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.1em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
                             {player.fixtureStatus && (
                               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
@@ -1994,7 +1994,7 @@ export default function SquadScreen() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <ClubCrest name={selectedPlayer.club} size={16} />
                     {selectedPlayer.club}
                     {selectedPlayer.id === captainId && (
@@ -2011,11 +2011,11 @@ export default function SquadScreen() {
             {/* Form + next fixture + ownership context strip */}
             <div className="flex items-stretch gap-3 mb-3" style={{ borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', padding: '10px 0' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>FORM</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>FORM</div>
                 <FormStrip rounds={squadStatsMap[selectedPlayer.id]} />
               </div>
               <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid var(--rule)', paddingLeft: 12 }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>NEXT FIXTURE</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>NEXT FIXTURE</div>
                 <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: selectedPlayer.fixtureStatus?.color || 'var(--paper)', letterSpacing: '-0.01em' }}>
                   {selectedPlayer.fixtureStatus?.label || 'NO FIXTURE'}
                 </div>
