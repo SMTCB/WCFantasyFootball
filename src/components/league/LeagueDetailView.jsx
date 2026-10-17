@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MgrTag, HubSectionLabel, MobFormDots, MobSection } from './HubShared';
+import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
 import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 import { supabase } from '../../lib/supabase';
 import { CompetitionResultsHeader } from '../competition/CompetitionResultsHeader';
@@ -128,63 +128,20 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── DESKTOP: 4-col spotlight strip ────────────────────────────── */}
-      <div className="hidden lg:grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-        {/* GW card */}
-        <div style={{ padding: '18px 22px', borderRight: '1px solid var(--rule)', borderBottom: '2px solid var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE · SEASON</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', marginTop: 4, letterSpacing: '-0.02em' }}>GW {currentGW}</div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{members.length} MANAGERS · STANDINGS</div>
+      {/* ── Summary: your rank and leader ───────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, padding: '16px max(16px, 3vw)', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+        <div style={{ padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderLeft: '4px solid var(--accent)', borderRadius: 'var(--radius)' }}>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Your rank</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
+            <span className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{myRank}</span>
+            <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>of {members.length}</span>
           </div>
-          {members[0] && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--positive)' }}>{Math.round(members[0].total_points ?? 0)}</div>
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em', marginTop: 4 }}>LEAD SCORE</div>
-            </div>
-          )}
+          <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>{myPts !== '—' ? Math.round(myPts) : '—'} pts</div>
         </div>
-        {/* Podium 1–3 */}
-        {members.slice(0, 3).map((m, idx) => {
-          const mName = (m.users?.username || 'Unknown');
-          const hue = mgrHue(m.users?.username || '');
-          return (
-            <div key={m.user_id} style={{ padding: '18px 22px', borderRight: idx < 2 ? '1px solid var(--rule)' : 'none', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <CompetitionRankBadge rank={idx + 1} accent="var(--accent)" size="lg" />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <MgrTag mono={mgrMono(mName)} hue={hue} />
-                  <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mName}</div>
-                </div>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>RANK #{idx + 1}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--positive)' }}>{Math.round(m.total_points ?? 0)}</div>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.18em' }}>TOT</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── MOBILE: 2-col hero cards ───────────────────────────────────── */}
-      <div className="lg:hidden" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '14px 18px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-        {/* Your rank */}
-        <div style={{ padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: '2px solid var(--cyan)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.2em' }}>YOUR RANK</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{myRank}</span>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>/ {members.length}</span>
-          </div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{myPts !== '—' ? Math.round(myPts) : '—'} TOT</div>
-        </div>
-        {/* Leader */}
-        <div style={{ padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: '2px solid var(--gold)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.2em' }}>LEADER · {mgrMono(leaderName)}</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)' }}>{leader?.total_points != null ? Math.round(leader.total_points) : '—'}</span>
-          </div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{leaderName}</div>
+        <div style={{ padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderLeft: '4px solid var(--gold)', borderRadius: 'var(--radius)' }}>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Leader</div>
+          <div className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', marginTop: 2 }}>{leader?.total_points != null ? Math.round(leader.total_points) : '—'}</div>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{leaderName} · GW {currentGW}</div>
         </div>
       </div>
 
@@ -211,7 +168,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                   <MgrTag mono={mgrMono(mName)} hue={hue} />
                   <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>{mName}</span>
-                    {m.rank === 1 && <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em' }}>LEADER</span>}
+                    {m.rank === 1 && <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, background: 'var(--gold-soft)', color: 'var(--gold-text)', padding: '1px 8px', borderRadius: 999 }}>Leader</span>}
                   </div>
                 </div>
               );
@@ -238,7 +195,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         </div>
 
         {/* Activity rail */}
-        <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'hidden' }}>
+        <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--card)', overflow: 'hidden' }}>
           {activityCollapsed ? (
             <button
               onClick={() => setActivityCollapsed(false)}
@@ -295,10 +252,8 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                     <div key={e.id} style={{ padding: '12px 18px', borderBottom: '1px solid var(--rule)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                         <span style={{
-                          fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
-                          padding: '2px 5px', border: `1px solid ${meta.color}`,
-                          color: meta.color, flexShrink: 0,
-                        }}>{meta.badge}</span>
+                          fontSize: 'var(--fs-micro)', fontWeight: 700, padding: '1px 8px', borderRadius: 999, border: `1px solid ${meta.color}`, color: meta.color, flexShrink: 0
+                        }}>{meta.badge.toLowerCase()}</span>
                         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                           {timeAgo(e.published_at)}
                         </span>
@@ -399,15 +354,15 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               key={m.user_id}
               onClick={() => onViewManager({ user_id: m.user_id, name: mName })}
               style={{
-                display: 'grid', gridTemplateColumns: '28px auto 1fr auto auto', gap: 10, alignItems: 'center',
-                padding: '10px 18px', borderBottom: '1px solid var(--rule)', cursor: 'pointer',
-                borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent',
-                background: isMe ? 'rgba(0,180,216,.04)' : 'transparent',
+                display: 'grid', gridTemplateColumns: '28px auto 1fr auto', gap: 10, alignItems: 'center',
+                minHeight: 'var(--tap)', padding: '10px 16px', borderBottom: '1px solid var(--rule)', cursor: 'pointer',
+                borderLeft: isMe ? '4px solid var(--accent)' : '4px solid transparent',
+                background: isMe ? 'var(--accent-soft)' : 'transparent',
               }}
             >
               {/* Rank + trend */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{m.rank || '—'}</span>
+                <span className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{m.rank || '—'}</span>
               </div>
               {/* Monogram */}
               <MgrTag mono={mgrMono(mName)} hue={hue} size={20} />
@@ -415,21 +370,15 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mName}</span>
-                  {m.rank === 1 && <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em', flexShrink: 0 }}>1st</span>}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                  <span style={{ width: 5, height: 5, background: 'var(--gold)', display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>C · —</span>
+                  {m.rank === 1 && <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, background: 'var(--gold-soft)', color: 'var(--gold-text)', padding: '1px 8px', borderRadius: 999, flexShrink: 0 }}>1st</span>}
                 </div>
               </div>
-              {/* Form dots */}
-              <MobFormDots form={[]} />
               {/* Points */}
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{Math.round(m.total_points ?? 0)}</div>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>TOT</div>
+                <div className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{Math.round(m.total_points ?? 0)}</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>pts</div>
                 {h2hEnabled && (
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.12em', marginTop: 1 }}>
+                  <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
                     {h2hMap[m.user_id] ?? '—'} H2H
                   </div>
                 )}
@@ -461,8 +410,8 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             return (
               <div key={e.id} style={{ padding: '11px 18px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', padding: '1px 4px', border: `1px solid ${meta.color}`, color: meta.color, flexShrink: 0 }}>
-                    {meta.badge}
+                  <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, padding: '1px 8px', borderRadius: 999, border: `1px solid ${meta.color}`, color: meta.color, flexShrink: 0 }}>
+                    {meta.badge.toLowerCase()}
                   </span>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{timeAgo(e.published_at)}</span>
                 </div>

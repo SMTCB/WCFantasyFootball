@@ -31,6 +31,9 @@ export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }
   );
 }
 
+// LEAGUE ACTIVITY -> League activity
+const sentence = (t) => (typeof t === 'string' ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : t);
+
 // Shared light tab row (redesign Wave 1) — underline tabs, 44px tap target, 12px+ labels.
 function HubTabRow({ tabs, active, onTab }) {
   return (
@@ -165,16 +168,16 @@ export function Spark({ data = [], w = 88, h = 22, tone = 'var(--cyan)', zero = 
 }
 
 // Section header with 3px tone bar
-export function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right }) {
+export function HubSectionLabel({ label, sub, tone = 'var(--accent)', right }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '12px 20px', borderBottom: '1px solid var(--rule)',
-      background: 'var(--ink-2)', flexShrink: 0,
+      display: 'flex', alignItems: 'center', gap: 10, minHeight: 'var(--tap)',
+      padding: '8px 20px', borderBottom: '1px solid var(--rule)',
+      background: 'var(--card)', flexShrink: 0,
     }}>
-      <span style={{ width: 3, height: 14, background: tone, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
-      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>· {sub}</span>}
+      <span aria-hidden style={{ width: 4, height: 16, borderRadius: 2, background: tone, flexShrink: 0 }} />
+      <h2 style={{ margin: 0, fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>{sentence(label)}</h2>
+      {sub && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>· {sentence(sub)}</span>}
       <span style={{ flex: 1 }} />
       {right}
     </div>
@@ -239,12 +242,12 @@ export function MobFormDots({ form = [], max = 3 }) {
 }
 
 // Mobile slim section header — no full-width background, used inside scrolling lists.
-export function MobSection({ label, sub, tone = 'var(--cyan)', right }) {
+export function MobSection({ label, sub, tone = 'var(--accent)', right }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px 6px' }}>
-      <span style={{ width: 3, height: 12, background: tone, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
-      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em' }}>· {sub}</span>}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 16px 8px' }}>
+      <span aria-hidden style={{ width: 4, height: 14, borderRadius: 2, background: tone, flexShrink: 0 }} />
+      <h2 style={{ margin: 0, fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>{sentence(label)}</h2>
+      {sub && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>· {sentence(sub)}</span>}
       <span style={{ flex: 1 }} />
       {right}
     </div>
