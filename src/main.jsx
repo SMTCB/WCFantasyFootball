@@ -6,6 +6,9 @@ import App from "./App.jsx";
 // initNative is called inside App.jsx — importing capacitor.js here AND
 // having AuthContext.jsx import it too creates a Rolldown TDZ at the entry point.
 import { supabase } from "./lib/supabase.js";
+import { initTheme } from "./lib/theme.js";
+
+initTheme();
 
 // ── Sentry (OPS-2) ────────────────────────────────────────────────────────────
 // Supplements the existing report_client_error RPC reporter below.

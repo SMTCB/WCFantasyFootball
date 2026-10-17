@@ -126,7 +126,7 @@
   --fs-body-lg: 17px;  --lh-body-lg: 1.5;
   --fs-body:    15px;  --lh-body:    1.5;
   --fs-label:   13px;  --lh-label:   1.3;
-  --fs-micro:   11px;  --lh-micro:   1.3;  /* hard floor — nothing renders smaller */
+  --fs-micro:   12px;  --lh-micro:   1.3;  /* hard floor — nothing renders smaller (raised from 11px, redesign Wave 0) */
 
   /* ── Sport accent palette ──────────────────────────────────────────────── */
   --f1:    #E10600;   /* Formula 1 — Ferrari red        */
@@ -155,15 +155,59 @@
   --pos-def:  #1A6FA8;
   --pos-mid:  #B8720E;
   --pos-fwd:  #B91C1C;
+
+  /* ── Redesign tokens (Wave 0) — see docs/design/REDESIGN_PROPOSAL_2026-10.html.
+     New screens/components use these; legacy names above keep working. */
+  --raised:    var(--elev);
+  --ink-soft:  #3F4A5C;   /* secondary text on --card / --bg */
+  --accent-soft: #E6F0F7;
+  --on-accent-solid: #ffffff;
+  --gold-soft: #FAF0DE;
+  --good:      #166534;
+  --good-soft: #E3F0E6;
+  --crit:      #B91C1C;
+  --crit-soft: #FBE9E9;
+  --navy:      #18202E;   /* Frontrow front page + trophy profile only */
+  --on-navy:   #F2EEE5;
+  --pitch:     #2F7A4B;
+  --pitch-2:   #2A6E43;
+  --radius:    12px;      /* cards, sheets, inputs */
+  --tap:       44px;      /* minimum touch target */
+}
+
+/* ── Dark theme (Wave 0: tokens only — nothing sets data-theme until after Wave 2).
+   Components still using hard-coded hex stay light until migrated. ─────────── */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0B0F14;  --card: #141A22;  --elev: #1C242E;  --rule: #2E3846;
+  --ink: #0B0F14; --ink-2: #141A22; --ink-3: #1C242E;
+  --paper: #F2EEE5;  --text-2: #C3CAD6;  --mute: #93A0B1;  --ink-soft: #C3CAD6;
+  --brand-accent: #5FB3E5;
+  --accent-soft: #14283A;  --on-accent-solid: #0B0F14;
+  --gold: #E5B45C;  --gold-text: #E5B45C;  --gold-soft: #2C2312;
+  --good: #7FDCA4;  --positive: #7FDCA4;  --pos: #7FDCA4;  --good-soft: #14261C;  --pos-bg: #14261C;
+  --crit: #F08B8B;  --danger: #F08B8B;  --neg: #F08B8B;  --crit-soft: #2E1616;  --neg-bg: #2E1616;
+  --navy: #0F151D;
+  --pitch: #1E5233;  --pitch-2: #1A482D;
+  --color-ink: #0B0F14;  --color-ink-2: #141A22;  --color-ink-3: #1C242E;  --color-rule: #2E3846;
+  --color-bg: #0B0F14;  --color-surface: #141A22;  --color-surface-2: #1C242E;  --color-surface-3: #1C242E;
+  --color-surface-elevated: #1C242E;  --color-border: #2E3846;  --color-border-2: #2E3846;
+  --color-paper: #F2EEE5;  --color-text-primary: #F2EEE5;  --color-text-secondary: #C3CAD6;
+  --color-text-tertiary: #93A0B1;  --color-mute: #93A0B1;
+  --color-cyan: #5FB3E5;  --color-gold: #E5B45C;
+  --color-positive: #7FDCA4;  --color-danger: #F08B8B;  --color-negative: #F08B8B;  --color-live: #F08B8B;
 }
 
 /* ── Global Base ─────────────────────────────────────────────────── */
 :root {
-  background-color: #F7F3ED;
-  color: #18202E;
+  background-color: var(--bg);
+  color: var(--paper);
   font-family: 'Archivo', sans-serif;
   color-scheme: light;
 }
+
+/* Tabular figures for points, ranks, prices — columns line up without mono */
+.num { font-variant-numeric: tabular-nums; }
 
 html {
   min-height: 100%;
@@ -175,7 +219,7 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F7F3ED;
+  background-color: var(--bg);
   touch-action: manipulation;
   overscroll-behavior-y: none;
   overflow-x: hidden;
