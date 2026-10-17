@@ -23,6 +23,14 @@ Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, r
 
 ---
 
+## ✅ Frontrow redesign — shell, top bar and league hub (2026-10-17) — PRs #1090–#1094
+
+- **#1090** top bar per mockup; duplicate Live/Squad/Market strip removed; Digest and Wishlist re-homed. **#1091** league hub: one tab row (H2H, Market report, Betting become sub-views), sentence-case window banner. **#1092–#1094** Market, Squad, League and 12 light-surface components moved off `--shell*` onto `--card`/`--elev`/`--rule`/`--mute` with a 4px marker.
+- Still on `--shell*` by design: pitch components, Live pitch, share card (`RecapCard`), `BrandMark`, Clubhouse front page, `FormStrip`, chat own-bubble, `PrimaryActionBar`. Tokens stay until pitch tokens exist.
+- Open / next: uppercase and mono sweep (~19 / ~39 files), lint-warning baseline (512), Tailwind fixed colours, trading into Market, commissioner gear. Checked on Vercel previews only; Tier 3 E2E fails on main already (baseline).
+
+---
+
 ## ✅ Frontrow redesign — cleanup and dark-mode pass (2026-10-17) — PRs #1083–#1086
 
 - **#1083** removed the legacy `--cyan`/`--ink*`/`--accent-bg` alias tokens (36 files + index.css). **#1084** dark-mode audit: only the Squad swap banner had a hardcoded light surface; fixed. **#1085** F1 header marker now uses `--f1`; lighter `--f1`/`--ten` in the dark theme. **#1086** `npm audit fix` (lockfile only, 0 vulnerabilities).
