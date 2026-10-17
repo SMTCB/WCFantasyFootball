@@ -5,7 +5,7 @@ import { MONO, DISPLAY, BODY, mgrHue, mgrMono } from './HubConstants';
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const POS_COLORS = {
   GK:  'var(--gold)',
-  DEF: 'var(--cyan)',
+  DEF: 'var(--accent)',
   MID: 'var(--positive)',
   FWD: 'var(--danger)',
   BET: 'var(--purple)',
@@ -18,9 +18,9 @@ function SectionHead({ accent, label, badge }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
       <span style={{ width: 3, height: 14, background: accent, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', }}>{label}</span>
       {badge && (
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '2px 5px' }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '2px 5px' }}>
           {badge}
         </span>
       )}
@@ -30,7 +30,7 @@ function SectionHead({ accent, label, badge }) {
 
 function EmptyState({ label }) {
   return (
-    <div style={{ padding: '28px 0', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>
+    <div style={{ padding: '28px 0', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>
       {label}
     </div>
   );
@@ -66,7 +66,7 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
   }, [matchdayPoints, matchdays]);
 
   if (matchdays.length === 0) {
-    return <EmptyState label="NO SCORED MATCHDAYS YET" />;
+    return <EmptyState label="No scored matchdays yet" />;
   }
 
   const W = 520, H = 180;
@@ -133,7 +133,7 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
             <div key={mgr.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 14, textAlign: 'right' }}>#{i + 1}</span>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: hue, flexShrink: 0 }} />
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', color: isMe ? hue : 'var(--mute)', fontWeight: isMe ? 700 : 400 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: isMe ? hue : 'var(--mute)', fontWeight: isMe ? 700 : 400 }}>
                 {(mgr.username || '').toUpperCase()}
               </span>
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
@@ -188,7 +188,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
   // All bars scale against the official #1 total — so leader always has the longest bar
   const maxTotalPts = Math.max(...rows.map(r => r.totalPts), 1);
 
-  if (rows.length === 0) return <EmptyState label="NO MATCH DATA YET" />;
+  if (rows.length === 0) return <EmptyState label="No match data yet" />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -198,7 +198,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
           {[...POS_ORDER, 'BET'].map(pos => (
             <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 9, height: 9, background: POS_COLORS[pos], flexShrink: 0 }} />
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>{pos}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{pos}</span>
             </div>
           ))}
         </div>
@@ -269,7 +269,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                   })()}
                 </>
               ) : (
-                <div style={{ width: `${(mgr.totalPts / maxTotalPts) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
+                <div style={{ width: `${(mgr.totalPts / maxTotalPts) * 100}%`, background: isMe ? hue : 'var(--accent)', opacity: 0.6 }} />
               )}
             </div>
           </div>
@@ -293,7 +293,7 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
     return Object.values(map).sort((a, b) => b.pts - a.pts);
   }, [matchdayPoints]);
 
-  if (bestByUser.length === 0) return <EmptyState label="NO MATCHDAY DATA YET" />;
+  if (bestByUser.length === 0) return <EmptyState label="No matchday data yet" />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -313,7 +313,7 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
             <MgrTag mono={mgrMono(m.username || '')} hue={hue} />
             <div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)' }}>{m.username}</div>
-              {gwNum && <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>GW{gwNum}</div>}
+              {gwNum && <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>GW{gwNum}</div>}
             </div>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
               {m.pts}<span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)', marginLeft: 3 }}>PTS</span>
@@ -331,7 +331,7 @@ function CaptainHitRate({ captainHitData }) {
   const [activeTooltip, setActiveTooltip] = useState(null); // { uid, matchday_id }
 
   if (!captainHitData || captainHitData.length === 0) {
-    return <EmptyState label="AVAILABLE AFTER FIRST COMPLETED MATCHDAY" />;
+    return <EmptyState label="Available after first completed matchday" />;
   }
 
   const maxRate = Math.max(...captainHitData.map(m => m.hits / (m.total || 1)), 0.01);
@@ -386,7 +386,7 @@ function CaptainHitRate({ captainHitData }) {
                     );
                   })}
                 </div>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{mgr.hits}/{mgr.total}</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{mgr.hits}/{mgr.total}</span>
                 <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: pct >= 50 ? 'var(--positive)' : 'var(--danger)', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
               </div>
             </div>
@@ -398,7 +398,7 @@ function CaptainHitRate({ captainHitData }) {
                 background: 'var(--ink-2)', border: `1px solid ${activeRound.hit ? 'var(--positive)' : 'var(--danger)'}44`,
                 borderRadius: 3, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
               }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: activeRound.hit ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.16em', flexShrink: 0 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: activeRound.hit ? 'var(--positive)' : 'var(--danger)', flexShrink: 0 }}>
                   GW{activeRound.matchday_id?.split('-r')[1]} · {activeRound.hit ? '✓ HIT' : '✗ MISS'}
                 </span>
                 <span style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>
@@ -427,7 +427,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
   const [selectedGW, setSelectedGW] = useState('AGG');
 
   if (!benchData || benchData.length === 0) {
-    return <EmptyState label="AVAILABLE AFTER FIRST COMPLETED MATCHDAY" />;
+    return <EmptyState label="Available after first completed matchday" />;
   }
 
   const allGWs = [...new Set(benchData.flatMap(m => (m.rounds || []).map(r => r.matchday_id)))]
@@ -453,7 +453,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {allGWs.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
             ROUND
           </span>
           {['AGG', ...allGWs].map(gw => {
@@ -462,10 +462,10 @@ function BenchPointsPanel({ benchData, currentUser }) {
             return (
               <button className="hit-44" key={gw} onClick={() => setSelectedGW(gw)} style={{
                 padding: '4px 9px', flexShrink: 0,
-                border: active ? '1px solid var(--cyan)' : '1px solid var(--rule)',
-                background: active ? 'rgba(0,180,216,.14)' : 'transparent',
-                color: active ? 'var(--cyan)' : 'var(--mute)',
-                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', cursor: 'pointer',
+                border: active ? '1px solid var(--accent)' : '1px solid var(--rule)',
+                background: active ? 'var(--accent-soft)' : 'transparent',
+                color: active ? 'var(--accent)' : 'var(--mute)',
+                fontFamily: MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer',
               }}>
                 {label}
               </button>
@@ -493,7 +493,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
                 <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
                   {mgr.pts}
                 </span>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 3 }}>MISSED</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 3 }}>Missed</span>
               </div>
             </div>
             <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
@@ -506,7 +506,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
         );
       })}
 
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginTop: 4 }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 4 }}>
         {selectedGW === 'AGG'
           ? 'AGG — rolling total across all completed rounds · lower = better · 0 = perfect season'
           : `GW${String(selectedGW).replace(/^.*-r/, '')} — missed pts this round · 0 = perfect selection`}
@@ -519,7 +519,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
 
 const ROI_TAB_STYLES = {
   base: {
-    fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', padding: '5px 12px',
+    fontFamily: MONO, fontSize: 'var(--fs-micro)', padding: '5px 12px',
     border: '1px solid var(--rule)', cursor: 'pointer', transition: 'all .15s',
   },
 };
@@ -545,13 +545,13 @@ function RoiPanel({ roiData, currentUser }) {
 
       {/* ── Manager ROI ───────────────────────────────────────────────── */}
       <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <SectionHead accent="var(--purple)" label="MANAGER ROI · PTS PER £M" />
+        <SectionHead accent="var(--purple)" label="Manager roi · pts per £M" />
         <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
           Season points divided by current XI value. Who extracts the most from their budget?
         </p>
 
         {noManagerData
-          ? <EmptyState label="AVAILABLE AFTER FIRST SCORED MATCHDAY" />
+          ? <EmptyState label="Available after first scored matchday" />
           : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {managerRoi.map((mgr, i) => {
@@ -580,7 +580,7 @@ function RoiPanel({ roiData, currentUser }) {
                         opacity: isMe ? 1 : 0.7,
                       }} />
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', marginTop: 3, marginLeft: 32 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3, marginLeft: 32 }}>
                       {mgr.total_points} PTS · £{mgr.squad_value.toFixed(1)}M XI
                     </div>
                   </div>
@@ -625,13 +625,13 @@ function RoiPanel({ roiData, currentUser }) {
         </p>
 
         {noPlayerData
-          ? <EmptyState label="AVAILABLE AFTER FIRST SCORED MATCHDAY" />
+          ? <EmptyState label="Available after first scored matchday" />
           : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '22px 28px 1fr auto auto auto', gap: 8, alignItems: 'center', padding: '4px 8px', marginBottom: 4 }}>
                 {['#', 'POS', 'PLAYER', 'PTS', '£M', 'ROI'].map(h => (
-                  <span key={h} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.16em', textAlign: h === 'PLAYER' ? 'left' : 'right' }}>{h}</span>
+                  <span key={h} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: h === 'PLAYER' ? 'left' : 'right' }}>{h}</span>
                 ))}
               </div>
 
@@ -654,7 +654,7 @@ function RoiPanel({ roiData, currentUser }) {
                       {i + 1}
                     </span>
                     <span style={{
-                      fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em', textAlign: 'center',
+                      fontFamily: MONO, fontSize: 'var(--fs-micro)', textAlign: 'center',
                       background: posColor, color: 'rgba(0,0,0,0.8)', padding: '2px 4px', borderRadius: 2, fontWeight: 700,
                     }}>
                       {p.position}
@@ -664,7 +664,7 @@ function RoiPanel({ roiData, currentUser }) {
                         {p.name}
                       </div>
                       {owners.length > 0 && (
-                        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
+                        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
                           {owners.join(' · ')}
                         </div>
                       )}
@@ -683,7 +683,7 @@ function RoiPanel({ roiData, currentUser }) {
                 );
               })}
 
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginTop: 6, textAlign: 'right' }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6, textAlign: 'right' }}>
                 ROI = TOTAL PTS ÷ PRICE · PLAYED PLAYERS ONLY
               </div>
             </div>
@@ -716,7 +716,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
       {/* ── Hero strip ───────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px,2vw,20px) clamp(14px,3vw,24px)', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--purple)', letterSpacing: '.22em' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--purple)', }}>
             LEAGUE STATS · {scoredGWs > 0 ? `${scoredGWs} GAMEWEEK${scoredGWs !== 1 ? 'S' : ''} SCORED` : `${members.length} MEMBERS`}
           </div>
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px,4vw,26px)', marginTop: 6, lineHeight: 1.1 }}>
@@ -726,11 +726,11 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
           {[
             { k: 'TOTAL',  v: totalPts.toLocaleString(), tone: 'var(--paper)' },
-            { k: 'AVG',    v: avgPts,                    tone: 'var(--cyan)'  },
+            { k: 'AVG',    v: avgPts,                    tone: 'var(--accent)'  },
             { k: 'LEADER', v: leaderPts,                 tone: 'var(--gold)'  },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px,2vw,16px) clamp(10px,2.5vw,22px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{c.k}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px,4vw,30px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
             </div>
           ))}
@@ -738,13 +738,13 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
       </div>
 
       {statsLoading ? (
-        <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+        <div style={{ padding: '48px', textAlign: 'center', fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</div>
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
 
           {/* ── Row 1: Score Progression (full width) ────────────────── */}
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <SectionHead accent="var(--purple)" label="SCORE PROGRESSION · CUMULATIVE PTS" />
+            <SectionHead accent="var(--purple)" label="Score progression · cumulative pts" />
             <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
               Cumulative season total per gameweek. Steeper slope = higher-scoring round.
             </p>
@@ -753,7 +753,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
 
           {/* ── Row 2: Season Totals + Position Breakdown (merged, full width) */}
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <SectionHead accent="var(--cyan)" label="SEASON TOTALS · POINTS BY POSITION" />
+            <SectionHead accent="var(--accent)" label="Season totals · points by position" />
             <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
               Sorted by official leaderboard total — the #1 manager always has the longest bar. Segments show points by position (from completed matchdays) plus a BET stripe for bet rewards and trade bonuses. Transfer penalties are noted alongside the total but already reflected in it.
             </p>
@@ -763,11 +763,11 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           {/* ── Row 3: Best Single GW + Captaincy ────────────────────── */}
           <div className="flex flex-col lg:grid lg:grid-cols-2" style={{ borderBottom: '1px solid var(--rule)' }}>
             <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <SectionHead accent="var(--danger)" label="BEST SINGLE GAMEWEEK" />
+              <SectionHead accent="var(--danger)" label="Best single gameweek" />
               <BestGameweeks matchdayPoints={matchdayPoints} currentUser={currentUser} />
             </section>
             <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <SectionHead accent="var(--gold)" label="CAPTAINCY · HIT RATE" />
+              <SectionHead accent="var(--gold)" label="Captaincy · hit rate" />
               <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
                 Did your captain outscore every other player in YOUR XI that gameweek? Two managers with the same captain can have different results — it depends on their other 10 players. Hover each square to see captain pts vs best other player. Only completed gameweeks count.
               </p>
@@ -782,7 +782,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
 
           {/* ── Row 5: Points left on bench ──────────────────────────── */}
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <SectionHead accent="var(--positive)" label="SELECTION EFFICIENCY · MISSED PTS" />
+            <SectionHead accent="var(--positive)" label="Selection efficiency · missed pts" />
             <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
               How many points did you leave on the bench? For each bench player who outscored your worst-performing starter, the difference counts as a missed point. Zero means every bench player scored less than your weakest XI player — perfect selection. Use the round selector to inspect individual gameweeks or AGG for the rolling season total. Only completed matchdays count.
             </p>

@@ -11,7 +11,7 @@ const DISPLAY = "'Archivo Black', sans-serif";
 const CATEGORIES = [
   { key: 'match',   label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
   { key: 'stats',   label: 'STATS',   color: 'var(--gold)',  icon: '📊' },
-  { key: 'players', label: 'PLAYERS', color: 'var(--cyan)',  icon: '🎯' },
+  { key: 'players', label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
   { key: 'custom',  label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏' },
 ];
 
@@ -64,7 +64,7 @@ const TMAP = Object.fromEntries(TEMPLATES.map(t => [t.slug, t]));
 function TypeSelector({ onSelect, catExpanded, onToggleCat }) {
   return (
     <div>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>
         1 · SELECT BET TYPE
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -86,8 +86,8 @@ function TypeSelector({ onSelect, catExpanded, onToggleCat }) {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                   <span style={{ fontSize: 'var(--fs-micro)' }}>{cat.icon}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: cat.color, letterSpacing: '.18em' }}>{cat.label}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em' }}>{catTemplates.length} types</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: cat.color, }}>{cat.label}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{catTemplates.length} types</span>
                 </div>
                 <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{isOpen ? '−' : '+'}</span>
               </button>
@@ -127,15 +127,15 @@ function TypeSelector({ onSelect, catExpanded, onToggleCat }) {
 
 function FixturePicker({ fixtures, selectedFixture, onSelect, loading, optional }) {
   if (loading) {
-    return <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', letterSpacing: '.2em' }}>LOADING FIXTURES…</div>;
+    return <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>Loading fixtures…</div>;
   }
   if (!fixtures.length) {
-    return <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', letterSpacing: '.18em' }}>NO SCHEDULED MATCHES AVAILABLE</div>;
+    return <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>No scheduled matches available</div>;
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
       {optional && (
-        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginBottom: 2 }}>
+        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 2 }}>
           Optional — select to scope this bet to a specific match
         </div>
       )}
@@ -158,13 +158,13 @@ function FixturePicker({ fixtures, selectedFixture, onSelect, loading, optional 
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1, minWidth: 0 }}>
-                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: sel ? 'var(--cyan)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: sel ? 'var(--accent)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team}</span>
                 <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>vs</span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: sel ? 'var(--cyan)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.away_team}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: sel ? 'var(--accent)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.away_team}</span>
               </div>
-              {sel && <span style={{ color: 'var(--cyan)', fontSize: 'var(--fs-body)', flexShrink: 0 }}>✓</span>}
+              {sel && <span style={{ color: 'var(--accent)', fontSize: 'var(--fs-body)', flexShrink: 0 }}>✓</span>}
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2, letterSpacing: '.1em' }}>{dateStr}</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2, }}>{dateStr}</div>
           </button>
         );
       })}
@@ -176,7 +176,7 @@ function OptionsPreview({ options }) {
   if (!options.length) return null;
   return (
     <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(0,196,232,0.05)', border: '1px solid rgba(0,196,232,0.18)', borderRadius: 3 }}>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.18em', marginBottom: 5 }}>OPTIONS ({options.length}):</div>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', marginBottom: 5 }}>OPTIONS ({options.length}):</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {options.map(o => (
           <span key={o.key} style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--paper)', padding: '3px 7px', background: 'var(--shell-fill)', border: '1px solid var(--shell-rule-strong)', borderRadius: 2 }}>
@@ -615,7 +615,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         <TypeSelector onSelect={selectTemplate} catExpanded={catExpanded} onToggleCat={toggleCat} />
       ) : (
         <div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>1 · BET TYPE</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>1 · BET TYPE</div>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '10px 12px', background: 'var(--shell-fill)',
@@ -625,12 +625,12 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
               <span style={{ fontSize: 'var(--fs-body-lg)' }}>{template.icon}</span>
               <div>
                 <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: catColor, letterSpacing: '-0.01em' }}>{template.label}</div>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginTop: 2, textTransform: 'uppercase' }}>{template.category}</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2, textTransform: 'uppercase' }}>{template.category}</div>
               </div>
             </div>
             <button className="hit-44"
               onClick={clearTemplate}
-              style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.15em', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
+              style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
             >
               CHANGE ×
             </button>
@@ -643,13 +643,13 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         <>
           {/* ── Step 2: Deadline + Reward ── */}
           <div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>
               2 · {isMatchdayPlayer ? 'MATCH WINDOW & DEADLINE' : 'DEADLINE & REWARD'}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {isMatchdayPlayer && (
                 <div>
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>FROM (OPTIONAL)</div>
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 5 }}>FROM (OPTIONAL)</div>
                   <input
                     type="datetime-local"
                     value={windowFrom}
@@ -660,7 +660,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
               )}
               {/* Deadline — full width row */}
               <div>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 5 }}>
                   {isMatchdayPlayer ? 'PICKS CLOSE' : 'DEADLINE'}
                 </div>
                 <input
@@ -672,7 +672,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
               </div>
               {/* Reward — own row below */}
               <div>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>REWARD</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 5 }}>Reward</div>
                 <div style={{ display: 'flex', gap: 5 }}>
                   <input
                     type="number"
@@ -693,7 +693,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
               </div>
             </div>
             {!isMatchdayPlayer && deadline && (
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 5, letterSpacing: '.1em' }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 5, }}>
                 Deadline auto-set from next matchday · adjust if needed
               </div>
             )}
@@ -701,7 +701,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
 
           {/* ── Step 3: Config panel (type-specific) ── */}
           <div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>
               3 · {template.configPanel === 'player_pick' ? 'SELECT PLAYERS'
                   : template.configPanel === 'free_text'  ? 'WRITE OPTIONS'
                   : template.configPanel === 'over_under' ? 'SET THE LINE'
@@ -714,7 +714,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             {/* Fixture picker — required or optional depending on panel */}
             {showFixturePanel && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginBottom: 6 }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6 }}>
                   {fixtureRequired ? 'SELECT MATCH (REQUIRED)' : 'SELECT MATCH (OPTIONAL — scopes this bet)'}
                 </div>
                 <FixturePicker
@@ -730,7 +730,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             {/* ── Over / Under line input ── */}
             {template.configPanel === 'over_under' && (
               <div style={{ marginBottom: 8 }}>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginBottom: 5 }}>LINE</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 5 }}>Line</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input
                     type="number"
@@ -746,7 +746,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                         key={v}
                         onClick={() => setOuLine(v)}
                         style={{
-                          padding: '5px 9px', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', cursor: 'pointer', borderRadius: 2,
+                          padding: '5px 9px', fontFamily: MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer', borderRadius: 2,
                           background: ouLine === v ? 'rgba(201,168,76,0.18)' : 'var(--shell-fill)',
                           border: `1px solid ${ouLine === v ? 'rgba(201,168,76,0.5)' : 'var(--shell-rule)'}`,
                           color: ouLine === v ? 'var(--gold)' : 'var(--mute)',
@@ -761,7 +761,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             {/* ── Binary Yes/No (auto options, nothing to configure) ── */}
             {template.configPanel === 'binary_yn' && (
               <div style={{ padding: '10px 12px', background: 'var(--shell-fill)', border: '1px solid var(--shell-rule)', borderRadius: 3 }}>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginBottom: 6 }}>OPTIONS (AUTO-GENERATED)</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6 }}>OPTIONS (AUTO-GENERATED)</div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {['Yes', 'No'].map(l => (
                     <span key={l} style={{ padding: '5px 16px', fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)', border: '1px solid var(--shell-rule-strong)', borderRadius: 2 }}>{l}</span>
@@ -773,10 +773,10 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             {/* ── Goal Interval (fixed 6 options) ── */}
             {template.configPanel === 'goal_interval' && (
               <div style={{ padding: '10px 12px', background: 'var(--shell-fill)', border: '1px solid var(--shell-rule)', borderRadius: 3 }}>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginBottom: 6 }}>OPTIONS (AUTO-GENERATED)</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 6 }}>OPTIONS (AUTO-GENERATED)</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   {['0 – 15', '16 – 30', '31 – 45+', '46 – 60', '61 – 75', '76 – 90+'].map(l => (
-                    <span key={l} style={{ padding: '4px 10px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', border: '1px solid var(--shell-rule-strong)', borderRadius: 2, letterSpacing: '.08em' }}>{l}</span>
+                    <span key={l} style={{ padding: '4px 10px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', border: '1px solid var(--shell-rule-strong)', borderRadius: 2, }}>{l}</span>
                   ))}
                 </div>
               </div>
@@ -799,26 +799,26 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                       onClick={() => setPosFilter(pos)}
                       style={{
                         padding: '6px 7px', borderRadius: 3, cursor: 'pointer', fontSize: 'var(--fs-micro)', fontWeight: 700,
-                        fontFamily: MONO, letterSpacing: '.1em',
+                        fontFamily: MONO, 
                         background: posFilter === pos ? 'rgba(0,196,232,0.15)' : 'var(--shell-fill)',
                         border: `1px solid ${posFilter === pos ? 'rgba(0,196,232,0.4)' : 'var(--shell-rule)'}`,
-                        color: posFilter === pos ? 'var(--cyan)' : 'var(--mute)',
+                        color: posFilter === pos ? 'var(--accent)' : 'var(--mute)',
                       }}
                     >{pos}</button>
                   ))}
                   {selectedPlayers.length > 0 && (
                     <button
                       onClick={() => setSelectedPlayers([])}
-                      style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.1em', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}
-                    >CLEAR</button>
+                      style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}
+                    >Clear</button>
                   )}
                 </div>
 
                 {loading && !players.length ? (
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', letterSpacing: '.18em' }}>LOADING PLAYERS…</div>
+                  <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>Loading players…</div>
                 ) : filteredPlayers.length === 0 ? (
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', letterSpacing: '.18em' }}>
-                    {players.length === 0 ? 'NO PLAYERS FOUND' : 'NO RESULTS — TRY A DIFFERENT FILTER'}
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>
+                    {players.length === 0 ? 'No players found' : 'No results — try a different filter'}
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 260, overflowY: 'auto' }}>
@@ -836,21 +836,21 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                             borderRadius: 3, transition: 'all 0.1s',
                           }}
                         >
-                          <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: sel ? 'rgba(0,196,232,0.2)' : 'var(--shell-fill-strong)', border: `1px solid ${sel ? 'rgba(0,196,232,0.5)' : 'var(--shell-rule-strong)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: sel ? 'var(--cyan)' : 'var(--mute)', fontWeight: 700 }}>
+                          <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: sel ? 'rgba(0,196,232,0.2)' : 'var(--shell-fill-strong)', border: `1px solid ${sel ? 'rgba(0,196,232,0.5)' : 'var(--shell-rule-strong)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: sel ? 'var(--accent)' : 'var(--mute)', fontWeight: 700 }}>
                             {p.position?.substring(0, 3)}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: sel ? 'var(--cyan)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>{p.club}</div>
+                            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: sel ? 'var(--accent)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{p.club}</div>
                           </div>
-                          {sel && <span style={{ color: 'var(--cyan)', fontSize: 'var(--fs-body)', flexShrink: 0 }}>✓</span>}
+                          {sel && <span style={{ color: 'var(--accent)', fontSize: 'var(--fs-body)', flexShrink: 0 }}>✓</span>}
                         </button>
                       );
                     })}
                   </div>
                 )}
 
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: selectedPlayers.length >= 2 ? 'var(--cyan)' : 'var(--mute)', letterSpacing: '.12em', marginTop: 5 }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: selectedPlayers.length >= 2 ? 'var(--accent)' : 'var(--mute)', marginTop: 5 }}>
                   {selectedPlayers.length} PLAYER{selectedPlayers.length !== 1 ? 'S' : ''} SELECTED{selectedPlayers.length < 2 ? ' · NEED AT LEAST 2' : ''}
                 </div>
               </>
@@ -859,7 +859,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             {/* ── Free text options ── */}
             {template.configPanel === 'free_text' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.12em', marginBottom: 2 }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 2 }}>
                   TYPE UP TO 6 OPTIONS (at least 2 required)
                 </div>
                 {freeOptions.map((val, i) => (
@@ -895,7 +895,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
 
           {/* ── Step 4: Title + Prompt ── */}
           <div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>4 · TITLE &amp; QUESTION</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>4 · TITLE &amp; QUESTION</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <input
                 type="text"
@@ -917,7 +917,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
           {/* ── Create button ── */}
           <div>
             {!canCreate && (
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.13em', marginBottom: 7 }}>
+              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 7 }}>
                 {!deadline && '· Set a deadline  '}
                 {!title.trim() && '· Add a title  '}
                 {template.needsFixture && !selectedFixture && '· Select a match  '}
@@ -927,13 +927,13 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
               </div>
             )}
             <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
-              <div style={{ flex: 1, padding: '9px 12px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: canCreate ? 'var(--paper)' : 'var(--mute)', display: 'flex', alignItems: 'center' }}>
+              <div style={{ flex: 1, padding: '9px 12px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: canCreate ? 'var(--paper)' : 'var(--mute)', display: 'flex', alignItems: 'center' }}>
                 {computedOptions.length || selectedPlayers.length || 0} OPTIONS
               </div>
               <button
                 onClick={handleCreate}
                 disabled={!canCreate}
-                style={{ background: 'transparent', border: `1px solid ${canCreate ? 'var(--cyan)' : 'var(--rule)'}`, color: canCreate ? 'var(--cyan)' : 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', padding: '0 16px', cursor: canCreate ? 'pointer' : 'not-allowed', flexShrink: 0, whiteSpace: 'nowrap' }}
+                style={{ background: 'transparent', border: `1px solid ${canCreate ? 'var(--accent)' : 'var(--rule)'}`, color: canCreate ? 'var(--accent)' : 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', padding: '0 16px', cursor: canCreate ? 'pointer' : 'not-allowed', flexShrink: 0, whiteSpace: 'nowrap' }}
               >
                 {saving ? 'CREATING…' : 'CREATE BET ↯'}
               </button>

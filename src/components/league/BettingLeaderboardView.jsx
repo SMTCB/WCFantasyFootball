@@ -5,7 +5,7 @@ import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 const CAT_META = {
   match:   { label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
   stats:   { label: 'STATS',   color: 'var(--gold)',  icon: '📊' },
-  players: { label: 'PLAYERS', color: 'var(--cyan)',  icon: '🎯' },
+  players: { label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
   custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏'  },
 };
 const CAT_ORDER = ['match', 'stats', 'players', 'custom'];
@@ -18,7 +18,7 @@ function PerformanceBetRow({ bt }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: hasData ? 'var(--paper)' : 'var(--mute)' }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: hasData ? 'var(--paper)' : 'var(--mute)' }}>
           {bt.label}
         </span>
         {hasData ? (
@@ -32,7 +32,7 @@ function PerformanceBetRow({ bt }) {
             </span>
           </span>
         ) : (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.4, letterSpacing: '.1em' }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.4, }}>—</span>
         )}
       </div>
       <div style={{ height: 6, borderRadius: 2, overflow: 'hidden', background: 'var(--ink-3)', display: 'flex' }}>
@@ -70,7 +70,7 @@ function PerformanceByType({ myBetsByType }) {
   const activeCats = CAT_ORDER.filter(c => groups[c]?.length);
   if (!activeCats.length) {
     return (
-      <div style={{ padding: '28px 22px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>
+      <div style={{ padding: '28px 22px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>
         NO RESOLVED BETS YET
       </div>
     );
@@ -95,8 +95,8 @@ function PerformanceByType({ myBetsByType }) {
               }}
             >
               <span style={{ fontSize: 'var(--fs-micro)' }}>{meta.icon}</span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: meta.color, letterSpacing: '.22em', flex: 1 }}>{meta.label}</span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: meta.color, flex: 1 }}>{meta.label}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>
                 {withData.length}/{bets.length}
               </span>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginLeft: 8 }}>{isOpen ? '−' : '+'}</span>
@@ -122,23 +122,23 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
       {/* Hero strip */}
       <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--cyan)', letterSpacing: '.22em' }}>YOUR BETTING · SEASON</div>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', }}>Your betting · season</div>
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 28px)', marginTop: 6, color: 'var(--paper)' }}>
             {myEntry ? `+${myEntry.total_rewards} PTS` : '—'}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6, letterSpacing: '.18em' }}>
-            {myEntry && leaderboard?.length ? `RANK ${myIdx + 1} / ${leaderboard.length} IN LEAGUE` : 'NO BETS YET'}
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6, }}>
+            {myEntry && leaderboard?.length ? `RANK ${myIdx + 1} / ${leaderboard.length} IN LEAGUE` : 'No bets yet'}
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
           {[
             { k: 'PLAYED',  v: myEntry?.total_bets    || '—', tone: 'var(--paper)'    },
             { k: 'WON',     v: myEntry?.correct_bets  || '—', tone: 'var(--positive)' },
-            { k: 'WIN %',   v: myEntry ? `${myEntry.accuracy_pct}%` : '—', tone: 'var(--cyan)' },
+            { k: 'WIN %',   v: myEntry ? `${myEntry.accuracy_pct}%` : '—', tone: 'var(--accent)' },
             { k: 'REWARDS', v: myEntry ? `+${myEntry.total_rewards}` : '—', tone: 'var(--gold)' },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(8px, 2vw, 20px)', borderRight: i < 3 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ fontFamily: MONO, fontSize: 'clamp(8px, 1.5vw, 9px)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: MONO, fontSize: 'clamp(8px, 1.5vw, 9px)', color: 'var(--mute)', }}>{c.k}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(16px, 3.5vw, 28px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
             </div>
           ))}
@@ -146,10 +146,10 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
       </div>
 
       {betLoading ? (
-        <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+        <div style={{ padding: '48px', textAlign: 'center', fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</div>
       ) : !leaderboard?.length ? (
         <div style={{ padding: '64px 28px', textAlign: 'center' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO RESOLVED BETS YET</div>
+          <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>No resolved bets yet</div>
         </div>
       ) : (
         /* Responsive: stack on mobile, 2-col on desktop */
@@ -157,7 +157,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
 
           {/* Leaderboard */}
           <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
-            <HubSectionLabel label="BETTING LEADERBOARD" sub="POINTS FROM BETS · SEASON"
+            <HubSectionLabel label="Betting leaderboard" sub="Points from bets · season"
               right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>SORT · REWARDS ↓</span>}
             />
             {/* Column headers — desktop only */}
@@ -173,8 +173,8 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                 return (
                   <div key={entry.user_id} style={{
                     borderBottom: '1px solid var(--rule)',
-                    background: isMe ? 'rgba(0,180,216,.04)' : 'transparent',
-                    borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent',
+                    background: isMe ? 'var(--accent-soft)' : 'transparent',
+                    borderLeft: isMe ? '2px solid var(--accent)' : '2px solid transparent',
                   }}>
                     {/* Mobile row */}
                     <div className="flex flex-col gap-2 lg:hidden" style={{ padding: '12px 14px' }}>
@@ -186,11 +186,11 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, paddingLeft: 30 }}>
                         <div>
-                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>WIN RATE</div>
-                          <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--cyan)' }}>{entry.accuracy_pct}%</div>
+                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Win rate</div>
+                          <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--accent)' }}>{entry.accuracy_pct}%</div>
                         </div>
                         <div>
-                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>RECORD</div>
+                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Record</div>
                           <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)' }}>
                             <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
                             <span style={{ color: 'var(--mute)' }}> · </span>
@@ -198,7 +198,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>REWARDS</div>
+                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Rewards</div>
                           <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--gold)' }}>+{entry.total_rewards}</div>
                         </div>
                       </div>
@@ -226,9 +226,9 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
 
           {/* Right rail — desktop only */}
           <aside className="hidden lg:flex" style={{ flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
-            <HubSectionLabel label="YOUR PERFORMANCE" sub="BY BET TYPE" tone="var(--gold)" />
+            <HubSectionLabel label="Your performance" sub="By bet type" tone="var(--gold)" />
             <PerformanceByType myBetsByType={myBetsByType} />
-            <HubSectionLabel label="RIVALS WATCH" sub="BIGGEST GAP" tone="var(--purple)" />
+            <HubSectionLabel label="Rivals watch" sub="Biggest gap" tone="var(--purple)" />
             <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {(leaderboard || []).filter((_, i) => Math.abs(i - myIdx) <= 2 && i !== myIdx).slice(0, 3).map(rival => {
                 const diff = (rival.total_rewards || 0) - (myEntry?.total_rewards || 0);
@@ -238,13 +238,13 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                     <MgrTag mono={mgrMono(rival.username || '')} hue={hue} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)' }}>{rival.username}</div>
-                      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>{rival.accuracy_pct}% WIN RATE</div>
+                      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>{rival.accuracy_pct}% WIN RATE</div>
                     </div>
                     <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: diff > 0 ? 'var(--positive)' : diff < 0 ? 'var(--danger)' : 'var(--mute)' }}>{diff > 0 ? '+' : ''}{diff}</span>
                   </div>
                 );
               })}
-              {!myEntry && <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>SUBMIT BETS TO APPEAR ON LEADERBOARD</div>}
+              {!myEntry && <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Submit bets to appear on leaderboard</div>}
             </div>
           </aside>
         </div>

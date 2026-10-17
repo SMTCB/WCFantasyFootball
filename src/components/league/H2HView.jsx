@@ -93,7 +93,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
 
   if (loading) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-micro)', }}>
         LOADING…
       </div>
     );
@@ -103,8 +103,8 @@ export default function H2HView({ leagueId, currentUser, members }) {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '40px 24px', textAlign: 'center' }}>
         <span style={{ fontSize: 'var(--fs-title)' }}>⚔️</span>
-        <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: 'var(--paper)' }}>CALENDAR NOT YET AVAILABLE</div>
-        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', maxWidth: 280, lineHeight: 1.6 }}>
+        <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: 'var(--paper)' }}>Calendar not yet available</div>
+        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', maxWidth: 280, lineHeight: 1.6 }}>
           THE COMMISSIONER WILL SET UP THE H2H SCHEDULE — CHECK BACK SOON.
         </div>
       </div>
@@ -118,11 +118,11 @@ export default function H2HView({ leagueId, currentUser, members }) {
       <div style={{ borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'var(--ink-2)' }}>
           <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>H2H STANDINGS</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', }}>H2h standings</span>
         </div>
 
         {standings.length === 0 ? (
-          <div style={{ padding: '16px 20px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>
+          <div style={{ padding: '16px 20px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>
             NO RESULTS YET — FIRST MATCHDAY PENDING
           </div>
         ) : (
@@ -144,8 +144,8 @@ export default function H2HView({ leagueId, currentUser, members }) {
                 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: idx < 3 ? ['var(--gold)','#C0C0C0','#CD7F32'][idx] : 'var(--mute)' }}>{row.h2h_rank}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 18, background: `${hue}18`, border: `1px solid ${hue}66`, color: hue, fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em' }}>{mgrMono(row.username ?? '')}</span>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isMe ? 'var(--cyan)' : 'var(--paper)' }}>{row.username ?? '?'}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 18, background: `${hue}18`, border: `1px solid ${hue}66`, color: hue, fontFamily: MONO, fontSize: 'var(--fs-micro)', }}>{mgrMono(row.username ?? '')}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isMe ? 'var(--accent)' : 'var(--paper)' }}>{row.username ?? '?'}</span>
                   </div>
                   <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                     <span style={{ color: 'var(--positive)' }}>{row.wins}</span>
@@ -163,8 +163,8 @@ export default function H2HView({ leagueId, currentUser, members }) {
       {/* ── Schedule ──────────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'var(--ink-2)', borderBottom: '1px solid var(--rule)' }}>
-          <span style={{ width: 3, height: 14, background: 'var(--cyan)', flexShrink: 0 }} />
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>SCHEDULE</span>
+          <span style={{ width: 3, height: 14, background: 'var(--accent)', flexShrink: 0 }} />
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', }}>Schedule</span>
         </div>
 
         {matchdayKeys.map(mdId => {
@@ -175,9 +175,9 @@ export default function H2HView({ leagueId, currentUser, members }) {
           return (
             <div key={mdId} style={{ borderBottom: '1px solid var(--rule)' }}>
               <div style={{ padding: '8px 20px', background: 'var(--ink-2)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>ROUND {roundNum}</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>ROUND {roundNum}</span>
                 {resolved && (
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', border: '1px solid var(--positive)44', padding: '1px 5px', letterSpacing: '.14em' }}>DONE</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', border: '1px solid var(--positive)44', padding: '1px 5px', }}>Done</span>
                 )}
               </div>
 
@@ -188,7 +188,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                   const byeName = usernameOf(row.bye_user_id);
                   return (
                     <div key={row.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid var(--shell-rule)' }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '.18em' }}>BYE</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', }}>BYE</span>
                       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{byeName}</span>
                       {isResolved && (
                         <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', fontWeight: 700 }}>+{row.home_h2h_pts}</span>
@@ -219,7 +219,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                           {Math.round(row.home_score ?? 0)} – {Math.round(row.away_score ?? 0)}
                         </span>
                       ) : (
-                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>VS</span>
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>VS</span>
                       )}
                     </div>
 
