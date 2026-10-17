@@ -19,13 +19,13 @@ const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
 
 // ── Inlined from HubShared (TDZ-safe copies) ─────────────────────────────────
-function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right, helpBtn }) {
+function HubSectionLabel({ label, sub, tone = 'var(--accent)', right, helpBtn }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
       <span style={{ width: 3, height: 14, background: tone, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{label}</span>
       {helpBtn}
-      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.18em' }}>· {sub}</span>}
+      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>· {sub}</span>}
       <span style={{ flex: 1 }} />
       {right}
     </div>
@@ -33,7 +33,7 @@ function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right, helpBtn }) {
 }
 function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: size + 10, height: size, padding: '0 4px', background: dim ? 'transparent' : `${hue}18`, border: `1px solid ${hue}${dim ? '44' : '66'}`, color: hue, fontFamily: MONO, fontSize: size <= 16 ? 9 : 10, letterSpacing: '.12em', fontWeight: 600, lineHeight: 1, flexShrink: 0 }}>{mono}</span>
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: size + 10, height: size, padding: '0 4px', background: dim ? 'transparent' : `${hue}18`, border: `1px solid ${hue}${dim ? '44' : '66'}`, color: hue, fontFamily: MONO, fontSize: size <= 16 ? 9 : 10, fontWeight: 600, lineHeight: 1, flexShrink: 0 }}>{mono}</span>
   );
 }
 
@@ -42,13 +42,13 @@ function mgrHue(str = '') { let h = 0; for (let i = 0; i < str.length; i++) h = 
 const mgrMono = (u = '') => u.substring(0, 3).toUpperCase() || '???';
 
 const inputStyle = {
-  background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)',
-  padding: '10px 12px', fontFamily: MONO, fontSize: 'var(--fs-label)', letterSpacing: '.06em',
+  background: 'var(--bg)', border: '1px solid var(--rule)', color: 'var(--paper)',
+  padding: '10px 12px', fontFamily: MONO, fontSize: 'var(--fs-label)',
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
 const btnBase = {
   padding: '11px 16px', border: 0, cursor: 'pointer',
-  fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', fontWeight: 400,
+  fontFamily: DISPLAY, fontSize: 'var(--fs-label)', fontWeight: 400,
 };
 const ghostBtn = {
   ...btnBase, background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)',
@@ -56,8 +56,8 @@ const ghostBtn = {
 };
 
 const helpBtnStyle = {
-  background: 'var(--shell-fill-strong)',
-  border: '1px solid var(--shell-rule-emphasis)',
+  background: 'var(--elev)',
+  border: '1px solid var(--rule)',
   color: 'var(--paper)',
   cursor: 'pointer',
   width: 18,
@@ -67,7 +67,7 @@ const helpBtnStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   fontFamily: MONO,
-  fontSize: 'var(--fs-micro)',
+  fontSize: 'var(--fs-label)',
   fontWeight: 700,
   letterSpacing: 0,
   flexShrink: 0,
@@ -81,7 +81,7 @@ function HelpOverlay({ topic, onClose }) {
 
   const CONTENT = {
     commissioner: {
-      title: 'COMMISSIONER CONTROLS — HOW IT WORKS',
+      title: 'Commissioner controls — how it works',
       sections: [
         {
           heading: 'What is this?',
@@ -103,7 +103,7 @@ function HelpOverlay({ topic, onClose }) {
       ],
     },
     lifecycle: {
-      title: 'LIFECYCLE OPERATIONS — HOW IT WORKS',
+      title: 'Lifecycle operations — how it works',
       sections: [
         {
           heading: 'Classic vs Draft Mode',
@@ -147,7 +147,7 @@ function HelpOverlay({ topic, onClose }) {
       }}
     >
       <div style={{
-        background: 'var(--ink-2)',
+        background: 'var(--card)',
         border: '1px solid var(--rule)',
         width: '100%', maxWidth: 580,
         maxHeight: '80vh',
@@ -159,10 +159,10 @@ function HelpOverlay({ topic, onClose }) {
           padding: '14px 18px',
           borderBottom: '1px solid var(--rule)',
           display: 'flex', alignItems: 'center', gap: 10,
-          background: 'var(--ink)',
+          background: 'var(--bg)',
         }}>
-          <span style={{ width: 3, height: 12, background: 'var(--cyan)', flexShrink: 0 }} />
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper)', flex: 1 }}>
+          <span style={{ width: 3, height: 12, background: 'var(--accent)', flexShrink: 0 }} />
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)', flex: 1 }}>
             {content.title}
           </span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 'var(--fs-heading)', lineHeight: 1, padding: '0 2px' }}>✕</button>
@@ -171,7 +171,7 @@ function HelpOverlay({ topic, onClose }) {
         <div style={{ padding: '18px 20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
           {content.sections.map((s, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--cyan)' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>
                 {s.heading.toUpperCase()}
               </span>
               {s.body && (
@@ -183,7 +183,7 @@ function HelpOverlay({ topic, onClose }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {s.rows.map(([k, v]) => (
                     <div key={k} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 10 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)', paddingTop: 2 }}>{k}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', paddingTop: 2 }}>{k}</span>
                       <span style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.5 }}>{v}</span>
                     </div>
                   ))}
@@ -194,7 +194,7 @@ function HelpOverlay({ topic, onClose }) {
         </div>
         {/* Footer */}
         <div style={{ padding: '10px 18px', borderTop: '1px solid var(--rule)', display: 'flex', justifyContent: 'flex-end' }}>
-          <button className="hit-44" onClick={onClose} style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', padding: '6px 14px' }}>CLOSE</button>
+          <button className="hit-44" onClick={onClose} style={{ ...ghostBtn, fontSize: 'var(--fs-label)', padding: '6px 14px' }}>CLOSE</button>
         </div>
       </div>
     </div>
@@ -233,7 +233,7 @@ function computePhases(league, memberCount = 0, windowType = null) {
   if (!isDraft) {
     // Classic mode: 2 stages
     return [
-      { id: 'transfers', label: 'TRANSFER WINDOW', state: 'active', sub: twSub },
+      { id: 'transfers', label: 'Transfer window', state: 'active', sub: twSub },
       { id: 'season',    label: `IN SEASON · ${memberCount} MGRS`, state: allocationDone ? 'active' : 'todo', sub: 'Live' },
     ];
   }
@@ -247,8 +247,8 @@ function computePhases(league, memberCount = 0, windowType = null) {
   const stateFor = (idx) => idx < currentIdx ? 'done' : idx === currentIdx ? 'active' : 'todo';
 
   return [
-    { id: 'transfers',  label: 'TRANSFER WINDOW', state: stateFor(0), sub: twSub },
-    { id: 'draft',      label: 'DRAFT DEADLINE',  state: stateFor(1), sub: hasDraftDeadline ? fmtKickoff(league.draft_deadline) : 'Not set' },
+    { id: 'transfers',  label: 'Transfer window', state: stateFor(0), sub: twSub },
+    { id: 'draft',      label: 'Draft deadline',  state: stateFor(1), sub: hasDraftDeadline ? fmtKickoff(league.draft_deadline) : 'Not set' },
     { id: 'allocation', label: 'ALLOCATION',       state: stateFor(2), sub: allocationDone ? 'Squads allocated' : deadlinePassed ? 'Processing…' : 'Awaiting draft' },
     { id: 'season',     label: `IN SEASON · ${memberCount} MGRS`, state: stateFor(3), sub: inSeason ? 'Live' : 'Awaiting allocation' },
   ];
@@ -259,23 +259,23 @@ function computePhases(league, memberCount = 0, windowType = null) {
 // ─────────────────────────────────────────────────────────────────────────────
 function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, windowType = null, onHelp }) {
   const phases = computePhases(league, memberCount, windowType) ?? [
-    { id: 'transfers',  label: 'TRANSFER WINDOW', state: 'done',   sub: 'Closed' },
-    { id: 'draft',      label: 'DRAFT DEADLINE',  state: 'done',   sub: '15 Mar 19:00' },
+    { id: 'transfers',  label: 'Transfer window', state: 'done',   sub: 'Closed' },
+    { id: 'draft',      label: 'Draft deadline',  state: 'done',   sub: '15 Mar 19:00' },
     { id: 'allocation', label: 'ALLOCATION',       state: 'active', sub: 'Squads allocated' },
-    { id: 'season',     label: 'IN SEASON · 14 MGRS', state: 'todo', sub: 'Awaiting allocation' },
+    { id: 'season',     label: 'In season · 14 managers', state: 'todo', sub: 'Awaiting allocation' },
   ];
-  const tone = (s) => s === 'done' ? 'var(--positive)' : s === 'active' ? 'var(--cyan)' : 'var(--mute)';
+  const tone = (s) => s === 'done' ? 'var(--positive)' : s === 'active' ? 'var(--accent)' : 'var(--mute)';
   return (
-    <div data-tour="comm-season-stepper" style={{ padding: '18px 28px 22px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+    <div data-tour="comm-season-stepper" style={{ padding: '18px 28px 22px', borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
         <span style={{ width: 3, height: 14, background: 'var(--purple)', flexShrink: 0 }} />
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper)' }}>COMMISSIONER CONTROLS</span>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)' }}>· ADMIN ONLY · CHANGES TAKE EFFECT IMMEDIATELY</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>Commissioner controls</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>· ADMIN ONLY · CHANGES TAKE EFFECT IMMEDIATELY</span>
         {onHelp && (
           <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
         )}
         <span style={{ flex: 1 }} />
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)' }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           {leagueName.toUpperCase()} · {memberCount} MGRS
         </span>
       </div>
@@ -287,17 +287,17 @@ function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, 
             <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative' }}>
               <span style={{
                 width: 28, height: 28, borderRadius: '50%',
-                background: p.state === 'done' ? t : 'var(--ink-2)',
+                background: p.state === 'done' ? t : 'var(--card)',
                 border: `1.5px solid ${t}`,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 600,
-                color: p.state === 'done' ? 'var(--ink)' : t,
+                fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 600,
+                color: p.state === 'done' ? 'var(--bg)' : t,
                 position: 'relative', zIndex: 1,
               }}>{p.state === 'done' ? '✓' : i + 1}</span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: t, textAlign: 'center' }}>{p.label}</span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--mute)', textAlign: 'center' }}>{p.sub}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: t, textAlign: 'center' }}>{p.label}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>{p.sub}</span>
               {p.state === 'active' && (
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--cyan)', border: '1px solid rgba(0,180,216,.33)', padding: '2px 6px', marginTop: 2 }}>● YOU ARE HERE</span>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--accent)', border: '1px solid rgba(0,180,216,.33)', padding: '2px 6px', marginTop: 2 }}>● YOU ARE HERE</span>
               )}
             </div>
           );
@@ -322,11 +322,11 @@ function DraftSubmissionTracker({ members, submitted }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {/* Summary bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           SUBMISSIONS
         </span>
         <span style={{
-          fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', padding: '2px 7px',
+          fontFamily: MONO, fontSize: 'var(--fs-label)', padding: '2px 7px',
           border: `1px solid ${allDone ? 'rgba(34,197,94,.4)' : 'rgba(245,158,11,.4)'}`,
           background: allDone ? 'rgba(34,197,94,.06)' : 'rgba(245,158,11,.06)',
           color: allDone ? 'var(--positive)' : 'var(--warn)',
@@ -343,20 +343,20 @@ function DraftSubmissionTracker({ members, submitted }) {
             <div key={m.user_id} style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '4px 8px',
-              background: done ? 'rgba(34,197,94,.04)' : 'var(--ink)',
+              background: done ? 'rgba(34,197,94,.04)' : 'var(--bg)',
               border: `1px solid ${done ? 'rgba(34,197,94,.2)' : 'var(--rule)'}`,
             }}>
               <span style={{
-                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
+                fontFamily: MONO, fontSize: 'var(--fs-label)',
                 color: done ? 'var(--positive)' : 'var(--danger)',
                 width: 12, textAlign: 'center', flexShrink: 0,
               }}>
                 {done ? '✓' : '✗'}
               </span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: done ? 'var(--paper)' : 'var(--mute)', flex: 1 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: done ? 'var(--paper)' : 'var(--mute)', flex: 1 }}>
                 {username}
               </span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: done ? 'var(--positive)' : 'var(--mute)' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: done ? 'var(--positive)' : 'var(--mute)' }}>
                 {done ? 'SUBMITTED' : 'PENDING'}
               </span>
             </div>
@@ -371,8 +371,8 @@ function WizField({ label, sub, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper)' }}>{label}</span>
-        {sub && <span style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{sub}</span>}
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{label}</span>
+        {sub && <span style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{sub}</span>}
       </div>
       {children}
     </div>
@@ -396,7 +396,7 @@ function VoidConfirmModal({ bet, onConfirm, onCancel }) {
       }}
     >
       <div style={{
-        background: 'var(--ink-2)',
+        background: 'var(--card)',
         border: '1px solid rgba(239,68,68,.45)',
         width: '100%', maxWidth: 440,
         boxShadow: '0 24px 60px rgba(0,0,0,0.7)',
@@ -405,12 +405,12 @@ function VoidConfirmModal({ bet, onConfirm, onCancel }) {
         <div style={{
           padding: '14px 18px',
           borderBottom: '1px solid var(--rule)',
-          background: 'var(--ink)',
+          background: 'var(--bg)',
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
           <span style={{ width: 3, height: 12, background: 'var(--danger)', flexShrink: 0 }} />
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--danger)', flex: 1 }}>
-            VOID BET — CONFIRM
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--danger)', flex: 1 }}>
+            Void bet — confirm
           </span>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 'var(--fs-heading)', lineHeight: 1, padding: '0 2px' }}>✕</button>
         </div>
@@ -420,21 +420,21 @@ function VoidConfirmModal({ bet, onConfirm, onCancel }) {
             {bet.title}
           </div>
           <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--danger)' }}>● WARNING · </span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>● WARNING · </span>
             All picks will be cleared and no points awarded. This cannot be undone.
           </div>
-          <div style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
+          <div style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
             Use <b style={{ color: 'var(--warn)' }}>No Winner</b> instead if the bet was valid but nobody got it right.
           </div>
         </div>
         {/* Footer */}
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button onClick={onCancel} style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', padding: '8px 16px' }}>CANCEL</button>
+          <button onClick={onCancel} style={{ ...ghostBtn, fontSize: 'var(--fs-label)', padding: '8px 16px' }}>CANCEL</button>
           <button
             onClick={onConfirm}
-            style={{ ...btnBase, fontSize: 'var(--fs-micro)', background: 'var(--danger)', color: 'var(--paper)', padding: '8px 18px' }}
+            style={{ ...btnBase, fontSize: 'var(--fs-label)', background: 'var(--danger)', color: 'var(--paper)', padding: '8px 18px' }}
           >
-            VOID BET
+            Void bet
           </button>
         </div>
       </div>
@@ -468,7 +468,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
   };
 
   const typeTone = (templateId) => {
-    if (templateId === 'top_scorer')   return 'var(--cyan)';
+    if (templateId === 'top_scorer')   return 'var(--accent)';
     if (templateId === 'match_result') return 'var(--positive)';
     if (templateId === 'player_block') return 'var(--danger)';
     return 'var(--paper)';
@@ -490,22 +490,22 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
         onCancel={() => setVoidConfirmBet(null)}
       />
       <HubSectionLabel
-        label="RESOLVE BETS"
+        label="Resolve bets"
         sub={`${pending.length} PENDING · ${resolved.length} RESOLVED (OVERRIDE ELIGIBLE)`}
         tone="var(--gold)"
-        right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)' }}>AUTO-RESOLVE IS OFF</span>}
+        right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Auto-resolve is off</span>}
       />
-      <div style={{ padding: '14px 22px 6px', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
+      <div style={{ padding: '14px 22px 6px', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
         Pick a bet, enter the result, hit <b style={{ color: 'var(--gold)' }}>RESOLVE</b>. Points are awarded immediately.
         Auto-resolved bets appear below and can be overridden if the result was set incorrectly.
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 22px 22px', overflow: 'auto', flex: 1 }}>
         {resolutionBetsLoading ? (
-          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING BETS…</div>
+          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading bets…</div>
         ) : allActionable.length === 0 ? (
-          <div style={{ padding: '18px 14px', background: 'var(--ink-2)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)' }}>NOTHING TO RESOLVE · ALL CAUGHT UP</span>
+          <div style={{ padding: '18px 14px', background: 'var(--card)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Nothing to resolve · all caught up</span>
           </div>
         ) : allActionable.map(b => {
           const isOpen       = expandedId === b.id;
@@ -521,7 +521,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
 
           return (
             <div key={b.id} style={{
-              background: isResolved ? 'rgba(34,197,94,0.04)' : 'var(--ink-2)',
+              background: isResolved ? 'rgba(34,197,94,0.04)' : 'var(--card)',
               border: isResolved ? '1px solid rgba(34,197,94,0.2)' : '1px solid var(--rule)',
               borderLeft: isResolved ? '3px solid rgba(34,197,94,0.6)' : `3px solid ${tone}`,
             }}>
@@ -533,16 +533,16 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isResolved ? 'var(--text-2)' : 'var(--paper)' }}>{b.title}</span>
                   {b.prompt && b.prompt !== b.title && (
-                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--text-2)', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.prompt}</span>
+                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--text-2)', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.prompt}</span>
                   )}
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                     {b.scope_ref || b.scope_type || ''}
                     {resolvedLabel ? ` · RESULT: ${resolvedLabel.toUpperCase()}` : ''}
                   </span>
                 </div>
                 {isResolved
-                  ? <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--positive)', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', padding: '2px 7px' }}>✓ RESOLVED</span>
-                  : <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--gold)' }}>● PENDING</span>}
+                  ? <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', padding: '2px 7px' }}>✓ RESOLVED</span>
+                  : <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>● PENDING</span>}
                 <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-label)' }}>{isOpen ? '−' : '+'}</span>
               </button>
 
@@ -550,18 +550,18 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                 <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, borderTop: isResolved ? '1px solid rgba(34,197,94,0.15)' : '1px solid var(--rule)' }}>
                   {/* Override notice for already-resolved bets */}
                   {isResolved && (
-                    <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                    <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--positive)', lineHeight: 1.5 }}>
                       This bet was resolved as <b>{resolvedLabel?.toUpperCase() ?? b.correct_answer}</b>. Selecting a different answer will override the result — points already awarded will be reversed and recalculated.
                     </div>
                   )}
                   {/* Who picked what */}
                   {Object.keys(answerGrouped).length > 0 && (
                     <div>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)' }}>WHO PICKED WHAT · {betSubmissions.length}/{memberCount}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>WHO PICKED WHAT · {betSubmissions.length}/{memberCount}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                         {Object.entries(answerGrouped).map(([optKey, usernames]) => (
                           <div key={optKey} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', minWidth: 80, color: 'var(--paper)' }}>
+                            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', minWidth: 80, color: 'var(--paper)' }}>
                               {opts.find(o => (o.key ?? o) === optKey)?.label ?? optKey}
                             </span>
                             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
@@ -570,7 +570,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                               ))}
                             </div>
                             <span style={{ flex: 1 }} />
-                            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--mute)' }}>{usernames.length} MGRS</span>
+                            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{usernames.length} MGRS</span>
                           </div>
                         ))}
                       </div>
@@ -593,14 +593,14 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         return (
                           <button key={optKey} onClick={() => toggleBetResolutionAnswer(optKey)} style={{
                             padding: '7px 11px', cursor: 'pointer',
-                            background: picked ? 'rgba(34,197,94,.08)' : 'var(--ink)',
+                            background: picked ? 'rgba(34,197,94,.08)' : 'var(--bg)',
                             border: picked ? '1px solid var(--positive)' : '1px solid var(--rule)',
                             color: picked ? 'var(--positive)' : 'var(--paper)',
-                            fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '-0.01em',
+                            fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em',
                             display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left',
                           }}>
                             <span>{picked ? '✓ ' : ''}{optLabel}</span>
-                            {subCount > 0 && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: picked ? 'var(--positive)' : 'var(--mute)' }}>{subCount} MGRS</span>}
+                            {subCount > 0 && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: picked ? 'var(--positive)' : 'var(--mute)' }}>{subCount} MGRS</span>}
                           </button>
                         );
                       })}
@@ -614,10 +614,10 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                           onClick={() => setCustomAnswerOpen(o => !o)}
                           style={{
                             padding: '7px 11px', cursor: 'pointer',
-                            background: customAnswerOpen ? 'rgba(224,168,0,.08)' : 'var(--ink)',
+                            background: customAnswerOpen ? 'rgba(224,168,0,.08)' : 'var(--bg)',
                             border: customAnswerOpen ? '1px solid var(--gold)' : '1px dashed var(--rule)',
                             color: customAnswerOpen ? 'var(--gold)' : 'var(--mute)',
-                            fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '-0.01em',
+                            fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em',
                           }}
                         >{customAnswerOpen ? '✕ CANCEL' : '+ OTHER / WRITE-IN'}</button>
                       )}
@@ -628,7 +628,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         placeholder="Type answer key manually…"
                         value={currentAnswers[0] ?? ''}
                         onChange={e => setBetResolutionAnswers(e.target.value ? [e.target.value] : [])}
-                        style={{ ...inputStyle, marginTop: 6, fontSize: 'var(--fs-micro)' }}
+                        style={{ ...inputStyle, marginTop: 6, fontSize: 'var(--fs-label)' }}
                       />
                     )}
                     {/* Write-in input — only offered when predefined options exist */}
@@ -647,7 +647,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                             setCustomAnswerText('');
                             setCustomAnswerOpen(false);
                           }}
-                          style={{ ...inputStyle, fontSize: 'var(--fs-micro)', flex: 1 }}
+                          style={{ ...inputStyle, fontSize: 'var(--fs-label)', flex: 1 }}
                         />
                         <button
                           disabled={!customAnswerText.trim()}
@@ -658,7 +658,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                             setCustomAnswerText('');
                             setCustomAnswerOpen(false);
                           }}
-                          style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', opacity: customAnswerText.trim() ? 1 : 0.4 }}
+                          style={{ ...ghostBtn, fontSize: 'var(--fs-label)', opacity: customAnswerText.trim() ? 1 : 0.4 }}
                         >ADD</button>
                       </div>
                     )}
@@ -674,7 +674,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                             <button className="hit-44" key={ca} onClick={() => toggleBetResolutionAnswer(ca)} style={{
                               padding: '5px 9px', cursor: 'pointer',
                               background: 'rgba(34,197,94,.08)', border: '1px solid var(--positive)',
-                              color: 'var(--positive)', fontFamily: DISPLAY, fontSize: 'var(--fs-micro)',
+                              color: 'var(--positive)', fontFamily: DISPLAY, fontSize: 'var(--fs-label)',
                             }}>✓ {ca} · WRITE-IN ✕</button>
                           ))}
                         </div>
@@ -688,21 +688,21 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                     const canResolve = currentAnswers.length > 0;
                     return (
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)' }}>
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                           {canResolve
                             ? <>AWARDS <b style={{ color: 'var(--positive)' }}>
                                 {b.reward_type === 'budget'
                                   ? `+€${b.reward_value}M BUDGET`
                                   : `+${b.reward_value} PTS`}
                               </b> TO {totalWinners} MGR{totalWinners !== 1 ? 'S' : ''}</>
-                            : <span style={{ color: 'var(--mute)' }}>SELECT A WINNER OR USE NO WINNER →</span>}
+                            : <span style={{ color: 'var(--mute)' }}>Select a winner or use no winner →</span>}
                         </span>
                         <span style={{ flex: 1 }} />
                         {/* VOID — cancels the bet entirely (wrong setup / abandoned fixture) */}
                         <button
                           onClick={() => setVoidConfirmBet({ id: b.id, title: b.title })}
                           disabled={commLoading}
-                          style={{ ...ghostBtn, fontSize: 'var(--fs-micro)' }}
+                          style={{ ...ghostBtn, fontSize: 'var(--fs-label)' }}
                         >VOID</button>
                         {/* NO WINNER — bet was valid but no option was correct (0 pts, stays resolved) */}
                         <button
@@ -715,19 +715,19 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                             });
                           }}
                           disabled={commLoading}
-                          style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', borderColor: 'rgba(245,158,11,.4)', color: 'var(--warn)' }}
-                        >NO WINNER</button>
+                          style={{ ...ghostBtn, fontSize: 'var(--fs-label)', borderColor: 'rgba(245,158,11,.4)', color: 'var(--warn)' }}
+                        >No winner</button>
                         {/* RESOLVE — awards pts to managers who picked a selected option */}
                         <button
                           disabled={commLoading || !canResolve}
                           onClick={resolveBet}
                           style={{
-                            ...btnBase, fontSize: 'var(--fs-micro)',
-                            background: canResolve ? 'var(--gold)' : 'var(--ink-3)',
-                            color: canResolve ? 'var(--ink)' : 'var(--mute)',
+                            ...btnBase, fontSize: 'var(--fs-label)',
+                            background: canResolve ? 'var(--gold)' : 'var(--elev)',
+                            color: canResolve ? 'var(--bg)' : 'var(--mute)',
                             cursor: canResolve ? 'pointer' : 'not-allowed',
                           }}
-                        >{commLoading ? 'RESOLVING…' : isResolved ? 'OVERRIDE →' : 'RESOLVE →'}</button>
+                        >{commLoading ? 'Resolving…' : isResolved ? 'Override →' : 'Resolve →'}</button>
                       </div>
                     );
                   })()}
@@ -751,7 +751,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
 // Betting History — all bets (admin read-only, below CREATE / RESOLVE)
 // ─────────────────────────────────────────────────────────────────────────────
 const BH_STATUS = {
-  open:      { label: 'OPEN',     tone: 'var(--cyan)',     bg: 'rgba(0,180,216,.08)'  },
+  open:      { label: 'OPEN',     tone: 'var(--accent)',     bg: 'rgba(0,180,216,.08)'  },
   closed:    { label: 'PENDING',  tone: 'var(--gold)',     bg: 'rgba(224,168,0,.08)'  },
   resolved:  { label: 'RESOLVED', tone: 'var(--positive)', bg: 'rgba(34,197,94,.08)'  },
   cancelled: { label: 'VOIDED',   tone: 'var(--danger)',   bg: 'rgba(239,68,68,.08)'  },
@@ -798,14 +798,14 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <HubSectionLabel
-        label="BETTING HISTORY"
+        label="Betting history"
         sub={`${counts.all} TOTAL · ALL STATUSES`}
         tone="var(--purple)"
         right={
           <button className="hit-44"
             onClick={fetchAllBets}
             disabled={allBetsLoading}
-            style={{ ...ghostBtn, fontSize: 'var(--fs-micro)', padding: '4px 10px', opacity: allBetsLoading ? 0.5 : 1 }}
+            style={{ ...ghostBtn, fontSize: 'var(--fs-label)', padding: '4px 10px', opacity: allBetsLoading ? 0.5 : 1 }}
           >↻ REFRESH</button>
         }
       />
@@ -813,7 +813,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
       {/* Filter tabs */}
       <div style={{
         display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)',
-        background: 'var(--ink)', overflowX: 'auto', flexShrink: 0,
+        background: 'var(--bg)', overflowX: 'auto', flexShrink: 0,
       }}>
         {FILTER_TABS.map((t, i) => {
           const active = filter === t.k;
@@ -833,11 +833,11 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                 display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
               }}
             >
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: active ? tone : 'var(--mute)' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: active ? tone : 'var(--mute)' }}>
                 {t.label}
               </span>
               <span style={{
-                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.1em',
+                fontFamily: MONO, fontSize: 'var(--fs-label)',
                 padding: '1px 5px',
                 background: active ? `${tone}18` : 'transparent',
                 border: `1px solid ${active ? `${tone}44` : 'var(--rule)'}`,
@@ -851,12 +851,12 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', padding: isMobile ? '8px 14px 80px' : '12px 22px 32px', gap: 6 }}>
         {allBetsLoading && (
-          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
         )}
         {!allBetsLoading && filtered.length === 0 && (
-          <div style={{ padding: '18px 14px', background: 'var(--ink-2)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)' }}>
-              {counts.all === 0 ? 'NO BETS CREATED YET' : 'NO BETS IN THIS CATEGORY'}
+          <div style={{ padding: '18px 14px', background: 'var(--card)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+              {counts.all === 0 ? 'No bets created yet' : 'No bets in this category'}
             </span>
           </div>
         )}
@@ -885,7 +885,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
             <div
               key={bet.id}
               style={{
-                background: 'var(--ink-2)',
+                background: 'var(--card)',
                 border: '1px solid var(--rule)',
                 borderLeft: `3px solid ${tone}`,
               }}
@@ -903,7 +903,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                 <span style={{
                   width: 20, height: 20, display: 'inline-flex', alignItems: 'center',
                   justifyContent: 'center', background: `${tone}15`,
-                  border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 'var(--fs-micro)',
+                  border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 'var(--fs-label)',
                   color: tone, flexShrink: 0,
                 }}>{glyph}</span>
 
@@ -914,13 +914,13 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                 }}>{bet.title}</span>
 
                 {/* Picks count */}
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--mute)', flexShrink: 0 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flexShrink: 0 }}>
                   {stats.total}/{memberCount}
                 </span>
 
                 {/* Status chip */}
                 <span style={{
-                  fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
+                  fontFamily: MONO, fontSize: 'var(--fs-label)',
                   padding: '2px 6px', border: `1px solid ${tone}44`,
                   background: cfg.bg, color: tone, flexShrink: 0,
                 }}>{cfg.label}</span>
@@ -938,17 +938,17 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                   {/* Meta row: reward · deadline */}
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>REWARD</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>REWARD</span>
                       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>+{bet.reward_value} PTS</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE</span>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.1em' }}>{fmtKickoff(bet.deadline_at)}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>DEADLINE</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{fmtKickoff(bet.deadline_at)}</span>
                     </div>
                     {bet.scope_ref && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>SCOPE</span>
-                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.1em' }}>{bet.scope_ref}</span>
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>SCOPE</span>
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{bet.scope_ref}</span>
                       </div>
                     )}
                   </div>
@@ -956,7 +956,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                   {/* Correct answer(s) — resolved bets only */}
                   {bet.status === 'resolved' && (
                     <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.25)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--positive)' }}>CORRECT ANSWER</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>Correct answer</span>
                       {cKeys.length > 0 ? (
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           {cKeys.map(k => (
@@ -970,7 +970,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                       ) : (
                         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No winner</span>
                       )}
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: 'var(--positive)' }}>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>
                         {stats.winners} / {stats.total} correct · +{bet.reward_value} pts each
                       </span>
                     </div>
@@ -979,7 +979,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                   {/* Voided notice */}
                   {bet.status === 'cancelled' && (
                     <div style={{ padding: '8px 10px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.25)' }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--danger)' }}>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>
                         VOIDED · All picks cleared — no points awarded
                       </span>
                     </div>
@@ -988,7 +988,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                   {/* Pick breakdown — who chose what */}
                   {stats.total > 0 && opts.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)' }}>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                         PICK BREAKDOWN · {stats.total} SUBMISSION{stats.total !== 1 ? 'S' : ''}
                       </span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1002,11 +1002,11 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                             <div key={key} style={{
                               display: 'flex', alignItems: 'flex-start', gap: 8,
                               padding: '6px 8px',
-                              background: isWinner ? 'rgba(34,197,94,.05)' : 'var(--ink)',
+                              background: isWinner ? 'rgba(34,197,94,.05)' : 'var(--bg)',
                               border: `1px solid ${isWinner ? 'rgba(34,197,94,.25)' : 'var(--rule)'}`,
                             }}>
                               <span style={{
-                                fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: isWinner ? 'var(--positive)' : 'var(--paper)',
+                                fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: isWinner ? 'var(--positive)' : 'var(--paper)',
                                 minWidth: isMobile ? 80 : 120, flexShrink: 0,
                               }}>
                                 {isWinner && <span style={{ marginRight: 4 }}>✓</span>}{label}
@@ -1016,7 +1016,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                                   <MgrTag key={name} mono={mgrMono(name)} hue={mgrHue(name)} size={16} />
                                 ))}
                               </div>
-                              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--mute)', flexShrink: 0 }}>
+                              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flexShrink: 0 }}>
                                 {pickers.length}
                               </span>
                             </div>
@@ -1028,8 +1028,8 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
 
                   {/* No submissions yet */}
                   {stats.total === 0 && (
-                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)' }}>
-                      NO PICKS SUBMITTED YET
+                    <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+                      No picks submitted yet
                     </div>
                   )}
                 </div>
@@ -1059,19 +1059,19 @@ function ToggleSwitch({ checked, onChange, disabled, labelOn, labelOff }) {
         cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
       }}
     >
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: checked ? 'var(--positive)' : 'var(--mute)' }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: checked ? 'var(--positive)' : 'var(--mute)' }}>
         {checked ? labelOn : labelOff}
       </span>
       <span style={{
         position: 'relative', width: 44, height: 24, borderRadius: 12, flexShrink: 0,
-        background: checked ? 'var(--positive)' : 'var(--ink)',
+        background: checked ? 'var(--positive)' : 'var(--bg)',
         border: `1px solid ${checked ? 'var(--positive)' : 'var(--rule)'}`,
         transition: 'background 0.15s ease',
       }}>
         <span style={{
           position: 'absolute', top: 2, left: checked ? 22 : 2,
           width: 18, height: 18, borderRadius: '50%',
-          background: checked ? 'var(--ink)' : 'var(--mute)',
+          background: checked ? 'var(--bg)' : 'var(--mute)',
           transition: 'left 0.15s ease',
         }} />
       </span>
@@ -1355,9 +1355,9 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
 
   const inp = {
     padding: '7px 10px',
-    borderRadius: 6,
+    borderRadius: 'var(--radius)',
     border: '1px solid var(--rule)',
-    background: 'var(--ink)',
+    background: 'var(--bg)',
     color: 'var(--paper)',
     fontFamily: MONO,
     fontSize: 'var(--fs-label)',
@@ -1366,7 +1366,7 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
   };
 
   const row = { display: 'flex', flexDirection: 'column', gap: 4 };
-  const lbl = { fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)' };
+  const lbl = { fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' };
 
   const content = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1377,45 +1377,44 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div style={row}>
-          <span style={lbl}>MIN STAKE</span>
+          <span style={lbl}>Min stake</span>
           <input type="number" min={1} value={minStake} onChange={e => setMinStake(e.target.value)} style={inp} />
         </div>
         <div style={row}>
-          <span style={lbl}>MAX STAKE</span>
+          <span style={lbl}>Max stake</span>
           <input type="number" min={1} max={10000} value={maxStake} onChange={e => setMaxStake(e.target.value)} style={inp} />
         </div>
       </div>
       <ToggleSwitch
         checked={enabled}
         onChange={() => setEnabled(v => !v)}
-        labelOn="CHALLENGES ENABLED"
-        labelOff="CHALLENGES DISABLED"
+        labelOn="Challenges enabled"
+        labelOff="Challenges disabled"
       />
       <button
         onClick={save}
         disabled={saving || commLoading}
         style={{
           padding: '9px 0',
-          borderRadius: 6,
+          borderRadius: 'var(--radius)',
           border: 'none',
           background: saved ? 'var(--positive)' : 'var(--gold)',
-          color: 'var(--ink)',
+          color: 'var(--bg)',
           fontFamily: MONO,
-          fontSize: 'var(--fs-micro)',
-          letterSpacing: '.18em',
+          fontSize: 'var(--fs-label)',
           fontWeight: 700,
           cursor: saving ? 'wait' : 'pointer',
           opacity: saving ? 0.7 : 1,
         }}
       >
-        {saved ? 'SAVED ✓' : saving ? 'SAVING…' : 'SAVE P2P CONFIG'}
+        {saved ? 'Saved ✓' : saving ? 'SAVING…' : 'Save P2P config'}
       </button>
     </div>
   );
 
   if (isMobile) {
     return (
-      <MobLifecycleCard title="P2P CHALLENGES" status={enabled ? 'ON' : 'OFF'} tone={enabled ? 'var(--positive)' : 'var(--mute)'} when="Set entry fee for new joiners and stake limits for challenges.">
+      <MobLifecycleCard title="P2P challenges" status={enabled ? 'ON' : 'OFF'} tone={enabled ? 'var(--positive)' : 'var(--mute)'} when="Set entry fee for new joiners and stake limits for challenges.">
         {content}
       </MobLifecycleCard>
     );
@@ -1423,7 +1422,7 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
 
   return (
     <div style={{ padding: '18px 24px', borderTop: '1px solid var(--rule)' }}>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)', marginBottom: 14 }}>P2P CHALLENGES CONFIG</div>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 14 }}>P2P challenges config</div>
       {content}
     </div>
   );
@@ -1434,19 +1433,19 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, children, primary }) {
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', minHeight: 240, flex: 1 }}>
+    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', minHeight: 240, flex: 1 }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ width: 3, height: 12, background: statusTone, flexShrink: 0 }} />
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper)' }}>{title}</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{title}</span>
         <span style={{ flex: 1 }} />
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: statusTone }}>● {status}</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: statusTone }}>● {status}</span>
       </div>
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
-        {sub && <span style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>{sub}</span>}
+        {sub && <span style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>{sub}</span>}
         {children}
         {when && (
-          <div style={{ marginTop: 'auto', padding: '6px 8px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.4 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>WHEN TO RUN · </span>
+          <div style={{ marginTop: 'auto', padding: '6px 8px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.4 }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>When to run · </span>
             {when}
           </div>
         )}
@@ -1517,16 +1516,16 @@ function wishlistCardStatus(st) {
     case 'pre_draft':
       return st.mode === 'auto'
         ? { label: `${r} · AUTO`, tone: 'var(--positive)' }
-        : { label: `${r} · MANUAL`, tone: 'var(--cyan)' };
+        : { label: `${r} · MANUAL`, tone: 'var(--accent)' };
     default:            return { label: `${r} · NEXT ROUND`, tone: 'var(--mute)' };
   }
 }
 
 const wlNote = (color = 'var(--mute)') => ({
-  padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)',
-  fontFamily: BODY, fontSize: 'var(--fs-micro)', color, lineHeight: 1.5,
+  padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)',
+  fontFamily: BODY, fontSize: 'var(--fs-label)', color, lineHeight: 1.5,
 });
-const wlLabel = { fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' };
+const wlLabel = { fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' };
 
 function ModeSegment({ value, onPick, disabled }) {
   const [helpOpen, setHelpOpen] = useState(false);
@@ -1538,7 +1537,7 @@ function ModeSegment({ value, onPick, disabled }) {
         aria-label="What do Manual, Auto and Disabled mean?"
         style={{
           ...ghostBtn, alignSelf: 'flex-end', width: 26, height: 26, padding: 0,
-          fontSize: 'var(--fs-micro)', color: 'var(--mute)',
+          fontSize: 'var(--fs-label)', color: 'var(--mute)',
         }}
       >?</button>
       <div style={{ display: 'flex', gap: 4 }}>
@@ -1553,9 +1552,9 @@ function ModeSegment({ value, onPick, disabled }) {
               aria-pressed={active}
               style={{
                 ...ghostBtn, flex: 1, padding: '8px 6px',
-                fontSize: 'var(--fs-micro)', letterSpacing: '.16em',
+                fontSize: 'var(--fs-label)',
                 background: active ? 'var(--paper)' : 'transparent',
-                color: active ? 'var(--ink)' : 'var(--mute)',
+                color: active ? 'var(--bg)' : 'var(--mute)',
                 borderColor: active ? 'var(--paper)' : 'var(--rule)',
                 cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
               }}
@@ -1576,19 +1575,19 @@ function ModeSegment({ value, onPick, disabled }) {
             aria-modal="true"
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'var(--ink)', border: '1px solid var(--rule)', padding: 16,
+              background: 'var(--bg)', border: '1px solid var(--rule)', padding: 16,
               maxWidth: 420, width: '100%', maxHeight: '85vh', overflowY: 'auto',
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <span style={wlLabel}>WISHLIST DRAFT MODES</span>
+            <span style={wlLabel}>Wishlist draft modes</span>
             {['manual', 'auto', 'disabled'].map(m => (
-              <div key={m} style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
-                <strong style={{ color: 'var(--paper)', letterSpacing: '.12em' }}>{MODE_LABEL[m].toUpperCase()}</strong>
+              <div key={m} style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--paper)' }}>{MODE_LABEL[m].toUpperCase()}</strong>
                 <br />{MODE_HELP_LONG[m]}
               </div>
             ))}
-            <button type="button" onClick={() => setHelpOpen(false)} style={{ ...btnBase, background: 'var(--paper)', color: 'var(--ink)' }}>GOT IT</button>
+            <button type="button" onClick={() => setHelpOpen(false)} style={{ ...btnBase, background: 'var(--paper)', color: 'var(--bg)' }}>Got it</button>
           </div>
         </div>,
         document.body,
@@ -1640,18 +1639,18 @@ function NextDraftPicker({ leagueId, nextDraft, lock, setBusy, say, reload }) {
         onChange={e => setAt(e.target.value)}
         style={inputStyle}
       />
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--mute)', lineHeight: 1.7 }}>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.7 }}>
         {nextDraft.first_kickoff_at
           ? <>KICKOFF · {fmtDraftTime(nextDraft.first_kickoff_at)}<br />LATEST · {fmtDraftTime(nextDraft.latest_at)} · EARLIEST · 6H FROM NOW</>
-          : 'NO KICKOFF DATE YET · EARLIEST 6H FROM NOW'}
+          : 'No kickoff date yet · earliest 6h from now'}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         <button
           type="button"
           disabled={lock || !at}
           onClick={() => save(new Date(at).toISOString())}
-          style={{ ...btnBase, flex: 1, background: 'var(--paper)', color: 'var(--ink)', opacity: lock || !at ? 0.5 : 1 }}
-        >{nextDraft.preset_at ? 'UPDATE TIME' : 'SET AUTO TIME'}</button>
+          style={{ ...btnBase, flex: 1, background: 'var(--paper)', color: 'var(--bg)', opacity: lock || !at ? 0.5 : 1 }}
+        >{nextDraft.preset_at ? 'Update time' : 'Set auto time'}</button>
         {nextDraft.preset_at && (
           <button type="button" disabled={lock} onClick={() => save(null)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CLEAR</button>
         )}
@@ -1809,13 +1808,13 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
               (trades stay allowed) until you run the draft. Managers keep only the targets they don&apos;t own yet.
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button type="button" disabled={lock} onClick={reopen} style={{ ...btnBase, flex: 1, background: 'var(--gold)', color: 'var(--ink)' }}>CONFIRM — REOPEN DRAFT</button>
+              <button type="button" disabled={lock} onClick={reopen} style={{ ...btnBase, flex: 1, background: 'var(--gold)', color: 'var(--bg)' }}>Confirm — reopen draft</button>
               <button type="button" disabled={lock} onClick={() => setConfirmReopen(false)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CANCEL</button>
             </div>
           </div>
         ) : (
           <button type="button" disabled={lock} onClick={() => setConfirmReopen(true)} style={{ ...ghostBtn, width: '100%', opacity: lock ? 0.5 : 1 }}>
-            REOPEN WISHLIST DRAFT (EXTRA DRAFT THIS ROUND)
+            Reopen wishlist draft (extra draft this round)
           </button>
         )
       )}
@@ -1826,7 +1825,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
           <div style={wlNote()}>{MODE_HELP[shown]}</div>
 
           {status.first_kickoff_at ? (
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.12em', color: 'var(--mute)', lineHeight: 1.7 }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.7 }}>
               KICKOFF · {fmtDraftTime(status.first_kickoff_at)}
               {status.hard_deadline_at && <><br />SAFETY NET · {fmtDraftTime(status.hard_deadline_at)} (KICKOFF − 8H)</>}
             </div>
@@ -1873,14 +1872,14 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
                 type="button"
                 disabled={lock || (picked === 'auto' && !autoAt)}
                 onClick={() => apply('round', picked, picked === 'auto' ? new Date(autoAt).toISOString() : null)}
-                style={{ ...btnBase, flex: 1, background: 'var(--paper)', color: 'var(--ink)', opacity: lock ? 0.5 : 1 }}
+                style={{ ...btnBase, flex: 1, background: 'var(--paper)', color: 'var(--bg)', opacity: lock ? 0.5 : 1 }}
               >
-                {picked === 'auto' ? (mode === 'auto' ? 'UPDATE TIME' : 'SET AUTO') : `CONFIRM ${MODE_LABEL[picked].toUpperCase()}`}
+                {picked === 'auto' ? (mode === 'auto' ? 'Update time' : 'Set auto') : `CONFIRM ${MODE_LABEL[picked].toUpperCase()}`}
               </button>
               <button type="button" disabled={lock} onClick={() => setPicked(null)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CANCEL</button>
             </div>
           ) : mode === 'auto' && (
-            <button type="button" disabled={lock} onClick={() => pickRoundMode('auto')} style={{ ...ghostBtn, width: '100%' }}>CHANGE TIME</button>
+            <button type="button" disabled={lock} onClick={() => pickRoundMode('auto')} style={{ ...ghostBtn, width: '100%' }}>Change time</button>
           )}
         </>
       )}
@@ -1897,7 +1896,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
               opens the market. This can&apos;t be undone.
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button type="button" disabled={lock} onClick={runNow} style={{ ...btnBase, flex: 1, background: 'var(--gold)', color: 'var(--ink)' }}>CONFIRM — RUN NOW ↯</button>
+              <button type="button" disabled={lock} onClick={runNow} style={{ ...btnBase, flex: 1, background: 'var(--gold)', color: 'var(--bg)' }}>CONFIRM — RUN NOW ↯</button>
               <button type="button" disabled={lock} onClick={() => setConfirmRun(false)} style={{ ...ghostBtn, flex: '0 0 auto' }}>CANCEL</button>
             </div>
           </div>
@@ -1906,8 +1905,8 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
             type="button"
             disabled={lock}
             onClick={() => setConfirmRun(true)}
-            style={{ ...btnBase, width: '100%', background: 'var(--gold)', color: 'var(--ink)', opacity: lock ? 0.5 : 1 }}
-          >{busy ? 'RUNNING…' : 'RUN DRAFT NOW ↯'}</button>
+            style={{ ...btnBase, width: '100%', background: 'var(--gold)', color: 'var(--bg)', opacity: lock ? 0.5 : 1 }}
+          >{busy ? 'Running…' : 'RUN DRAFT NOW ↯'}</button>
         )
       )}
 
@@ -1917,7 +1916,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
       )}
 
       {/* ── League default ──────────────────────────────────────────── */}
-      <span style={{ ...wlLabel, marginTop: 4 }}>LEAGUE DEFAULT · FROM NEXT ROUND</span>
+      <span style={{ ...wlLabel, marginTop: 4 }}>League default · from next round</span>
       <ModeSegment value={defaultMode} onPick={(m) => { if (m !== defaultMode) apply('default', m); }} disabled={lock} />
     </div>
   );
@@ -1969,18 +1968,18 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const { relaxationEnabled, relaxationLocked, relaxationTier, toggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
 
   // AUDIT-58-A3: derive live status labels for the LifecycleOp cards.
-  // Deadline-controlled leagues: show OPEN (OVERRIDE) when manually opened, AUTO-MANAGED otherwise.
+  // Deadline-controlled leagues: show open (override) when manually opened, AUTO-MANAGED otherwise.
   const twStatus  = isDeadlineControlled
-                  ? (league?.transfers_open ? 'OPEN (OVERRIDE)' : 'AUTO-MANAGED')
+                  ? (league?.transfers_open ? 'Open (override)' : 'Auto-managed')
                   : league?.transfers_open ? 'OPEN' : 'CLOSED';
   const twTone    = isDeadlineControlled
                   ? (league?.transfers_open ? 'var(--positive)' : 'var(--warn)')
                   : league?.transfers_open ? 'var(--positive)' : 'var(--danger)';
 
-  const draftStatus = !league?.draft_deadline ? 'NOT SET'
+  const draftStatus = !league?.draft_deadline ? 'Not set'
                     : allocationDone          ? 'ALLOCATED'
-                    : deadlinePassed          ? 'DEADLINE PASSED'
-                    :                           'DEADLINE SET';
+                    : deadlinePassed          ? 'Deadline passed'
+                    :                           'Deadline set';
   const draftTone   = !league?.draft_deadline ? 'var(--mute)'
                     : allocationDone          ? 'var(--positive)'
                     : deadlinePassed          ? 'var(--warn)'
@@ -2015,10 +2014,10 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     });
   };
 
-  const opBtnStyle = (bg, color = 'var(--ink)') => ({
-    ...btnBase, width: '100%', background: commLoading ? 'var(--ink-3)' : bg,
+  const opBtnStyle = (bg, color = 'var(--bg)') => ({
+    ...btnBase, width: '100%', background: commLoading ? 'var(--elev)' : bg,
     color: commLoading ? 'var(--mute)' : color,
-    cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 'var(--fs-micro)',
+    cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 'var(--fs-label)',
   });
 
   // Compact inline action button — sits beside an input, replaces full-width CTAs
@@ -2026,7 +2025,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     background: 'transparent',
     border: `1px solid ${disabled ? 'var(--rule)' : color}`,
     color: disabled ? 'var(--mute)' : color,
-    fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
+    fontFamily: MONO, fontSize: 'var(--fs-label)',
     padding: '0 14px', cursor: disabled ? 'not-allowed' : 'pointer',
     flexShrink: 0, whiteSpace: 'nowrap',
   });
@@ -2036,8 +2035,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
       {confirmDialog}
       {freeWindowDialog}
       <HubSectionLabel
-        label="LIFECYCLE OPERATIONS"
-        sub="SEASON-STAGE CONTROLS"
+        label="Lifecycle operations"
+        sub="Season-stage controls"
         tone="var(--purple)"
         helpBtn={onHelp && (
           <button onClick={onHelp} style={helpBtnStyle} title="How do these controls work?">?</button>
@@ -2049,7 +2048,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           {/* Transfer Window */}
           <div data-tour="comm-transfer-window" style={{ display: 'flex', flexDirection: 'column' }}>
           <LifecycleOp
-            title="TRANSFER WINDOW"
+            title="Transfer window"
             status={twStatus}
             statusTone={twTone}
             sub="Controls when the transfer market is open. Toggle to open or close manually — combine with FREE TRANSFERS to also remove the per-round limit."
@@ -2057,24 +2056,24 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {isDeadlineControlled ? (
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--warn)' }}>AUTO-MANAGED · </span>
+                  <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--warn)' }}>Auto-managed · </span>
                     Opens and closes automatically based on matchday deadlines. Toggle to temporarily override.
                   </div>
                 ) : (
                   <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
-                        <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 'var(--fs-micro)' }} />
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>OPENS</span>
+                        <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
-                        <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 'var(--fs-micro)' }} />
+                        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>CLOSES</span>
+                        <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
+                      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
                       <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
                     </div>
                   </>
@@ -2083,8 +2082,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   checked={!!league?.transfers_open}
                   onChange={league?.transfers_open ? handleCloseNow : openTransferWindow}
                   disabled={commLoading}
-                  labelOn="WINDOW OPEN"
-                  labelOff="WINDOW CLOSED"
+                  labelOn="Window open"
+                  labelOff="Window closed"
                 />
               </div>
             }
@@ -2097,7 +2096,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           {league?.format !== 'noduplicate' && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
           <LifecycleOp
-            title="FREE TRANSFERS"
+            title="Free transfers"
             status={freeTransfers ? 'ON' : 'OFF'}
             statusTone={freeTransfers ? 'var(--positive)' : 'var(--mute)'}
             sub="Removes the per-round transfer limit (normally 3 free + penalty buys) while the transfer window is open. Budget, position, club cap, and window timing still apply."
@@ -2105,8 +2104,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {freeTransfers && (
-                  <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ON · </span>
+                  <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>ON · </span>
                     Transfer limit lifted — managers can buy freely while the window is open.
                   </div>
                 )}
@@ -2114,8 +2113,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   checked={freeTransfers}
                   onChange={() => toggleFreeTransfers(!freeTransfers)}
                   disabled={commLoading}
-                  labelOn="FREE TRANSFERS ON"
-                  labelOff="FREE TRANSFERS OFF"
+                  labelOn="Free transfers on"
+                  labelOff="Free transfers off"
                 />
               </div>
             }
@@ -2128,20 +2127,20 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           {isDeadlineControlled && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
           <LifecycleOp
-            title="EMERGENCY TRANSFERS"
+            title="Emergency transfers"
             status={activeFreeWindow ? 'ON' : 'OFF'}
             statusTone={activeFreeWindow ? 'var(--positive)' : 'var(--mute)'}
             sub="Forces the market open during a live matchday AND lifts the live-fixture price lock and the per-round transfer limit. Budget, position, club cap, and ownership rules still apply."
             when="Genuine emergencies only — e.g. reversing a manager's mistaken transfer or unblocking someone hit by a bug. For routine schedule fixes, use TRANSFER WINDOW OVERRIDE instead."
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>CAUTION · </span>
+                <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--warn)', lineHeight: 1.5 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Caution · </span>
                   Managers can sub in players who already scored this round, or sub out players who already conceded points. Past points are NOT recalculated. Turn off as soon as the issue is resolved.
                 </div>
                 {activeFreeWindow && (
-                  <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ON · </span>
+                  <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>ON · </span>
                     Auto-closes {new Date(activeFreeWindow.closes_at).toLocaleString()}
                   </div>
                 )}
@@ -2149,8 +2148,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   checked={!!activeFreeWindow}
                   onChange={activeFreeWindow ? closeFreeWindow : openFreeWindow}
                   disabled={commLoading}
-                  labelOn="EMERGENCY TRANSFERS ON"
-                  labelOff="EMERGENCY TRANSFERS OFF"
+                  labelOn="Emergency transfers on"
+                  labelOff="Emergency transfers off"
                 />
               </div>
             }
@@ -2170,7 +2169,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             primary={
               allocationDone ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                  <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--positive)', lineHeight: 1.5 }}>
                     ✓ Allocation complete — squads are live. The lottery cannot be re-run.
                   </div>
                   {/* Submission tracker still visible after allocation for reference */}
@@ -2186,13 +2185,13 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   )}
                   <div style={{ height: 1, background: 'var(--rule)', margin: '2px 0' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
                     <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={inputStyle} />
                   </div>
-                  <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-micro)' }}>SET DEADLINE</button>
+                  <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-label)' }}>Set deadline</button>
                   <div style={{ height: 1, background: 'var(--rule)', margin: '4px 0' }} />
-                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>
-                    ONCE DONE · 15 PLAYERS / MGR · €100M BUDGET · GK≤2 DEF≤5 MID≤5 FWD≤3
+                  <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>
+                    Once done · 15 players / mgr · €100M budget · gk≤2 def≤5 mid≤5 fwd≤3
                   </div>
                   <button
                     onClick={handleRunAllocation}
@@ -2211,7 +2210,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           {isWishlistDraftLeague(league) && (
           <div data-tour="comm-wishlist-draft">
           <LifecycleOp
-            title="WISHLIST DRAFT"
+            title="Wishlist draft"
             status={wlCard.label}
             statusTone={wlCard.tone}
             sub="Between rounds, managers rank the players they want and the draft hands them out fairly before the market opens. Manual: you run it (safety net 8h before kickoff). Auto: runs at the time you set. Disabled: free market."
@@ -2237,7 +2236,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           {(!league || league.format === 'noduplicate') && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
           <LifecycleOp
-            title="RELAXATION FORMULA"
+            title="Relaxation formula"
             status={relaxationEnabled ? 'ON' : 'OFF'}
             statusTone={relaxationEnabled ? 'var(--positive)' : 'var(--mute)'}
             sub="Lets the no-repeat rule relax (allow shared ownership) as the player pool tightens late in a cup. Off by default — no shared ownership regardless of pool pressure."
@@ -2245,8 +2244,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {relaxationLocked && (
-                  <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>LOCKED · </span>
+                  <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--warn)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Locked · </span>
                     Shared ownership already exists (tier {relaxationTier}) — this can't be disabled for this league.
                   </div>
                 )}
@@ -2254,8 +2253,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   checked={relaxationEnabled}
                   onChange={() => toggleRelaxation(!relaxationEnabled)}
                   disabled={commLoading || (relaxationEnabled && relaxationLocked)}
-                  labelOn="RELAXATION ON"
-                  labelOff="RELAXATION OFF"
+                  labelOn="Relaxation on"
+                  labelOff="Relaxation off"
                 />
               </div>
             }
@@ -2266,18 +2265,18 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           {/* Score Recalculation */}
           <div data-tour="comm-score-recalc" style={{ display: 'flex' }}>
           <LifecycleOp
-            title="SCORE RECALCULATION"
-            status="UTILITY · ON-DEMAND"
+            title="Score recalculation"
+            status="Utility · on-demand"
             statusTone="var(--mute)"
             sub="Scores run automatically — no action needed under normal conditions."
             when="Use only if a match score looks wrong or a fixture failed to score."
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.6 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--positive)' }}>AUTO · </span>
+                <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>Auto · </span>
                   Scores recalculate automatically after every match via scheduled jobs (post-match ~22:30 UTC, late finishers ~23:30 UTC, live every 2 min). You do not need to trigger anything.
                   <br /><br />
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--warn)' }}>WHEN TO USE · </span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--warn)' }}>When to use · </span>
                   Only if a specific match shows incorrect points (e.g. a data correction from the provider arrived after scoring ran). Enter the fixture ID and recalculate — safe to re-run, overwrites with latest data.
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
@@ -2292,7 +2291,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           {/* Archive / reactivate — season-lifecycle control, available regardless of format/mode */}
           <div data-tour="comm-archive" style={{ display: 'flex' }}>
           <LifecycleOp
-            title="ARCHIVE LEAGUE"
+            title="Archive league"
             status={league?.archived ? 'ARCHIVED' : 'ACTIVE'}
             statusTone={league?.archived ? 'var(--mute)' : 'var(--positive)'}
             sub="Pauses scoring, matchday sync, and draft jobs for a league that's finished or dormant. Nothing is deleted."
@@ -2300,13 +2299,13 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {league?.archived ? (
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ARCHIVED · </span>
+                  <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Archived · </span>
                     {league?.archived_at ? `Since ${new Date(league.archived_at).toLocaleDateString()}. ` : ''}Background jobs are skipped for this league.
                   </div>
                 ) : (
-                  <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>NOTE · </span>
+                  <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--warn)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Note · </span>
                     Managers can still view the league while archived — they just won't see new scores or matchdays until you reactivate.
                   </div>
                 )}
@@ -2402,23 +2401,23 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
   const genDisabled = generating || !startMatchday;
 
   const infoBox = isGenerated ? (
-    <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.6 }}>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--positive)' }}>ACTIVE · </span>
+    <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>Active · </span>
       H2H schedule is in place. Managers can view it on the H2H tab. Results are calculated automatically once every match in a round finishes.
       <br /><br />
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--warn)' }}>RE-GENERATE · </span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--warn)' }}>Re-generate · </span>
       To regenerate (e.g. after a new manager joins), pick a new start matchday below. Only unresolved future matchdays are overwritten — completed rounds are preserved.
     </div>
   ) : (
-    <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(240,180,0,0.2)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.6 }}>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--gold)' }}>SETUP REQUIRED · </span>
+    <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid rgba(240,180,0,0.2)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>Setup required · </span>
       Pick the first matchday for H2H play and click Generate. All managers currently in the league will be included. If a new manager joins later, regenerate from the next unplayed matchday.
     </div>
   );
 
   const selectAndBtn = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>START FROM MATCHDAY</span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Start from matchday</span>
       <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
         {matchdays.length > 0 ? (
           <select
@@ -2431,7 +2430,7 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
             ))}
           </select>
         ) : (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flex: 1 }}>Loading matchdays…</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flex: 1 }}>Loading matchdays…</span>
         )}
         <button
           onClick={generate}
@@ -2440,7 +2439,7 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
             background: 'transparent',
             border: `1px solid ${genDisabled ? 'var(--rule)' : 'var(--gold)'}`,
             color: genDisabled ? 'var(--mute)' : 'var(--gold)',
-            fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em',
+            fontFamily: MONO, fontSize: 'var(--fs-label)',
             padding: '0 14px', cursor: genDisabled ? 'not-allowed' : 'pointer',
             flexShrink: 0, whiteSpace: 'nowrap',
           }}
@@ -2449,7 +2448,7 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
         </button>
       </div>
       {msg && (
-        <div style={{ padding: '8px 10px', background: msg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, fontFamily: MONO, fontSize: 'var(--fs-micro)', color: msg.type === 'ok' ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.1em' }}>
+        <div style={{ padding: '8px 10px', background: msg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, fontFamily: MONO, fontSize: 'var(--fs-label)', color: msg.type === 'ok' ? 'var(--positive)' : 'var(--danger)' }}>
           {msg.text}
         </div>
       )}
@@ -2459,8 +2458,8 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
   if (!isMobile) {
     return (
       <LifecycleOp
-        title="H2H CALENDAR"
-        status={isGenerated ? 'GENERATED' : 'NOT YET GENERATED'}
+        title="H2H calendar"
+        status={isGenerated ? 'GENERATED' : 'Not yet generated'}
         statusTone={isGenerated ? 'var(--positive)' : 'var(--gold)'}
         when="After all managers join. Regenerate from the next unplayed matchday if a new manager joins later."
       >
@@ -2473,8 +2472,8 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
   return (
     <div>
       <HubSectionLabel
-        label="H2H CALENDAR"
-        sub={isGenerated ? 'GENERATED' : 'NOT YET GENERATED'}
+        label="H2H calendar"
+        sub={isGenerated ? 'GENERATED' : 'Not yet generated'}
         tone={isGenerated ? 'var(--positive)' : 'var(--gold)'}
       />
       <div style={{ padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -2499,11 +2498,11 @@ function MobSeasonStepper({ league = null, memberCount = 0, windowType = null, o
         { label: 'SEASON',     state: 'todo' },
       ];
   return (
-    <div style={{ padding: '14px 18px', background: 'var(--ink-2)', borderBottom: '1px solid var(--rule)' }}>
+    <div style={{ padding: '14px 18px', background: 'var(--card)', borderBottom: '1px solid var(--rule)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <span style={{ width: 3, height: 12, background: 'var(--purple)', flexShrink: 0 }} />
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper)' }}>COMMISSIONER</span>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)' }}>· ADMIN ONLY</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>COMMISSIONER</span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>· ADMIN ONLY</span>
         {onHelp && (
           <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
         )}
@@ -2511,18 +2510,18 @@ function MobSeasonStepper({ league = null, memberCount = 0, windowType = null, o
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${phases.length}, 1fr)`, gap: 4, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 11, left: '10%', right: '10%', height: 1, background: 'var(--rule)' }} />
         {phases.map((p, i) => {
-          const tone = p.state === 'done' ? 'var(--positive)' : p.state === 'active' ? 'var(--cyan)' : 'var(--mute)';
+          const tone = p.state === 'done' ? 'var(--positive)' : p.state === 'active' ? 'var(--accent)' : 'var(--mute)';
           return (
             <div key={p.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, zIndex: 1 }}>
               <span style={{
                 width: 22, height: 22, borderRadius: '50%',
-                background: p.state === 'done' ? tone : 'var(--ink-2)',
+                background: p.state === 'done' ? tone : 'var(--card)',
                 border: `1.5px solid ${tone}`,
-                color: p.state === 'done' ? 'var(--ink)' : tone,
+                color: p.state === 'done' ? 'var(--bg)' : tone,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 600,
+                fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 600,
               }}>{p.state === 'done' ? '✓' : i + 1}</span>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: tone, textAlign: 'center' }}>{p.label}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: tone, textAlign: 'center' }}>{p.label}</span>
             </div>
           );
         })}
@@ -2535,11 +2534,11 @@ function MobSeasonStepper({ league = null, memberCount = 0, windowType = null, o
 function MobLifecycleCard({ title, status, tone, children, when, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: `3px solid ${tone}`, margin: '0 14px' }}>
+    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderLeft: `3px solid ${tone}`, margin: '0 14px' }}>
       <button onClick={() => setOpen(!open)} style={{ background: 'transparent', border: 0, padding: '12px 14px', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper)' }}>{title}</span>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: tone }}>● {status}</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{title}</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: tone }}>● {status}</span>
         </div>
         <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-label)' }}>{open ? '−' : '+'}</span>
       </button>
@@ -2547,8 +2546,8 @@ function MobLifecycleCard({ title, status, tone, children, when, defaultOpen = f
         <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid var(--rule)' }}>
           {children}
           {when && (
-            <div style={{ padding: '6px 8px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>WHEN · </span>{when}
+            <div style={{ padding: '6px 8px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.4 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>When · </span>{when}
             </div>
           )}
         </div>
@@ -2562,11 +2561,11 @@ function MobSectionHeader({ label, sub, tone, onHelp }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px 6px' }}>
       <span style={{ width: 3, height: 12, background: tone, flexShrink: 0 }} />
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--paper)' }}>{label}</span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>{label}</span>
       {onHelp && (
         <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
       )}
-      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)' }}>· {sub}</span>}
+      {sub && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>· {sub}</span>}
     </div>
   );
 }
@@ -2582,9 +2581,9 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
   const [generating,   setGenerating]   = useState(false);
 
   const POST_TYPES = [
-    { key: 'breaking_news', label: 'BREAKING NEWS' },
-    { key: 'classified',    label: 'CLASSIFIED AD'  },
-    { key: 'pin_quote',     label: 'PIN QUOTE'      },
+    { key: 'breaking_news', label: 'Breaking news' },
+    { key: 'classified',    label: 'Classified ad'  },
+    { key: 'pin_quote',     label: 'Pin quote'      },
   ];
 
   const handlePost = async () => {
@@ -2664,8 +2663,8 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
             onClick={() => setPostType(t.key)}
             style={{
               padding: '6px 12px', border: 'none', cursor: 'pointer',
-              fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em',
-              background: postType === t.key ? 'var(--ink-3)' : 'transparent',
+              fontFamily: MONO, fontSize: 'var(--fs-label)',
+              background: postType === t.key ? 'var(--elev)' : 'transparent',
               color: postType === t.key ? 'var(--paper)' : 'var(--mute)',
               borderBottom: postType === t.key ? '2px solid var(--danger)' : '2px solid transparent',
               marginBottom: -1,
@@ -2680,7 +2679,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
       {postType === 'pin_quote' ? (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>QUOTE TEXT</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>Quote text</span>
             <input
               type="text"
               placeholder="e.g. May the best manager win — good luck everyone"
@@ -2691,7 +2690,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>AUTHOR (OPTIONAL)</span>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>AUTHOR (OPTIONAL)</span>
             <input
               type="text"
               placeholder="e.g. The Commissioner"
@@ -2705,8 +2704,8 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
       ) : (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>
-              {postType === 'classified' ? 'AD HEADLINE' : 'HEADLINE'}
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
+              {postType === 'classified' ? 'Ad headline' : 'HEADLINE'}
             </span>
             <input
               type="text"
@@ -2720,8 +2719,8 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>
-              DETAILS · ONE LINE EACH (OPTIONAL)
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+              Details · one line each (optional)
             </span>
             <textarea
               placeholder={postType === 'classified'
@@ -2740,36 +2739,36 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
         onClick={handlePost}
         disabled={posting || !canPost}
         style={{
-          ...btnBase, fontSize: 'var(--fs-micro)',
-          background: posting || !canPost ? 'var(--ink-3)' : 'var(--danger)',
+          ...btnBase, fontSize: 'var(--fs-label)',
+          background: posting || !canPost ? 'var(--elev)' : 'var(--danger)',
           color: posting || !canPost ? 'var(--mute)' : 'var(--paper)',
           cursor: posting || !canPost ? 'not-allowed' : 'pointer',
           alignSelf: 'flex-start',
         }}
       >
-        {posting ? 'POSTING…' : postType === 'pin_quote' ? 'PIN QUOTE →' : 'POST TO LEAGUE →'}
+        {posting ? 'Posting…' : postType === 'pin_quote' ? 'Pin quote →' : 'Post to league →'}
       </button>
 
       {/* Special Edition generator */}
       <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 14, marginTop: 4 }}>
-        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: 'var(--mute)', marginBottom: 8 }}>
-          AI SPECIAL EDITION · THE FRONTROW
+        <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
+          Ai special edition · the frontrow
         </div>
-        <p style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5, marginBottom: 10 }}>
+        <p style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5, marginBottom: 10 }}>
           Generate a fresh AI-written edition now — headline, hot take, wooden spoon, transfer rumour. Shows immediately on the Frontpage. 4h rate limit.
         </p>
         <button
           onClick={handleGenerateEdition}
           disabled={generating}
           style={{
-            ...btnBase, fontSize: 'var(--fs-micro)',
-            background: generating ? 'var(--ink-3)' : 'var(--gold)',
-            color: generating ? 'var(--mute)' : 'var(--ink)',
+            ...btnBase, fontSize: 'var(--fs-label)',
+            background: generating ? 'var(--elev)' : 'var(--gold)',
+            color: generating ? 'var(--mute)' : 'var(--bg)',
             cursor: generating ? 'not-allowed' : 'pointer',
             alignSelf: 'flex-start',
           }}
         >
-          {generating ? 'GENERATING…' : 'GENERATE SPECIAL EDITION →'}
+          {generating ? 'Generating…' : 'Generate special edition →'}
         </button>
       </div>
     </div>
@@ -2778,7 +2777,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
 
 // ── Mobile accordion wizard step header ───────────────────────────────────────
 function MobStepHeader({ n, label, state, onClick, summary }) {
-  const tone = state === 'done' ? 'var(--positive)' : state === 'active' ? 'var(--cyan)' : 'var(--mute)';
+  const tone = state === 'done' ? 'var(--positive)' : state === 'active' ? 'var(--accent)' : 'var(--mute)';
   return (
     <button onClick={onClick} style={{
       background: 'transparent', border: 0, padding: '12px 16px', width: '100%',
@@ -2790,13 +2789,13 @@ function MobStepHeader({ n, label, state, onClick, summary }) {
         width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
         border: `1.5px solid ${tone}`,
         background: state === 'done' ? tone : 'transparent',
-        color: state === 'done' ? 'var(--ink)' : tone,
+        color: state === 'done' ? 'var(--bg)' : tone,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 600,
+        fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 600,
       }}>{state === 'done' ? '✓' : n}</span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.22em', color: tone }}>STEP {n} · {label}</span>
-        {summary && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: 'var(--mute)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{summary}</span>}
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: tone }}>STEP {n} · {label}</span>
+        {summary && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{summary}</span>}
       </div>
       <span style={{ color: tone, fontFamily: MONO, fontSize: 'var(--fs-label)' }}>{state === 'active' ? '−' : '+'}</span>
     </button>
@@ -2887,16 +2886,16 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     // whether this league uses the matchday-deadline lock system at all.
     const mobIsDeadlineControlled = !!tournamentId;
     const mobTwStatus = mobIsDeadlineControlled
-                      ? (league?.transfers_open ? 'OPEN (OVERRIDE)' : 'AUTO-MANAGED')
+                      ? (league?.transfers_open ? 'Open (override)' : 'Auto-managed')
                       : league?.transfers_open ? 'OPEN' : 'CLOSED';
     const mobTwTone   = mobIsDeadlineControlled
                       ? (league?.transfers_open ? 'var(--positive)' : 'var(--warn)')
                       : league?.transfers_open ? 'var(--positive)' : 'var(--danger)';
 
-    const mobDraftStatus = !league?.draft_deadline ? 'NOT SET'
+    const mobDraftStatus = !league?.draft_deadline ? 'Not set'
                          : mobAllocationDone       ? 'ALLOCATED'
-                         : mobDeadlinePassed        ? 'DEADLINE PASSED'
-                         :                           'DEADLINE SET';
+                         : mobDeadlinePassed        ? 'Deadline passed'
+                         :                           'Deadline set';
     const mobDraftTone   = !league?.draft_deadline ? 'var(--mute)'
                          : mobAllocationDone       ? 'var(--positive)'
                          : mobDeadlinePassed        ? 'var(--warn)'
@@ -2917,7 +2916,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     };
 
     return (
-      <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
         {confirmDialog}
         {freeWindowDialog}
         <HelpOverlay topic={helpModal} onClose={() => setHelpModal(null)} />
@@ -2925,27 +2924,27 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         <MobSeasonStepper league={league} memberCount={memberCount} windowType={windowType} onHelp={() => setHelpModal('commissioner')} />
 
         {/* Lifecycle ops (mobile) — moved above bets; cards have margin: 0 14px built in */}
-        <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" onHelp={() => setHelpModal('lifecycle')} />
+        <MobSectionHeader label="Lifecycle operations" sub="Season controls" tone="var(--purple)" onHelp={() => setHelpModal('lifecycle')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 80 }}>
           <div data-tour="comm-transfer-window">
-          <MobLifecycleCard title="TRANSFER WINDOW" status={mobTwStatus} tone={mobTwTone} when="Deadline-controlled leagues auto-open between gameweeks. Toggle to override. Combine with FREE TRANSFERS to also remove the per-round limit.">
+          <MobLifecycleCard title="Transfer window" status={mobTwStatus} tone={mobTwTone} when="Deadline-controlled leagues auto-open between gameweeks. Toggle to override. Combine with FREE TRANSFERS to also remove the per-round limit.">
             {tournamentId ? (
-              <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--warn)' }}>AUTO-MANAGED · </span>
+              <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--warn)' }}>Auto-managed · </span>
                 Opens and closes automatically based on matchday deadlines. Toggle to temporarily override.
               </div>
             ) : (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
-                  <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 'var(--fs-micro)' }} />
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>OPENS</span>
+                  <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
-                  <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 'var(--fs-micro)' }} />
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>CLOSES</span>
+                  <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
                   <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={mobInput} />
                 </div>
               </>
@@ -2961,18 +2960,18 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                 })
                 : openTransferWindow}
               disabled={commLoading}
-              labelOn="WINDOW OPEN"
-              labelOff="WINDOW CLOSED"
+              labelOn="Window open"
+              labelOff="Window closed"
             />
           </MobLifecycleCard>
           </div>
 
           {/* Free transfers (mobile) — Classic leagues only */}
           {league?.format !== 'noduplicate' && (
-          <MobLifecycleCard title="FREE TRANSFERS" status={mobFreeTransfers ? 'ON' : 'OFF'} tone={mobFreeTransfers ? 'var(--positive)' : 'var(--mute)'} when="Enable when you want unlimited transfers — e.g. post-draft building. Disable to restore per-round limits.">
+          <MobLifecycleCard title="Free transfers" status={mobFreeTransfers ? 'ON' : 'OFF'} tone={mobFreeTransfers ? 'var(--positive)' : 'var(--mute)'} when="Enable when you want unlimited transfers — e.g. post-draft building. Disable to restore per-round limits.">
             {mobFreeTransfers && (
-              <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ON · </span>
+              <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>ON · </span>
                 Transfer limit lifted — managers can buy freely while the window is open.
               </div>
             )}
@@ -2980,22 +2979,22 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               checked={mobFreeTransfers}
               onChange={() => mobToggleFreeTransfers(!mobFreeTransfers)}
               disabled={commLoading}
-              labelOn="FREE TRANSFERS ON"
-              labelOff="FREE TRANSFERS OFF"
+              labelOn="Free transfers on"
+              labelOff="Free transfers off"
             />
           </MobLifecycleCard>
           )}
 
           {mobIsDeadlineControlled && (
           <div data-tour="comm-emergency-transfers">
-          <MobLifecycleCard title="EMERGENCY TRANSFERS" status={mobEtStatus} tone={mobEtTone} when="Genuine emergencies only — e.g. reversing a manager's mistaken transfer or unblocking someone hit by a bug. For routine schedule fixes, use TRANSFER WINDOW OVERRIDE instead.">
-            <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>CAUTION · </span>
+          <MobLifecycleCard title="Emergency transfers" status={mobEtStatus} tone={mobEtTone} when="Genuine emergencies only — e.g. reversing a manager's mistaken transfer or unblocking someone hit by a bug. For routine schedule fixes, use TRANSFER WINDOW OVERRIDE instead.">
+            <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--warn)', lineHeight: 1.5 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Caution · </span>
               Managers can sub in players who already scored this round, or sub out players who already conceded points. Past points are NOT recalculated. Turn off as soon as the issue is resolved.
             </div>
             {activeFreeWindow && (
-              <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ON · </span>
+              <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>ON · </span>
                 Auto-closes {new Date(activeFreeWindow.closes_at).toLocaleString()}
               </div>
             )}
@@ -3003,8 +3002,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               checked={!!activeFreeWindow}
               onChange={activeFreeWindow ? closeFreeWindow : openFreeWindow}
               disabled={commLoading}
-              labelOn="EMERGENCY TRANSFERS ON"
-              labelOff="EMERGENCY TRANSFERS OFF"
+              labelOn="Emergency transfers on"
+              labelOff="Emergency transfers off"
             />
           </MobLifecycleCard>
           </div>
@@ -3015,7 +3014,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           <MobLifecycleCard title="DRAFT" status={mobDraftStatus} tone={mobDraftTone} when="After all picks. Before GW1.">
             {mobAllocationDone ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--positive)', lineHeight: 1.5 }}>
+                <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--positive)', lineHeight: 1.5 }}>
                   ✓ Allocation complete — squads are live
                 </div>
                 {draftMembers.length > 0 && draftSubmissions !== null && (
@@ -3028,11 +3027,11 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                   <DraftSubmissionTracker members={draftMembers} submitted={draftSubmissions} />
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
+                  <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
                   <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={mobInput} />
                 </div>
-                <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>SET DEADLINE</button>
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · €100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
+                <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>Set deadline</button>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · €100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
                 <button
                   onClick={() => askConfirm({
                     title: 'Run squad allocation?',
@@ -3042,7 +3041,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                     onConfirm: triggerDraftAllocation,
                   })}
                   disabled={commLoading}
-                  style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
+                  style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--bg)' }}
                 >RUN ALLOCATION ↯</button>
               </>
             )}
@@ -3053,7 +3052,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           {isWishlistDraftLeague(league) && (
           <div data-tour="comm-wishlist-draft">
           <MobLifecycleCard
-            title="WISHLIST DRAFT"
+            title="Wishlist draft"
             status={wishlistCardStatus(mobWlStatus).label}
             tone={wishlistCardStatus(mobWlStatus).tone}
             when="Set the mode once the previous round ends. Auto needs at least 6h notice; unless disabled, the draft always runs by kickoff − 8h."
@@ -3073,10 +3072,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
           {(!league || league.format === 'noduplicate') && (
           <div>
-          <MobLifecycleCard title="RELAXATION FORMULA" status={mobRelaxationEnabled ? 'ON' : 'OFF'} tone={mobRelaxationEnabled ? 'var(--positive)' : 'var(--mute)'} when="Leave off unless managers get stuck with an empty pool late in a cup run. Locks ON once shared ownership exists.">
+          <MobLifecycleCard title="Relaxation formula" status={mobRelaxationEnabled ? 'ON' : 'OFF'} tone={mobRelaxationEnabled ? 'var(--positive)' : 'var(--mute)'} when="Leave off unless managers get stuck with an empty pool late in a cup run. Locks ON once shared ownership exists.">
             {mobRelaxationLocked && (
-              <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>LOCKED · </span>
+              <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--warn)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Locked · </span>
                 Shared ownership already exists (tier {mobRelaxationTier}) — can't disable.
               </div>
             )}
@@ -3084,37 +3083,37 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               checked={mobRelaxationEnabled}
               onChange={() => mobToggleRelaxation(!mobRelaxationEnabled)}
               disabled={commLoading || (mobRelaxationEnabled && mobRelaxationLocked)}
-              labelOn="RELAXATION ON"
-              labelOff="RELAXATION OFF"
+              labelOn="Relaxation on"
+              labelOff="Relaxation off"
             />
           </MobLifecycleCard>
           </div>
           )}
 
           <div data-tour="comm-score-recalc">
-          <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Only if a match shows incorrect points.">
-            <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.6, marginBottom: 8 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.18em', color: 'var(--positive)' }}>AUTO · </span>
+          <MobLifecycleCard title="Score recalculation" status="UTILITY" tone="var(--mute)" when="Only if a match shows incorrect points.">
+            <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6, marginBottom: 8 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>Auto · </span>
               Scores run automatically after every match. No action needed under normal conditions.
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: 'var(--paper)' }}>FIXTURE ID</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>Fixture id</span>
               <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={mobInput} />
             </div>
-            <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: commLoading || !scoreFixtureId ? 'var(--ink-3)' : 'var(--warn)', color: commLoading || !scoreFixtureId ? 'var(--mute)' : 'var(--ink)', cursor: commLoading || !scoreFixtureId ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
+            <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: commLoading || !scoreFixtureId ? 'var(--elev)' : 'var(--warn)', color: commLoading || !scoreFixtureId ? 'var(--mute)' : 'var(--bg)', cursor: commLoading || !scoreFixtureId ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
           </MobLifecycleCard>
           </div>
 
           <div data-tour="comm-archive">
-          <MobLifecycleCard title="ARCHIVE LEAGUE" status={league?.archived ? 'ARCHIVED' : 'ACTIVE'} tone={league?.archived ? 'var(--mute)' : 'var(--positive)'} when="End of season, or a league that never got off the ground. Reactivate any time — jobs resume from the current round, no catch-up scoring for rounds missed while archived.">
+          <MobLifecycleCard title="Archive league" status={league?.archived ? 'ARCHIVED' : 'ACTIVE'} tone={league?.archived ? 'var(--mute)' : 'var(--positive)'} when="End of season, or a league that never got off the ground. Reactivate any time — jobs resume from the current round, no catch-up scoring for rounds missed while archived.">
             {league?.archived ? (
-              <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.5 }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>ARCHIVED · </span>
+              <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Archived · </span>
                 {league?.archived_at ? `Since ${new Date(league.archived_at).toLocaleDateString()}. ` : ''}Background jobs are skipped for this league.
               </div>
             ) : (
-              <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--warn)', lineHeight: 1.5 }}>
-                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em' }}>NOTE · </span>
+              <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--warn)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)' }}>Note · </span>
                 Managers can still view the league while archived — they just won't see new scores or matchdays until you reactivate.
               </div>
             )}
@@ -3130,7 +3129,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         </div>
 
         {/* Bet management (mobile) */}
-        <MobSectionHeader label="BET MANAGEMENT" sub="CREATE · RESOLVE · HISTORY" tone="var(--cyan)" />
+        <MobSectionHeader label="Bet management" sub="Create · resolve · history" tone="var(--accent)" />
         <div style={{ padding: '0 14px' }}>
           <BetCreatorPanel
             leagueId={leagueId}
@@ -3171,7 +3170,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         {/* H2H Calendar (mobile) — only for Draft + H2H leagues */}
         {league?.h2h_enabled && (
           <>
-            <MobSectionHeader label="H2H CALENDAR" sub="SCHEDULE MANAGEMENT" tone="var(--gold)" />
+            <MobSectionHeader label="H2H calendar" sub="Schedule management" tone="var(--gold)" />
             <div style={{ padding: '0 14px' }}>
               <H2HCalendarSection leagueId={leagueId} tournamentId={tournamentId} isMobile />
             </div>
@@ -3179,7 +3178,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         )}
 
         {/* League news (mobile) */}
-        <MobSectionHeader label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />
+        <MobSectionHeader label="League news" sub="Post to activity feed" tone="var(--danger)" />
         <NewsPostForm leagueId={leagueId} setCommMsg={setCommMsg} isMobile />
 
       </div>
@@ -3188,7 +3187,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
   // ── Desktop layout ──────────────────────────────────────────────────────────
   return (
-    <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
       <HelpOverlay topic={helpModal} onClose={() => setHelpModal(null)} />
       <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
 
@@ -3213,7 +3212,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       />
 
       {/* Zone C — Bet creation */}
-      <HubSectionLabel label="CREATE BET" sub="FOOTBALL PREDICTION WIDGET" tone="var(--cyan)" />
+      <HubSectionLabel label="Create bet" sub="Football prediction widget" tone="var(--accent)" />
       <div style={{ padding: '14px 22px' }}>
         <BetCreatorPanel
           leagueId={leagueId}
@@ -3252,11 +3251,11 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       />
 
       {/* P2P Challenges config */}
-      <HubSectionLabel label="P2P CHALLENGES" sub="COIN ENTRY FEE & STAKE LIMITS" tone="var(--gold)" />
+      <HubSectionLabel label="P2P challenges" sub="Coin entry fee & stake limits" tone="var(--gold)" />
       <P2PChallengesConfig leagueId={leagueId} commLoading={commLoading} />
 
       {/* League News — breaking news form */}
-      <HubSectionLabel label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />
+      <HubSectionLabel label="League news" sub="Post to activity feed" tone="var(--danger)" />
       <NewsPostForm leagueId={leagueId} setCommMsg={setCommMsg} />
 
     </div>
