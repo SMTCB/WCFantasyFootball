@@ -14,7 +14,7 @@ import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
 
-const MONO = { fontFamily: 'JetBrains Mono, monospace' };
+const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif', letterSpacing: '-0.02em' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
 

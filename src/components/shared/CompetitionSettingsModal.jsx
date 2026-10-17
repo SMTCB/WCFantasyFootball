@@ -1,7 +1,7 @@
 import BottomSheet from './BottomSheet';
 import CompetitionArchivePanel from './CompetitionArchivePanel';
 
-const MONO = "'JetBrains Mono', monospace";
+const MONO = "Archivo, sans-serif";
 
 // Minimal settings overlay for Paddock/Player Box owners — currently just
 // hosts the archive toggle (B-13-F1 / B-13-TENNIS). Reuses BottomSheet for

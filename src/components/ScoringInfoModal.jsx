@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import BottomSheet from './shared/BottomSheet';
 
-const MONO    = 'var(--font-mono, monospace)';
+const MONO    = 'Archivo, sans-serif';
 const DISPLAY = 'Archivo Black, sans-serif';
 
 const POSITIONS = [

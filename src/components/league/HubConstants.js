@@ -4,7 +4,7 @@
 // and its child panels (depth 2+). Function declarations in HubShared.jsx
 // are hoisted and safe; const declarations are not.
 
-export const MONO    = "'JetBrains Mono', monospace";
+export const MONO    = "Archivo, sans-serif";
 export const DISPLAY = "'Archivo Black', sans-serif";
 export const BODY    = "'Archivo', sans-serif";
 

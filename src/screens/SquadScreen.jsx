@@ -851,7 +851,7 @@ export default function SquadScreen() {
           <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
             No League Yet
           </div>
-          <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
             You need to join or create a league before building your squad.
           </p>
         </div>
@@ -960,7 +960,7 @@ export default function SquadScreen() {
           <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
             No Squad Built Yet
           </div>
-          <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
             Head to the Transfer Market to sign players and build your squad.
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
@@ -976,7 +976,7 @@ export default function SquadScreen() {
             {leagues && leagues.length > 1 && (
               <button
                 onClick={() => setActiveLeague(null)}
-                style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
+                style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
               >
                 Switch League
               </button>
@@ -1124,7 +1124,7 @@ export default function SquadScreen() {
                     <button className="hit-44"
                       onClick={() => setStatsDashboardPlayer(player)}
                       style={{
-                        fontFamily: 'JetBrains Mono, monospace',
+                        fontFamily: 'Archivo, sans-serif',
                         fontSize: 'var(--fs-micro)', fontWeight: 800,
                         padding: '2px 6px',
                         border: '1px solid var(--accent)',
@@ -1138,7 +1138,7 @@ export default function SquadScreen() {
                     </button>
                     <span
                       style={{
-                        fontFamily: 'JetBrains Mono, monospace',
+                        fontFamily: 'Archivo, sans-serif',
                         fontSize: 'var(--fs-micro)', fontWeight: 800,
                         padding: '2px 6px',
                         border: isBench ? '1px solid var(--rule)' : '1px solid rgba(26,111,168,0.4)',
@@ -1168,7 +1168,7 @@ export default function SquadScreen() {
                           else showToast(`${player.name} listed for auction`, 'success');
                         }}
                         style={{
-                          fontFamily: 'JetBrains Mono, monospace',
+                          fontFamily: 'Archivo, sans-serif',
                           fontSize: 'var(--fs-micro)', fontWeight: 800,
                           padding: '2px 6px',
                           border: '1px solid rgba(240,180,0,0.4)',
@@ -1190,7 +1190,7 @@ export default function SquadScreen() {
                           disabled={isCancelBusy}
                           onClick={() => handleAuctionBadgeClick(player, auctionListing)}
                           style={{
-                            fontFamily: 'JetBrains Mono, monospace',
+                            fontFamily: 'Archivo, sans-serif',
                             fontSize: 'var(--fs-micro)', fontWeight: 800,
                             padding: '2px 6px',
                             border: isConfirming ? '1px solid rgba(185,28,28,0.6)' : '1px solid rgba(240,180,0,0.4)',
@@ -1425,7 +1425,7 @@ export default function SquadScreen() {
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)' }}>
                 Squad too small — {allSquadPlayers.length}/11 players
               </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
                 Need {11 - allSquadPlayers.length} more to field a starting XI
               </div>
             </div>
@@ -1440,7 +1440,7 @@ export default function SquadScreen() {
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)' }}>
                 Squad incomplete — {allSquadPlayers.length}/15 players
               </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.7)', marginTop: 3 }}>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.7)', marginTop: 3 }}>
                 {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players
               </div>
             </div>
@@ -1501,7 +1501,7 @@ export default function SquadScreen() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 6px', borderTop: '1px solid var(--rule)', marginTop: 4 }}>
                     <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Substitutes</div>
                     <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{bench.length}</div>
+                    <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{bench.length}</div>
                   </div>
                   {bench.map((player, bi) => {
                     const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? '?';
@@ -1531,21 +1531,21 @@ export default function SquadScreen() {
                             {player.intel?.status !== 'fit' && (
                               <span title={`${player.intel?.reason ?? player.intel?.status} — tap ? for status info`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                             )}
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0 }}>{player.position}</span>
+                            <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0 }}>{player.position}</span>
                             {isSwapTarget && !isLocked && (
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0 }}>SWAP</span>
+                              <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0 }}>SWAP</span>
                             )}
                             {isLocked && (
                               <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '1px 4px', flexShrink: 0 }}>LOCKED</span>
                             )}
                           </div>
                           {player.fixtureStatus && (
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
                           )}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, minWidth: 40, justifyContent: 'flex-end' }}>
                           <ClubCrest name={player.club} size={16} />
-                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</span>
+                          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</span>
                         </div>
                         <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{Math.round(player.points ?? 0)}</div>
                       </button>
@@ -1590,7 +1590,7 @@ export default function SquadScreen() {
                     {/* Position group header */}
                     <div style={{ padding: '10px 16px 5px', display: 'flex', alignItems: 'center', gap: 8, borderLeft: `3px solid ${posColor}` }}>
                       <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: posColor, flex: 1 }}>{POS_LABEL_LIST[pos]}</span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{allPos.length}/{limit}</span>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{allPos.length}/{limit}</span>
                     </div>
                     {/* Signed players */}
                     {allPos.map(player => {
@@ -1635,7 +1635,7 @@ export default function SquadScreen() {
                               <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</span>
                             </div>
                             {player.fixtureStatus && (
-                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
                             <FormStrip rounds={squadStatsMap[player.id]} />
                           </div>
@@ -1645,7 +1645,7 @@ export default function SquadScreen() {
                           <button className="hit-44"
                             onClick={e => { e.stopPropagation(); setStatsDashboardPlayer(player); }}
                             style={{
-                              fontFamily: 'JetBrains Mono, monospace',
+                              fontFamily: 'Archivo, sans-serif',
                               fontSize: 'var(--fs-micro)', fontWeight: 800,
                               padding: '3px 6px',
                               border: '1px solid var(--accent)',
@@ -1669,7 +1669,7 @@ export default function SquadScreen() {
                                     disabled={isCancelBusy}
                                     onClick={() => handleAuctionBadgeClick(player, auctionListing)}
                                     style={{
-                                      fontFamily: 'JetBrains Mono, monospace',
+                                      fontFamily: 'Archivo, sans-serif',
                                       fontSize: 'var(--fs-micro)', fontWeight: 800,
                                       padding: '3px 6px',
                                       border: isConfirming ? '1px solid rgba(185,28,28,0.6)' : '1px solid rgba(240,180,0,0.4)',
@@ -1695,7 +1695,7 @@ export default function SquadScreen() {
                                     else showToast(`${player.name} listed for auction`, 'success');
                                   }}
                                   style={{
-                                    fontFamily: 'JetBrains Mono, monospace',
+                                    fontFamily: 'Archivo, sans-serif',
                                     fontSize: 'var(--fs-micro)', fontWeight: 800,
                                     padding: '3px 6px',
                                     border: '1px solid rgba(240,180,0,0.4)',
@@ -1795,7 +1795,7 @@ export default function SquadScreen() {
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--danger)' }}>
               Squad too small — {allSquadPlayers.length}/11 players
             </div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)' }}>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)' }}>
               Need {11 - allSquadPlayers.length} more to field a starting XI
             </div>
             <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
@@ -1808,7 +1808,7 @@ export default function SquadScreen() {
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)' }}>
               Squad incomplete — {allSquadPlayers.length}/15 players
             </div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)' }}>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)' }}>
               {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players to complete your squad
             </div>
             <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
@@ -1868,7 +1868,7 @@ export default function SquadScreen() {
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
                             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
                             {player.fixtureStatus && (
-                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: player.fixtureStatus.color, marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
                           </div>
                         </button>
@@ -1974,7 +1974,7 @@ export default function SquadScreen() {
                   <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1.1, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                     {selectedPlayer.name}
                     {selectedPlayer.price > 0 && (
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
                         €{Number(selectedPlayer.price).toFixed(1)}M
                       </span>
                     )}
@@ -2120,7 +2120,7 @@ export default function SquadScreen() {
             <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--accent)' }}>
               {selectedIsBench ? 'Select a starter to replace' : 'Select a bench player to bring on'}
             </div>
-            <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace' }}>
+            <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
               Swapping out: {selectedPlayer?.name}
             </div>
           </div>

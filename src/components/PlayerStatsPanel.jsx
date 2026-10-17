@@ -11,7 +11,7 @@ function ptColor(pts) {
 
 const TH = ({ children, right }) => (
   <th style={{
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: 700,
+    fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 700,
     color: 'var(--mute)', letterSpacing: '0.18em', textTransform: 'uppercase',
     padding: '0 4px 5px', textAlign: right ? 'right' : 'left', whiteSpace: 'nowrap',
   }}>{children}</th>
@@ -19,7 +19,7 @@ const TH = ({ children, right }) => (
 
 const TD = ({ children, right, bold, color }) => (
   <td style={{
-    fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', fontWeight: bold ? 700 : 400,
+    fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: bold ? 700 : 400,
     color: color ?? 'var(--paper)', padding: '3px 4px',
     textAlign: right ? 'right' : 'left', whiteSpace: 'nowrap',
   }}>{children}</td>

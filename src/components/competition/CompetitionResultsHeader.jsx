@@ -1,7 +1,7 @@
 import { useIsMobile } from '../../hooks/useViewport';
 import CompetitionRankBadge from '../CompetitionRankBadge';
 
-const MONO  = 'JetBrains Mono, monospace';
+const MONO  = 'Archivo, sans-serif';
 const DISP  = 'Archivo Black, sans-serif';
 
 /**

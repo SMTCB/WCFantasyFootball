@@ -1547,15 +1547,15 @@ export default function MarketScreen() {
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {netLabel && (
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: netColor, fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: netColor, fontWeight: 700 }}>
                       {netLabel}
                     </span>
                   )}
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                     €{effectiveBudget.toFixed(1)}M left
                   </span>
                   {penaltyPointsCost > 0 && (
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--neg)', fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--neg)', fontWeight: 700 }}>
                       −{penaltyPointsCost}pts
                     </span>
                   )}
@@ -1582,7 +1582,7 @@ export default function MarketScreen() {
                           <>
                             <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--neg)', border: '1px solid var(--neg)', padding: '1px 4px', flexShrink: 0 }}>OUT</span>
                             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sell.player.name}</span>
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{sell.player.price}M</span>
+                            <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{sell.player.price}M</span>
                             <button
                               onClick={() => setBasket(prev => prev.filter(b => b.player.id !== sell.player.id))}
                               disabled={confirming}
@@ -1602,7 +1602,7 @@ export default function MarketScreen() {
                           <>
                             <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '1px 4px', flexShrink: 0 }}>IN</span>
                             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{buy.player.name}</span>
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{buy.player.price}M</span>
+                            <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{buy.player.price}M</span>
                             <button
                               onClick={() => setBasket(prev => prev.filter(b => b.player.id !== buy.player.id))}
                               disabled={confirming}

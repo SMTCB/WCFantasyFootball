@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 // Inline font constants — avoids importing HubShared here. LeagueScreen imports HubShared
 // directly, and CommissionerPanel→BetCreatorPanel also importing it creates a competing
 // module-evaluation path that causes a TDZ crash in Vite/Rolldown's production bundle.
-const MONO    = "'JetBrains Mono', monospace";
+const MONO    = "Archivo, sans-serif";
 const DISPLAY = "'Archivo Black', sans-serif";
 
 // ── Category + template catalogue ────────────────────────────────────────────

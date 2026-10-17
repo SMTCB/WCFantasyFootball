@@ -27,7 +27,7 @@ export default function NotFoundScreen() {
           Page not found
         </div>
         <p style={{
-          fontFamily: 'JetBrains Mono, monospace',
+          fontFamily: 'Archivo, sans-serif',
           fontSize: 'var(--fs-label)',
           color:      'var(--mute)',
           lineHeight: 1.6,

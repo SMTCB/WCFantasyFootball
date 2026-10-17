@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { usePlayerFullStats, buildBreakdownItems } from '../../hooks/usePlayerFullStats';
 import { POS_TONE } from '../../lib/formations';
 
-const MO = { fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '.14em' };
+const MO = { fontFamily: 'Archivo, sans-serif', textTransform: 'uppercase', letterSpacing: '.14em' };
 
 const STATUS_C = { fit: 'var(--positive)', doubt: 'var(--gold)', returning: 'var(--gold)', out: 'var(--danger)' };
 const STATUS_L = { fit: 'AVAILABLE', doubt: 'DOUBTFUL', returning: 'RETURNING', out: 'INJURED' };

@@ -1152,7 +1152,7 @@ export default function LeagueScreen() {
               >
                 <div className="flex items-center gap-2 w-full">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Draft + H2H</span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>⚔️ H2H</span>
+                  <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>⚔️ H2H</span>
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Draft league with a parallel head-to-head competition each matchday.</span>
                 <ul className="flex flex-col gap-[3px]">
@@ -1432,16 +1432,16 @@ export default function LeagueScreen() {
                  borderBottom: '1px solid rgba(224,168,0,0.25)',
                  flexShrink: 0,
                }}>
-                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
+                 <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
                    ⇄ Trade proposals
                  </span>
                  {incomingTrades.length > 0 && (
-                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>
+                   <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>
                      {incomingTrades.length} INCOMING
                    </span>
                  )}
                  {outgoingTrades.length > 0 && (
-                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+                   <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                      {outgoingTrades.length} SENT
                    </span>
                  )}
@@ -1804,7 +1804,7 @@ export default function LeagueScreen() {
                      {activeLeague?.leagues?.format === 'noduplicate' && managerTeamView.user_id !== currentUser?.id && (
                        <button className="hit-44"
                          onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
-                         style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', background: 'transparent', border: '1px solid rgba(26,111,168,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
+                         style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)', background: 'transparent', border: '1px solid rgba(26,111,168,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
                        >TRADE</button>
                      )}
                    </div>

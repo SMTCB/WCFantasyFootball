@@ -2,7 +2,7 @@ import { TypeChip, RankBadge, ArchivedBadge } from './LeagueBadges';
 import { TYPE_COLOR } from './LeagueBadgeHelpers';
 
 const DISPLAY = "'Archivo Black', sans-serif";
-const MONO = "'JetBrains Mono', monospace";
+const MONO = "Archivo, sans-serif";
 
 const archiveToggleStyle = {
   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',

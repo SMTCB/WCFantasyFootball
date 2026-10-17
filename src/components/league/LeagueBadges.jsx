@@ -11,7 +11,7 @@ export function TypeChip({ type, format }) {
         border: `1px solid ${c}44`,
         background: `${c}12`,
         color: c,
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
+        fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
         textTransform: 'uppercase', whiteSpace: 'nowrap',
       }}
     >
@@ -29,7 +29,7 @@ export function ArchivedBadge() {
         border: '1px solid var(--rule)',
         background: 'var(--elev)',
         color: 'var(--mute)',
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
+        fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
         textTransform: 'uppercase', whiteSpace: 'nowrap',
       }}
     >
@@ -47,7 +47,7 @@ export function FinishedBadge() {
         border: '1px solid color-mix(in srgb, var(--gold) 40%, transparent)',
         background: 'color-mix(in srgb, var(--gold) 12%, transparent)',
         color: 'var(--gold)',
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
+        fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', letterSpacing: '.16em', fontWeight: 600,
         textTransform: 'uppercase', whiteSpace: 'nowrap',
       }}
     >

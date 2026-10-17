@@ -7,7 +7,7 @@ import useConfirmDialog from '../../hooks/useConfirmDialog';
 // CLAUDE.md (same module imported at two different depths). See PRs #300s
 // history: HubShared's MONO/DISPLAY were inlined into BetCreatorPanel for
 // the same reason.
-const MONO    = "'JetBrains Mono', monospace";
+const MONO    = "Archivo, sans-serif";
 const BODY    = "'Archivo', sans-serif";
 
 const COPY = {

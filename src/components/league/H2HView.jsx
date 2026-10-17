@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 
 // Inlined to avoid Rolldown TDZ — do NOT import from HubShared or HubConstants here
-const MONO    = "'JetBrains Mono', monospace";
+const MONO    = "Archivo, sans-serif";
 const DISPLAY = "'Archivo Black', sans-serif";
 
 function mgrHue(str = '') {
