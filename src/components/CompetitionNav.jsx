@@ -4,10 +4,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSport } from '../context/SportContext';
 import {
-  NavIconLive,
-  NavIconSquad,
-  NavIconMarket,
-  NavIconRecap,
+  NavIconClubhouse,
   NavIconWishlist,
   NavIconF1Calendar,
   NavIconF1Standings,
@@ -48,22 +45,31 @@ const TENNIS_SCREENS = [
   { key: 'ten-lb',   label: 'LEADERBOARD', path: '/tennis/leaderboard', Icon: null },
 ];
 
+const CHEVRON = (open) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s', flexShrink: 0 }}><path d="M6 9l6 6 6-6" /></svg>
+);
+
+function UnreadDot({ count }) {
+  if (!(count > 0)) return null;
+  return (
+    <span className="num" style={{
+      minWidth: 18, height: 18, borderRadius: 9, background: 'var(--crit)', color: 'var(--on-accent)',
+      fontSize: 'var(--fs-micro)', fontWeight: 700, display: 'inline-flex', alignItems: 'center',
+      justifyContent: 'center', padding: '0 5px', flexShrink: 0,
+    }}>{count > 99 ? '99+' : count}</span>
+  );
+}
+
 /**
- * CompetitionNav — merged top-bar: a single "where am I" dropdown (this
- * Clubhouse + its competitions, plus a switcher to other Clubhouses) on row 1,
- * and the current sport's screen tabs (Live/Squad/Market/Digest, F1, Tennis)
- * on row 2. Replaces the old CompetitionTopBar (flat competition pill list)
- * and CompetitionScreenNav — same two rows, but row 1 is now a compact
- * dropdown instead of an ever-growing row of pills, and it works identically
- * on mobile and desktop (no separate mobile treatment needed).
+ * ClubhouseSwitcher — one pill showing "Clubhouse / Competition" that opens the
+ * picker (clubhouses, this clubhouse's competitions, hub, new, invite). Used in
+ * the desktop top bar and as row 1 of CompetitionNav on mobile.
  */
-export function CompetitionNav({
-  myCircles, activeCircleId, onSelectCircle,
-  competitions, pathname, onAdd, onInvite, hasClubhouse = true, clubhouseName,
-  paddockId,
+export function ClubhouseSwitcher({
+  myCircles, activeCircleId, onSelectCircle, competitions, pathname,
+  onAdd, onInvite, clubhouseName, unreadCount = 0, grow = false,
 }) {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { setActivePlayerBoxId } = useSport();
   const active = extractActiveCompId(pathname);
   const isClubhouseHome = /^\/clubhouse(\/[^/]+)?$/.test(pathname);
@@ -74,7 +80,7 @@ export function CompetitionNav({
 
   const openMenu = () => {
     const rect = buttonRef.current.getBoundingClientRect();
-    setMenuPos({ top: rect.bottom + 6, left: rect.left });
+    setMenuPos({ top: rect.bottom + 6, left: Math.max(8, Math.min(rect.left, window.innerWidth - 268)) });
     setMenuOpen(true);
   };
 
@@ -117,6 +123,191 @@ export function CompetitionNav({
       navigate(`/league/${comp.id}`);
     }
   };
+
+  const activeComp = allComps.find(c => active && c.id === active.id && c.sport === active.sport);
+
+  return (
+    <>
+      <button className="hit-44"
+          ref={buttonRef}
+          onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            minWidth: 0, flex: grow ? '1 1 auto' : '0 1 auto',
+            minHeight: 'var(--tap)', padding: '6px 14px', borderRadius: 22,
+            background: menuOpen ? 'var(--accent-soft)' : 'var(--elev)',
+            border: 'none', maxWidth: '100%',
+            cursor: 'pointer', textAlign: 'left',
+          }}
+        >
+          <NavIconClubhouse size={18} />
+          <span style={{
+            minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)',
+          }}>
+            {clubhouseName ?? 'Clubhouse'}
+          </span>
+          {activeComp && (
+            <>
+              <span aria-hidden="true" style={{ color: 'var(--mute)', flexShrink: 0 }}>/</span>
+              <span aria-hidden="true" style={{
+                display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                background: SPORT_COLOR[activeComp.sport] ?? 'var(--mute)', flexShrink: 0,
+              }} />
+              <span style={{
+                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)',
+              }}>
+                {activeComp.name}
+              </span>
+            </>
+          )}
+          <UnreadDot count={unreadCount} />
+          <span style={{ marginLeft: 'auto', color: 'var(--mute)', display: 'inline-flex' }}>{CHEVRON(menuOpen)}</span>
+        </button>
+
+      {menuOpen && menuPos && createPortal(
+        <div
+          ref={dropdownRef}
+          role="menu"
+          style={{
+            position: 'fixed', top: menuPos.top, left: menuPos.left,
+            background: 'var(--card)', border: '1px solid var(--rule)',
+            borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.25)', zIndex: 'var(--z-toast)',
+            overflow: 'hidden', width: 260, maxHeight: '70vh', overflowY: 'auto',
+          }}
+        >
+          {myCircles.length > 1 && (
+            <>
+              <div style={{ padding: '10px 14px 6px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+                Your clubhouses
+              </div>
+              {myCircles.map((c, i) => {
+                const isActive = c.id === activeCircleId;
+                return (
+                  <button
+                    key={c.id}
+                    role="menuitem"
+                    onClick={() => { setMenuOpen(false); onSelectCircle(c.id); }}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 14px', minHeight: 'var(--tap)', border: 'none', textAlign: 'left', cursor: 'pointer',
+                      background: isActive ? 'var(--elev)' : 'transparent',
+                      color: isActive ? 'var(--paper)' : 'var(--mute)',
+                      fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
+                    }}
+                  >
+                    <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: IDENTITY_COLORS[i % IDENTITY_COLORS.length] }} />
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                    {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>✓</span>}
+                  </button>
+                );
+              })}
+              <div style={{ borderTop: '1px solid var(--rule)' }} />
+            </>
+          )}
+
+          <div style={{ padding: '10px 14px 6px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+            {clubhouseName ?? 'This clubhouse'}
+          </div>
+          <button
+            role="menuitem"
+            onClick={() => { setMenuOpen(false); navigate('/clubhouse'); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 14px', minHeight: 'var(--tap)', border: 'none', textAlign: 'left', cursor: 'pointer',
+              background: isClubhouseHome ? 'var(--elev)' : 'transparent',
+              color: isClubhouseHome ? 'var(--paper)' : 'var(--mute)',
+              fontSize: 'var(--fs-label)', fontWeight: isClubhouseHome ? 600 : 500,
+            }}
+          >
+            <NavIconClubhouse size={18} />
+            <span style={{ flex: 1 }}>Clubhouse hub</span>
+            <UnreadDot count={unreadCount} />
+          </button>
+          {allComps.map(comp => {
+            const isActive = active?.id === comp.id && active?.sport === comp.sport;
+            const color = SPORT_COLOR[comp.sport] ?? 'var(--mute)';
+            return (
+              <button
+                key={`${comp.sport}-${comp.id}`}
+                role="menuitem"
+                onClick={() => goToComp(comp)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 14px', minHeight: 'var(--tap)', border: 'none', textAlign: 'left', cursor: 'pointer',
+                  background: isActive ? 'var(--elev)' : 'transparent',
+                  color: isActive ? 'var(--paper)' : 'var(--mute)',
+                  fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
+                }}
+              >
+                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: color }} />
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comp.name}</span>
+                {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>✓</span>}
+              </button>
+            );
+          })}
+
+          <div style={{ borderTop: '1px solid var(--rule)' }} />
+          <button
+            role="menuitem"
+            onClick={() => { setMenuOpen(false); onAdd(); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 14px', minHeight: 'var(--tap)', border: 'none', textAlign: 'left', cursor: 'pointer',
+              background: 'transparent', color: 'var(--paper)',
+              fontSize: 'var(--fs-label)', fontWeight: 500,
+            }}
+          >
+            <span aria-hidden="true"><IconTrophy size={20} /></span>
+            Add competition
+          </button>
+          {onInvite && (
+            <button
+              role="menuitem"
+              onClick={() => { setMenuOpen(false); onInvite(); }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px', border: 'none', borderTop: '1px solid var(--rule)',
+                textAlign: 'left', cursor: 'pointer',
+                background: 'transparent', color: 'var(--paper)',
+                fontSize: 'var(--fs-label)', fontWeight: 500,
+              }}
+            >
+              Invite to Clubhouse
+            </button>
+          )}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
+/**
+ * CompetitionNav — merged top-bar: a single "where am I" dropdown (this
+ * Clubhouse + its competitions, plus a switcher to other Clubhouses) on row 1,
+ * and the current sport's screen tabs (Live/Squad/Market/Digest, F1, Tennis)
+ * on row 2. Replaces the old CompetitionTopBar (flat competition pill list)
+ * and CompetitionScreenNav — same two rows, but row 1 is now a compact
+ * dropdown instead of an ever-growing row of pills, and it works identically
+ * on mobile and desktop (no separate mobile treatment needed).
+ */
+export function CompetitionNav({
+  myCircles, activeCircleId, onSelectCircle,
+  competitions, pathname, onAdd, onInvite, hasClubhouse = true, clubhouseName,
+  paddockId, unreadCount = 0,
+}) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const active = extractActiveCompId(pathname);
+  const allComps = [
+    ...(competitions.football ?? []).map(c => ({ ...c, sport: 'football' })),
+    ...(competitions.f1      ?? []).map(c => ({ ...c, sport: 'f1' })),
+    ...(competitions.tennis  ?? []).map(c => ({ ...c, sport: 'tennis' })),
+  ];
 
   const activeComp = allComps.find(c => active && c.id === active.id && c.sport === active.sport);
 
@@ -170,6 +361,7 @@ export function CompetitionNav({
       <div
         role="navigation"
         aria-label="Clubhouse and competition"
+        className="lg:hidden"
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           borderBottom: '1px solid var(--rule)',
@@ -178,44 +370,11 @@ export function CompetitionNav({
           flexShrink: 0,
         }}
       >
-        <button className="hit-44"
-          ref={buttonRef}
-          onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            minWidth: 0, flex: '1 1 auto',
-            padding: '6px 10px', borderRadius: 7,
-            background: menuOpen ? 'var(--elev)' : 'transparent',
-            border: '1px solid var(--rule)',
-            cursor: 'pointer', textAlign: 'left',
-          }}
-        >
-          <span aria-hidden="true">🏠</span>
-          <span style={{
-            minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)',
-          }}>
-            {clubhouseName ?? 'Clubhouse'}
-          </span>
-          {activeComp && (
-            <>
-              <span aria-hidden="true" style={{ color: 'var(--mute)', flexShrink: 0 }}>›</span>
-              <span aria-hidden="true" style={{
-                display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
-                background: SPORT_COLOR[activeComp.sport] ?? 'var(--mute)', flexShrink: 0,
-              }} />
-              <span style={{
-                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)',
-              }}>
-                {activeComp.name}
-              </span>
-            </>
-          )}
-          <span aria-hidden="true" style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', opacity: 0.6, color: 'var(--mute)', transform: menuOpen ? 'rotate(180deg)' : 'none', transition: 'transform .12s', flexShrink: 0 }}>⌄</span>
-        </button>
+        <ClubhouseSwitcher
+          myCircles={myCircles} activeCircleId={activeCircleId} onSelectCircle={onSelectCircle}
+          competitions={competitions} pathname={pathname} onAdd={onAdd} onInvite={onInvite}
+          clubhouseName={clubhouseName} unreadCount={unreadCount} grow
+        />
 
         <button
           onClick={hasClubhouse ? onAdd : () => navigate('/home')}
@@ -230,121 +389,6 @@ export function CompetitionNav({
           }}
         >+</button>
       </div>
-
-      {menuOpen && menuPos && createPortal(
-        <div
-          ref={dropdownRef}
-          role="menu"
-          style={{
-            position: 'fixed', top: menuPos.top, left: menuPos.left,
-            background: 'var(--card)', border: '1px solid var(--rule)',
-            borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.25)', zIndex: 'var(--z-toast)',
-            overflow: 'hidden', width: 260, maxHeight: '70vh', overflowY: 'auto',
-          }}
-        >
-          {myCircles.length > 1 && (
-            <>
-              <div style={{ padding: '9px 14px 5px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-                Your clubhouses
-              </div>
-              {myCircles.map((c, i) => {
-                const isActive = c.id === activeCircleId;
-                return (
-                  <button
-                    key={c.id}
-                    role="menuitem"
-                    onClick={() => { setMenuOpen(false); onSelectCircle(c.id); }}
-                    style={{
-                      width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '8px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-                      background: isActive ? 'var(--elev)' : 'transparent',
-                      color: isActive ? 'var(--paper)' : 'var(--mute)',
-                      fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
-                    }}
-                  >
-                    <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: IDENTITY_COLORS[i % IDENTITY_COLORS.length] }} />
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-                    {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>✓</span>}
-                  </button>
-                );
-              })}
-              <div style={{ borderTop: '1px solid var(--rule)' }} />
-            </>
-          )}
-
-          <div style={{ padding: '9px 14px 5px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-            {(clubhouseName ?? 'This clubhouse').toUpperCase()}
-          </div>
-          <button
-            role="menuitem"
-            onClick={() => { setMenuOpen(false); navigate('/clubhouse'); }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-              background: isClubhouseHome ? 'var(--elev)' : 'transparent',
-              color: isClubhouseHome ? 'var(--paper)' : 'var(--mute)',
-              fontSize: 'var(--fs-label)', fontWeight: isClubhouseHome ? 600 : 500,
-            }}
-          >
-            <span aria-hidden="true">🏠</span>
-            Frontpage
-          </button>
-          {allComps.map(comp => {
-            const isActive = active?.id === comp.id && active?.sport === comp.sport;
-            const color = SPORT_COLOR[comp.sport] ?? 'var(--mute)';
-            return (
-              <button
-                key={`${comp.sport}-${comp.id}`}
-                role="menuitem"
-                onClick={() => goToComp(comp)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-                  background: isActive ? 'var(--elev)' : 'transparent',
-                  color: isActive ? 'var(--paper)' : 'var(--mute)',
-                  fontSize: 'var(--fs-label)', fontWeight: isActive ? 600 : 500,
-                }}
-              >
-                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: color }} />
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comp.name}</span>
-                {isActive && <span aria-hidden="true" style={{ fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>✓</span>}
-              </button>
-            );
-          })}
-
-          <div style={{ borderTop: '1px solid var(--rule)' }} />
-          <button
-            role="menuitem"
-            onClick={() => { setMenuOpen(false); onAdd(); }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 14px', border: 'none', textAlign: 'left', cursor: 'pointer',
-              background: 'transparent', color: 'var(--paper)',
-              fontSize: 'var(--fs-label)', fontWeight: 500,
-            }}
-          >
-            <span aria-hidden="true"><IconTrophy size={20} /></span>
-            New competition
-          </button>
-          {onInvite && (
-            <button
-              role="menuitem"
-              onClick={() => { setMenuOpen(false); onInvite(); }}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                padding: '10px 14px', border: 'none', borderTop: '1px solid var(--rule)',
-                textAlign: 'left', cursor: 'pointer',
-                background: 'transparent', color: 'var(--paper)',
-                fontSize: 'var(--fs-label)', fontWeight: 500,
-              }}
-            >
-              <span aria-hidden="true">💬</span>
-              Invite to Clubhouse
-            </button>
-          )}
-        </div>,
-        document.body
-      )}
 
       {/* ── Row 2: sport screen tabs ── */}
       {screens.length > 0 && (
