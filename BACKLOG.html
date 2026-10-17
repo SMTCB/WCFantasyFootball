@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>274</strong><span>closed</span></div>
+      <div class="total-pill"><strong>275</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (191)</span>
+    <span class="chip" data-filter-kind="done">Shipped (192)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">274</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">275</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">191</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">192</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,7 +1396,7 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">191</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">192</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — wave 0 + wave 1 (football league screens) (2026-10-17) — prs #1059–#1065, rollback tag `rollback/pre-redesign-2026-10-17` @ 6b56bfa 
 
@@ -1429,6 +1429,36 @@ built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, r
 <li><strong>#1063 1d</strong> Squad/Market/Live share the league tab row (<code>LeagueRouteTabs</code>).</li>
 <li><strong>#1064 1e</strong> Recap + Market report · <strong>#1065 1f</strong> Bets, Betting leaderboard, Bet creator, Stats, H2H, Trading (sentence-case labels, token colours, pill badges; logic untouched).</li>
 <li>Open / next: Wave 3 (F1 + tennis), then Waves 4–5; dark mode now exposed (Wave 2), CI Security job failing on npm advisories (@capacitor/ios, @capacitor/android, source-map-js) — unrelated, separate follow-up. Wave 1 was not visually verified locally (no league data in dev); checked on Vercel previews.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — cleanup and dark-mode pass (2026-10-17) — prs #1083–#1086 
+
+- **#1083** removed the legacy `--cyan`/`--ink*`/`--accent-bg` alias tokens (36 files + index.css). **#1084** dark-mode audit: only the squad swap banner had a hardcoded light surface; fixed. **#1085** f1 header marker now uses `--f1`; lighter `--f1`/`--ten` in the dark theme. **#1086** `npm audit fix` (lockfile only, 0 vulnerabilities).
+- deliberately left: `gazettedraftreport` cream paper panel, pitch components and trophy cabinet (dark by design), brand colours. ~63 tailwind fixed-colour classes remain (mostly gazette/betwidget).
+- open / next: `--shell*`/`--on-shell*` tokens still used for dark bars (market, squad, league, pitch) — needs dedicated pitch tokens before removal; **ci security job still fails on the edge function drift check** (calculate-scores, generate-frontpage-edition, ingest-match-events, run-wishlist-draft changed since last recorded deploy — needs deploy approval then `npm run update:checksums`), not npm. visual/dark-mode qa on vercel previews still outstanding.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Frontrow redesign — cleanup and dark-mode pass</h3>
+        <p class="card-summary">#1083 removed the legacy --cyan / --ink* / --accent-bg alias tokens (36 files + index.css). #1084 dark-mode audit: only the Squad swap banner had a hardcoded light…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-17</span><span class="foot-refs">PRs #1083–#1086</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Frontrow redesign — cleanup and dark-mode pass</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>#1083 removed the legacy --cyan / --ink* / --accent-bg alias tokens (36 files + index.css). #1084 dark-mode audit: only the Squad swap banner had a hardcoded light…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #1083–#1086</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-17</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><ul>
+<li><strong>#1083</strong> removed the legacy <code>--cyan</code>/<code>--ink*</code>/<code>--accent-bg</code> alias tokens (36 files + index.css). <strong>#1084</strong> dark-mode audit: only the Squad swap banner had a hardcoded light surface; fixed. <strong>#1085</strong> F1 header marker now uses <code>--f1</code>; lighter <code>--f1</code>/<code>--ten</code> in the dark theme. <strong>#1086</strong> <code>npm audit fix</code> (lockfile only, 0 vulnerabilities).</li>
+<li>Deliberately left: <code>GazetteDraftReport</code> cream paper panel, pitch components and trophy cabinet (dark by design), brand colours. ~63 Tailwind fixed-colour classes remain (mostly Gazette/BetWidget).</li>
+<li>Open / next: <code>--shell*</code>/<code>--on-shell*</code> tokens still used for dark bars (Market, Squad, League, pitch) — needs dedicated pitch tokens before removal; <strong>CI Security job still fails on the Edge Function drift check</strong> (calculate-scores, generate-frontpage-edition, ingest-match-events, run-wishlist-draft changed since last recorded deploy — needs deploy approval then <code>npm run update:checksums</code>), not npm. Visual/dark-mode QA on Vercel previews still outstanding.</li>
 </ul>
 <hr></dd></div>
       </dl></template>
