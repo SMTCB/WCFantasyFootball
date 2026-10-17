@@ -371,7 +371,7 @@ function MatchdayDeadlines({ tournamentId }) {
     <Section title="Matchday Deadlines" sub="Squad lock / unlock windows per round">
       {/* Override toggle */}
       <div className="flex items-center justify-between mb-3 p-2 border border-border rounded"
-        style={{ background: overrideMode ? 'rgba(240,180,0,0.07)' : 'var(--shell-fill)' }}>
+        style={{ background: overrideMode ? 'rgba(240,180,0,0.07)' : 'var(--elev)' }}>
         <div>
           <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: overrideMode ? 'var(--gold)' : 'var(--mute)' }}>
             {overrideMode ? '✏ Override mode — editing enabled' : '⚙ Auto-managed by fixture sync'}
@@ -384,11 +384,10 @@ function MatchdayDeadlines({ tournamentId }) {
           onClick={handleToggleOverride}
           className="hit-44 ml-4 text-[11px] font-black uppercase px-3 py-1.5 border transition-colors flex-shrink-0"
           style={{
-            border:     overrideMode ? '1px solid rgba(240,180,0,0.6)' : '1px solid var(--shell-rule-emphasis)',
+            border:     overrideMode ? '1px solid rgba(240,180,0,0.6)' : '1px solid var(--rule)',
             color:      overrideMode ? 'var(--gold)' : 'var(--mute)',
             background: 'transparent',
             cursor:     'pointer',
-            letterSpacing: '.12em',
           }}
         >
           {overrideMode ? 'LOCK' : 'OVERRIDE'}
