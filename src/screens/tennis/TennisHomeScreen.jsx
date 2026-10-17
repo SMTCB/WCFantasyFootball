@@ -44,12 +44,12 @@ export default function TennisHomeScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
 
       {/* Header */}
-      <div style={{ background: 'var(--shell)', borderLeft: '4px solid var(--ten)', padding: '24px 20px 20px 16px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 6 }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '24px 20px 20px 16px' }}>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
           🎾 Tennis · 2026 ATP Season
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0 }}>
+          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>
             {activeBox ? activeBox.name : 'Tennis'}{activeBox?.archived ? ' (Archived)' : ''}
           </h1>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -57,7 +57,7 @@ export default function TennisHomeScreen() {
               <button className="hit-44"
                 onClick={() => setShowSettings(true)}
                 aria-label="Player's Box settings"
-                style={{ padding: '6px 9px', background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--on-accent)' }}
+                style={{ padding: '6px 9px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-accent)' }}
               >
                 ⚙
               </button>
@@ -66,7 +66,7 @@ export default function TennisHomeScreen() {
               <select
                 value={activeBox?.player_box_id ?? ''}
                 onChange={e => setActivePlayerBoxId(e.target.value)}
-                style={{ background: 'var(--shell-fill-strong)', color: 'var(--on-accent)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+                style={{ background: 'var(--elev)', color: 'var(--text)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
               >
                 {visibleBoxes.map(b => (
                   <option key={b.player_box_id} value={b.player_box_id}>{b.name}{b.archived ? ' (Archived)' : ''}</option>
@@ -76,20 +76,20 @@ export default function TennisHomeScreen() {
           </div>
         </div>
         {activeBox && (
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', margin: '6px 0 0', letterSpacing: '0.1em' }}>
+          <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '6px 0 0' }}>
             {activeBox.member_count} {activeBox.member_count === 1 ? 'member' : 'members'} · CODE: {activeBox.invite_code}
           </p>
         )}
         {archivedBoxCount > 0 && (
           <button
             onClick={() => setShowArchived(v => !v)}
-            style={{ marginTop: 6, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--on-shell-dim)' }}
+            style={{ marginTop: 6, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
           >
             {showArchived ? 'HIDE' : 'SHOW'} ARCHIVED BOXES ({archivedBoxCount})
           </button>
         )}
         {activeBox?.archived && (
-          <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--shell-fill-strong)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', color: 'var(--on-shell-mid)' }}>
+          <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             ARCHIVED — this player's box is inactive.
           </div>
         )}
@@ -111,7 +111,7 @@ export default function TennisHomeScreen() {
 
         {/* No-box CTA */}
         {noBox && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '24px 20px', textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '24px 20px', textAlign: 'center', marginBottom: 20 }}>
             <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🎾</div>
             <p style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--paper)', margin: '0 0 8px' }}>
               Join a Player's Box to start competing
@@ -121,7 +121,7 @@ export default function TennisHomeScreen() {
             </p>
             <button
               onClick={() => navigate('/tennis/box')}
-              style={{ padding: '11px 28px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
+              style={{ padding: '11px 28px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
             >
               Create or join a box
             </button>
@@ -130,18 +130,18 @@ export default function TennisHomeScreen() {
 
         {/* Action banner — active tournament */}
         {activeOrNext && (activeOrNext.status === 'roster_open' || activeOrNext.status === 'qf_captain_open') && (
-          <div style={{ background: activeOrNext.status === 'qf_captain_open' ? 'var(--gold)' : 'var(--ten)', borderRadius: 6, padding: '14px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: activeOrNext.status === 'qf_captain_open' ? 'var(--gold)' : 'var(--ten)', borderRadius: 'var(--radius)', padding: '14px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-mid)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
                 {activeOrNext.status === 'qf_captain_open' ? 'QF Captain window open' : 'Roster selection open'}
               </div>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--on-accent)' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--text)' }}>
                 {activeOrNext.name}
               </div>
             </div>
             <button
               onClick={() => navigate(`/tennis/tournament/${activeOrNext.tournament_id ?? activeOrNext.id}`)}
-              style={{ padding: '9px 18px', background: 'var(--shell-fill-active)', color: 'var(--on-accent)', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              style={{ padding: '9px 18px', background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
               {activeOrNext.status === 'qf_captain_open' ? 'Pick captain →' : 'Pick squad →'}
             </button>
@@ -150,7 +150,7 @@ export default function TennisHomeScreen() {
 
         {/* Leaderboard snapshot */}
         {activeBox && !lbLoading && standings.length > 0 && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, marginBottom: 20 }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', marginBottom: 20 }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Season Standings</span>
               <button
@@ -200,7 +200,7 @@ export default function TennisHomeScreen() {
                   key={t.tournament_id ?? t.id}
                   onClick={() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`)}
                   style={{
-                    background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6,
+                    background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)',
                     padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
                     cursor: isClickable ? 'pointer' : 'default',
                     opacity: t.status === 'upcoming' ? 0.42 : 1,
@@ -212,7 +212,7 @@ export default function TennisHomeScreen() {
                       <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>
                         {t.name}
                       </span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: tb.color, background: tb.bg, borderRadius: 3, padding: '2px 6px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: tb.color, background: tb.bg, borderRadius: 3, padding: '2px 6px' }}>
                         {tb.label}
                       </span>
                     </div>
@@ -221,7 +221,7 @@ export default function TennisHomeScreen() {
                         {formatDate(t.start_date)} – {formatDate(t.end_date)}
                       </span>
                       {t.player_count > 0 && (
-                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>
+                        <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                           {t.player_count} players
                         </span>
                       )}
@@ -229,14 +229,14 @@ export default function TennisHomeScreen() {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{
-                      fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 600, color: st.color,
+                      fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 600, color: st.color,
                       background: st.bg, display: 'inline-block', padding: st.outline ? '3px 9px' : '4px 10px',
                       borderRadius: 4, border: st.outline ? '1px solid var(--rule)' : 'none',
                     }}>
                       {st.label}
                     </div>
                     {t.has_my_roster && (
-                      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--pos)', letterSpacing: '0.08em', marginTop: 2 }}>
+                      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--pos)', marginTop: 2 }}>
                         Squad set ✓
                       </div>
                     )}

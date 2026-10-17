@@ -36,7 +36,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
       <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: 0 }}>No tennis scores yet this season.</p>
       <button
         onClick={() => navigate('/tennis')}
-        style={{ marginTop: 12, padding: '9px 18px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
+        style={{ marginTop: 12, padding: '9px 18px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
       >
         Enter the Player's Box
       </button>
@@ -50,7 +50,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>🎾 Tennis 2026</div>
         <div>
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em', marginRight: 6 }}>SEASON</span>
+          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginRight: 6 }}>SEASON</span>
           <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--accent)' }}>{seasonTotal.toLocaleString()}</span>
         </div>
       </div>
@@ -60,14 +60,14 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
           <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => s.tournament?.id && navigate(`/tennis/tournament/${s.tournament.id}`))(e); } }}
             key={s.tournament?.id}
             onClick={() => s.tournament?.id && navigate(`/tennis/tournament/${s.tournament.id}`)}
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer' }}
           >
             <span style={{ fontSize: 'var(--fs-heading)' }}>{SURFACE_ICON[s.tournament?.surface] ?? '🎾'}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {s.tournament?.name ?? '—'}
               </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
                 {TYPE_LABEL[s.tournament?.tournament_type] ?? ''}
               </div>
             </div>
@@ -76,7 +76,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
                 {s.total_points.toLocaleString()}
               </div>
               {(s.ace_card_bonus > 0 || s.captain_bonus > 0) && (
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: '0.06em' }}>
+                <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
                   {s.ace_card_bonus > 0 && `+${s.ace_card_bonus} ace`}
                   {s.ace_card_bonus > 0 && s.captain_bonus > 0 && ' · '}
                   {s.captain_bonus > 0 && `+${s.captain_bonus} cap`}

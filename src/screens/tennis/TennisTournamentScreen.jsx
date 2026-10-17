@@ -82,17 +82,17 @@ export default function TennisTournamentScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '20px 16px' }}>
-        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--on-shell-dim)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '20px 16px' }}>
+        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Back
         </button>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 4 }}>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
           {tournament.tournament_type === 'grand_slam' ? 'Grand Slam' : tournament.tournament_type === 'atp_finals' ? 'ATP Finals' : 'Masters 1000'} · {tournament.surface}
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-accent)', margin: '0 0 4px' }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: '0 0 4px' }}>
           {tournament.name}
         </h1>
-        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)' }}>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           {new Date(tournament.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {new Date(tournament.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
       </div>
@@ -101,8 +101,8 @@ export default function TennisTournamentScreen() {
 
         {/* Score card (completed) */}
         {isCompleted && score && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', marginBottom: 20, textAlign: 'center' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20, textAlign: 'center' }}>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
               Your Score
             </div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--accent)' }}>
@@ -118,7 +118,7 @@ export default function TennisTournamentScreen() {
 
         {/* QF Captain picker */}
         {isQfOpen && !isAtp && (
-          <div style={{ background: 'var(--card)', border: `2px solid var(--gold)`, borderRadius: 6, padding: '16px', marginBottom: 20 }}>
+          <div style={{ background: 'var(--card)', border: `2px solid var(--gold)`, borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
               ⚡ QF Captain Window Open
             </div>
@@ -126,7 +126,7 @@ export default function TennisTournamentScreen() {
               Select one of your surviving players as captain. They earn 2× points for the rest of the tournament.
             </p>
             {captain && (
-              <div style={{ background: 'var(--elev)', borderRadius: 6, padding: '10px 12px', marginBottom: 12, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>
+              <div style={{ background: 'var(--elev)', borderRadius: 'var(--radius)', padding: '10px 12px', marginBottom: 12, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>
                 Current captain: <strong>{players.find(p => p.id === captain.captain_player_id)?.player_name ?? '—'}</strong>
               </div>
             )}
@@ -142,12 +142,12 @@ export default function TennisTournamentScreen() {
                   style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '10px 14px', border: `1px solid ${captain?.captain_player_id === p.id ? 'var(--gold)' : 'var(--rule)'}`,
-                    borderRadius: 6, background: captain?.captain_player_id === p.id ? 'rgba(184,114,14,0.08)' : 'var(--card)',
+                    borderRadius: 'var(--radius)', background: captain?.captain_player_id === p.id ? 'rgba(184,114,14,0.08)' : 'var(--card)',
                     cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)',
                   }}
                 >
                   <span>{p.player_name}</span>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                     {TIER_LABEL[p.tier]} {captain?.captain_player_id === p.id ? '· ⭐ Captain' : ''}
                   </span>
                 </button>
@@ -159,13 +159,13 @@ export default function TennisTournamentScreen() {
 
         {/* Existing roster display */}
         {roster && !isRosterOpen && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', marginBottom: 20 }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 12 }}>
               Your Squad
             </div>
             {TIER_SLOTS.map(({ tier, keys, label }) => (
               <div key={tier} style={{ marginBottom: 12 }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
+                <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
                   {label} — {TIER_LABEL[tier]}
                 </div>
                 {keys.map(k => {
@@ -179,7 +179,7 @@ export default function TennisTournamentScreen() {
               </div>
             ))}
             {usedCard && (
-              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--elev)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text2)' }}>
+              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text2)' }}>
                 {ACE_CARD_INFO[usedCard.card_type]?.icon} Ace Card played: <strong>{ACE_CARD_INFO[usedCard.card_type]?.label}</strong>
               </div>
             )}
@@ -189,13 +189,13 @@ export default function TennisTournamentScreen() {
         {/* Roster picker form */}
         {isRosterOpen && !isAtp && (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px' }}>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px' }}>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 16 }}>
                 Pick your 7-player squad
               </div>
               {TIER_SLOTS.map(({ tier, keys, label }) => (
                 <div key={tier} style={{ marginBottom: 16 }}>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+                  <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
                     {label} — {TIER_LABEL[tier]} ({keys.length} pick{keys.length > 1 ? 's' : ''})
                   </div>
                   {keys.map(slotKey => (
@@ -203,7 +203,7 @@ export default function TennisTournamentScreen() {
                       <select
                         value={slots[slotKey] ?? ''}
                         onChange={e => setSlots(prev => ({ ...prev, [slotKey]: e.target.value || null }))}
-                        style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: slots[slotKey] ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: slots[slotKey] ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none' }}
                       >
                         <option value="">Select player…</option>
                         {tierPlayers(tier).map(p => (
@@ -220,7 +220,7 @@ export default function TennisTournamentScreen() {
 
             {/* Ace Card selector */}
             {availableAceCards.length > 0 && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px' }}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px' }}>
                 <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
                   Ace Card (optional)
                 </div>
@@ -231,7 +231,7 @@ export default function TennisTournamentScreen() {
                   <button
                     type="button"
                     onClick={() => setSelectedAce(null)}
-                    style={{ padding: '10px 14px', border: `1px solid ${!selectedAce ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, background: !selectedAce ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text2)' }}
+                    style={{ padding: '10px 14px', border: `1px solid ${!selectedAce ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', background: !selectedAce ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text2)' }}
                   >
                     No card this tournament
                   </button>
@@ -242,7 +242,7 @@ export default function TennisTournamentScreen() {
                         key={c.card_type}
                         type="button"
                         onClick={() => setSelectedAce(c.card_type)}
-                        style={{ padding: '10px 14px', border: `1px solid ${selectedAce === c.card_type ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, background: selectedAce === c.card_type ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer' }}
+                        style={{ padding: '10px 14px', border: `1px solid ${selectedAce === c.card_type ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', background: selectedAce === c.card_type ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer' }}
                       >
                         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', marginBottom: 2 }}>
                           {info.icon} {info.label}
@@ -259,7 +259,7 @@ export default function TennisTournamentScreen() {
             <button
               type="submit"
               disabled={busy}
-              style={{ padding: '13px', background: busy ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}
             >
               {busy ? 'Locking squad…' : roster ? 'Update squad →' : 'Lock squad →'}
             </button>
@@ -268,8 +268,8 @@ export default function TennisTournamentScreen() {
 
         {/* Upcoming / not-open state */}
         {tournament.status === 'upcoming' && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '24px 20px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '24px 20px', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
               Roster not yet open
             </div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '10px 0 0' }}>
@@ -280,8 +280,8 @@ export default function TennisTournamentScreen() {
 
         {/* In progress (no QF window) */}
         {tournament.status === 'in_progress' && !isQfOpen && roster && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>
               Tournament in progress
             </div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '8px 0 0' }}>
@@ -298,18 +298,18 @@ function RosterRow({ player, isCaptain }) {
   const tierColor = { 1: 'var(--gold)', 2: 'var(--accent)', 3: 'var(--text2)', 4: 'var(--neg)' };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--rule)' }}>
-      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: tierColor[player.tier] ?? 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.08em', minWidth: 16 }}>
+      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: tierColor[player.tier] ?? 'var(--mute)', minWidth: 16 }}>
         T{player.tier}
       </span>
       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1, fontWeight: 500 }}>
         {player.player_name} {isCaptain && '⭐'}
       </span>
       {player.eliminated ? (
-        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           {ROUND_LABEL[player.round_reached] ?? player.round_reached}
         </span>
       ) : (
-        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--pos)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--pos)' }}>
           Still in
         </span>
       )}
@@ -321,13 +321,13 @@ function ScorePill({ label, val, accent, gold }) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: gold ? 'var(--gold)' : accent ? 'var(--accent)' : 'var(--paper)' }}>{val}</div>
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
+      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{label}</div>
     </div>
   );
 }
 
 function Loader() {
-  return <div style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</div>;
+  return <div style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>;
 }
 
 function ErrorMsg({ msg, onBack }) {

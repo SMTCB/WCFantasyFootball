@@ -79,14 +79,14 @@ export default function PlayerBoxScreen() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', paddingBottom: 32 }}>
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '24px 20px 20px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 6 }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '24px 20px 20px' }}>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
           🎾 Tennis · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0, lineHeight: 1.1 }}>
           The Player's Box
         </h1>
-        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--on-shell-dim)', margin: '6px 0 0' }}>
+        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '6px 0 0' }}>
           Your private prediction group — create one or join a friend's.
         </p>
       </div>
@@ -118,7 +118,7 @@ export default function PlayerBoxScreen() {
         {tab === 'my' && (
           <div>
             {loading ? (
-              <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', textAlign: 'center', padding: 40 }}>
+              <div style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', textAlign: 'center', padding: 40 }}>
                 Loading…
               </div>
             ) : myBoxes.length === 0 ? (
@@ -129,7 +129,7 @@ export default function PlayerBoxScreen() {
                 </p>
                 <button
                   onClick={() => setTab('create')}
-                  style={{ padding: '10px 24px', background: 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '10px 24px', background: 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
                 >
                   Create your first box
                 </button>
@@ -137,7 +137,7 @@ export default function PlayerBoxScreen() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {visibleBoxes.map(b => (
-                  <div key={b.player_box_id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '14px 16px', opacity: b.archived ? 0.7 : 1 }}>
+                  <div key={b.player_box_id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', opacity: b.archived ? 0.7 : 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -147,7 +147,7 @@ export default function PlayerBoxScreen() {
                           {b.archived && <ArchivedBadge />}
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
+                          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                             {b.member_count} {b.member_count === 1 ? 'member' : 'members'}
                           </span>
                         </div>
@@ -157,27 +157,27 @@ export default function PlayerBoxScreen() {
                           <button
                             onClick={() => setSettingsBox(b)}
                             aria-label="Player's Box settings"
-                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
+                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
                           >
                             ⚙
                           </button>
                         )}
                         <button
                           onClick={() => enterBox(b.player_box_id)}
-                          style={{ padding: '8px 16px', background: 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '8px 16px', background: 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           Enter →
                         </button>
                       </div>
                     </div>
                     <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => copyCode(b.invite_code))(e); } }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 'var(--radius)', cursor: 'pointer' }}
                       onClick={() => copyCode(b.invite_code)}
                     >
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', fontWeight: 700, letterSpacing: '0.2em', color: 'var(--paper)', flex: 1 }}>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)', flex: 1 }}>
                         {b.invite_code}
                       </span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: copied === b.invite_code ? 'var(--pos)' : 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: copied === b.invite_code ? 'var(--pos)' : 'var(--mute)' }}>
                         {copied === b.invite_code ? 'Copied ✓' : 'Copy code'}
                       </span>
                     </div>
@@ -193,7 +193,7 @@ export default function PlayerBoxScreen() {
                 )}
                 <button
                   onClick={() => setTab('create')}
-                  style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 6, background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer' }}
+                  style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer' }}
                 >
                   + Create another box
                 </button>
@@ -224,13 +224,13 @@ export default function PlayerBoxScreen() {
           ) : (
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
                 Clubhouse
               </label>
               <select
                 value={selectedCircleId ?? ''}
                 onChange={e => setSelectedCircleId(e.target.value || null)}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
               >
                 {myCircles.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -238,7 +238,7 @@ export default function PlayerBoxScreen() {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
                 Box Name
               </label>
               <input
@@ -246,14 +246,14 @@ export default function PlayerBoxScreen() {
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. The Baseline Crew"
                 maxLength={40}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)' }}>{err}</div>}
             <button
               type="submit"
               disabled={busy || !name.trim() || !selectedCircleId}
-              style={{ padding: '13px', background: busy || !name.trim() || !selectedCircleId ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !name.trim() || !selectedCircleId ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || !name.trim() || !selectedCircleId ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || !name.trim() || !selectedCircleId ? 'default' : 'pointer' }}
             >
               {busy ? 'Creating…' : 'Create Player\'s Box →'}
             </button>
@@ -265,7 +265,7 @@ export default function PlayerBoxScreen() {
         {tab === 'join' && (
           <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
                 Invite Code
               </label>
               <input
@@ -273,14 +273,14 @@ export default function PlayerBoxScreen() {
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="8-CHARACTER CODE"
                 maxLength={8}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-heading)', fontWeight: 700, letterSpacing: '0.25em', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase' }}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-heading)', fontWeight: 700, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)' }}>{err}</div>}
             <button
               type="submit"
               disabled={busy || code.trim().length < 6}
-              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--ten)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
             >
               {busy ? 'Joining…' : 'Join Player\'s Box →'}
             </button>
