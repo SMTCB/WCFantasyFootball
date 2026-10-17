@@ -14,6 +14,7 @@ import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../l
 import { normalisePlayer, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useTransferWindow } from '../hooks/useTransferWindow';
+import { LeagueRouteTabs } from '../components/league/HubShared';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
@@ -1271,6 +1272,7 @@ export default function SquadScreen() {
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
+      <LeagueRouteTabs active="squad" leagueId={activeLeague} />
 
       {/* ── Transfer window status banner (U5) ──────────────────────────────── */}
       <TransferWindowBanner

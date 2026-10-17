@@ -23,7 +23,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { useBettingLeaderboard } from '../hooks/useBettingLeaderboard';
 import OnboardingTour from '../components/OnboardingTour';
 import {
-  HubTopbar, HubTabs,
+  HubTopbar, HubTabs, ROUTE_TABS,
   HubLeagueHeader, HubTabPills,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
 } from '../components/league/HubShared';
@@ -401,13 +401,14 @@ export default function LeagueScreen() {
   // the /league render, causing tab clicks to navigate to /league?tab=X instead
   // of /league/:leagueId?tab=X.
   const setTab = useCallback((t) => {
+    if (ROUTE_TABS.includes(t)) { navigate(`/${t}?leagueId=${activeLeague?.league_id ?? ''}`); return; }
     setView(tabToView(t));
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
       next.set('tab', t);
       return next;
     }, { replace: true });
-  }, [setSearchParams]);
+  }, [setSearchParams, navigate, activeLeague?.league_id]);
 
   // B-13: shared "show archived leagues" toggle for the My Leagues list
   const [showArchived, setShowArchived] = useShowArchived();
