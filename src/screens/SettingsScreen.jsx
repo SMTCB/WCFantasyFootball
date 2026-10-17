@@ -121,20 +121,19 @@ export default function SettingsScreen() {
             fontSize: 'var(--fs-title)',
             color: 'var(--paper)',
             marginBottom: 8,
-            letterSpacing: '0.02em',
           }}>
             Settings
           </h1>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+          <p style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             Manage your account, security, and preferences
           </p>
         </div>
 
         {/* Profile Section */}
         <div style={{
-          background: 'var(--ink-3)',
+          background: 'var(--card)',
           border: '1px solid var(--rule)',
-          borderRadius: 8,
+          borderRadius: 'var(--radius)',
           padding: '20px 16px',
           marginBottom: 24,
         }}>
@@ -143,8 +142,6 @@ export default function SettingsScreen() {
             fontSize: 'var(--fs-body)',
             color: 'var(--paper)',
             marginBottom: 16,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
           }}>
             Profile
           </h2>
@@ -153,17 +150,14 @@ export default function SettingsScreen() {
             {/* Username — editable */}
             <div>
               <label style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 'var(--fs-micro)',
+                fontSize: 'var(--fs-label)',
                 color: 'var(--mute)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
                 display: 'block',
                 marginBottom: 4,
               }}>
                 Username
               </label>
-              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8, lineHeight: 1.5 }}>
                 Shown to other managers in leaderboards, chat, and bets. 3–30 characters. No uniqueness required.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -177,13 +171,12 @@ export default function SettingsScreen() {
                   disabled={!usernameLoaded || isSavingUsername}
                   style={{
                     flex: 1,
-                    fontFamily: 'JetBrains Mono, monospace',
                     fontSize: 'var(--fs-label)',
                     color: 'var(--paper)',
-                    padding: '8px 12px',
-                    background: 'rgba(24,32,46,.04)',
+                    minHeight: 'var(--tap)', padding: '8px 12px',
+                    background: 'var(--elev)',
                     border: `1px solid ${usernameInput.trim() !== currentUsername && usernameInput.trim() ? 'var(--accent)' : 'var(--rule)'}`,
-                    borderRadius: 4,
+                    borderRadius: 'var(--radius)',
                     outline: 'none',
                   }}
                 />
@@ -192,10 +185,8 @@ export default function SettingsScreen() {
                   disabled={!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim()}
                   style={{
                     fontFamily: 'Archivo Black, sans-serif',
-                    fontSize: 'var(--fs-micro)',
-                    fontWeight: 800,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
+                    fontSize: 'var(--fs-label)',
+                    fontWeight: 700, minHeight: 'var(--tap)',
                     padding: '8px 16px',
                     background: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
                       ? 'var(--elev)'
@@ -204,7 +195,7 @@ export default function SettingsScreen() {
                       ? 'var(--mute)'
                       : 'var(--on-accent)',
                     border: '1px solid var(--rule)',
-                    borderRadius: 4,
+                    borderRadius: 'var(--radius)',
                     cursor: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
                       ? 'not-allowed'
                       : 'pointer',
@@ -220,23 +211,19 @@ export default function SettingsScreen() {
             {/* Email — read-only */}
             <div>
               <label style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 'var(--fs-micro)',
+                fontSize: 'var(--fs-label)',
                 color: 'var(--mute)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
                 display: 'block',
                 marginBottom: 4,
               }}>
-                Email Address
+                Email address
               </label>
               <div style={{
-                fontFamily: 'JetBrains Mono, monospace',
                 fontSize: 'var(--fs-label)',
                 color: 'var(--mute)',
                 padding: '8px 12px',
-                background: 'rgba(24,32,46,.02)',
-                borderRadius: 4,
+                background: 'var(--elev)',
+                borderRadius: 'var(--radius)',
                 border: '1px solid var(--rule)',
               }}>
                 {user?.email || 'Not loaded'}
@@ -248,9 +235,9 @@ export default function SettingsScreen() {
 
         {/* Password Change Section */}
         <div style={{
-          background: 'var(--ink-3)',
+          background: 'var(--card)',
           border: '1px solid var(--rule)',
-          borderRadius: 8,
+          borderRadius: 'var(--radius)',
           padding: '20px 16px',
           marginBottom: 24,
         }}>
@@ -259,14 +246,12 @@ export default function SettingsScreen() {
             fontSize: 'var(--fs-body)',
             color: 'var(--paper)',
             marginBottom: 16,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
           }}>
-            Change Password
+            Change password
           </h2>
           <form onSubmit={handlePasswordChange} style={{ display: 'grid', gap: 12 }}>
             <TextInput
-              label="New Password"
+              label="New password"
               type="password"
               value={passwordForm.new}
               onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
@@ -274,7 +259,7 @@ export default function SettingsScreen() {
               helperText="Minimum 8 characters"
             />
             <TextInput
-              label="Confirm Password"
+              label="Confirm password"
               type="password"
               value={passwordForm.confirm}
               onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
@@ -285,30 +270,28 @@ export default function SettingsScreen() {
               disabled={isChangingPassword}
               style={{
                 fontFamily: 'Archivo Black, sans-serif',
-                fontSize: 'var(--fs-micro)',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
+                fontSize: 'var(--fs-label)',
+                fontWeight: 700, minHeight: 'var(--tap)',
                 padding: '10px 16px',
                 background: isChangingPassword ? 'var(--elev)' : 'var(--accent)',
                 color: isChangingPassword ? 'var(--mute)' : 'var(--on-accent)',
                 border: 'none',
-                borderRadius: 4,
+                borderRadius: 'var(--radius)',
                 cursor: isChangingPassword ? 'wait' : 'pointer',
                 opacity: isChangingPassword ? 0.6 : 1,
                 marginTop: 8,
               }}
             >
-              {isChangingPassword ? 'Updating...' : 'Update Password'}
+              {isChangingPassword ? 'Updating...' : 'Update password'}
             </button>
           </form>
         </div>
 
         {/* Tour & Account Section */}
         <div style={{
-          background: 'var(--ink-3)',
+          background: 'var(--card)',
           border: '1px solid var(--rule)',
-          borderRadius: 8,
+          borderRadius: 'var(--radius)',
           padding: '20px 16px',
           marginBottom: 24,
           display: 'grid',
@@ -318,53 +301,49 @@ export default function SettingsScreen() {
             onClick={handleReplayTour}
             style={{
               fontFamily: 'Archivo Black, sans-serif',
-              fontSize: 'var(--fs-micro)',
-              fontWeight: 800,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
+              fontSize: 'var(--fs-label)',
+              fontWeight: 700, minHeight: 'var(--tap)',
               padding: '10px 16px',
-              background: 'var(--accent-bg)',
+              background: 'var(--accent-soft)',
               color: 'var(--accent)',
-              border: '1px solid rgba(26,111,168,.25)',
-              borderRadius: 4,
+              border: '1px solid var(--rule)',
+              borderRadius: 'var(--radius)',
               cursor: 'pointer',
               transition: 'all 150ms',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(26,111,168,.16)';
+              e.currentTarget.style.background = 'var(--accent-soft)';
               e.currentTarget.style.borderColor = 'var(--accent)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--accent-bg)';
-              e.currentTarget.style.borderColor = 'rgba(26,111,168,.25)';
+              e.currentTarget.style.background = 'var(--accent-soft)';
+              e.currentTarget.style.borderColor = 'var(--rule)';
             }}
           >
-            ↻ Replay Tour
+            ↻ Replay tour
           </button>
 
           <button
             onClick={handleLogout}
             style={{
               fontFamily: 'Archivo Black, sans-serif',
-              fontSize: 'var(--fs-micro)',
-              fontWeight: 800,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
+              fontSize: 'var(--fs-label)',
+              fontWeight: 700, minHeight: 'var(--tap)',
               padding: '10px 16px',
               background: 'var(--neg-bg)',
               color: 'var(--neg)',
-              border: '1px solid rgba(185,28,28,.25)',
-              borderRadius: 4,
+              border: '1px solid var(--rule)',
+              borderRadius: 'var(--radius)',
               cursor: 'pointer',
               transition: 'all 150ms',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(185,28,28,.16)';
+              e.currentTarget.style.background = 'var(--crit-soft)';
               e.currentTarget.style.borderColor = 'var(--neg)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--neg-bg)';
-              e.currentTarget.style.borderColor = 'rgba(185,28,28,.25)';
+              e.currentTarget.style.borderColor = 'var(--rule)';
             }}
           >
             ← Logout
@@ -376,8 +355,6 @@ export default function SettingsScreen() {
           textAlign: 'center',
           fontSize: 'var(--fs-micro)',
           color: 'var(--mute)',
-          fontFamily: 'JetBrains Mono, monospace',
-          letterSpacing: '0.08em',
           marginTop: 32,
         }}>
           <p>Alpha v0.1 · 2026</p>

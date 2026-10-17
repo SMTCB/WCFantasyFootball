@@ -3,21 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useMyBets } from '../hooks/useMyBets';
 import { HubSectionLabel, MobSection } from '../components/league/HubShared';
-import { MONO, DISPLAY } from '../components/league/HubConstants';
+import { DISPLAY } from '../components/league/HubConstants';
 import TabStrip from '../components/shared/TabStrip';
 
 const STATUS_META = {
-  open:      { label: 'OPEN',      tone: 'var(--cyan)' },
-  closed:    { label: 'AWAITING',  tone: 'var(--gold)' },
+  open:      { label: 'Open',      tone: 'var(--accent)' },
+  closed:    { label: 'Awaiting',  tone: 'var(--gold)' },
   disputed:  { label: 'DISPUTED',  tone: 'var(--danger)' },
-  resolved:  { label: 'RESOLVED',  tone: 'var(--mute)' },
-  cancelled: { label: 'CANCELLED', tone: 'var(--mute)' },
+  resolved:  { label: 'Resolved',  tone: 'var(--mute)' },
+  cancelled: { label: 'Cancelled', tone: 'var(--mute)' },
 };
 
 function timeLeft(iso) {
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
-  if (ms <= 0) return 'ENDED';
+  if (ms <= 0) return 'Ended';
   const h = Math.floor(ms / 3_600_000);
   if (h < 1) return `${Math.max(1, Math.floor(ms / 60_000))}m left`;
   if (h < 24) return `${h}h left`;
@@ -33,26 +33,26 @@ function MyBetCard({ bet, onOpen }) {
       style={{
         display: 'block', width: '100%', textAlign: 'left',
         margin: 'clamp(4px, 1.5vw, 8px) clamp(12px, 4vw, 24px)',
-        background: 'var(--ink-2)', border: '1px solid var(--rule)',
-        borderLeft: `3px solid ${meta.tone}`, cursor: 'pointer',
+        background: 'var(--card)', border: '1px solid var(--rule)',
+        borderLeft: `4px solid ${meta.tone}`, borderRadius: 'var(--radius)', cursor: 'pointer', minHeight: 'var(--tap)',
         padding: 'clamp(10px, 2vw, 14px) clamp(12px, 3vw, 18px)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--cyan)', letterSpacing: '.16em' }}>
-          {bet.circle_name?.toUpperCase()}
+        <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)' }}>
+          {bet.circle_name}
         </span>
         <span style={{ flex: 1 }} />
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: meta.tone, letterSpacing: '.18em' }}>
-          {pendingObjection ? 'PENDING OBJECTION' : meta.label}
+        <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: meta.tone }}>
+          {pendingObjection ? 'Pending objection' : meta.label}
         </span>
       </div>
       <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4, marginBottom: 8 }}>
         {bet.question}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em' }}>
-        <span style={{ color: 'var(--gold-text)' }}>{bet.stake_coins} COINS</span>
-        <span>{bet.participant_count} JOINED</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 'var(--fs-label)', color: 'var(--mute)' }} className="num">
+        <span style={{ color: 'var(--gold-text)' }}>{bet.stake_coins} coins</span>
+        <span>{bet.participant_count} joined</span>
         {bet.status === 'open' && bet.ends_at && <span>{timeLeft(bet.ends_at)}</span>}
       </div>
     </button>
@@ -68,8 +68,8 @@ function Section({ label, sub, tone, bets, onOpen, defaultOpen = false }) {
         <HubSectionLabel
           label={label} sub={sub} tone={tone}
           right={
-            <button onClick={() => setOpen(o => !o)} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', background: 'none', border: 'none', cursor: 'pointer' }}>
-              {bets.length} · {open ? 'COLLAPSE −' : 'EXPAND +'}
+            <button onClick={() => setOpen(o => !o)} style={{ minHeight: 'var(--tap)', padding: '0 8px', fontSize: 'var(--fs-label)', color: 'var(--mute)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              {bets.length} · {open ? 'Collapse −' : 'Expand +'}
             </button>
           }
         />
@@ -78,7 +78,7 @@ function Section({ label, sub, tone, bets, onOpen, defaultOpen = false }) {
         <MobSection
           label={label} sub={sub} tone={tone}
           right={
-            <button onClick={() => setOpen(o => !o)} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <button onClick={() => setOpen(o => !o)} style={{ minHeight: 'var(--tap)', minWidth: 'var(--tap)', fontSize: 'var(--fs-label)', color: 'var(--mute)', background: 'none', border: 'none', cursor: 'pointer' }}>
               {bets.length} {open ? '−' : '+'}
             </button>
           }
@@ -98,11 +98,11 @@ export default function MyBetsScreen() {
   const filterBy = (list) => circleFilter === 'all' ? list : list.filter(b => b.circle_id === circleFilter);
 
   const sections = useMemo(() => ([
-    { key: 'open',      label: 'YOUR OPEN BETS',   sub: 'ANSWER OR WAIT', tone: 'var(--cyan)',    bets: filterBy(myOpenJoined),             defaultOpen: true },
-    { key: 'declare',   label: 'AWAITING OUTCOME',  sub: 'YOU DECLARE',    tone: 'var(--gold)',    bets: filterBy(closedAwaitingDeclare),     defaultOpen: true },
-    { key: 'resolve',   label: 'AWAITING OUTCOME',  sub: 'CREATOR DECLARES', tone: 'var(--gold)',  bets: filterBy(closedAwaitingResolution),  defaultOpen: false },
-    { key: 'disputed',  label: 'DISPUTED',          sub: 'UNDER REVIEW',   tone: 'var(--danger)',  bets: filterBy(disputed),                  defaultOpen: true },
-    { key: 'history',   label: 'HISTORY',           sub: 'RESOLVED & CANCELLED', tone: 'var(--mute)', bets: filterBy(history),               defaultOpen: false },
+    { key: 'open',      label: 'Your open bets',   sub: 'Answer or wait', tone: 'var(--accent)',    bets: filterBy(myOpenJoined),             defaultOpen: true },
+    { key: 'declare',   label: 'Awaiting outcome',  sub: 'You declare',    tone: 'var(--gold)',    bets: filterBy(closedAwaitingDeclare),     defaultOpen: true },
+    { key: 'resolve',   label: 'Awaiting outcome',  sub: 'Creator declares', tone: 'var(--gold)',  bets: filterBy(closedAwaitingResolution),  defaultOpen: false },
+    { key: 'disputed',  label: 'Disputed',          sub: 'Under review',   tone: 'var(--danger)',  bets: filterBy(disputed),                  defaultOpen: true },
+    { key: 'history',   label: 'History',           sub: 'Resolved and cancelled', tone: 'var(--mute)', bets: filterBy(history),               defaultOpen: false },
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ]), [circleFilter, myOpenJoined, closedAwaitingDeclare, closedAwaitingResolution, disputed, history]);
 
@@ -112,24 +112,25 @@ export default function MyBetsScreen() {
   const openBet = (bet) => navigate(`/challenges?tab=bets&circle=${bet.circle_id}`);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)', minHeight: '100%' }}>
-      {/* Hero strip */}
-      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
-        <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--cyan)', letterSpacing: '.22em' }}>MY BETS · ALL CLUBHOUSES</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 26px)', marginTop: 6, lineHeight: 1.1 }}>
-            Every group bet you've joined, in one place.
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)', minHeight: '100%' }}>
+      {/* Header */}
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
+        <div style={{ padding: '20px clamp(14px, 3vw, 24px) 16px', display: 'flex', gap: 10 }}>
+          <span aria-hidden style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: 'var(--accent)', flexShrink: 0 }} />
+          <div>
+            <h1 style={{ margin: 0, fontFamily: DISPLAY, fontSize: 'var(--fs-title)', lineHeight: 1.1 }}>My bets</h1>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 4 }}>Every group bet you've joined, across all Clubhouses.</div>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderTop: '1px solid var(--rule)' }}>
           {[
-            { k: 'IN PLAY',  v: openCount,               tone: 'var(--cyan)' },
-            { k: 'DISPUTED', v: disputed.length,         tone: 'var(--danger)' },
-            { k: 'STAKED',   v: `${totalCoinsStaked}`,    tone: 'var(--gold)' },
+            { k: 'In play',  v: openCount,               tone: 'var(--accent)' },
+            { k: 'Disputed', v: disputed.length,         tone: 'var(--danger)' },
+            { k: 'Staked',   v: `${totalCoinsStaked}`,    tone: 'var(--gold-text)' },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 20px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 30px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{c.k}</div>
+              <div className="num" style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-title)', color: c.tone, marginTop: 4 }}>{c.v}</div>
             </div>
           ))}
         </div>
@@ -139,8 +140,8 @@ export default function MyBetsScreen() {
       {circles.length > 1 && (
         <TabStrip
           variant="pill"
-          accent="var(--cyan)"
-          tabs={[{ key: 'all', label: 'ALL' }, ...circles.map(c => ({ key: c.id, label: c.name.toUpperCase() }))]}
+          accent="var(--accent)"
+          tabs={[{ key: 'all', label: 'All' }, ...circles.map(c => ({ key: c.id, label: c.name }))]}
           active={circleFilter}
           onTab={setCircleFilter}
         />
@@ -149,16 +150,16 @@ export default function MyBetsScreen() {
       {/* Content */}
       <div style={{ flex: 1, minHeight: 60, overflow: 'auto', paddingBottom: 80 }}>
         {loading && (
-          <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+          <div style={{ padding: '48px 24px', textAlign: 'center', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
         )}
         {error && (
-          <div style={{ padding: '24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.18em' }}>FAILED TO LOAD: {error}</div>
+          <div style={{ padding: '24px', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>Failed to load: {error}</div>
         )}
         {!loading && !error && sections.every(s => !s.bets.length) && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
             <div style={{ fontSize: 'var(--fs-title)' }}>🎲</div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO GROUP BETS YET</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>No group bets yet</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', maxWidth: 320, textAlign: 'center' }}>
               Join or create a group bet from any Clubhouse's Group Bets tab and it'll show up here.
             </div>
           </div>
