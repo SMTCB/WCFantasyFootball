@@ -7,7 +7,7 @@ import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useActiveCompetition } from '../hooks/useActiveCompetition';
-import { CompetitionNav } from './CompetitionNav';
+import { CompetitionNav, ClubhouseSwitcher } from './CompetitionNav';
 import NewCompetitionFlow from './NewCompetitionFlow';
 import ClubhouseInviteModal from './ClubhouseInviteModal';
 import {
@@ -158,12 +158,16 @@ export default function AppLayout({ children }) {
           <BrandMark theme="light" compact />
         </Link>
         <TopBarLink label="Home" path="/home" Icon={NavIconHome} active={location.pathname === '/home'} />
-        <TopBarLink
-          label="Clubhouse"
-          path="/clubhouse"
-          Icon={NavIconClubhouse}
-          active={location.pathname.startsWith('/clubhouse')}
-          badge={unreadCount}
+        <ClubhouseSwitcher
+          myCircles={myCircles}
+          activeCircleId={activeCircleId}
+          onSelectCircle={(id) => { setActiveCircleId(id); navigate(`/clubhouse/${id}`); }}
+          competitions={competitions}
+          pathname={location.pathname}
+          onAdd={openNewCompetitionFlow}
+          onInvite={activeCircle?.invite_code ? () => setShowInvite(true) : undefined}
+          clubhouseName={activeCircle?.name}
+          unreadCount={unreadCount}
         />
         <TopBarLink label="Trophies" path="/trophy" Icon={NavIconTrophy} active={location.pathname === '/trophy'} />
         <TopBarLink label="Bets" path="/my-bets" Icon={NavIconMyBets} active={location.pathname === '/my-bets'} />
@@ -264,6 +268,7 @@ export default function AppLayout({ children }) {
             onAdd={openNewCompetitionFlow}
             onInvite={activeCircle?.invite_code ? () => setShowInvite(true) : undefined}
             hasClubhouse={myCircles.length > 0}
+            unreadCount={unreadCount}
             clubhouseName={activeCircle?.name}
             paddockId={competitionId}
           />
