@@ -147,7 +147,7 @@ export default function F1HomeScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
 
       {/* Header */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--sport-marker, var(--accent))', padding: '20px 16px 16px' }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '20px 16px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>

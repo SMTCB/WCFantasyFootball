@@ -32,7 +32,7 @@ export default function F1StandingsScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--sport-marker, var(--accent))', padding: '16px 16px 12px' }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
           Paddock standings · 2026
         </div>
