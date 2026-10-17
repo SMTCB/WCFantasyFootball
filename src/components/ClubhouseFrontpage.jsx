@@ -48,7 +48,7 @@ function FtSection({ label, content, sectionKey, ft }) {
   if (!content) return null;
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: FT_MUTE, textTransform: 'uppercase', marginBottom: 6 }}>
+      <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE, marginBottom: 6 }}>
         {label}
       </div>
       <p style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-body)', color: FT_SECTION_TEXT, lineHeight: 1.65, margin: '0 0 8px' }}>
@@ -81,7 +81,7 @@ function ClassificationSection({ leagues }) {
   if (withStandings.length === 0) return null;
   return (
     <div style={{ marginBottom: 20, borderTop: `1px solid ${FT_RULE}`, paddingTop: 18 }}>
-      <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.2em', color: FT_MUTE, textTransform: 'uppercase', marginBottom: 10 }}>
+      <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE, marginBottom: 10 }}>
         📊 Classification
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
@@ -92,7 +92,7 @@ function ClassificationSection({ leagues }) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {l.standings.map((line, j) => (
-                <div key={j} style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: FT_SECTION_TEXT, lineHeight: 1.6 }}>
+                <div key={j} style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_SECTION_TEXT, lineHeight: 1.6 }}>
                   {line}
                 </div>
               ))}
@@ -116,10 +116,10 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
       {/* Masthead — single combined meta line with inline regenerate control, double-rule close */}
       <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 18, borderBottom: `3px double ${FT_INK}` }}>
         <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-title)', letterSpacing: '-0.01em', color: FT_INK, lineHeight: 1, marginBottom: 6 }}>
-          THE FRONTROW
+          The Frontrow
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_MUTE, textTransform: 'uppercase' }}>
-          <span>EDITION #{edition.edition_number} · {dateLabel.toUpperCase()} · {circleName}</span>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE }}>
+          <span>Edition #{edition.edition_number} · {dateLabel} · {circleName}</span>
           {isOwner && (
             cooldownLabel ? (
               <span>↻ Regenerate (owner · next in {cooldownLabel})</span>
@@ -131,13 +131,12 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
                   border: 'none',
                   background: 'transparent',
                   color: FT_GOLD,
-                  fontFamily: FT_MONO,
-                  fontSize: 'var(--fs-micro)',
+                  fontFamily: FT_BODY,
+                  fontSize: 'var(--fs-label)',
                   fontWeight: 700,
-                  letterSpacing: '.16em',
-                  textTransform: 'uppercase',
                   cursor: generating ? 'default' : 'pointer',
-                  padding: 0,
+                  minHeight: 'var(--tap)',
+                  padding: '0 8px',
                 }}
               >
                 {generating ? '↻ Generating…' : '↻ Regenerate (owner)'}
@@ -146,14 +145,14 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
           )}
         </div>
         {genError && (
-          <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 8 }}>{genError}</div>
+          <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)', marginTop: 8 }}>{genError}</div>
         )}
       </div>
 
       {/* Commissioner notices — verbatim, so an admin announcement is never lost in the AI copy */}
       {(edition.raw_input?.announcements ?? []).map((a, i) => (
         <div key={i} style={{ background: FT_INK, color: FT_PAPER, padding: '12px 14px', marginBottom: 16 }}>
-          <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_GOLD, textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_GOLD, marginBottom: 6 }}>
             📣 Commissioner's notice{a.league ? ` · ${a.league}` : ''}
           </div>
           <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-body)', lineHeight: 1.3 }}>{a.headline}</div>
@@ -174,7 +173,7 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
               {edition.deck}
             </p>
           )}
-          <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em', color: FT_MUTE, marginTop: 10 }}>
+          <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE, marginTop: 10 }}>
             By the Frontrow Desk
           </div>
           <ReactionStrip
@@ -221,7 +220,7 @@ function EmptyState({ isOwner, onGenerate, generating, genError }) {
   return (
     <div style={{ background: FT_PAPER, color: FT_INK, padding: '48px 20px', textAlign: 'center' }}>
       <div style={{ fontFamily: FT_SLAB, fontSize: 'var(--fs-title)', letterSpacing: '.04em', color: FT_INK, marginBottom: 4 }}>
-        THE FRONTROW
+        The Frontrow
       </div>
       <div style={{ height: 2, background: FT_INK, maxWidth: 200, margin: '0 auto 20px' }} />
       <p style={{ fontFamily: FT_SERIF, fontSize: 'var(--fs-body)', color: FT_MUTE, fontStyle: 'italic', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
@@ -233,24 +232,24 @@ function EmptyState({ isOwner, onGenerate, generating, genError }) {
             onClick={onGenerate}
             disabled={generating}
             style={{
-              padding: '11px 24px',
+              minHeight: 'var(--tap)', padding: '11px 24px',
               border: 'none',
               background: FT_GOLD,
               color: FT_PAPER,
               fontFamily: FT_MONO,
               fontSize: 'var(--fs-micro)',
               fontWeight: 700,
-              letterSpacing: '.16em',
+              
               cursor: generating ? 'default' : 'pointer',
             }}
           >
-            {generating ? 'GENERATING…' : 'PUBLISH SPECIAL EDITION →'}
+            {generating ? 'Generating…' : 'Publish special edition →'}
           </button>
           {genError && (
-            <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 10 }}>{genError}</div>
+            <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)', marginTop: 10 }}>{genError}</div>
           )}
-          <p style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', color: FT_MUTE, letterSpacing: '.1em', marginTop: 10 }}>
-            AS CLUBHOUSE OWNER · MAX 1 PER 4 HOURS
+          <p style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE, marginTop: 10 }}>
+            As Clubhouse owner · max 1 per 4 hours
           </p>
         </div>
       )}
@@ -287,8 +286,8 @@ export default function ClubhouseFrontpage({ circleId, circleName, isOwner }) {
   if (ft.loading) {
     return (
       <div style={{ background: FT_PAPER, padding: '48px 20px', textAlign: 'center' }}>
-        <div style={{ fontFamily: FT_MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: FT_MUTE }}>
-          LOADING THE FRONTROW…
+        <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE }}>
+          Loading the Frontrow…
         </div>
       </div>
     );
