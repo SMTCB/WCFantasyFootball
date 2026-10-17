@@ -68,7 +68,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
   const isDirty = JSON.stringify([...selected].sort()) !== JSON.stringify([...existingKeeps].sort());
 
   return (
-    <div style={{ borderBottom: '1px solid var(--shell-rule)', background: 'rgba(160,108,255,0.05)' }}>
+    <div style={{ borderBottom: '1px solid var(--rule)', background: 'rgba(160,108,255,0.05)' }}>
 
       {/* ── Collapsed banner ─────────────────────────────────────────────── */}
       <button
@@ -80,17 +80,17 @@ export default function KnockoutKeepSelector({ leagueId }) {
         }}
       >
         <span style={{ width: 3, height: 14, background: 'var(--purple, #a855f7)', flexShrink: 0 }} />
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.22em' }}>
-          KNOCKOUT KEEP WINDOW
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
+          Knockout keep window
         </span>
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', flex: 1 }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flex: 1 }}>
           · Select up to {maxSlots} players to protect · Draft {fmt(knockoutDeadline)}
         </span>
 
         {/* Status chip */}
         {existingKeeps.length > 0 && !isDirty ? (
           <span style={{
-            fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
+            fontFamily: MONO, fontSize: 'var(--fs-label)',
             padding: '2px 8px', border: '1px solid rgba(24,201,107,0.4)', color: 'var(--positive)',
             background: 'rgba(24,201,107,0.08)', flexShrink: 0,
           }}>
@@ -98,7 +98,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
           </span>
         ) : (
           <span style={{
-            fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
+            fontFamily: MONO, fontSize: 'var(--fs-label)',
             padding: '2px 8px', border: '1px solid rgba(160,108,255,0.4)', color: 'var(--purple)',
             background: 'rgba(160,108,255,0.08)', flexShrink: 0,
           }}>
@@ -106,7 +106,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
           </span>
         )}
 
-        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flexShrink: 0 }}>
           {expanded ? '▲' : '▼'}
         </span>
       </button>
@@ -116,7 +116,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
         <div style={{ padding: '0 20px 16px' }}>
 
           {/* Instruction */}
-          <p style={{ fontFamily: BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.6, margin: '0 0 12px' }}>
+          <p style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6, margin: '0 0 12px' }}>
             Protected players carry into your knockout squad without going through the lottery.
             Other managers cannot draft them. Choose up to <strong style={{ color: 'var(--paper)' }}>{maxSlots}</strong>.
             You can revise this list until the commissioner runs the knockout allocation.
@@ -124,7 +124,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
 
           {/* Player grid */}
           {players.length === 0 ? (
-            <p style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em' }}>
+            <p style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
               No squad data available.
             </p>
           ) : (
@@ -145,10 +145,10 @@ export default function KnockoutKeepSelector({ leagueId }) {
                       padding: '8px 12px',
                       background: isKept
                         ? 'rgba(160,108,255,0.12)'
-                        : 'var(--shell-fill)',
+                        : 'var(--elev)',
                       border: isKept
                         ? '1px solid rgba(160,108,255,0.45)'
-                        : '1px solid var(--shell-rule)',
+                        : '1px solid var(--rule)',
                       cursor: isDisabled ? 'not-allowed' : 'pointer',
                       opacity: isEliminated ? 0.4 : 1,
                       borderRadius: 4,
@@ -162,8 +162,8 @@ export default function KnockoutKeepSelector({ leagueId }) {
 
                     {/* Position badge */}
                     <span style={{
-                      fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 800,
-                      letterSpacing: '.14em', padding: '1px 5px', flexShrink: 0,
+                      fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 800,
+                     padding: '1px 5px', flexShrink: 0,
                       border: `1px solid ${posColor}44`, color: posColor, background: `${posColor}12`,
                     }}>
                       {p.position === 'FW' ? 'FWD' : p.position}
@@ -175,12 +175,12 @@ export default function KnockoutKeepSelector({ leagueId }) {
                     </span>
 
                     {/* Club */}
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', flexShrink: 0 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flexShrink: 0 }}>
                       {isEliminated ? '✕ ELIMINATED' : (p.club ?? '')}
                     </span>
 
                     {/* Price */}
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', flexShrink: 0 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)', flexShrink: 0 }}>
                       €{Number(p.price ?? 0).toFixed(1)}m
                     </span>
                   </button>
@@ -191,18 +191,18 @@ export default function KnockoutKeepSelector({ leagueId }) {
 
           {/* Footer */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.14em', flex: 1 }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flex: 1 }}>
               {selected.size} / {maxSlots} selected
             </span>
 
             {saveError && (
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.1em', flex: 1 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--danger)', flex: 1 }}>
                 {saveError}
               </span>
             )}
 
             {saved && !isDirty && (
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)', letterSpacing: '.14em' }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>
                 Saved ✓
               </span>
             )}
@@ -211,9 +211,9 @@ export default function KnockoutKeepSelector({ leagueId }) {
               onClick={() => { setSelected(new Set()); setSaved(false); setSaveError(null); }}
               disabled={selected.size === 0 || saving}
               style={{
-                fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
+                fontFamily: MONO, fontSize: 'var(--fs-label)',
                 padding: '6px 12px', background: 'transparent',
-                border: '1px solid var(--shell-rule-strong)', color: 'var(--mute)',
+                border: '1px solid var(--rule)', color: 'var(--mute)',
                 cursor: selected.size === 0 || saving ? 'not-allowed' : 'pointer',
                 opacity: selected.size === 0 ? 0.4 : 1,
               }}
@@ -225,7 +225,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
               onClick={handleSave}
               disabled={saving || !isDirty}
               style={{
-                fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
+                fontFamily: DISPLAY, fontSize: 'var(--fs-label)',
                 padding: '7px 18px',
                 background: isDirty ? 'var(--purple, #a855f7)' : 'rgba(160,108,255,0.2)',
                 border: 'none',
@@ -233,12 +233,12 @@ export default function KnockoutKeepSelector({ leagueId }) {
                 cursor: saving || !isDirty ? 'not-allowed' : 'pointer',
               }}
             >
-              {saving ? 'SAVING…' : 'SAVE KEEPS'}
+              {saving ? 'Saving…' : 'Save keeps'}
             </button>
           </div>
 
           {error && (
-            <p style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', letterSpacing: '.1em', margin: '8px 0 0' }}>
+            <p style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--danger)', margin: '8px 0 0' }}>
               {error}
             </p>
           )}

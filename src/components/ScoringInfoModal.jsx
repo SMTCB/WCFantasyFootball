@@ -23,7 +23,7 @@ const POSITIONS = [
     ],
   },
   {
-    pos: 'DEF', color: 'var(--cyan)',
+    pos: 'DEF', color: 'var(--accent)',
     rules: [
       { label: 'Goal',               val: '+6' },
       { label: 'Assist',             val: '+3' },
@@ -98,11 +98,11 @@ const TAB_META = {
   game_rules: { title: 'GAME RULES',      sub: 'TRANSFERS · LINEUPS · CAPTAIN'         },
 };
 
-function Row({ label, val, valColor = 'var(--cyan)', note }) {
+function Row({ label, val, valColor = 'var(--accent)', note }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '6px 0', borderBottom: '1px solid var(--shell-rule)',
+      padding: '6px 0', borderBottom: '1px solid var(--rule)',
     }}>
       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', letterSpacing: '.06em' }}>
         {label}
@@ -127,7 +127,7 @@ function Section({ title, children, accent = 'var(--gold)' }) {
 function InfoBox({ children }) {
   return (
     <div style={{
-      background: 'var(--shell-fill)', borderRadius: 6, padding: '10px 14px',
+      background: 'var(--elev)', borderRadius: 6, padding: '10px 14px',
       fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
     }}>
       {children}
@@ -143,14 +143,14 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
   return (
     <BottomSheet ariaLabel="Scoring rules"
       onClose={onClose}
-      background="var(--ink)"
+      background="var(--bg)"
       maxWidth={480}
       showHandle={false}
       contentStyle={{ padding: '0 0 32px' }}
     >
         {/* Sticky header */}
         <div style={{
-          position: 'sticky', top: 0, background: 'var(--ink)', zIndex: 1,
+          position: 'sticky', top: 0, background: 'var(--bg)', zIndex: 1,
           borderBottom: '1px solid var(--rule)',
         }}>
           {/* Title + close */}
@@ -185,7 +185,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                 onClick={() => setTab(t.id)}
                 style={{
                   flex: 1, padding: '7px 0',
-                  background: tab === t.id ? 'var(--gold)' : 'var(--shell-fill)',
+                  background: tab === t.id ? 'var(--gold)' : 'var(--elev)',
                   border: 'none', borderRadius: 4, cursor: 'pointer',
                   fontFamily: MONO, fontSize: 'var(--fs-micro)', letterSpacing: '.14em',
                   color: tab === t.id ? '#000' : 'var(--mute)',
@@ -253,11 +253,11 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
               <InfoBox>
                 <div>Club cap per round:</div>
                 <div style={{ marginTop: 6, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px', fontSize: 'var(--fs-micro)' }}>
-                  <div style={{ color: 'var(--mute)' }}>Group (MD1–MD3)</div>      <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
-                  <div style={{ color: 'var(--mute)' }}>Round of 32 (MD4)</div>    <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
-                  <div style={{ color: 'var(--mute)' }}>Round of 16 (MD5)</div>    <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>4 players</div>
-                  <div style={{ color: 'var(--mute)' }}>QF + SF (MD6–7)</div>      <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>5 players</div>
-                  <div style={{ color: 'var(--mute)' }}>Final (MD8)</div>           <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>6 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Group (MD1–MD3)</div>      <div style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>3 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Round of 32 (MD4)</div>    <div style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>3 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Round of 16 (MD5)</div>    <div style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>4 players</div>
+                  <div style={{ color: 'var(--mute)' }}>QF + SF (MD6–7)</div>      <div style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>5 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Final (MD8)</div>           <div style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>6 players</div>
                 </div>
               </InfoBox>
             </Section>
@@ -269,10 +269,10 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                   {' — '}<span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>∞ unlimited</span> buys and sells, no point penalty.
                 </div>
                 <div>
-                  <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>CLASSIC LEAGUES</span>
-                  {' — '}Up to <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 buys</span> per matchday window. Sells are always free.
+                  <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>CLASSIC LEAGUES</span>
+                  {' — '}Up to <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>3 buys</span> per matchday window. Sells are always free.
                 </div>
-                <div>Window closes at the <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>matchday deadline</span> and reopens ~8h after the last match.</div>
+                <div>Window closes at the <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>matchday deadline</span> and reopens ~8h after the last match.</div>
                 <div style={{ marginTop: 6, color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>
                   Classic leagues only: extra buys beyond 3 are allowed but cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each. Commissioner free-transfer windows bypass all limits.
                 </div>
@@ -288,7 +288,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
               <InfoBox>
                 <div style={{ marginBottom: 8 }}>
                   <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>OPEN</span>
-                  {' — '}Between matchdays. <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>Draft leagues: ∞ unlimited</span> buys/sells, no penalty. <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>Classic leagues:</span> up to 3 buys; sells always free; extra buys cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each.
+                  {' — '}Between matchdays. <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>Draft leagues: ∞ unlimited</span> buys/sells, no penalty. <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>Classic leagues:</span> up to 3 buys; sells always free; extra buys cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each.
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>CLOSED</span>
@@ -303,11 +303,11 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             <Section title="LINEUPS & SUBS">
               <InfoBox>
                 <div style={{ marginBottom: 6 }}>
-                  <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>SUB OUT</span>
+                  <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>SUB OUT</span>
                   {' — '}Tap any starting XI player and choose SUB OUT to move them to the bench. Frees a XI slot for a bench player.
                 </div>
                 <div style={{ marginBottom: 6 }}>
-                  <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>SUB IN</span>
+                  <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>SUB IN</span>
                   {' — '}Tap any bench player and choose SUB IN to bring them into the starting XI.
                 </div>
                 <div style={{ marginBottom: 6, color: 'var(--gold)' }}>

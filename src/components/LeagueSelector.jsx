@@ -38,7 +38,7 @@ export default function LeagueSelector({ value, onChange, showArchived = false }
     return (
       <span
         className="text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded"
-        style={{ background: 'rgba(0,196,232,0.10)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}
+        style={{ background: 'rgba(0,196,232,0.10)', color: 'var(--accent)', fontFamily: 'Archivo Black, sans-serif' }}
       >
         {leagues[0].name}{leagues[0].archived ? ' (Archived)' : ''}
       </span>
@@ -53,15 +53,14 @@ export default function LeagueSelector({ value, onChange, showArchived = false }
       style={{
         background:   'rgba(0,196,232,0.10)',
         border:       '1px solid rgba(0,196,232,0.25)',
-        color:        'var(--cyan)',
+        color:        'var(--accent)',
         fontFamily:   'Archivo Black, sans-serif',
         outline:      'none',
-        letterSpacing: '0.06em',
       }}
     >
-      <option value="" disabled style={{ background: 'var(--ink-2)' }}>Select league…</option>
+      <option value="" disabled style={{ background: 'var(--card)' }}>Select league…</option>
       {leagues.map(l => (
-        <option key={l.id} value={l.id} style={{ background: 'var(--ink-2)', color: 'var(--paper)' }}>
+        <option key={l.id} value={l.id} style={{ background: 'var(--card)', color: 'var(--paper)' }}>
           {l.name}{l.archived ? ' (Archived)' : ''}
         </option>
       ))}

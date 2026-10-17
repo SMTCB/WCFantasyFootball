@@ -15,7 +15,7 @@ function timeAgo(iso) {
 const NOTIF_TYPE_META = {
   frontpage_edition:  { badge: 'TIMES',     color: 'var(--accent)' },
   breaking_news:      { badge: 'NEWS',      color: 'var(--danger)' },
-  direct_message:     { badge: 'DM',        color: 'var(--cyan)'   },
+  direct_message:     { badge: 'DM',        color: 'var(--accent)'   },
   arbitration_needed: { badge: 'ARBITRATE', color: 'var(--purple)' },
 };
 
@@ -39,7 +39,7 @@ function defaultRenderRow(n, { onMarkRead, onNavigate, onNavigated }) {
       style={{
         display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 14px',
         borderBottom: '1px solid var(--rule)',
-        background: isNew ? 'var(--accent-bg)' : 'transparent',
+        background: isNew ? 'var(--accent-soft)' : 'transparent',
         cursor: canNav ? 'pointer' : 'default',
       }}
     >
@@ -48,8 +48,8 @@ function defaultRenderRow(n, { onMarkRead, onNavigate, onNavigated }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: meta.color }}>{meta.badge}</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{timeAgo(n.created_at)}</span>
         </div>
         <div style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>
           {n.payload?.headline ?? n.payload?.preview ?? n.type}
@@ -68,7 +68,7 @@ export default function NotificationBell({
   const row = renderRow ?? ((n, ctx) => defaultRenderRow(n, { onMarkRead, onNavigate, ...ctx }));
 
   const list = notifications.length === 0 ? (
-    <div style={{ textAlign: 'center', padding: '32px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+    <div style={{ textAlign: 'center', padding: '32px 0', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
       No notifications yet.
     </div>
   ) : notifications.map(n => row(n, { onNavigated: close }));
@@ -79,19 +79,19 @@ export default function NotificationBell({
         onClick={() => setOpen(o => !o)}
         title="Notifications"
         style={{
-          position: 'relative', width: 32, height: 32, borderRadius: 6,
-          background: 'var(--shell-fill-strong)', border: '1px solid var(--shell-rule-strong)',
+          position: 'relative', width: 32, height: 32, borderRadius: 'var(--radius)',
+          background: 'var(--elev)', border: '1px solid var(--rule)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
         {/* Two-tone tray/inbox glyph — CSS-built, not an emoji */}
-        <div style={{ width: 14, height: 11, border: '1.5px solid var(--shell-rule-emphasis)', borderTop: 'none', borderRadius: '0 0 2px 2px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: -1, left: -1.5, right: -1.5, height: 1.5, background: 'var(--shell-fill-active)' }} />
+        <div style={{ width: 14, height: 11, border: '1.5px solid var(--rule)', borderTop: 'none', borderRadius: '0 0 2px 2px', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -1, left: -1.5, right: -1.5, height: 1.5, background: 'var(--rule)' }} />
         </div>
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4, minWidth: 15, height: 15, borderRadius: 100,
-            background: 'var(--danger)', color: 'var(--on-accent)', fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700,
+            background: 'var(--danger)', color: 'var(--on-accent)', fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
           }}>
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -114,9 +114,9 @@ export default function NotificationBell({
             {unreadCount > 0 && (
               <button
                 onClick={onMarkAll}
-                style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
               >
-                MARK ALL READ
+                Mark all read
               </button>
             )}
           </div>
@@ -139,9 +139,9 @@ export default function NotificationBell({
               {unreadCount > 0 && (
                 <button
                   onClick={onMarkAll}
-                  style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
                 >
-                  MARK ALL READ
+                  Mark all read
                 </button>
               )}
             </div>

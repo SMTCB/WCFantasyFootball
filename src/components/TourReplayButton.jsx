@@ -9,7 +9,7 @@
 
 const MONO = "'JetBrains Mono', monospace";
 
-export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', title = 'Replay the guide' }) {
+export default function TourReplayButton({ onReplay, label = 'Replay guide', title = 'Replay the guide' }) {
   if (!onReplay) return null;
 
   return (
@@ -25,7 +25,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
         alignItems:    'center',
         gap:           8,
         padding:       '8px 14px 8px 10px',
-        background:    'var(--ink-2)',
+        background:    'var(--card)',
         border:        '1px solid rgba(224,168,0,0.45)',
         borderRadius:  '999px',
         cursor:        'pointer',
@@ -37,7 +37,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
         e.currentTarget.style.borderColor = 'rgba(224,168,0,0.8)';
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.background = 'var(--ink-2)';
+        e.currentTarget.style.background = 'var(--card)';
         e.currentTarget.style.borderColor = 'rgba(224,168,0,0.45)';
       }}
     >
@@ -50,7 +50,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
         border:        '1px solid rgba(224,168,0,0.6)',
         color:         'var(--gold-text)',
         fontFamily:    MONO,
-        fontSize: 'var(--fs-micro)',
+        fontSize: 'var(--fs-label)',
         fontWeight:    700,
         display:       'flex',
         alignItems:    'center',
@@ -62,8 +62,7 @@ export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', tit
       {/* Label */}
       <span style={{
         fontFamily:    MONO,
-        fontSize: 'var(--fs-micro)',
-        letterSpacing: '.2em',
+        fontSize: 'var(--fs-label)',
         color:         'var(--gold-text)',
         fontWeight:    600,
         whiteSpace:    'nowrap',
