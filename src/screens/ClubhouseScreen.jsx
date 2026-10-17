@@ -80,7 +80,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', minHeight: '60vh' }}>
       <div style={{ maxWidth: 560, textAlign: 'center' }}>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 14 }}>
+        <div style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', marginBottom: 14 }}>
           Welcome to Frontrow
         </div>
         <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--paper)', letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 14px' }}>
@@ -91,13 +91,13 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
         </p>
 
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', textAlign: 'left' }}>
-          {/* Create — primary, dark shell fill */}
-          <div style={{ flex: '1 1 240px', background: 'var(--shell)', border: '1px solid var(--shell)', borderRadius: 8, padding: '20px 18px', color: 'var(--on-accent)' }}>
-            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginBottom: 8 }}>
+          {/* Create — primary */}
+          <div style={{ flex: '1 1 240px', background: 'var(--card)', border: '1px solid var(--rule)', borderLeft: '4px solid var(--accent)', borderRadius: 'var(--radius)', padding: '20px 18px', color: 'var(--paper)' }}>
+            <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
               Start fresh
             </div>
             <div style={{ ...HEAD, fontSize: 'var(--fs-body)', marginBottom: 6 }}>Create a Clubhouse</div>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--on-shell-dim)', marginBottom: 14 }}>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 14 }}>
               Name it, invite your group, add competitions as you go
             </div>
 
@@ -109,13 +109,13 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. The Friday Night Crew"
                   maxLength={40}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--shell-rule-emphasis)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--on-accent)', background: 'var(--shell-fill-strong)', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--elev)', outline: 'none', boxSizing: 'border-box' }}
                 />
-                {createErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: '#FF8A8A' }}>{createErr}</div>}
+                {createErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{createErr}</div>}
                 <button
                   type="submit"
                   disabled={busy === 'create' || !name.trim()}
-                  style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
+                  style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
                 >
                   {busy === 'create' ? 'Creating…' : 'Create Clubhouse'}
                 </button>
@@ -123,7 +123,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
             ) : (
               <button
                 onClick={() => setCreating(true)}
-                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--on-accent)', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: 'pointer' }}
               >
                 Create Clubhouse
               </button>
@@ -132,7 +132,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
 
           {/* Join — secondary, always-visible code input */}
           <div style={{ flex: '1 1 240px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '20px 18px' }}>
-            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
+            <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
               Have a code?
             </div>
             <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 6 }}>Join with an invite</div>
@@ -142,13 +142,13 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="FK-XXXXX"
                 maxLength={8}
-                style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...MONO, fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
               />
-              {joinErr && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>{joinErr}</div>}
+              {joinErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{joinErr}</div>}
               <button
                 type="submit"
                 disabled={busy === 'join' || code.trim().length < 6}
-                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
+                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
               >
                 {busy === 'join' ? 'Joining…' : 'Join Clubhouse'}
               </button>
@@ -167,18 +167,18 @@ function ShortcutCard({ eyebrow, value, sublabel, onClick }) {
       onClick={onClick}
       style={{
         flex: '1 1 160px', minWidth: 150, textAlign: 'left', cursor: 'pointer',
-        background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8,
-        padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4,
+        background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)',
+        minHeight: 'var(--tap)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4,
       }}
     >
-      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+      <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
         {eyebrow}
       </div>
-      <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.1 }}>
+      <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.1 }}>
         {value}
       </div>
       {sublabel && (
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{sublabel}</div>
+        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{sublabel}</div>
       )}
     </button>
   );
@@ -194,9 +194,7 @@ function AllCompetitions({ competitions, onEnter }) {
   if (allComps.length === 0) return null;
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
-        COMPETITIONS
-      </div>
+      <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>Competitions</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
         {allComps.map(item => {
           const meta = SPORT_META[item.sport] ?? SPORT_META.football;
@@ -206,7 +204,7 @@ function AllCompetitions({ competitions, onEnter }) {
               onClick={() => onEnter(item, item.sport)}
               style={{
                 display: 'flex', flexDirection: 'column',
-                background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8,
+                background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)',
                 overflow: 'hidden', cursor: 'pointer', textAlign: 'left', padding: 0,
               }}
             >
@@ -221,21 +219,21 @@ function AllCompetitions({ competitions, onEnter }) {
                   </div>
                   <span style={{
                     flexShrink: 0,
-                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em',
+                    fontSize: 'var(--fs-micro)', fontWeight: 700,
                     color: meta.color,
                     background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
-                    padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase',
+                    padding: '2px 8px', borderRadius: 100,
                   }}>
                     {meta.emoji} {meta.label}
                   </span>
                 </div>
                 {item.format && (
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
                     {item.format}
                   </div>
                 )}
                 <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-                  <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>ENTER →</span>
+                  <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)' }}>Enter →</span>
                 </div>
               </div>
             </button>
@@ -249,16 +247,16 @@ function AllCompetitions({ competitions, onEnter }) {
 // ── Activity feed ─────────────────────────────────────────────────────────────
 function FeedEntry({ entry, onEnter }) {
   const typeLabel = {
-    activity:      'GW RESULT',
-    breaking_news: 'NEWS',
-    auction_result:'AUCTION',
-    trade_result:  'TRADE',
-    draft_report:  'DRAFT',
-    classified:    'CLASSIFIED',
-  }[entry.entry_type] ?? entry.entry_type.toUpperCase();
+    activity:      'GW result',
+    breaking_news: 'News',
+    auction_result:'Auction',
+    trade_result:  'Trade',
+    draft_report:  'Draft',
+    classified:    'Classified',
+  }[entry.entry_type] ?? entry.entry_type.replace(/_/g, ' ');
 
   const typeColor = {
-    activity:      'var(--cyan)',
+    activity:      'var(--accent)',
     breaking_news: 'var(--accent)',
     auction_result:'var(--positive)',
     trade_result:  'var(--positive)',
@@ -283,14 +281,14 @@ function FeedEntry({ entry, onEnter }) {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', color: typeColor }}>{typeLabel}</span>
+            <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: typeColor }}>{typeLabel}</span>
             {entry.league_name && (
-              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em' }}>{entry.league_name}</span>
+              <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{entry.league_name}</span>
             )}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>{ago}</span>
-            {clickable && <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', letterSpacing: '0.08em' }}>→</span>}
+            <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>{ago}</span>
+            {clickable && <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>→</span>}
           </div>
         </div>
         <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4 }}>{entry.headline}</div>
@@ -301,7 +299,7 @@ function FeedEntry({ entry, onEnter }) {
           style={{
             display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, padding: 0,
             background: 'transparent', border: 'none', cursor: 'pointer',
-            ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em',
+            ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', 
           }}
         >
           <span>{expanded ? '−' : '+'}</span>
@@ -314,7 +312,7 @@ function FeedEntry({ entry, onEnter }) {
             const text = bulletText(b);
             if (!text) return null;
             return (
-              <div key={i} style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+              <div key={i} style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.4 }}>
                 {text}
               </div>
             );
@@ -342,7 +340,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
 
   if (members.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '48px 0', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+      <div style={{ textAlign: 'center', padding: '48px 0', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
         No members yet.
       </div>
     );
@@ -358,10 +356,10 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
         return (
           <div
             key={m.user_id}
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, flexWrap: 'wrap' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', flexWrap: 'wrap' }}
           >
             <div style={{ width: 32, height: 32, borderRadius: '50%', background: m.role === 'owner' ? 'var(--accent)' : 'var(--elev)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: m.role === 'owner' ? 'var(--on-shell)' : 'var(--paper)' }}>
+              <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: m.role === 'owner' ? 'var(--on-accent)' : 'var(--paper)' }}>
                 {(m.username?.[0] ?? '?').toUpperCase()}
               </span>
             </div>
@@ -372,7 +370,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
                 </span>
                 {m.role === 'owner' && (
                   <span style={{
-                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)',
+                    ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold)',
                     border: '1px solid var(--gold)', borderRadius: 4, padding: '1px 5px', flexShrink: 0,
                   }}>
                     OWNER
@@ -380,7 +378,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
                 )}
               </div>
               {joinDate && (
-                <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>
+                <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
                   Joined {joinDate}
                 </div>
               )}
@@ -389,7 +387,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
               {meta && (
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)' }}>{meta.trophy_count}</div>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.06em' }}>TROPHIES</div>
+                  <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>TROPHIES</div>
                 </div>
               )}
             </div>
@@ -397,7 +395,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
               <button className="hit-44"
                 onClick={() => handleKick(m.user_id)}
                 disabled={kicking === m.user_id}
-                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
+                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
               >
                 {kicking === m.user_id ? '…' : 'KICK'}
               </button>
@@ -541,7 +539,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
   }
 
   const sectionLabel = (text) => (
-    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.16em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10, marginTop: 20 }}>
+    <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10, marginTop: 20 }}>
       {text}
     </div>
   );
@@ -576,7 +574,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
     <div>
       {confirmDialog}
       {archived && (
-        <div style={{ padding: '10px 14px', marginBottom: 16, background: 'var(--shell-fill)', border: '1px solid var(--rule)', borderRadius: 8, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.06em' }}>
+        <div style={{ padding: '10px 14px', marginBottom: 16, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           ARCHIVED{circle.archived_at ? ` · SINCE ${new Date(circle.archived_at).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}. Hidden from your switcher and Home dashboard.
         </div>
       )}
@@ -592,12 +590,12 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
         <button
           type="submit"
           disabled={savingName || !name.trim() || name.trim() === circle.name}
-          style={{ padding: '10px 16px', background: savingName || !name.trim() || name.trim() === circle.name ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          style={{ padding: '10px 16px', background: savingName || !name.trim() || name.trim() === circle.name ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
           {savingName ? '…' : 'SAVE'}
         </button>
       </form>
-      {nameMsg && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: nameMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 6 }}>{nameMsg}</div>}
+      {nameMsg && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: nameMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 6 }}>{nameMsg}</div>}
 
       {sectionLabel('Visibility & Features')}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -615,12 +613,12 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
         <button
           onClick={loadLinkableLeagues}
           disabled={loadingLeagues}
-          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingLeagues ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', cursor: 'pointer' }}
+          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingLeagues ? 'var(--mute)' : 'var(--accent)', ...BODY, fontSize: 'var(--fs-label)', cursor: 'pointer' }}
         >
           {loadingLeagues ? 'LOADING…' : '+ LINK AN EXISTING LEAGUE →'}
         </button>
       ) : linkableLeagues.length === 0 ? (
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+        <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
           All your leagues are already linked — or you are not a commissioner of any unlinked league.
         </div>
       ) : (
@@ -629,12 +627,12 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
             <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
               <div>
                 <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{l.name}</div>
-                {l.format && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{l.format}</div>}
+                {l.format && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>{l.format}</div>}
               </div>
               <button
                 onClick={() => handleLink(l.id)}
                 disabled={linkingId === l.id}
-                style={{ padding: '7px 14px', background: linkingId === l.id ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                style={{ padding: '7px 14px', background: linkingId === l.id ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
                 {linkingId === l.id ? '…' : 'LINK'}
               </button>
@@ -642,14 +640,14 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
           ))}
         </div>
       )}
-      {linkMsg && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: linkMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 8 }}>{linkMsg}</div>}
+      {linkMsg && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: linkMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 8 }}>{linkMsg}</div>}
 
       {sectionLabel('Competition Admins')}
       {competitionAdmins === null ? (
         <button
           onClick={loadCompetitionAdmins}
           disabled={loadingAdmins}
-          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingAdmins ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.1em', cursor: 'pointer' }}
+          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingAdmins ? 'var(--mute)' : 'var(--accent)', ...BODY, fontSize: 'var(--fs-label)', cursor: 'pointer' }}
         >
           {loadingAdmins ? 'LOADING…' : '+ MANAGE COMPETITION ADMINS →'}
         </button>
@@ -661,18 +659,18 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
             { label: 'Tennis Boxes', type: 'player_box',  list: competitionAdmins.tennis ?? [] },
           ].map(group => group.list.length === 0 ? null : (
             <div key={group.type}>
-              <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em', marginBottom: 6, textTransform: 'uppercase' }}>{group.label}</div>
+              <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>{group.label}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {group.list.map(comp => (
                   <div key={comp.id} style={{ padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                       <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{comp.name}</div>
-                      <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>Creator: {comp.creator_username ?? '—'}</div>
+                      <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>Creator: {comp.creator_username ?? '—'}</div>
                     </div>
                     {comp.assigned_admins.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                         {comp.assigned_admins.map(a => (
-                          <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: 'var(--elev)', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>
+                          <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: 'var(--elev)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
                             {a.username}
                             <button
                               onClick={() => handleRemoveAdmin(group.type, comp.id, a.user_id)}
@@ -701,7 +699,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
                       <button className="hit-44"
                         onClick={() => handleAssignAdmin(group.type, comp.id)}
                         disabled={!assignPicks[comp.id] || pendingKey === `assign-${comp.id}`}
-                        style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         {pendingKey === `assign-${comp.id}` ? '…' : 'ADD'}
                       </button>
@@ -712,13 +710,13 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
             </div>
           ))}
           {(competitionAdmins.leagues ?? []).length === 0 && (competitionAdmins.f1 ?? []).length === 0 && (competitionAdmins.tennis ?? []).length === 0 && (
-            <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+            <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
               No competitions linked to this Clubhouse yet.
             </div>
           )}
         </div>
       )}
-      {adminMsg && <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 8 }}>{adminMsg}</div>}
+      {adminMsg && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)', marginTop: 8 }}>{adminMsg}</div>}
     </div>
   );
 }
@@ -834,63 +832,63 @@ export default function ClubhouseScreen() {
 
   // 5 tabs on desktop (chat lives in the persistent rail); 6 on mobile (chat gets its own tab, no rail)
   const MAIN_TABS = [
-    { key: 'home',      label: 'HOME'           },
-    { key: 'frontrow',  label: 'THE FRONTROW'   },
-    ...(!isDesktop ? [{ key: 'chat', label: 'CHAT' }] : []),
-    { key: 'members',   label: 'MEMBERS'        },
-    ...(isOwner ? [{ key: 'settings', label: 'SETTINGS' }] : []),
+    { key: 'home',      label: 'Home' },
+    { key: 'frontrow',  label: 'The Frontrow' },
+    ...(!isDesktop ? [{ key: 'chat', label: 'Chat' }] : []),
+    { key: 'members',   label: 'Members' },
+    ...(isOwner ? [{ key: 'settings', label: 'Settings' }] : []),
   ];
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 32 }}>
 
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '20px 20px 18px' }}>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 8 }}>
-          🏠 THE CLUBHOUSE
-        </div>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '20px 20px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           {/* Left: name + member avatars */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-shell)', margin: 0, lineHeight: 1.1, overflowWrap: 'anywhere' }}>
-              {activeCircle ? activeCircle.name.toUpperCase() : 'CLUBHOUSE'}
-            </h1>
-            {activeCircle && (
-              <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
-                {members.slice(0, 5).map((m, i) => (
-                  <div
-                    key={m.user_id}
-                    style={{
-                      width: 24, height: 24, borderRadius: '50%',
-                      background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: 10 }}>
+            <span aria-hidden style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: 'var(--accent)', flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.1, overflowWrap: 'anywhere' }}>
+                {activeCircle ? activeCircle.name : 'Clubhouse'}
+              </h1>
+              {activeCircle && (
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
+                  {members.slice(0, 5).map((m, i) => (
+                    <div
+                      key={m.user_id}
+                      style={{
+                        width: 28, height: 28, borderRadius: '50%',
+                        background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                        display: 'grid', placeItems: 'center',
+                        fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--on-accent)',
+                        border: '2px solid var(--card)',
+                        marginRight: -6, position: 'relative', zIndex: 5 - i,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {(m.username?.[0] ?? '?').toUpperCase()}
+                    </div>
+                  ))}
+                  {members.length > 5 && (
+                    <div className="num" style={{
+                      width: 28, height: 28, borderRadius: '50%',
+                      background: 'var(--elev)',
                       display: 'grid', placeItems: 'center',
-                      fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--on-accent)',
-                      border: '2px solid var(--shell)',
-                      marginRight: -6, position: 'relative', zIndex: 5 - i,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {(m.username?.[0] ?? '?').toUpperCase()}
-                  </div>
-                ))}
-                {members.length > 5 && (
-                  <div style={{
-                    width: 24, height: 24, borderRadius: '50%',
-                    background: 'var(--shell-fill-active)',
-                    display: 'grid', placeItems: 'center',
-                    ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--on-shell-dim)',
-                    border: '2px solid var(--shell)',
-                    marginRight: -6, zIndex: 0, flexShrink: 0,
-                  }}>
-                    +{members.length - 5}
-                  </div>
-                )}
-                <span style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.08em', color: 'var(--on-shell-dim)', marginLeft: 18, flexShrink: 0 }}>
-                  {members.length} {members.length === 1 ? 'MEMBER' : 'MEMBERS'}
-                  {activeCircle.is_public && <span style={{ color: 'var(--positive)', marginLeft: 6 }}>· PUBLIC</span>}
-                </span>
-              </div>
-            )}
+                      fontSize: 'var(--fs-micro)', color: 'var(--mute)',
+                      border: '2px solid var(--card)',
+                      marginRight: -6, zIndex: 0, flexShrink: 0,
+                    }}>
+                      +{members.length - 5}
+                    </div>
+                  )}
+                  <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginLeft: 18, flexShrink: 0 }}>
+                    {members.length} {members.length === 1 ? 'member' : 'members'}
+                    {activeCircle.is_public && <span style={{ color: 'var(--positive)', marginLeft: 6 }}>· Public</span>}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right: notif bell + stats + invite code */}
@@ -899,12 +897,12 @@ export default function ClubhouseScreen() {
               {activeCircle && totalComps > 0 && (
                 <div style={{ display: 'flex', gap: 20 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>SPORTS</div>
+                    <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{activeSports}</div>
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Sports</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--on-shell-dim)', marginTop: 2 }}>COMPETITIONS</div>
+                    <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{totalComps}</div>
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Competitions</div>
                   </div>
                 </div>
               )}
@@ -912,11 +910,11 @@ export default function ClubhouseScreen() {
                 <button
                   onClick={() => setShowInvite(true)}
                   title="Invite people to this Clubhouse"
-                  style={{ padding: '8px 14px', background: 'var(--accent)', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                  style={{ minHeight: 'var(--tap)', padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                 >
                   <span style={{ fontSize: 'var(--fs-label)' }}>💬</span>
-                  <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, letterSpacing: '0.1em', color: '#0a0e14' }}>
-                    INVITE
+                  <span style={{ ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--on-accent)' }}>
+                    Invite
                   </span>
                 </button>
               )}
@@ -934,19 +932,19 @@ export default function ClubhouseScreen() {
       </div>
 
       {joinCodeStatus === 'joining' && (
-        <div style={{ padding: '10px 16px', background: 'var(--accent-bg)', borderBottom: '1px solid var(--rule)', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', textAlign: 'center' }}>
+        <div style={{ padding: '10px 16px', background: 'var(--accent-soft)', borderBottom: '1px solid var(--rule)', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--accent)', textAlign: 'center' }}>
           Joining Clubhouse…
         </div>
       )}
       {joinCodeStatus?.error && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 16px', background: 'rgba(220,60,60,0.1)', borderBottom: '1px solid rgba(220,60,60,0.3)', ...MONO, fontSize: 'var(--fs-micro)', color: '#e05a5a' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 16px', background: 'var(--crit-soft)', borderBottom: '1px solid var(--rule)', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--crit)' }}>
           <span>{joinCodeStatus.error}</span>
-          <button onClick={() => setJoinCodeStatus(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-micro)' }}>✕</button>
+          <button onClick={() => setJoinCodeStatus(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', ...BODY, fontSize: 'var(--fs-label)' }}>✕</button>
         </div>
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+        <div style={{ textAlign: 'center', padding: 60, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           Loading…
         </div>
       ) : myCircles.length === 0 ? (
@@ -1028,9 +1026,9 @@ export default function ClubhouseScreen() {
                     </p>
                     <button
                       onClick={openNewCompetitionFlow}
-                      style={{ padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
+                      style={{ minHeight: 'var(--tap)', padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer' }}
                     >
-                      + CREATE A COMPETITION →
+                      Create a competition →
                     </button>
                   </div>
                 )}
@@ -1039,25 +1037,23 @@ export default function ClubhouseScreen() {
                 <button
                   onClick={() => setTab('frontrow')}
                   style={{
-                    textAlign: 'left', cursor: 'pointer', border: '1px solid #E5DFC8', borderRadius: 8,
-                    background: '#F2EEE5', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 4,
+                    textAlign: 'left', cursor: 'pointer', border: '1px solid var(--rule)', borderLeft: '4px solid var(--gold)', borderRadius: 'var(--radius)',
+                    background: 'var(--card)', minHeight: 'var(--tap)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 4,
                   }}
                 >
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.14em', color: '#8A8368', textTransform: 'uppercase' }}>
-                    THE FRONTROW{frontpage.edition ? ` · EDITION #${frontpage.edition.edition_number}` : ''}
+                  <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
+                    The Frontrow{frontpage.edition ? ` · Edition #${frontpage.edition.edition_number}` : ''}
                   </div>
-                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 'var(--fs-body)', color: '#1A1A18', fontStyle: frontpage.edition ? 'normal' : 'italic' }}>
+                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', fontStyle: frontpage.edition ? 'normal' : 'italic' }}>
                     {frontpage.edition?.headline ?? 'No edition published yet today.'}
                   </div>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: '#8A8368', marginTop: 2 }}>READ THE FRONTROW →</div>
+                  <div style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', marginTop: 2 }}>Read the Frontrow →</div>
                 </button>
 
                 {/* Activity feed */}
                 {feed.length > 0 && (
                   <div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-micro)', letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
-                      Activity
-                    </div>
+                    <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>Activity</h2>
                     {feed.map(entry => (
                       <FeedEntry key={entry.id} entry={entry} onEnter={enterLeague} />
                     ))}
@@ -1065,7 +1061,7 @@ export default function ClubhouseScreen() {
                 )}
 
                 {feed.length === 0 && totalComps > 0 && (
-                  <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+                  <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
                     Activity will appear here once competitions start.
                   </div>
                 )}
