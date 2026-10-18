@@ -4,9 +4,15 @@ import { useAuth } from './useAuth';
 
 export const FT_EMOJIS = ['🔥', '💀', '😂', '👑', '😤'];
 
-export function useClubhouseFrontpage(circleId) {
+// withArchive: also load the list of dates that have an edition (only the
+// Frontrow tab needs it; the Clubhouse home card just shows today's headline).
+export function useClubhouseFrontpage(circleId, { withArchive = false } = {}) {
   const { user } = useAuth();
   const today = new Date().toISOString().split('T')[0];
+  // null = live "today", so the page keeps following the date if left open.
+  const [pickedDate,   setPickedDate]   = useState(null);
+  const [archive,      setArchive]      = useState([]);
+  const viewDate = pickedDate ?? today;
   const [edition,      setEdition]      = useState(null);
   const [reactions,    setReactions]    = useState([]);
   const [comments,     setComments]     = useState([]);
@@ -18,9 +24,9 @@ export function useClubhouseFrontpage(circleId) {
     let cancelled = false;
     setLoading(true);
     Promise.all([
-      supabase.from('frontpage_editions').select('*').eq('circle_id', circleId).eq('edition_date', today).maybeSingle(),
-      supabase.from('frontpage_reactions').select('id, section_key, user_id, emoji').eq('circle_id', circleId).eq('edition_date', today),
-      supabase.from('frontpage_comments').select('id, section_key, user_id, text, created_at').eq('circle_id', circleId).eq('edition_date', today).order('created_at', { ascending: true }),
+      supabase.from('frontpage_editions').select('*').eq('circle_id', circleId).eq('edition_date', viewDate).maybeSingle(),
+      supabase.from('frontpage_reactions').select('id, section_key, user_id, emoji').eq('circle_id', circleId).eq('edition_date', viewDate),
+      supabase.from('frontpage_comments').select('id, section_key, user_id, text, created_at').eq('circle_id', circleId).eq('edition_date', viewDate).order('created_at', { ascending: true }),
     ]).then(([{ data: ed }, { data: rx }, { data: cm }]) => {
       if (cancelled) return;
       setEdition(ed ?? null);
@@ -29,7 +35,27 @@ export function useClubhouseFrontpage(circleId) {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [circleId, today, refreshTick]);
+  }, [circleId, viewDate, refreshTick]);
+
+  // Only dates that actually have an edition, newest first.
+  useEffect(() => {
+    if (!withArchive || !circleId) { setArchive([]); return; }
+    let cancelled = false;
+    supabase.from('frontpage_editions')
+      .select('edition_date, edition_number')
+      .eq('circle_id', circleId)
+      .order('edition_date', { ascending: false })
+      .limit(120)
+      .then(({ data }) => { if (!cancelled) setArchive(data ?? []); });
+    return () => { cancelled = true; };
+  }, [withArchive, circleId, refreshTick]);
+
+  // Switching circles returns to today's edition.
+  useEffect(() => { setPickedDate(null); }, [circleId]);
+
+  const selectDate = useCallback((d) => {
+    setPickedDate(d && d !== new Date().toISOString().split('T')[0] ? d : null);
+  }, []);
 
   const refresh = useCallback(() => {
     setRefreshTick(t => t + 1);
@@ -48,7 +74,7 @@ export function useClubhouseFrontpage(circleId) {
       setReactions(prev => [...prev, { id: tempId, section_key: sectionKey, user_id: user.id, emoji }]);
       const { data, error } = await supabase
         .from('frontpage_reactions')
-        .insert({ circle_id: circleId, edition_date: today, section_key: sectionKey, user_id: user.id, emoji })
+        .insert({ circle_id: circleId, edition_date: viewDate, section_key: sectionKey, user_id: user.id, emoji })
         .select('id')
         .single();
       if (error) {
@@ -57,7 +83,7 @@ export function useClubhouseFrontpage(circleId) {
         setReactions(prev => prev.map(r => r.id === tempId ? { ...r, id: data.id } : r));
       }
     }
-  }, [user, circleId, today, edition, reactions]);
+  }, [user, circleId, viewDate, edition, reactions]);
 
   const getReactionCounts = useCallback((sectionKey) => {
     const counts = {};
@@ -77,12 +103,12 @@ export function useClubhouseFrontpage(circleId) {
     if (!user || !circleId || !edition) return { error: 'not_ready' };
     const { data, error } = await supabase
       .from('frontpage_comments')
-      .insert({ circle_id: circleId, edition_date: today, section_key: sectionKey, user_id: user.id, text })
+      .insert({ circle_id: circleId, edition_date: viewDate, section_key: sectionKey, user_id: user.id, text })
       .select('id, section_key, user_id, text, created_at')
       .single();
     if (!error && data) setComments(prev => [...prev, data]);
     return { error };
-  }, [user, circleId, today, edition]);
+  }, [user, circleId, viewDate, edition]);
 
   const deleteComment = useCallback(async (commentId) => {
     await supabase.from('frontpage_comments').delete().eq('id', commentId);
@@ -97,6 +123,11 @@ export function useClubhouseFrontpage(circleId) {
     edition,
     loading,
     refresh,
+    today,
+    viewDate,
+    isToday: viewDate === today,
+    archive,
+    selectDate,
     toggleReaction,
     getReactionCounts,
     isMyReaction,

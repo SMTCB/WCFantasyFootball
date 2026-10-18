@@ -257,8 +257,56 @@ function EmptyState({ isOwner, onGenerate, generating, genError }) {
   );
 }
 
+function formatEditionDate(d) {
+  return new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+  });
+}
+
+// "Today" shows the current edition (or the empty state if none yet); the
+// dropdown lists only earlier dates that actually have an edition.
+function EditionPicker({ ft }) {
+  const earlier = ft.archive.filter(e => e.edition_date !== ft.today);
+  if (earlier.length === 0) return null;
+  return (
+    <div style={{ background: FT_CREAM, borderBottom: `1px solid ${FT_RULE}`, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <button
+        onClick={() => ft.selectDate(null)}
+        aria-pressed={ft.isToday}
+        style={{
+          minHeight: 'var(--tap)', padding: '0 16px', cursor: 'pointer', flexShrink: 0,
+          fontFamily: FT_BODY, fontSize: 'var(--fs-label)', fontWeight: 700,
+          border: `1px solid ${ft.isToday ? FT_INK : FT_RULE}`,
+          background: ft.isToday ? FT_INK : 'transparent',
+          color: ft.isToday ? FT_PAPER : FT_INK,
+        }}
+      >
+        Today
+      </button>
+      <select
+        aria-label="Earlier editions"
+        value={ft.isToday ? '' : ft.viewDate}
+        onChange={(e) => ft.selectDate(e.target.value || null)}
+        style={{
+          flex: 1, minWidth: 0, minHeight: 'var(--tap)', padding: '0 10px',
+          fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_INK,
+          background: ft.isToday ? 'transparent' : FT_PAPER,
+          border: `1px solid ${ft.isToday ? FT_RULE : FT_INK}`,
+        }}
+      >
+        <option value="">Earlier editions…</option>
+        {earlier.map(e => (
+          <option key={e.edition_date} value={e.edition_date}>
+            {formatEditionDate(e.edition_date)} · #{e.edition_number}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function ClubhouseFrontpage({ circleId, circleName, isOwner }) {
-  const ft = useClubhouseFrontpage(circleId);
+  const ft = useClubhouseFrontpage(circleId, { withArchive: true });
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
 
@@ -283,20 +331,31 @@ export default function ClubhouseFrontpage({ circleId, circleName, isOwner }) {
     }
   }
 
+  let body;
   if (ft.loading) {
-    return (
+    body = (
       <div style={{ background: FT_PAPER, padding: '48px 20px', textAlign: 'center' }}>
         <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE }}>
           Loading the Frontrow…
         </div>
       </div>
     );
-  }
-
-  if (!ft.edition) {
-    return (
+  } else if (!ft.edition) {
+    body = (
       <EmptyState
-        isOwner={isOwner}
+        isOwner={isOwner && ft.isToday}
+        onGenerate={handleGenerate}
+        generating={generating}
+        genError={genError}
+      />
+    );
+  } else {
+    body = (
+      <EditionView
+        edition={ft.edition}
+        ft={ft}
+        circleName={circleName ?? 'Clubhouse'}
+        isOwner={isOwner && ft.isToday}
         onGenerate={handleGenerate}
         generating={generating}
         genError={genError}
@@ -305,14 +364,9 @@ export default function ClubhouseFrontpage({ circleId, circleName, isOwner }) {
   }
 
   return (
-    <EditionView
-      edition={ft.edition}
-      ft={ft}
-      circleName={circleName ?? 'Clubhouse'}
-      isOwner={isOwner}
-      onGenerate={handleGenerate}
-      generating={generating}
-      genError={genError}
-    />
+    <>
+      <EditionPicker ft={ft} />
+      {body}
+    </>
   );
 }
