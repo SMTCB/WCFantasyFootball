@@ -166,9 +166,16 @@ export default function WishlistDraftScreen() {
     if (loading || hydrated) return;
     const poolMap = Object.fromEntries(playerPool.map(p => [p.id, p]));
     setTargets(existingTargets.map(id => poolMap[id]).filter(Boolean));
-    setDropIds(new Set(existingDrops));
+    // A saved release can name a player who has since left the squad (sold,
+    // traded, auctioned). submit_wishlist_draft rejects those (NOT_IN_SQUAD) and
+    // the drop panel only lists current squad players, so the stale id could
+    // neither be saved nor un-ticked — every auto-save failed.
+    const squadIds = new Set(squadPlayers.map(p => p.id));
+    const liveDrops = existingDrops.filter(id => squadIds.has(id));
+    if (liveDrops.length !== existingDrops.length) dirtyRef.current = true;
+    setDropIds(new Set(liveDrops));
     setHydrated(true);
-  }, [loading, hydrated, playerPool, existingTargets, existingDrops]);
+  }, [loading, hydrated, playerPool, squadPlayers, existingTargets, existingDrops]);
 
   const listedIds = useMemo(() => new Set(targets.map(p => p.id)), [targets]);
   const ownedIds  = useMemo(() => new Set(squadPlayers.map(p => p.id)), [squadPlayers]);
