@@ -850,7 +850,7 @@ export default function ClubhouseScreen() {
                 {activeCircle ? activeCircle.name : 'Clubhouse'}
               </h1>
               {activeCircle && (
-                <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', rowGap: 6, marginTop: 10 }}>
                   {members.slice(0, 5).map((m, i) => (
                     <div
                       key={m.user_id}
@@ -885,10 +885,22 @@ export default function ClubhouseScreen() {
                   </span>
                 </div>
               )}
+              {activeCircle?.invite_code && (
+                <button
+                  onClick={() => setShowInvite(true)}
+                  title="Invite people to this Clubhouse"
+                  style={{ marginTop: 12, minHeight: 'var(--tap)', padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  <span style={{ fontSize: 'var(--fs-label)' }}>💬</span>
+                  <span style={{ ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--on-accent)' }}>
+                    Invite
+                  </span>
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Right: notif bell + stats + invite code */}
+          {/* Right: stats + notif bell (Invite lives under the member row so it can't collide with the member count) */}
           <div style={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
               {activeCircle && totalComps > 0 && (
@@ -902,18 +914,6 @@ export default function ClubhouseScreen() {
                     <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Competitions</div>
                   </div>
                 </div>
-              )}
-              {activeCircle?.invite_code && (
-                <button
-                  onClick={() => setShowInvite(true)}
-                  title="Invite people to this Clubhouse"
-                  style={{ minHeight: 'var(--tap)', padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-                >
-                  <span style={{ fontSize: 'var(--fs-label)' }}>💬</span>
-                  <span style={{ ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--on-accent)' }}>
-                    Invite
-                  </span>
-                </button>
               )}
             </div>
             <NotificationBell
