@@ -58,9 +58,9 @@ function RoundNav({ rounds, lastRound, selected, onSelect }) {
         WINDOW
       </span>
       <button className="hit-44" onClick={() => onSelect('all')} style={pillStyle(selected === 'all')}>ALL</button>
-      {rounds.map(r => (
+      {[...rounds].sort((a, b) => a - b).map(r => (
         <button className="hit-44" key={r} onClick={() => onSelect(r)} style={pillStyle(selected === r)}>
-          MD {r}{r === lastRound ? ' · LAST' : ''}
+          MD {r}{r === lastRound ? ' · LATEST' : ''}
         </button>
       ))}
     </div>
@@ -74,37 +74,48 @@ function formatWindowSub(w) {
   return closed ? `WINDOW CLOSED ${d}` : `WINDOW CLOSES ${d}`;
 }
 
+const HEAT_COLLAPSED = 5;
+
 function HeatMapPanel({ items, playerMap }) {
+  const [expanded, setExpanded] = useState(false);
   if (!items.length) return null;
   const max = items[0].count;
+  const shown = expanded ? items : items.slice(0, HEAT_COLLAPSED);
   return (
     <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--rule)' }}>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 10 }}>
-        MOST WANTED
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flex: 1 }}>
+          MOST WANTED
+        </span>
+        {items.length > HEAT_COLLAPSED && (
+          <button className="hit-44" onClick={() => setExpanded(e => !e)} style={miniBtnStyle('var(--accent)')}>
+            {expanded ? 'TOP 5 ▲' : `ALL ${items.length} ▼`}
+          </button>
+        )}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {items.map(({ player_id, count }) => {
+        {shown.map(({ player_id, count }) => {
           const p = playerMap[player_id];
           const pct = Math.max(8, Math.round((count / max) * 100));
           return (
-            <div key={player_id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div key={player_id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <ClubCrest name={p?.club} size={18} />
               <span style={{
                 fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[p?.position] || 'var(--mute)',
-                width: 30, flexShrink: 0,
+                width: 28, flexShrink: 0,
               }}>
                 {p?.position ?? '—'}
               </span>
               <span style={{
                 fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)',
-                width: 120, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {p?.name ?? player_id}
               </span>
-              <div style={{ flex: 1, height: 6, background: 'var(--rule)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ width: 64, height: 6, background: 'var(--rule)', borderRadius: 3, overflow: 'hidden', flexShrink: 0 }}>
                 <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)' }} />
               </div>
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 20, textAlign: 'right', flexShrink: 0 }}>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', width: 18, textAlign: 'right', flexShrink: 0 }}>
                 {count}
               </span>
             </div>
@@ -115,55 +126,50 @@ function HeatMapPanel({ items, playerMap }) {
   );
 }
 
-function TransferRow({ t, playerMap, username, isMe }) {
-  const pOut = playerMap[t.player_out];
-  const pIn  = playerMap[t.player_in];
-  const when = t.transferred_at
-    ? new Date(t.transferred_at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-    : '—';
+function MoveLine({ tone, label, player }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 28 }}>
+      <span style={{
+        fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tone, width: 28, flexShrink: 0,
+      }}>
+        {label}
+      </span>
+      <ClubCrest name={player.club} size={16} />
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[player.position] || 'var(--mute)', width: 28, flexShrink: 0 }}>
+        {player.position}
+      </span>
+      <span style={{
+        fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: 'var(--paper)',
+        flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}>
+        {player.name}
+      </span>
+    </div>
+  );
+}
 
+// One card per manager per matchday: their buys, then their sells. A buy and a
+// sell are separate log rows with no pairing key, so they stay separate lists.
+function ManagerMoves({ m, playerMap, username, isMe }) {
+  const lookup = (id) => playerMap[id] ?? { name: id, position: '', club: undefined };
+  const when = new Date(m.latest).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8,
-      padding: '10px 20px', borderBottom: '1px solid var(--rule)',
+      padding: '10px 20px 12px', borderBottom: '1px solid var(--rule)',
       borderLeft: isMe ? '2px solid var(--accent)' : '2px solid transparent',
       background: isMe ? 'var(--accent-soft)' : 'transparent',
     }}>
-      <MgrTag mono={mgrMono(username)} hue={mgrHue(username)} size={18} />
-      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)', flexShrink: 0 }}>
-        {username}
-      </span>
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        {t.player_out && (
-          <>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>SOLD</span>
-            {pOut && <ClubCrest name={pOut.club} size={16} />}
-            {pOut && (
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pOut.position] || 'var(--mute)' }}>
-                {pOut.position}
-              </span>
-            )}
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--danger)', textDecoration: 'line-through', opacity: 0.85 }}>
-              {pOut?.name ?? t.player_out}
-            </span>
-          </>
-        )}
-        {t.player_in && (
-          <>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>BOUGHT</span>
-            {pIn && <ClubCrest name={pIn.club} size={16} />}
-            {pIn && (
-              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pIn.position] || 'var(--mute)' }}>
-                {pIn.position}
-              </span>
-            )}
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>
-              {pIn?.name ?? t.player_in}
-            </span>
-          </>
-        )}
-      </span>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>{when}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <MgrTag mono={mgrMono(username)} hue={mgrHue(username)} size={18} />
+        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {username}
+        </span>
+        <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
+          {m.ins.length} in · {m.outs.length} out · {when}
+        </span>
+      </div>
+      {m.ins.map((id, i) => <MoveLine key={`in-${id}-${i}`} tone="var(--positive)" label="IN" player={lookup(id)} />)}
+      {m.outs.map((id, i) => <MoveLine key={`out-${id}-${i}`} tone="var(--danger)" label="OUT" player={lookup(id)} />)}
     </div>
   );
 }
@@ -312,13 +318,20 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
   const lastRound = allRounds[0];
 
   const grouped = useMemo(() => {
-    const map = {};
+    const rounds = {};
     for (const t of transfers) {
       if (selectedRound !== 'all' && t.round_number !== selectedRound) continue;
-      (map[t.round_number] ??= []).push(t);
+      const byMgr = (rounds[t.round_number] ??= {});
+      const m = (byMgr[t.user_id] ??= { user_id: t.user_id, ins: [], outs: [], latest: t.transferred_at });
+      if (t.player_in) m.ins.push(t.player_in);
+      if (t.player_out) m.outs.push(t.player_out);
+      if (t.transferred_at > m.latest) m.latest = t.transferred_at;
     }
-    return Object.entries(map)
-      .map(([r, list]) => ({ round: Number(r), list }))
+    return Object.entries(rounds)
+      .map(([r, byMgr]) => {
+        const managers = Object.values(byMgr).sort((a, b) => (a.latest < b.latest ? 1 : -1));
+        return { round: Number(r), managers, moves: managers.reduce((n, m) => n + m.ins.length + m.outs.length, 0) };
+      })
       .sort((a, b) => b.round - a.round);
   }, [transfers, selectedRound]);
 
@@ -333,7 +346,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
       <HubSectionLabel label="Market report" sub="League transfer activity" tone="var(--accent)" />
       <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--rule)' }}>
         <p style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5, margin: 0 }}>
-          Every transfer made across the league, grouped by matchday. Pick a single window below to see just the last transfer window, or view All for the full season.
+          Every manager's transfers, grouped by matchday. Pick a window below, or view All.
         </p>
       </div>
 
@@ -352,14 +365,18 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
       ) : (
         grouped.map(g => (
           <div key={g.round}>
-            <MobSection label={`Matchday ${g.round}`} sub={formatWindowSub(windowMeta[g.round])} tone="var(--gold)" />
-            {g.list.map(t => (
-              <TransferRow
-                key={t.id}
-                t={t}
+            <MobSection
+              label={`Matchday ${g.round}`}
+              sub={[`${g.moves} ${g.moves === 1 ? 'move' : 'moves'}`, formatWindowSub(windowMeta[g.round])].filter(Boolean).join(' · ')}
+              tone="var(--gold)"
+            />
+            {g.managers.map(m => (
+              <ManagerMoves
+                key={m.user_id}
+                m={m}
                 playerMap={playerMap}
-                username={userMap[t.user_id] ?? 'Unknown'}
-                isMe={!!currentUser && t.user_id === currentUser.id}
+                username={userMap[m.user_id] ?? 'Unknown'}
+                isMe={!!currentUser && m.user_id === currentUser.id}
               />
             ))}
           </div>
