@@ -12,6 +12,17 @@
 
 ---
 
+## ✅ Market report fixed and redesigned; Clubhouse Invite button (2026-10-18) — PRs #1104–#1106
+
+- **Root cause of the empty Market report**: the legacy `transfers` table has not been written since migration 183 — buys/sells log to `squad_events` (`transfer_buy` / `transfer_sell`, separate rows, no pairing key). New RPC `get_league_market_events` (migrations 302 → 303, SECURITY DEFINER, member-only, transfer events only) feeds `MarketReportView`. Migration 301 (a league-member read policy on legacy `transfers`) was applied on a wrong diagnosis; harmless, not needed.
+- **Redesign**: one collapsible card per manager per matchday (IN/OUT lines, own card open), EXPAND/COLLAPSE ALL, ALL → MD 1 → MD n filter, Most wanted collapsed to top 5.
+- **Hidden until the round starts**: 303 returns a round's transfers only after `matchday_deadlines.deadline_at` (fallback `transfer_windows.closes_at` for that round number; hidden if neither). Enforced server-side; also hides the caller's own pending moves from this report.
+- **Clubhouse header**: Invite button moved under the member avatars (it covered the member count on narrow screens).
+- Migrations 301–303 applied manually via the SQL editor on 2026-10-18 (the session's Supabase CLI token was invalid; backup skipped by the owner's call — change is read-only).
+- Open: `RecapScreen` (My Digest) still reads the legacy `transfers` table for own transfers, so it is probably empty too. CI "Tier 3 Local Full-Stack E2E" fails on `auth-screen.spec.js` 1.2 (Create Account tab) — red on `main` before and after these PRs.
+
+---
+
 ## ✅ Frontrow redesign — Wave 0 + Wave 1 (football league screens) (2026-10-17) — PRs #1059–#1065, rollback tag `rollback/pre-redesign-2026-10-17` @ 6b56bfa
 
 Built from `docs/design/REDESIGN_PROPOSAL_2026-10.html` (approved). One small, revertible PR per slice:

@@ -147,7 +147,7 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-10-17. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-10-18. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-amber">NOT READY FOR NEW TESTERS — 2 P0 blockers open</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
@@ -155,7 +155,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>68</strong><span>open</span></div>
-      <div class="total-pill"><strong>278</strong><span>closed</span></div>
+      <div class="total-pill"><strong>279</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (195)</span>
+    <span class="chip" data-filter-kind="done">Shipped (196)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
@@ -188,7 +188,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">68</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">278</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">279</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -199,7 +199,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">195</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">196</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
@@ -1396,8 +1396,44 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">195</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">196</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ market report fixed and redesigned; clubhouse invite button (2026-10-18) — prs #1104–#1106 
+
+- **root cause of the empty market report**: the legacy `transfers` table has not been written since migration 183 — buys/sells log to `squad_events` (`transfer_buy` / `transfer_sell`, separate rows, no pairing key). new rpc `get_league_market_events` (migrations 302 → 303, security definer, member-only, transfer events only) feeds `marketreportview`. migration 301 (a league-member read policy on legacy `transfers`) was applied on a wrong diagnosis; harmless, not needed.
+- **redesign**: one collapsible card per manager per matchday (in/out lines, own card open), expand/collapse all, all → md 1 → md n filter, most wanted collapsed to top 5.
+- **hidden until the round starts**: 303 returns a round&#x27;s transfers only after `matchday_deadlines.deadline_at` (fallback `transfer_windows.closes_at` for that round number; hidden if neither). enforced server-side; also hides the caller&#x27;s own pending moves from this report.
+- **clubhouse header**: invite button moved under the member avatars (it covered the member count on narrow screens).
+- migrations 301–303 applied manually via the sql editor on 2026-10-18 (the session&#x27;s supabase cli token was invalid; backup skipped by the owner&#x27;s call — change is read-only).
+- open: `recapscreen` (my digest) still reads the legacy `transfers` table for own transfers, so it is probably empty too. ci &quot;tier 3 local full-stack e2e&quot; fails on `auth-screen.spec.js` 1.2 (create account tab) — red on `main` before and after these prs.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Market report fixed and redesigned; Clubhouse Invite button</h3>
+        <p class="card-summary">Root cause of the empty Market report : the legacy transfers table has not been written since migration 183 — buys/sells log to squad_events ( transfer_buy /…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-18</span><span class="foot-refs">PRs #1104–#1106</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Market report fixed and redesigned; Clubhouse Invite button</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Root cause of the empty Market report : the legacy transfers table has not been written since migration 183 — buys/sells log to squad_events ( transfer_buy /…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #1104–#1106</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-18</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><ul>
+<li><strong>Root cause of the empty Market report</strong>: the legacy <code>transfers</code> table has not been written since migration 183 — buys/sells log to <code>squad_events</code> (<code>transfer_buy</code> / <code>transfer_sell</code>, separate rows, no pairing key). New RPC <code>get_league_market_events</code> (migrations 302 → 303, SECURITY DEFINER, member-only, transfer events only) feeds <code>MarketReportView</code>. Migration 301 (a league-member read policy on legacy <code>transfers</code>) was applied on a wrong diagnosis; harmless, not needed.</li>
+<li><strong>Redesign</strong>: one collapsible card per manager per matchday (IN/OUT lines, own card open), EXPAND/COLLAPSE ALL, ALL → MD 1 → MD n filter, Most wanted collapsed to top 5.</li>
+<li><strong>Hidden until the round starts</strong>: 303 returns a round's transfers only after <code>matchday_deadlines.deadline_at</code> (fallback <code>transfer_windows.closes_at</code> for that round number; hidden if neither). Enforced server-side; also hides the caller's own pending moves from this report.</li>
+<li><strong>Clubhouse header</strong>: Invite button moved under the member avatars (it covered the member count on narrow screens).</li>
+<li>Migrations 301–303 applied manually via the SQL editor on 2026-10-18 (the session's Supabase CLI token was invalid; backup skipped by the owner's call — change is read-only).</li>
+<li>Open: <code>RecapScreen</code> (My Digest) still reads the legacy <code>transfers</code> table for own transfers, so it is probably empty too. CI "Tier 3 Local Full-Stack E2E" fails on <code>auth-screen.spec.js</code> 1.2 (Create Account tab) — red on <code>main</code> before and after these PRs.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ frontrow redesign — wave 0 + wave 1 (football league screens) (2026-10-17) — prs #1059–#1065, rollback tag `rollback/pre-redesign-2026-10-17` @ 6b56bfa 
 
 built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, revertible pr per slice:
