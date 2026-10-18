@@ -12,6 +12,30 @@ import ClubCrest from '../ClubCrest';
 
 const POSITION_COLOR = { GK: 'var(--gold)', DEF: 'var(--accent)', MID: 'var(--positive)', FWD: 'var(--danger)' };
 
+// matchday_id looks like '623-r4'; null means a pre-competition move.
+function roundFromMatchday(matchdayId) {
+  const m = /-r(\d+)$/.exec(matchdayId ?? '');
+  return m ? Number(m[1]) : null;
+}
+
+// squad_events logs a buy and a sell as separate rows; one row per event keeps
+// the feed honest without guessing which sell pairs with which buy.
+async function fetchLeagueTransfers(leagueId) {
+  const { data, error } = await supabase.rpc('get_league_market_events', { p_league_id: leagueId });
+  if (error) return { data: null, error };
+  const rows = (data ?? [])
+    .map(e => ({
+      id: e.id,
+      user_id: e.user_id,
+      round_number: roundFromMatchday(e.matchday_id),
+      player_in: e.player_in,
+      player_out: e.player_out,
+      transferred_at: e.event_at,
+    }))
+    .filter(t => t.round_number != null);
+  return { data: rows, error: null };
+}
+
 function pillStyle(active) {
   return {
     padding: '8px 10px', minHeight: 36, flexShrink: 0,
@@ -110,25 +134,34 @@ function TransferRow({ t, playerMap, username, isMe }) {
         {username}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        {pOut && <ClubCrest name={pOut.club} size={16} />}
-        {pOut && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pOut.position] || 'var(--mute)' }}>
-            {pOut.position}
-          </span>
+        {t.player_out && (
+          <>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>SOLD</span>
+            {pOut && <ClubCrest name={pOut.club} size={16} />}
+            {pOut && (
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pOut.position] || 'var(--mute)' }}>
+                {pOut.position}
+              </span>
+            )}
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--danger)', textDecoration: 'line-through', opacity: 0.85 }}>
+              {pOut?.name ?? t.player_out}
+            </span>
+          </>
         )}
-        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--danger)', textDecoration: 'line-through', opacity: 0.85 }}>
-          {pOut?.name ?? t.player_out ?? '—'}
-        </span>
-        <span style={{ color: 'var(--mute)' }}>→</span>
-        {pIn && <ClubCrest name={pIn.club} size={16} />}
-        {pIn && (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pIn.position] || 'var(--mute)' }}>
-            {pIn.position}
-          </span>
+        {t.player_in && (
+          <>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>BOUGHT</span>
+            {pIn && <ClubCrest name={pIn.club} size={16} />}
+            {pIn && (
+              <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: POSITION_COLOR[pIn.position] || 'var(--mute)' }}>
+                {pIn.position}
+              </span>
+            )}
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>
+              {pIn?.name ?? t.player_in}
+            </span>
+          </>
         )}
-        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--positive)' }}>
-          {pIn?.name ?? t.player_in ?? '—'}
-        </span>
       </span>
       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>{when}</span>
     </div>
@@ -189,10 +222,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
           for (const pid of row.target_ids ?? []) counts[pid] = (counts[pid] ?? 0) + 1;
         }
       } else {
-        const { data: allTransfers } = await supabase
-          .from('transfers')
-          .select('player_in')
-          .eq('league_id', leagueId);
+        const { data: allTransfers } = await fetchLeagueTransfers(leagueId);
         if (cancelled) return;
         for (const row of allTransfers ?? []) {
           if (row.player_in) counts[row.player_in] = (counts[row.player_in] ?? 0) + 1;
@@ -223,11 +253,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
     (async () => {
       try {
         const [{ data: transferRows, error: tErr }, { data: windowRows }] = await Promise.all([
-          supabase.from('transfers')
-            .select('id, user_id, round_number, player_in, player_out, transferred_at')
-            .eq('league_id', leagueId)
-            .order('round_number', { ascending: false })
-            .order('transferred_at', { ascending: false }),
+          fetchLeagueTransfers(leagueId),
           supabase.from('transfer_windows')
             .select('round_number, opens_at, closes_at, window_type')
             .eq('league_id', leagueId)
