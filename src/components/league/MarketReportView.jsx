@@ -148,28 +148,46 @@ function MoveLine({ tone, label, player }) {
   );
 }
 
-// One card per manager per matchday: their buys, then their sells. A buy and a
-// sell are separate log rows with no pairing key, so they stay separate lists.
-function ManagerMoves({ m, playerMap, username, isMe }) {
+// One collapsible card per manager per matchday: their buys, then their sells.
+// A buy and a sell are separate log rows with no pairing key, so they stay
+// separate lists.
+function ManagerMoves({ m, playerMap, username, isMe, open, onToggle }) {
   const lookup = (id) => playerMap[id] ?? { name: id, position: '', club: undefined };
   const when = new Date(m.latest).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   return (
     <div style={{
-      padding: '10px 20px 12px', borderBottom: '1px solid var(--rule)',
+      borderBottom: '1px solid var(--rule)',
       borderLeft: isMe ? '2px solid var(--accent)' : '2px solid transparent',
       background: isMe ? 'var(--accent-soft)' : 'transparent',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8, width: '100%', minHeight: 'var(--tap)',
+          padding: '8px 20px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+        }}
+      >
         <MgrTag mono={mgrMono(username)} hue={mgrHue(username)} size={18} />
         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {username}
         </span>
         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
-          {m.ins.length} in · {m.outs.length} out · {when}
+          {m.ins.length} in · {m.outs.length} out
         </span>
-      </div>
-      {m.ins.map((id, i) => <MoveLine key={`in-${id}-${i}`} tone="var(--positive)" label="IN" player={lookup(id)} />)}
-      {m.outs.map((id, i) => <MoveLine key={`out-${id}-${i}`} tone="var(--danger)" label="OUT" player={lookup(id)} />)}
+        <span aria-hidden style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)', width: 12, textAlign: 'center', flexShrink: 0 }}>
+          {open ? '▲' : '▼'}
+        </span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 20px 12px' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 4 }}>
+            Last move {when}
+          </div>
+          {m.ins.map((id, i) => <MoveLine key={`in-${id}-${i}`} tone="var(--positive)" label="IN" player={lookup(id)} />)}
+          {m.outs.map((id, i) => <MoveLine key={`out-${id}-${i}`} tone="var(--danger)" label="OUT" player={lookup(id)} />)}
+        </div>
+      )}
     </div>
   );
 }
@@ -183,6 +201,8 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
   const [hasDraftReport, setHasDraftReport] = useState(false);
   const [draftAuditOpen, setDraftAuditOpen] = useState(false);
   const [wantedCounts, setWantedCounts] = useState([]); // [{player_id, count}], draft-mode leagues only
+  // `${round}:${userId}` -> expanded; own card starts open, others closed.
+  const [openCards, setOpenCards] = useState({});
 
   useEffect(() => {
     if (!leagueId) return;
@@ -271,10 +291,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
         setTransfers(transferRows ?? []);
         setWindows(windowRows ?? []);
 
-        const rounds = [...new Set([
-          ...(windowRows ?? []).map(w => w.round_number),
-          ...(transferRows ?? []).map(t => t.round_number),
-        ])];
+        const rounds = [...new Set((transferRows ?? []).map(t => t.round_number))];
         if (rounds.length > 0) setSelectedRound(Math.max(...rounds));
 
         const pidSet = new Set();
@@ -312,9 +329,9 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
   );
 
   const allRounds = useMemo(() => {
-    const set = new Set([...windows.map(w => w.round_number), ...transfers.map(t => t.round_number)]);
+    const set = new Set(transfers.map(t => t.round_number));
     return [...set].sort((a, b) => b - a);
-  }, [windows, transfers]);
+  }, [transfers]);
   const lastRound = allRounds[0];
 
   const grouped = useMemo(() => {
@@ -369,16 +386,37 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
               label={`Matchday ${g.round}`}
               sub={[`${g.moves} ${g.moves === 1 ? 'move' : 'moves'}`, formatWindowSub(windowMeta[g.round])].filter(Boolean).join(' · ')}
               tone="var(--gold)"
+              right={(() => {
+                const allOpen = g.managers.every(m => openCards[`${g.round}:${m.user_id}`] ?? (!!currentUser && m.user_id === currentUser.id));
+                return (
+                  <button
+                    className="hit-44"
+                    onClick={() => setOpenCards(prev => ({
+                      ...prev,
+                      ...Object.fromEntries(g.managers.map(m => [`${g.round}:${m.user_id}`, !allOpen])),
+                    }))}
+                    style={miniBtnStyle('var(--accent)')}
+                  >
+                    {allOpen ? 'COLLAPSE ALL' : 'EXPAND ALL'}
+                  </button>
+                );
+              })()}
             />
-            {g.managers.map(m => (
-              <ManagerMoves
-                key={m.user_id}
-                m={m}
-                playerMap={playerMap}
-                username={userMap[m.user_id] ?? 'Unknown'}
-                isMe={!!currentUser && m.user_id === currentUser.id}
-              />
-            ))}
+            {g.managers.map(m => {
+              const key = `${g.round}:${m.user_id}`;
+              const isMe = !!currentUser && m.user_id === currentUser.id;
+              return (
+                <ManagerMoves
+                  key={m.user_id}
+                  m={m}
+                  playerMap={playerMap}
+                  username={userMap[m.user_id] ?? 'Unknown'}
+                  isMe={isMe}
+                  open={openCards[key] ?? isMe}
+                  onToggle={() => setOpenCards(prev => ({ ...prev, [key]: !(prev[key] ?? isMe) }))}
+                />
+              );
+            })}
           </div>
         ))
       )}
