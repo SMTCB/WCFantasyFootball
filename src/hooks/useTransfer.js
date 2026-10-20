@@ -6,15 +6,25 @@ async function invokeTransfer(body) {
   if (!FUNCTIONS_BASE) return { ok: false, error: 'Supabase not configured' };
   let session = null;
   try {
-    const { data } = await supabase.auth.getSession();
+    const { data } = await Promise.race([
+      supabase.auth.getSession(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('session timeout')), 5000)),
+    ]);
     session = data?.session ?? null;
   } catch { /* network/token-store failure — fall through to anon key */ }
   const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const res = await fetch(`${FUNCTIONS_BASE}/process-transfer`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body:    JSON.stringify(body),
-  });
+  // Without a timeout a stalled request leaves the buy button doing nothing forever.
+  let res;
+  try {
+    res = await fetch(`${FUNCTIONS_BASE}/process-transfer`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body:    JSON.stringify(body),
+      signal:  AbortSignal.timeout(20000),
+    });
+  } catch {
+    return { ok: false, error: 'Network problem or timeout — please try again' };
+  }
   if (!res.ok) {
     let msg = 'Transfer failed';
     try { const b = await res.json(); msg = b?.error ?? msg; } catch { /* ignore */ }
