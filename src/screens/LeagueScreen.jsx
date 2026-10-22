@@ -1821,9 +1821,9 @@ export default function LeagueScreen() {
            const sub = [mv?.rank ? ord(mv.rank) : null, mv?.total_points != null ? `${Math.round(mv.total_points)} pts` : null].filter(Boolean).join(' · ');
            const isDraft = activeLeague?.leagues?.format === 'noduplicate';
            return (
-           <div role="presentation" className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setManagerTeamView(null)}>
-             <div role="dialog" aria-label={`${managerTeamView.name}'s squad`} className="w-full h-[85vh] bg-[var(--bg)] rounded-t-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px 12px' }}>
+           <div role="presentation" className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center sm:p-6 bg-black/60" onClick={() => setManagerTeamView(null)}>
+             <div role="dialog" aria-label={`${managerTeamView.name}'s squad`} className="w-full h-[85vh] sm:h-auto sm:max-h-[80vh] sm:max-w-[600px] bg-[var(--bg)] rounded-t-2xl sm:rounded-2xl flex flex-col overflow-hidden" style={{ boxShadow: '0 20px 60px rgba(0,0,0,.25)' }} onClick={e => e.stopPropagation()}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 14px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
                  <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: '50%', background: `${hue}26`, color: hue, display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 'var(--fs-body)', flexShrink: 0 }}>{ini}</span>
                  <div style={{ minWidth: 0, flex: 1 }}>
                    <h2 style={{ margin: 0, fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-heading)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{managerTeamView.name}</h2>
@@ -1834,14 +1834,14 @@ export default function LeagueScreen() {
                  </button>
                </div>
                {h2hEnabled && !isMeView && (
-                 <div style={{ padding: '0 16px 12px' }}>
+                 <div style={{ padding: '14px 20px 0' }}>
                    <button
                      onClick={() => { setH2hTarget({ user_id: managerTeamView.user_id, name: managerTeamView.name, rank: mv?.rank, total_points: mv?.total_points }); setManagerTeamView(null); }}
                      style={{ width: '100%', minHeight: 'var(--tap)', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', background: 'var(--card)', color: 'var(--paper)', fontFamily: 'inherit', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
                    >Compare with me</button>
                  </div>
                )}
-               <div className="flex-1 overflow-y-auto no-scrollbar" style={{ padding: '0 16px 24px' }}>
+               <div className="flex-1 overflow-y-auto no-scrollbar" style={{ padding: '16px 20px 20px' }}>
                  {!managerRoster.length && <LoadingRows rows={3} />}
                  {managerRoster.length > 0 && (
                    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
