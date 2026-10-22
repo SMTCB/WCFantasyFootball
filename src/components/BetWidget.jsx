@@ -245,11 +245,10 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
         {/* Resolved: show correct answer */}
         {isResolved && (
           <div className="flex items-center gap-3">
-            <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: 'var(--mute)' }}>Answer:</div>
+            <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: 'var(--mute)' }}>Correct answer:</div>
             <div className="text-[13px] font-black" style={{ color: correctAnswerKeys?.length ? 'var(--paper)' : 'var(--mute)' }}>
               {correctAnswerKeys?.length ? correctLabel : 'No winner'}
             </div>
-            {resultBadge()}
           </div>
         )}
 
@@ -262,11 +261,12 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
               </div>
               <div>
                 <div className="text-[11px] font-semibold mb-0.5" style={{ color: isResolved ? (submission.is_correct ? 'var(--positive)' : 'var(--danger)') : 'var(--accent)' }}>
-                  {isResolved ? (submission.is_correct ? '✓ Correct' : '✗ Wrong') : 'Your pick'}
+                  {isResolved ? 'Your answer' : 'Your pick'}
                 </div>
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--paper)' }}>{answerLabel}</div>
               </div>
             </div>
+            {resultBadge()}
             {!isPastDeadline && !isResolved && (
               <div className="text-[11px] font-semibold" style={{ color: 'var(--mute)' }}>Tap below to change</div>
             )}
