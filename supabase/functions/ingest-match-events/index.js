@@ -622,10 +622,9 @@ Deno.serve(async (req) => {
         goals_conceded:  conceded,
         clean_sheet:     conceded === 0, // minutes gate applied per-position in calculate-scores scorePlayer (GK/DEF≥45, MID≥60)
 
-        // BPS and bonus — calculated by calculate-scores after this upsert
-        bps_score:       0,
-        bonus_points:    0,
-        fantasy_points:  0,
+        // bps_score / bonus_points / fantasy_points are left out on purpose: calculate-scores
+        // writes them after this upsert (new rows take the column default 0). Resetting them
+        // here on every pass let a concurrent round freeze read a whole fixture as 0 (1593-r3).
         updated_at:      new Date().toISOString(),
       });
     }
