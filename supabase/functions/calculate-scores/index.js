@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
         pointsLookup[r.player_id] = scorePlayer({ ...r, bonus: r.bonus }, r.position, POINTS, UNIVERSAL);
       }
 
-      const updatedSquads = await rollupSquads(fixture_id, pointsLookup, fixture.tournament_id ?? '');
+      const updatedSquads = await rollupSquads(fixture_id, pointsLookup, fixture.tournament_id ?? '', { POINTS, UNIVERSAL });
       await broadcastUpdate(fixture_id);
 
       return respond(200, {
@@ -339,7 +339,7 @@ Deno.serve(async (req) => {
     const pointsLookup = {};
     for (const u of playerStatUpserts) pointsLookup[u.player_id] = u.fantasy_points;
 
-    const updatedSquads = await rollupSquads(fixture_id, pointsLookup, fixture.tournament_id ?? '');
+    const updatedSquads = await rollupSquads(fixture_id, pointsLookup, fixture.tournament_id ?? '', { POINTS, UNIVERSAL });
     await broadcastUpdate(fixture_id);
 
     return respond(200, {
@@ -375,11 +375,9 @@ async function releaseRoundLock(matchdayId) {
   }
 }
 
-// PostgREST caps every response at 1000 rows and truncates silently. A round's
-// player_match_stats is ~1100-1200 rows (18 UCL fixtures x ~65 players), so an
-// unpaged read dropped whole fixtures from the freeze total — the real cause of the
-// 1593-r1 and 1593-r3 undercounts. Returns null on any page error so callers can
-// abort instead of freezing a partial total.
+// Defensive paging for round-wide reads: PostgREST truncates silently at max_rows
+// (10,000 on this project), and a partial read would freeze a partial total.
+// Returns null on any page error so callers can abort instead.
 async function fetchAllRows(buildQuery, pageSize = 1000) {
   const rows = [];
   for (let from = 0; ; from += pageSize) {
@@ -394,7 +392,7 @@ async function fetchAllRows(buildQuery, pageSize = 1000) {
   }
 }
 
-async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
+async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, UNIVERSAL }) {
   const fullRoundLookup = { ...pointsLookup };
 
   // Load fixture round — hard-fail if missing so we never write matchday_id='current' (L3.4 / DATA-6)
@@ -474,21 +472,27 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     }
   }
 
-  // Merge already-stored fantasy_points from other fixtures in the same round
+  // Merge points from the other fixtures in the same round
   if (roundFixtureIds.length > 0) {
     const otherStats = await fetchAllRows(() => supabase
       .from('player_match_stats')
-      .select('player_id, fantasy_points')
-      .in('fixture_id', roundFixtureIds)
-      .not('fantasy_points', 'is', null));
+      .select('*, players(position)')
+      .in('fixture_id', roundFixtureIds));
     if (!otherStats) {
       if (roundComplete) await releaseRoundLock(roundMatchdayId);
       return 0;
     }
 
     for (const r of otherStats) {
-      if (!(r.player_id in fullRoundLookup)) {
-        fullRoundLookup[r.player_id] = r.fantasy_points ?? 0;
+      if (r.player_id in fullRoundLookup) continue;
+      // ingest-match-events writes fantasy_points: 0 on every pass and that fixture's own
+      // calculate-scores run fills it a moment later, so a freeze running concurrently can
+      // read a transient 0 (1593-r3: 6 of the 7 fixtures that finished in the same cron
+      // tick read as 0). Score Forza rows from their raw stats instead of trusting it.
+      if (r.forza_match_id) {
+        fullRoundLookup[r.player_id] = scorePlayer({ ...r, bps: 0, bonus: 0 }, r.players?.position ?? 'MID', POINTS, UNIVERSAL);
+      } else if (r.fantasy_points != null) {
+        fullRoundLookup[r.player_id] = r.fantasy_points;
       }
     }
   }
