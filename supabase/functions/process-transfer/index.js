@@ -179,14 +179,23 @@ Deno.serve(async (req) => {
     // below full size does NOT regain this exemption.
     const squadNeverCompleted = !squad.initial_build_complete;
 
-    if (!inFreeWindow && !squadNeverCompleted) {
+    if (!inFreeWindow) {
       // Single source of truth for window status. get_transfer_window_status()
       // handles all cases: deadline lock, live-fixture lock, AND the post-match
       // scoring window (MAX kickoff + reopen_hours + 2h).
       const { data: winStatus, error: winErr } = await supabase
         .rpc('get_transfer_window_status', { p_league_id: league_id });
 
-      if (winErr || !winStatus || winStatus.status !== 'open') {
+      // A pending/running wishlist draft locks the market for everyone, including
+      // a squad that has never been full: they are allocated players by the draft
+      // itself, and buying first would jump the queue ahead of the other managers'
+      // wishlists. The never-completed exemption only covers the matchday/fixture
+      // locks (finishing the squad build after the draft).
+      const wishlistLocked = winStatus?.window_type === 'wishlist'
+        || winStatus?.window_type === 'wishlist_running';
+      const windowBlocks = winErr || !winStatus || winStatus.status !== 'open';
+
+      if (wishlistLocked || (windowBlocks && !squadNeverCompleted)) {
         const opensAt = winStatus?.opens_at
           ? ` — opens ${new Date(winStatus.opens_at).toUTCString()}`
           : '';
