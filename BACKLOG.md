@@ -32,7 +32,7 @@
 - **Hidden until the round starts**: 303 returns a round's transfers only after `matchday_deadlines.deadline_at` (fallback `transfer_windows.closes_at` for that round number; hidden if neither). Enforced server-side; also hides the caller's own pending moves from this report.
 - **Clubhouse header**: Invite button moved under the member avatars (it covered the member count on narrow screens).
 - Migrations 301–303 applied manually via the SQL editor on 2026-10-18 (the session's Supabase CLI token was invalid; backup skipped by the owner's call — change is read-only).
-- Open: `RecapScreen` (My Digest) still reads the legacy `transfers` table for own transfers, so it is probably empty too. CI "Tier 3 Local Full-Stack E2E" fails on `auth-screen.spec.js` 1.2 (Create Account tab) — red on `main` before and after these PRs.
+- Open: `RecapScreen` (My Digest) still reads the legacy `transfers` table for own transfers, so it is probably empty too. CI "Tier 3 Local Full-Stack E2E" failure on `auth-screen.spec.js` 1.2 (Create Account tab) fixed in a follow-up PR: the test clicked `getByRole('button')` but the AuthScreen tab strip is an ARIA tablist (`role="tab"`); it now targets the tab and asserts `aria-selected`.
 
 ---
 

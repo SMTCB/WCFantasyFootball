@@ -68,8 +68,10 @@ test.describe('Auth screen', () => {
     await page.waitForLoadState('networkidle', { timeout: 12000 }).catch(() => {});
     await page.waitForTimeout(800);
 
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await page.waitForTimeout(300);
+    // The tab strip is an ARIA tablist (role="tab"), not plain buttons.
+    const signupTab = page.getByRole('tab', { name: 'Create Account' });
+    await signupTab.click();
+    await expect(signupTab).toHaveAttribute('aria-selected', 'true');
 
     await expect(page.locator('#auth-signup-username')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#auth-signup-email')).toBeVisible();

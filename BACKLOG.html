@@ -1440,7 +1440,7 @@
 - **hidden until the round starts**: 303 returns a round&#x27;s transfers only after `matchday_deadlines.deadline_at` (fallback `transfer_windows.closes_at` for that round number; hidden if neither). enforced server-side; also hides the caller&#x27;s own pending moves from this report.
 - **clubhouse header**: invite button moved under the member avatars (it covered the member count on narrow screens).
 - migrations 301–303 applied manually via the sql editor on 2026-10-18 (the session&#x27;s supabase cli token was invalid; backup skipped by the owner&#x27;s call — change is read-only).
-- open: `recapscreen` (my digest) still reads the legacy `transfers` table for own transfers, so it is probably empty too. ci &quot;tier 3 local full-stack e2e&quot; fails on `auth-screen.spec.js` 1.2 (create account tab) — red on `main` before and after these prs.
+- open: `recapscreen` (my digest) still reads the legacy `transfers` table for own transfers, so it is probably empty too. ci &quot;tier 3 local full-stack e2e&quot; failure on `auth-screen.spec.js` 1.2 (create account tab) fixed in a follow-up pr: the test clicked `getbyrole(&#x27;button&#x27;)` but the authscreen tab strip is an aria tablist (`role=&quot;tab&quot;`); it now targets the tab and asserts `aria-selected`.
 
 ---
 
@@ -1463,7 +1463,7 @@
 <li><strong>Hidden until the round starts</strong>: 303 returns a round's transfers only after <code>matchday_deadlines.deadline_at</code> (fallback <code>transfer_windows.closes_at</code> for that round number; hidden if neither). Enforced server-side; also hides the caller's own pending moves from this report.</li>
 <li><strong>Clubhouse header</strong>: Invite button moved under the member avatars (it covered the member count on narrow screens).</li>
 <li>Migrations 301–303 applied manually via the SQL editor on 2026-10-18 (the session's Supabase CLI token was invalid; backup skipped by the owner's call — change is read-only).</li>
-<li>Open: <code>RecapScreen</code> (My Digest) still reads the legacy <code>transfers</code> table for own transfers, so it is probably empty too. CI "Tier 3 Local Full-Stack E2E" fails on <code>auth-screen.spec.js</code> 1.2 (Create Account tab) — red on <code>main</code> before and after these PRs.</li>
+<li>Open: <code>RecapScreen</code> (My Digest) still reads the legacy <code>transfers</code> table for own transfers, so it is probably empty too. CI "Tier 3 Local Full-Stack E2E" failure on <code>auth-screen.spec.js</code> 1.2 (Create Account tab) fixed in a follow-up PR: the test clicked <code>getByRole('button')</code> but the AuthScreen tab strip is an ARIA tablist (<code>role="tab"</code>); it now targets the tab and asserts <code>aria-selected</code>.</li>
 </ul>
 <hr></dd></div>
       </dl></template>
