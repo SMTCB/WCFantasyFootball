@@ -97,6 +97,11 @@ export default function WishlistInfoModal({ onClose }) {
             nominated. This continues until every manager's list is exhausted or no eligible
             targets remain.
           </div>
+          <div style={{ marginBottom: 8 }}>
+            A release only counts if it was needed: if your list runs dry before every release
+            was replaced, the leftover players stay on your squad (unless another manager drafted
+            them first).
+          </div>
           <div style={{ color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>
             Only players not already on any roster in the league are eligible targets — the
             list below is automatically filtered to exclude anyone already owned.

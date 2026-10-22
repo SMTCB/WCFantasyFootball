@@ -63,6 +63,7 @@ interface AllocationPlan {
   skipLog: SkipEntry[];
   // deno-lint-ignore no-explicit-any
   safetyNetActions: any[];
+  restoredReleases: Array<{ user_id: string; player_id: string }>;
   contestedPlayers: number;
 }
 
@@ -254,7 +255,7 @@ async function computeAllocation(supabase: any, leagueId: string, roundNumber: n
   // already has a full squad — their working state starts from what they
   // currently own, minus anything they're releasing this round. A release of
   // a player no longer in the squad (traded away since submitting) is ignored.
-  const userState: Record<string, { allocated: string[]; posCounts: Record<string, number>; clubCounts: Record<string, number>; budgetUsed: number; preCount: number; before: string[] }> = {};
+  const userState: Record<string, { allocated: string[]; posCounts: Record<string, number>; clubCounts: Record<string, number>; budgetUsed: number; preCount: number; before: string[]; dropped: string[] }> = {};
 
   for (const sub of participants) {
     const squad = latestSquadByUser[sub.user_id];
@@ -265,12 +266,14 @@ async function computeAllocation(supabase: any, leagueId: string, roundNumber: n
     const clubCounts: Record<string, number> = {};
     let budgetUsed = 0;
     const keptIds: string[] = [];
+    const droppedIds: string[] = [];
 
     for (const pid of currentIds) {
       if (dropSet.has(pid)) {
         // Free the dropped player globally so other participants (or this
         // manager, via a different target) can draft them this round.
         taken.delete(pid);
+        droppedIds.push(pid);
         continue;
       }
       keptIds.push(pid);
@@ -283,7 +286,7 @@ async function computeAllocation(supabase: any, leagueId: string, roundNumber: n
       budgetUsed += Number(player.price ?? 0);
     }
 
-    userState[sub.user_id] = { allocated: keptIds, posCounts, clubCounts, budgetUsed, preCount: keptIds.length, before: currentIds };
+    userState[sub.user_id] = { allocated: keptIds, posCounts, clubCounts, budgetUsed, preCount: keptIds.length, before: currentIds, dropped: droppedIds };
   }
 
   // Phase 1 (targets): rotate the seeded base order by one seat per round —
@@ -310,6 +313,10 @@ async function computeAllocation(supabase: any, leagueId: string, roundNumber: n
     minFloor:  MIN_FORMATION,
     skipLog:   rawSkips,
   });
+
+  // A release only makes room for a target. Any release the manager ended up
+  // not needing (their list ran dry) goes back on the squad.
+  const restoredReleases = restoreUnusedReleases(userState, playerMap, taken, SQUAD_POS_CAPS, budget, CLUB_CAP);
 
   // Last-resort guarantee: the in-loop reservation guard above stops a
   // manager's own picks from *creating* a formation deficit, but it can't
@@ -361,7 +368,44 @@ async function computeAllocation(supabase: any, leagueId: string, roundNumber: n
     };
   });
 
-  return { allocations, userState, order, pickLog, skipLog, safetyNetActions, contestedPlayers };
+  return { allocations, userState, order, pickLog, skipLog, safetyNetActions, restoredReleases, contestedPlayers };
+}
+
+// Puts back releases that no target ended up replacing. Without this a manager
+// who lists more releases than they land targets finishes the round short of
+// their original squad size. Only players nobody else drafted can come back;
+// position cap, budget and club cap are re-checked against the final squad.
+// Mutates userState/taken in place.
+function restoreUnusedReleases(
+  // deno-lint-ignore no-explicit-any
+  userState: Record<string, any>,
+  // deno-lint-ignore no-explicit-any
+  playerMap: Record<string, any>,
+  taken: Set<string>,
+  posCaps: Record<string, number>,
+  budget: number,
+  clubCap: number,
+): Array<{ user_id: string; player_id: string }> {
+  const restored: Array<{ user_id: string; player_id: string }> = [];
+  for (const [uid, u] of Object.entries(userState)) {
+    for (const pid of u.dropped ?? []) {
+      if (u.allocated.length >= u.before.length) break;
+      const player = playerMap[pid];
+      if (!player || taken.has(pid)) continue;
+      const pos = normalisePosition(player.position);
+      const teamId = player.forza_team_id;
+      if ((u.posCounts[pos] ?? 0) >= (posCaps[pos] ?? 0)) continue;
+      if (u.budgetUsed + Number(player.price ?? 0) > budget) continue;
+      if (teamId && clubCap < 99 && (u.clubCounts[teamId] ?? 0) >= clubCap) continue;
+      u.allocated.push(pid);
+      u.posCounts[pos] = (u.posCounts[pos] ?? 0) + 1;
+      if (teamId) u.clubCounts[teamId] = (u.clubCounts[teamId] ?? 0) + 1;
+      u.budgetUsed += Number(player.price ?? 0);
+      taken.add(pid);
+      restored.push({ user_id: uid, player_id: pid });
+    }
+  }
+  return restored;
 }
 
 // Post-allocation safety net: tops up any manager still below `minFloor` in
@@ -478,9 +522,13 @@ function rotateOrder(ids: string[], seed: number, roundNumber: number): string[]
   return [...ids.slice(shift), ...ids.slice(0, shift)];
 }
 
+function restoredCountFor(restored: Array<{ user_id: string }> | undefined, uid: string): number {
+  return (restored ?? []).filter((r) => r.user_id === uid).length;
+}
+
 // deno-lint-ignore no-explicit-any
 async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: number, trigger: string | null, submissions: any[], plan: AllocationPlan, attempts: number) {
-  const { userState, order, pickLog, skipLog, safetyNetActions } = plan;
+  const { userState, order, pickLog, skipLog, safetyNetActions, restoredReleases } = plan;
   const bullets = order.map((uid, idx) => {
     const sub = submissions.find((s) => s.user_id === uid);
     const u = userState[uid];
@@ -488,8 +536,9 @@ async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: n
       user_id:   uid,
       pick_slot: idx + 1,
       requested: sub?.target_ids?.length ?? 0,
-      released:  sub?.drop_ids?.length ?? 0,
-      gained:    u.allocated.length - u.preCount,
+      // Releases that actually stuck: unused ones were restored.
+      released:  Math.max(0, (u.before?.length ?? 0) - (u.preCount ?? 0) - restoredCountFor(restoredReleases, uid)),
+      gained:    u.allocated.length - u.preCount - restoredCountFor(restoredReleases, uid),
     };
   });
 
@@ -526,6 +575,8 @@ async function writeGazetteEntry(supabase: any, leagueId: string, roundNumber: n
       // the in-loop reservation guard, and a last-resort swap was made from
       // the full player pool to fix it.
       formation_safety_net: safetyNetActions ?? [],
+      // Releases put back because no target replaced them.
+      restored_releases: restoredReleases ?? [],
     }),
   });
   if (error) {
