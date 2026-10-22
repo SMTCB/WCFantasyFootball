@@ -1560,7 +1560,7 @@ built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, r
 
 - **#1083** removed the legacy `--cyan`/`--ink*`/`--accent-bg` alias tokens (36 files + index.css). **#1084** dark-mode audit: only the squad swap banner had a hardcoded light surface; fixed. **#1085** f1 header marker now uses `--f1`; lighter `--f1`/`--ten` in the dark theme. **#1086** `npm audit fix` (lockfile only, 0 vulnerabilities).
 - deliberately left: `gazettedraftreport` cream paper panel, pitch components and trophy cabinet (dark by design), brand colours. ~63 tailwind fixed-colour classes remain (mostly gazette/betwidget).
-- open / next: `--shell*`/`--on-shell*` tokens still used for dark bars (market, squad, league, pitch) — needs dedicated pitch tokens before removal; **ci security job still fails on the edge function drift check** (calculate-scores, generate-frontpage-edition, ingest-match-events, run-wishlist-draft changed since last recorded deploy — needs deploy approval then `npm run update:checksums`), not npm. visual/dark-mode qa on vercel previews still outstanding.
+- open / next: `--shell*`/`--on-shell*` tokens still used for dark bars (market, squad, league, pitch) — needs dedicated pitch tokens before removal; **ci security job fixed (#1088):** the failure was the edge function drift check, not npm. the four flagged functions were already deployed; only `.function-checksums.json` was stale, and it was refreshed with no deploy. security is green again. visual/dark-mode qa on vercel previews still outstanding.
 
 ---
 
@@ -1580,7 +1580,7 @@ built from `docs/design/redesign_proposal_2026-10.html` (approved). one small, r
         <div class="field"><dt>Technical solution</dt><dd><ul>
 <li><strong>#1083</strong> removed the legacy <code>--cyan</code>/<code>--ink*</code>/<code>--accent-bg</code> alias tokens (36 files + index.css). <strong>#1084</strong> dark-mode audit: only the Squad swap banner had a hardcoded light surface; fixed. <strong>#1085</strong> F1 header marker now uses <code>--f1</code>; lighter <code>--f1</code>/<code>--ten</code> in the dark theme. <strong>#1086</strong> <code>npm audit fix</code> (lockfile only, 0 vulnerabilities).</li>
 <li>Deliberately left: <code>GazetteDraftReport</code> cream paper panel, pitch components and trophy cabinet (dark by design), brand colours. ~63 Tailwind fixed-colour classes remain (mostly Gazette/BetWidget).</li>
-<li>Open / next: <code>--shell*</code>/<code>--on-shell*</code> tokens still used for dark bars (Market, Squad, League, pitch) — needs dedicated pitch tokens before removal; <strong>CI Security job still fails on the Edge Function drift check</strong> (calculate-scores, generate-frontpage-edition, ingest-match-events, run-wishlist-draft changed since last recorded deploy — needs deploy approval then <code>npm run update:checksums</code>), not npm. Visual/dark-mode QA on Vercel previews still outstanding.</li>
+<li>Open / next: <code>--shell*</code>/<code>--on-shell*</code> tokens still used for dark bars (Market, Squad, League, pitch) — needs dedicated pitch tokens before removal; <strong>CI Security job fixed (#1088):</strong> the failure was the Edge Function drift check, not npm. The four flagged functions were already deployed; only <code>.function-checksums.json</code> was stale, and it was refreshed with no deploy. Security is green again. Visual/dark-mode QA on Vercel previews still outstanding.</li>
 </ul>
 <hr></dd></div>
       </dl></template>
