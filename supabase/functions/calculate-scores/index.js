@@ -375,6 +375,25 @@ async function releaseRoundLock(matchdayId) {
   }
 }
 
+// PostgREST caps every response at 1000 rows and truncates silently. A round's
+// player_match_stats is ~1100-1200 rows (18 UCL fixtures x ~65 players), so an
+// unpaged read dropped whole fixtures from the freeze total — the real cause of the
+// 1593-r1 and 1593-r3 undercounts. Returns null on any page error so callers can
+// abort instead of freezing a partial total.
+async function fetchAllRows(buildQuery, pageSize = 1000) {
+  const rows = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await buildQuery().order('id').range(from, from + pageSize - 1);
+    if (error) {
+      console.error('fetchAllRows page error:', JSON.stringify(error));
+      await logError('error', 'paged read failed', { from, error });
+      return null;
+    }
+    rows.push(...(data ?? []));
+    if (!data || data.length < pageSize) return rows;
+  }
+}
+
 async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   const fullRoundLookup = { ...pointsLookup };
 
@@ -457,13 +476,17 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   // Merge already-stored fantasy_points from other fixtures in the same round
   if (roundFixtureIds.length > 0) {
-    const { data: otherStats } = await supabase
+    const otherStats = await fetchAllRows(() => supabase
       .from('player_match_stats')
       .select('player_id, fantasy_points')
       .in('fixture_id', roundFixtureIds)
-      .not('fantasy_points', 'is', null);
+      .not('fantasy_points', 'is', null));
+    if (!otherStats) {
+      if (roundComplete) await releaseRoundLock(roundMatchdayId);
+      return 0;
+    }
 
-    for (const r of otherStats ?? []) {
+    for (const r of otherStats) {
       if (!(r.player_id in fullRoundLookup)) {
         fullRoundLookup[r.player_id] = r.fantasy_points ?? 0;
       }
@@ -586,11 +609,15 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   // minutes played per player this round (max across the round's fixtures)
   const minutesLookup = {};
   if (roundComplete) {
-    const { data: minRows } = await supabase
+    const minRows = await fetchAllRows(() => supabase
       .from('player_match_stats')
       .select('player_id, minutes_played')
-      .in('fixture_id', allRoundFixtureIds);
-    for (const r of minRows ?? []) {
+      .in('fixture_id', allRoundFixtureIds));
+    if (!minRows) {
+      await releaseRoundLock(roundMatchdayId);
+      return 0;
+    }
+    for (const r of minRows) {
       minutesLookup[r.player_id] = Math.max(minutesLookup[r.player_id] ?? 0, r.minutes_played ?? 0);
     }
   }

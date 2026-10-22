@@ -329,14 +329,15 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   }, [leagueId, tournamentId]);
 
   // ── Effect 1b: load resolved points-bet rewards, mapped onto a matchday ──────
-  // bet_instances has no matchday_id column, so we approximate: each resolved
-  // points-type bet maps to the matchday whose deadline is the next one on/after
-  // the bet's own deadline (clamped to the last known matchday if the bet
-  // resolved after every matchday deadline). The points themselves are already
+  // bet_instances has no matchday_id column. A bet shows on the matchday it was
+  // created in: a match-scoped bet takes its fixture's matchday; any other bet
+  // takes the first matchday whose last kickoff is on/after its created_at (i.e.
+  // the round in progress when it was set). Mapping by the bet's own deadline
+  // pushed every bet into the following round. The points themselves are already
   // safely included in league_members.total_points (migration 167) regardless —
   // this only controls which GW row shows the "+N BET" indicator.
   useEffect(() => {
-    if (!leagueId || !allMatchdays.length) return;
+    if (!leagueId || !tournamentId || !allMatchdays.length) return;
     let cancelled = false;
 
     (async () => {
@@ -351,7 +352,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
 
         const { data: betRows, error: betErr } = await supabase
           .from('bet_submissions')
-          .select('squad_id, reward_awarded, bet_instances!inner(id, league_id, deadline_at, resolves_at, created_at, title, reward_type, status)')
+          .select('squad_id, reward_awarded, bet_instances!inner(id, league_id, created_at, scope_type, scope_ref, title, reward_type, status)')
           .in('squad_id', squadIds)
           .eq('is_correct', true)
           .not('reward_awarded', 'is', null)
@@ -363,21 +364,39 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         if (betErr) { console.error('[RecapView] bet rewards:', betErr); return; }
         if (!betRows?.length) { setBetMap({}); return; }
 
+        const { data: fixRows, error: fixErr } = await supabase
+          .from('fixtures').select('id, matchday_id, kickoff_at')
+          .eq('tournament_id', tournamentId);
+        if (cancelled) return;
+        if (fixErr) { console.error('[RecapView] bet fixtures:', fixErr); return; }
+
+        const fixtureMd = {};
+        const lastKickoff = {};
+        for (const f of fixRows ?? []) {
+          if (!f.matchday_id) continue;
+          fixtureMd[f.id] = f.matchday_id;
+          const t = new Date(f.kickoff_at).getTime();
+          if (!(lastKickoff[f.matchday_id] >= t)) lastKickoff[f.matchday_id] = t;
+        }
+
         // allMatchdays is already ascending by round number / deadline
         const sortedMds = allMatchdays;
-        const mapToMatchday = (anchorIso) => {
-          const anchor = new Date(anchorIso).getTime();
+        const shownMds = new Set(sortedMds.map(md => md.matchday_id));
+        const lastShown = sortedMds[sortedMds.length - 1].matchday_id;
+        const mapToMatchday = (inst) => {
+          const scoped = inst.scope_type === 'match' ? fixtureMd[inst.scope_ref] : null;
+          if (scoped) return shownMds.has(scoped) ? scoped : lastShown;
+          const created = new Date(inst.created_at).getTime();
           for (const md of sortedMds) {
-            if (new Date(md.deadline_at).getTime() >= anchor) return md.matchday_id;
+            if (lastKickoff[md.matchday_id] >= created) return md.matchday_id;
           }
-          return sortedMds[sortedMds.length - 1].matchday_id;
+          return lastShown;
         };
 
         const map = {};
         for (const row of betRows) {
           const inst = row.bet_instances;
-          const anchor = inst.deadline_at ?? inst.resolves_at ?? inst.created_at;
-          const mdId = mapToMatchday(anchor);
+          const mdId = mapToMatchday(inst);
           const amount = Number(row.reward_awarded) || 0;
           if (!amount) continue;
           if (!map[row.squad_id]) map[row.squad_id] = {};
@@ -392,7 +411,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     })();
 
     return () => { cancelled = true; };
-  }, [leagueId, allMatchdays]);
+  }, [leagueId, tournamentId, allMatchdays]);
 
   // ── Effect 1c: load accepted trade points sweeteners, mapped onto a matchday ─
   // points_sweetener moves from the proposer (gives points) to the target
