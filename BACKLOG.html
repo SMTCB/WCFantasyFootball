@@ -1398,7 +1398,7 @@
     <section class="item-group" id="group-done" data-group="done">
       <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">197</span></h2>
       <div class="card-grid">
-      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl round 3 (1593-r3) undercount fixed; wishlist draft + market fixes (2026-10-22) — prs #1111–#1114 
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl round 3 (1593-r3) undercount fixed; wishlist draft + market fixes (2026-10-22) — prs #1103, #1110–#1117 
 
 - **symptom**: recap totals for gw3 lower than the sum of the player rows in draft champions 26/27, champignon &#x27;26/&#x27;27 and champions eder 26/27 (e.g. sb7 24 vs 44).
 - **root cause**: `ingest-match-events` upserts `player_match_stats` with `fantasy_points: 0` on every pass; the fixture&#x27;s own `calculate-scores` run fills the real value a moment later. on 2026-10-21 21:00:05, 7 fixtures finished in the same cron tick. f-1221211680 won the `round_freeze_locks` lock (code-race-1) and froze the round while the other 6 still read 0. recomputing without those 6 fixtures reproduces every wrong stored total exactly. **not** a postgrest row cap (`max_rows` is 10,000; ~728 rows were read). 1593-r1 was most likely the same mechanism. code-race-1 stops double freezes, not mid-ingest reads.
@@ -1406,18 +1406,18 @@
 - **data corrected** (approved; backups in `backups/*_1593r3_20261022_203904.json`): 23 `fantasy_points` totals in 1593-r3 (+685 total), `league_members.total_points` re-aggregated, 3 gw3 gazette posts rewritten. `get_score_discrepancies` = 0 for the 3 leagues; rounds 1–2 clean. test leagues (champs_2627_test, &quot;test 1&quot;) left as-is by the owner&#x27;s call.
 - **recap bets (#1113)**: bet results now show on the matchday the bet was created (round-2 bets were missing).
 - **#1111**: wishlist draft only releases players a target replaced (xmaquina lost rodri; the owner restores him manually). **#1112**: sentry allowed in csp, valid manifest icons, timeout on transfer calls.
-- **⚠️ deploy pending**: `calculate-scores`, `run-wishlist-draft`, `run-draft-lottery` (and every function bu" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+- **deployed 2026-10-22**: `calculate-scores`, `run-wishlist-draft`, `run-draft-lottery` (#1116 record" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
         <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
         <h3 class="card-title">UCL round 3 (1593-r3) undercount fixed; wishlist draft + market fixes</h3>
         <p class="card-summary">Symptom : Recap totals for GW3 lower than the sum of the player rows in Draft Champions 26/27, Champignon '26/'27 and Champions Eder 26/27 (e.g. SB7 24 vs 44). Root…</p>
-        <div class="card-foot"><span class="foot-date">2026-10-22</span><span class="foot-refs">PRs #1111–#1114</span></div>
+        <div class="card-foot"><span class="foot-date">2026-10-22</span><span class="foot-refs">PRs #1103, #1110–#1117</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
       <h2 class="drawer-title">UCL round 3 (1593-r3) undercount fixed; wishlist draft + market fixes</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Symptom : Recap totals for GW3 lower than the sum of the player rows in Draft Champions 26/27, Champignon '26/'27 and Champions Eder 26/27 (e.g. SB7 24 vs 44). Root…</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #1111–#1114</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PRs #1103, #1110–#1117</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p>2026-10-22</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><ul>
 <li><strong>Symptom</strong>: Recap totals for GW3 lower than the sum of the player rows in Draft Champions 26/27, Champignon '26/'27 and Champions Eder 26/27 (e.g. SB7 24 vs 44).</li>
@@ -1426,8 +1426,8 @@
 <li><strong>Data corrected</strong> (approved; backups in <code>backups/*_1593r3_20261022_203904.json</code>): 23 <code>fantasy_points</code> totals in 1593-r3 (+685 total), <code>league_members.total_points</code> re-aggregated, 3 GW3 gazette posts rewritten. <code>get_score_discrepancies</code> = 0 for the 3 leagues; rounds 1–2 clean. Test leagues (CHAMPS_2627_TEST, "test 1") left as-is by the owner's call.</li>
 <li><strong>Recap bets (#1113)</strong>: bet results now show on the matchday the bet was created (round-2 bets were missing).</li>
 <li><strong>#1111</strong>: wishlist draft only releases players a target replaced (XMaquina lost Rodri; the owner restores him manually). <strong>#1112</strong>: Sentry allowed in CSP, valid manifest icons, timeout on transfer calls.</li>
-<li><strong>⚠️ Deploy pending</strong>: <code>calculate-scores</code>, <code>run-wishlist-draft</code>, <code>run-draft-lottery</code> (and every function bundling the changed <code>_shared/wishlistDraft.ts</code>) are not deployed yet — production still runs the old code until they are, then <code>npm run update:checksums</code>. Must happen before round 4's last fixtures finish.</li>
-<li><strong>Open</strong>: <code>ingest-match-events</code> still writes <code>fantasy_points: 0</code> on every pass (now harmless for the freeze; removing it needs a separate deploy). PRs #1110 (needs a <code>process-transfer</code> deploy) and #1103 (unreviewed feature) left open. Stale branches cleaned; 4 abandoned worktree diffs saved to <code>backups/stale_worktrees_20261022/</code>.</li>
+<li><strong>Deployed 2026-10-22</strong>: <code>calculate-scores</code>, <code>run-wishlist-draft</code>, <code>run-draft-lottery</code> (#1116 records the checksums), then <code>ingest-match-events</code> and <code>process-transfer</code> (this close-out PR records them). All 26 functions match deployed checksums.</li>
+<li><strong>Close-out (2026-10-22)</strong>: #1117 — <code>ingest-match-events</code> no longer resets <code>bps_score/bonus_points/fantasy_points</code> to 0 on every pass. #1110 — a pending/running wishlist draft (<code>window_type</code> <code>wishlist</code>/<code>wishlist_running</code>) now locks the market for never-completed squads too (zecoliveira bought Kaique 13 min before the r3 draft); <code>wishlist_pending</code> deliberately not blocked, since it is also returned mid-round after the market closes. #1103 — nav unread count scoped to the open clubhouse; Standings squad view as a centred popup on desktop. Stale branches and 2 old stashes cleaned (stash patches in <code>backups/stash*.patch</code>, worktree diffs in <code>backups/stale_worktrees_20261022/</code>); repo is <code>main</code> only. Still open: Tier 3 E2E <code>auth-screen.spec.js</code> 1.2 fails on <code>main</code>.</li>
 </ul>
 <hr></dd></div>
       </dl></template>
