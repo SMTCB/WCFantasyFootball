@@ -1,10 +1,10 @@
 {
   "_note": "SHA-256 of each supabase/functions/*/index.{ts,js} + combined _shared/*.ts at last deploy. Run 'npm run update:checksums' after every function deploy, then commit this file. CI fails if checksums drift.",
-  "_shared_hash": "e622aae05e42ef8a20d440ee4b1bc845c9a982040e529b83b27c6b083d2020a2",
+  "_shared_hash": "0cc0bd8f3f08b03167df0a4e007f7cb93700315c9a4c7b2a69e6958c2b50d66a",
   "auto-open-transfer-window": "e3e31945d0f1355578c18fb2a3d60711bc7c8c50d2e9b37e6363cc833af6bcb0",
   "award-season-trophies": "073769d4a77a5dee431f669561d933c5496446eedb34f0ed343772715026a931",
   "calculate-relaxation": "ccd36232def1a9482ec9ed3fafe0766b60923992f80b444993200b90b2d6f0b5",
-  "calculate-scores": "c9f846cb069312ceae8bc6d945ecd139b93849d3ad4e1f892f60396a03e6c112",
+  "calculate-scores": "bda16910edf15d614eac0c661248c19b82e2abcd20a40d326fa0ad56529cc187",
   "check-cron-health": "b6e52eefe81238f13fba4634c1079e6e395b4883e291886491d1f36ab5fe68cc",
   "discover-tournament": "10e04e42c588fc3a1e482dc18278f2a7f3ec70e55d04053d4b9b927e33f748f0",
   "eliminate-cup-club": "9764097b11736cde8d19c9da79cb534a0a00101e66a3cd10bc199cdb60165b9c",
