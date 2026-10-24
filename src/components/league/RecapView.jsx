@@ -767,24 +767,20 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
               {isTop && <span style={{ fontSize: 'var(--fs-micro)', background: 'var(--gold-soft)', color: 'var(--gold-text)', padding: '1px 8px', borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>Top</span>}
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
-                {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
-              </span>
-              {betPts > 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginTop: 1 }}>+{betPts} bet</div>
-              )}
-              {tradeNet !== 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', marginTop: 1 }}>
-                  {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
-                </div>
-              )}
-              {s.penalty > 0 ? (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 1 }}>−{s.penalty} penalty</div>
-              ) : isLiveRound && s.pts !== null ? (
-                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 1 }}>Live</div>
-              ) : null}
+<div style={{ textAlign: 'right' }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
+              {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
+            </span>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginTop: 1, visibility: betPts > 0 ? 'visible' : 'hidden' }}>
+              +{betPts} bet
             </div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', marginTop: 1, visibility: tradeNet !== 0 ? 'visible' : 'hidden' }}>
+              {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
+            </div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 1, visibility: s.penalty > 0 || (isLiveRound && s.pts !== null) ? 'visible' : 'hidden' }}>
+              {s.penalty > 0 ? `−${s.penalty} penalty` : (isLiveRound && s.pts !== null ? 'Live' : '')}
+            </div>
+          </div>
             <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
               {totalPts != null ? Math.round(totalPts) : '—'}
             </div>
