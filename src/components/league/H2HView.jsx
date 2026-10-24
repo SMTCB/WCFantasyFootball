@@ -149,7 +149,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                   </div>
                   <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
                     <span style={{ color: 'var(--positive)' }}>{row.wins}</span>
-                    <span>-{row.draws}-</span>
+                    <span>-{row.losses}-</span>
                     <span style={{ color: 'var(--danger)' }}>{row.losses}</span>
                   </div>
                   <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--gold-text)' }}>{row.total_h2h_pts}</div>
