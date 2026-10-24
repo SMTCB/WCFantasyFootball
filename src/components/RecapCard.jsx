@@ -73,7 +73,7 @@ export default function RecapCard({ recap, forwardRef }) {
       </div>
 
       {/* Stat rows */}
-      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px', minHeight: '180px' }}>
         {/* Best Player */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
