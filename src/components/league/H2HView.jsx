@@ -147,11 +147,11 @@ export default function H2HView({ leagueId, currentUser, members }) {
                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 18, background: `${hue}18`, border: `1px solid ${hue}66`, color: hue, fontFamily: MONO, fontSize: 'var(--fs-micro)', }}>{mgrMono(row.username ?? '')}</span>
                     <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isMe ? 'var(--accent)' : 'var(--paper)' }}>{row.username ?? '?'}</span>
                   </div>
-                  <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
-                    <span style={{ color: 'var(--positive)' }}>{row.wins}</span>
-                    <span>-{row.losses}-</span>
-                    <span style={{ color: 'var(--danger)' }}>{row.losses}</span>
-                  </div>
+<div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+  <span style={{ color: 'var(--positive)' }}>{row.wins}</span>
+  <span>-{row.draws}-</span>
+  <span style={{ color: 'var(--danger)' }}>{row.losses}</span>
+</div>
                   <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: 'var(--gold-text)' }}>{row.total_h2h_pts}</div>
                 </div>
               );
