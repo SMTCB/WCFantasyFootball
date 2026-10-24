@@ -571,7 +571,7 @@ export default function MarketScreen() {
     if (effectiveSquadIds.length >= squadSize) { showToast('Squad is full — sell a player first.', 'warning'); return; }
     if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { showToast(`Max ${player.position}s reached.`, 'warning'); return; }
     if ((stats.countryCounts[player.club] ?? 0) >= clubCap) { showToast(`Max ${clubCap} players per club — ${player.club} is full.`, 'warning'); return; }
-    if (effectiveBudget <= player.price) { showToast('Not enough budget.', 'error'); return; }
+    if (effectiveBudget < player.price) { showToast('Not enough budget.', 'error'); return; }
 
     setBasket(prev => [...prev, { type: 'buy', player }]);
   };
