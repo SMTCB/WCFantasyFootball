@@ -7,15 +7,28 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_SUPABASE_URL: https://placeholder.supabase.co
+      VITE_SUPABASE_ANON_KEY: placeholder
+      VITE_AUTH_ENABLED: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm run lint --if-present
-      - run: npm run build --if-present
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint --if-present
+      - name: Build
+        run: npm run build --if-present
+      - name: Install browser
+        run: npx playwright install-deps chromium && npx playwright install chromium
+      # Same demo-mode browser tests as the main CI: desktop and phone, no database needed.
+      - name: Browser tests (desktop and phone)
         env:
-          VITE_SUPABASE_URL: https://placeholder.supabase.co
-          VITE_SUPABASE_ANON_KEY: placeholder
+          CI: true
+          SKIP_BUILD: true
+        run: npx playwright test --project=desktop-chrome --project=mobile-chrome --reporter=list
