@@ -65,7 +65,7 @@ export default function RecapCard({ recap, forwardRef }) {
           {rank}{rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th'}
         </div>
         <div style={{ fontSize: 'var(--fs-title)', fontWeight: 700, color: 'var(--positive)', marginTop: '8px', letterSpacing: '0.02em' }}>
-          {points} pts this matchday
+          {Math.round(points * 10) / 10} pts this matchday
         </div>
         <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: rankChangeColor, marginTop: '6px' }}>
           {rankChangeText}
