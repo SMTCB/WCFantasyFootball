@@ -4,6 +4,8 @@
 
 ---
 
+> **2026-10-27 — chips revision (migration 304 + calculate-scores, pending approval/deploy).** The spec now is: **Triple Captain** ×3 once per tournament; **Joker** = one player outside the squad scored **×2**, **once per tournament** (replaces the per-matchday, ×1 rules below); **Max Cap** = no manual captain, ×2 to the round's top-scoring starter, once per tournament. Admins can switch each chip off per league (`league_config('chips_disabled')`). A manager can't stack Triple Captain and Max Cap in one round. The Squad **Chips** tab (`src/components/chips/`) drives everything through `get_my_chips`, `activate_chip`, `set_joker`, `clear_joker`. Sections below describe the previous behaviour until migration 304 and the function deploy are live.
+
 ## Overview
 
 Chips are special one-time (or once-per-matchday) boosts that give a scoring advantage. There are currently two active chips:
@@ -147,4 +149,4 @@ squads.joker_player_id    → UI mirror only. Not read by scoring.
 
 ---
 
-Last Updated: **2026-06-06** (session — joker redesign: external only, real points, once per player per season)
+Last Updated: **2026-10-27** (session — joker redesign: external only, real points, once per player per season)

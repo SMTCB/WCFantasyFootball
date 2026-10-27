@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
 import useConfirmDialog from '../../hooks/useConfirmDialog';
+import { CHIPS } from '../../lib/chips';
 import {
   MODE_LABEL, MODE_HELP, MODE_HELP_LONG, MIN_NOTICE_MS, KICKOFF_BUFFER_MS, fmtDraftTime, toLocalInput, suggestDraftTime, draftErrorMessage,
 } from '../../lib/wishlistDraft';
@@ -1204,6 +1205,73 @@ function useFreeTransfersConfig(leagueId, commissioner) {
   return { freeTransfers, toggleFreeTransfers: toggle };
 }
 
+// Chips config — which chips managers in this league may play. Stored as
+// league_config('chips_disabled') = JSON array of chip ids; missing key = all chips on
+// (fail-open, so existing leagues are unchanged). Enforced server-side in migration 304
+// (activate_chip / set_joker → CHIP_DISABLED). Same dual-call pattern as useFreeTransfersConfig.
+function useChipsConfig(leagueId, commissioner) {
+  const [disabled, setDisabled] = useState([]);
+
+  const refresh = useCallback(() => {
+    if (!leagueId) return;
+    supabase
+      .from('league_config')
+      .select('config_value')
+      .eq('league_id', leagueId)
+      .eq('config_key', 'chips_disabled')
+      .maybeSingle()
+      .then(({ data }) => { setDisabled(Array.isArray(data?.config_value) ? data.config_value : []); });
+  }, [leagueId]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const toggle = (chip, enabled) => {
+    const next = enabled ? disabled.filter(id => id !== chip.id) : [...new Set([...disabled, chip.id])];
+    commissioner.commAction(async () => {
+      const { error } = await supabase
+        .from('league_config')
+        .upsert(
+          { league_id: leagueId, config_key: 'chips_disabled', config_value: next },
+          { onConflict: 'league_id,config_key' }
+        );
+      if (error) throw new Error(error.message);
+      setDisabled(next);
+      commissioner.setCommMsg({
+        type: 'ok',
+        text: enabled
+          ? `${chip.name} ON — managers can play it again.`
+          : `${chip.name} OFF — hidden from managers. Chips already played keep their effect.`,
+      });
+    });
+  };
+
+  return { chipsDisabled: disabled, toggleChip: toggle };
+}
+
+function ChipsSwitches({ chipsDisabled, toggleChip, disabled }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {CHIPS.map(chip => {
+        const on = !chipsDisabled.includes(chip.id);
+        return (
+          <div key={chip.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
+              <strong>{chip.name}</strong> <span style={{ color: 'var(--mute)' }}>· {chip.badge}</span>
+            </span>
+            <ToggleSwitch
+              checked={on}
+              onChange={() => toggleChip(chip, !on)}
+              disabled={disabled}
+              labelOn={`${chip.name} available`}
+              labelOff={`${chip.name} hidden`}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Relaxation formula config — draft leagues only. Admin on/off switch for the
 // pool-pressure no-repeat relaxation (see docs/architecture/POOL_RELAXATION_SYSTEM.md).
 // Default OFF (missing key = disabled, fail-closed — matches process-transfer's
@@ -1965,6 +2033,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const [askConfirm, confirmDialog] = useConfirmDialog();
   // Free transfers config — lifts per-round cap while window is open (Classic leagues only).
   const { freeTransfers, toggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
+  const { chipsDisabled, toggleChip } = useChipsConfig(leagueId, commissioner);
   const { relaxationEnabled, relaxationLocked, relaxationTier, toggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
 
   // AUDIT-58-A3: derive live status labels for the LifecycleOp cards.
@@ -2121,6 +2190,18 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           />
           </div>
           )}
+
+          {/* Chips — per-league switches for Triple Captain / Joker / Max Cap. */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <LifecycleOp
+            title="Chips"
+            status={chipsDisabled.length === 0 ? 'ALL ON' : `${CHIPS.length - chipsDisabled.length}/${CHIPS.length} ON`}
+            statusTone={chipsDisabled.length === 0 ? 'var(--positive)' : 'var(--warn)'}
+            sub="Choose which chips managers in this league can play. Turning a chip off hides it from the Squad screen; chips already played keep their effect."
+            when="Set before the first round. Each chip is once per tournament per manager."
+            primary={<ChipsSwitches chipsDisabled={chipsDisabled} toggleChip={toggleChip} disabled={commLoading} />}
+          />
+          </div>
 
           {/* Emergency mid-matchday transfer toggle — relevant to any deadline-controlled
               league (matchday-deadline lock applies regardless of league_mode). */}
@@ -2837,6 +2918,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const [askConfirm, confirmDialog] = useConfirmDialog();
   // Free transfers config — same dual-call pattern as useFreeTransferWindow above.
   const { freeTransfers: mobFreeTransfers, toggleFreeTransfers: mobToggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
+  const { chipsDisabled: mobChipsDisabled, toggleChip: mobToggleChip } = useChipsConfig(leagueId, commissioner);
   const { relaxationEnabled: mobRelaxationEnabled, relaxationLocked: mobRelaxationLocked, relaxationTier: mobRelaxationTier, toggleRelaxation: mobToggleRelaxation } = useRelaxationFormulaConfig(leagueId, commissioner);
   // Draft submission tracker — same dual-call pattern, shared by desktop LifecycleOps and the mobile DRAFT card.
   const { draftMembers, draftSubmissions } = useDraftSubmissionTracker(leagueId, league);
@@ -2984,6 +3066,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             />
           </MobLifecycleCard>
           )}
+
+          <MobLifecycleCard title="Chips" status={mobChipsDisabled.length === 0 ? 'ALL ON' : `${CHIPS.length - mobChipsDisabled.length}/${CHIPS.length} ON`} tone={mobChipsDisabled.length === 0 ? 'var(--positive)' : 'var(--warn)'} when="Set before the first round. Turning a chip off hides it from managers; chips already played keep their effect.">
+            <ChipsSwitches chipsDisabled={mobChipsDisabled} toggleChip={mobToggleChip} disabled={commLoading} />
+          </MobLifecycleCard>
 
           {mobIsDeadlineControlled && (
           <div data-tour="comm-emergency-transfers">

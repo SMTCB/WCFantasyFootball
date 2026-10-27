@@ -32,6 +32,7 @@ import PlayerCard from '../components/PlayerCard';
 import ClubCrest from '../components/ClubCrest';
 import PlayerPickerSheet from '../components/PlayerPickerSheet';
 import SectionHeader from '../components/SectionHeader';
+import ChipsPanel from '../components/chips/ChipsPanel';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
@@ -1393,6 +1394,7 @@ export default function SquadScreen() {
           {[
             { id: 'pitch',  label: '⚽ PITCH'  },
             { id: 'squad',  label: '📋 LIST'   },
+            { id: 'chips',  label: '⚡ CHIPS'  },
             { id: 'status', label: '⚠️ STATUS' },
           ].map(tab => (
             <button
@@ -1746,6 +1748,20 @@ export default function SquadScreen() {
           );
         })()}
 
+        {mobileTab === 'chips' && (
+          <div className="pb-24">
+            <ChipsPanel
+              leagueId={activeLeague}
+              userId={user?.id}
+              tournamentId={tournamentId}
+              ownedIds={allSquadPlayers.map(p => p.id)}
+              hasCaptain={!!captainId}
+              setConfirm={setConfirm}
+              showToast={showToast}
+            />
+          </div>
+        )}
+
         {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileTab === 'status' && (
           <div className="pb-24">
@@ -1765,6 +1781,7 @@ export default function SquadScreen() {
           {[
             { id: 'pitch',  label: 'Pitch'  },
             { id: 'list',   label: 'List'   },
+            { id: 'chips',  label: 'Chips'  },
             { id: 'status', label: 'Status' },
           ].map(tab => (
             <button
@@ -1892,6 +1909,20 @@ export default function SquadScreen() {
                 {PlayerList()}
               </div>
             </>
+          )}
+
+          {desktopTab === 'chips' && (
+            <div className="flex-1 overflow-y-auto max-w-xl">
+              <ChipsPanel
+              leagueId={activeLeague}
+              userId={user?.id}
+              tournamentId={tournamentId}
+              ownedIds={allSquadPlayers.map(p => p.id)}
+              hasCaptain={!!captainId}
+              setConfirm={setConfirm}
+              showToast={showToast}
+            />
+            </div>
           )}
 
           {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
