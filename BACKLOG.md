@@ -12,6 +12,15 @@
 
 ---
 
+## 🟡 Chips revision — Triple Captain, Joker ×2, Max Cap (2026-10-31) — built and tested, NOT yet live: migration 304 + `calculate-scores` deploy pending
+
+- **Spec** (from the product doc): Triple Captain ×3 once per tournament; Joker = one player outside the squad scored **×2**, once per tournament (was ×1, once per matchday); Max Cap = no manual captain, ×2 to the round's top-scoring starter, once per tournament. Per-league admin switches for each chip. One captain chip (Triple Captain or Max Cap) per round. Qualification Bonus, Wildcard and Limitless remain open (lower priority, est. 2–3d / 1.5–2d / 2–3d).
+- **Gap found**: no client code called `activate_chip` or wrote `daily_jokers` — chips scored correctly in the engine but managers had no way to activate them. The `CHIPS-1` "fully wired and live" note referred to the engine only.
+- **Built** (branch `claude/chips-ui-and-engine`): migration `304_chips_engine.sql` (`get_my_chips`, rewritten `activate_chip`, `set_joker`, `clear_joker`, `league_config('chips_disabled')`; open round taken from `matchday_deadlines`, not `squads.matchday_id`); `calculate-scores` chip maths moved into pure, unit-tested `scoring-logic.js` (`resolveEffectiveCaptain`, `scoreSquadTotal`); Squad **Chips** tab (`src/components/chips/`, `useChips`, `lib/chips.js`); Commissioner "Chips" switches; Recap shows the Joker ×2; scoring rules popup text corrected.
+- **Tested**: migration dry-run on local Postgres 16 with the production Joker triggers — 30/30 checks; `tests/unit/scoring-logic.test.js` 41/41 incl. a 2,000-squad regression vs the old algorithm; Chips panel driven in headless Chromium at 375px with a mocked backend (activate → confirm → state change, Joker picker, no overflow, no console errors); lint 0 errors, build green.
+- **Not done / remaining**: (1) back up DB, apply migration 304 — **needs explicit approval and a working `SUPABASE_ACCESS_TOKEN`** (the cloud-session token was rejected, so this moves to a local session); (2) deploy `calculate-scores`, then `npm run update:checksums`; (3) read-only replay of a finished round vs stored totals; (4) live test of every chip on a `TEST_` league; (5) open PR and merge (merge only after 1–2 — the Chips tab calls RPCs that don't exist until 304 is applied); (6) Max Cap is not reflected in the Recap screen mid-round (only once the round is final).
+- **Known limits**: the lock is the matchday deadline, not first kickoff; existing multi-round `daily_jokers` rows are untouched, so a manager with several would see the Joker as used.
+
 ## ✅ UCL round 3 (1593-r3) undercount fixed; wishlist draft + market fixes (2026-10-22) — PRs #1103, #1110–#1117
 
 - **Symptom**: Recap totals for GW3 lower than the sum of the player rows in Draft Champions 26/27, Champignon '26/'27 and Champions Eder 26/27 (e.g. SB7 24 vs 44).

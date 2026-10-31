@@ -34,6 +34,7 @@ import { requireServiceRole } from '../_shared/auth.ts';
 import {
   calcBPS, assignBonus, scorePlayer, buildBreakdown,
   isValidFormation, applyAutoSubs, pickValidStarters,
+  resolveEffectiveCaptain, scoreSquadTotal,
 } from './scoring-logic.js';
 
 const supabase = createClient(
@@ -540,6 +541,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, U
   // (C2: the retired wildcard chip's +10% multiplier is intentionally not applied at all.)
   const leagueIds = [...new Set(squads.map(s => s.league_id))];
   const tcThisRound = new Set();
+  const maxCapThisRound = new Set();
   const jokerThisRound = {};
   if (leagueIds.length) {
     const { data: tcRows } = await supabase
@@ -549,6 +551,14 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, U
       .eq('chip_type', 'triple_captain')
       .eq('matchday_id', roundMatchdayId);
     for (const r of tcRows ?? []) tcThisRound.add(`${r.league_id}:${r.user_id}`);
+
+    const { data: maxCapRows } = await supabase
+      .from('chips_used')
+      .select('user_id, league_id')
+      .in('league_id', leagueIds)
+      .eq('chip_type', 'max_cap')
+      .eq('matchday_id', roundMatchdayId);
+    for (const r of maxCapRows ?? []) maxCapThisRound.add(`${r.league_id}:${r.user_id}`);
 
     const { data: jokerRows } = await supabase
       .from('daily_jokers')
@@ -650,6 +660,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, U
   for (const squad of squads) {
     const mgrKey = `${squad.league_id}:${squad.user_id}`;
     const isTripleCaptain = tcThisRound.has(mgrKey);   // C1: per-round, from chips_used
+    const isMaxCap = maxCapThisRound.has(mgrKey);       // Max Cap: ×2 goes to the XI's top scorer
     const jokerPid = jokerThisRound[mgrKey] ?? null;    // C1: per-round, from daily_jokers
     // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads.
     // IMPORTANT: if the squad has already advanced to a later round (matchday_id !== roundMatchdayId)
@@ -721,21 +732,16 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, U
     }
     // Players not in the effective XI — this is what we store as historical bench.
     const benchPlayers = allPlayers.filter(pid => !pitchPlayers.includes(pid));
-    let total = 0;
-
     // L3.5: if the captain isn't in the (effective) XI, move the bonus to the highest
     // POSITIVE-scoring starter. #6: never reassign onto a negative score (that would
     // amplify a loss); if no starter scored positive, no captain bonus applies this round.
-    let effectiveCaptainId = squad.captain_id;
-    if (squad.captain_id && !pitchPlayers.includes(squad.captain_id)) {
-      let bestPid = null, bestRaw = 0;   // strictly > 0 required to reassign
-      for (const pid of pitchPlayers) {
-        const raw = fullRoundLookup[pid] ?? 0;
-        if (raw > bestRaw) { bestRaw = raw; bestPid = pid; }
-      }
-      effectiveCaptainId = bestPid;      // null when no positive scorer → no captain bonus
+    // Max Cap chip: the manager's own captain pick is ignored (see scoring-logic.js).
+    const { effectiveCaptainId, moved: captainMoved } = resolveEffectiveCaptain({
+      captainId: squad.captain_id, pitchPlayers, roundPoints: fullRoundLookup, isMaxCap,
+    });
+    if (captainMoved) {
       logError('warning', 'Captain not in XI; bonus moved to highest positive starter (if any)', {
-        fixture_id, squad_id: squad.id, captain_id: squad.captain_id, effective_captain_id: bestPid,
+        fixture_id, squad_id: squad.id, captain_id: squad.captain_id, effective_captain_id: effectiveCaptainId,
       }); // fire-and-forget
       // TDD-07: notify manager so they know the reallocation happened
       supabase.from('league_notifications').insert({
@@ -753,31 +759,12 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, U
     // B-05: each player's raw points are rounded to a whole number BEFORE the captain
     // multiplier is applied and the result is summed — this matches the UI display
     // formula (Math.round(rawPts) * mult) used by SquadScreen/RecapView/LiveScreen.
-    // Previously raw (unrounded) points were multiplied and summed, then rounded ONCE
-    // at the end — "round of sum" vs "sum of rounds" diverge and caused the squad
-    // total to disagree with the visible per-player breakdown by several points.
-    for (const pid of pitchPlayers) {
-      let rawPts = fullRoundLookup[pid] ?? 0;   // ?? preserves legitimate negative scores (L1.3)
-      if (Number.isNaN(rawPts)) {
-        rawPts = 0;
-        logError('error', 'NaN in points lookup', { fixture_id, player_id: pid }); // fire-and-forget
-      }
-      // Only captain / Triple Captain multipliers apply inside the XI.
-      // The Matchday Joker no longer applies a multiplier — it is always an external
-      // player (DB trigger enforces this) scored separately below.
-      const captainMult = pid === effectiveCaptainId ? (isTripleCaptain ? 3 : 2) : 1;
-      total += Math.round(rawPts) * captainMult;
-    }
-
-    // Matchday Joker — external player bonus (real points, no multiplier):
-    // The joker is a player outside the manager's squad who scores their real
-    // fantasy points as a bonus added on top of the XI total. A DB trigger
-    // (migration 143) ensures the joker is always external, so there is no
-    // double-counting risk with pitchPlayers. Guard with the includes check
-    // anyway for safety (legacy rows pre-migration 143).
-    if (jokerPid && !pitchPlayers.includes(jokerPid)) {
-      const jokerRawPts = fullRoundLookup[jokerPid] ?? 0;
-      total += Math.round(jokerRawPts);   // ×1 — real points, no multiplier
+    // Joker chip: outside player, rounded points ×2, added on top.
+    let { total, nanPlayers } = scoreSquadTotal({
+      pitchPlayers, roundPoints: fullRoundLookup, effectiveCaptainId, isTripleCaptain, jokerPid,
+    });
+    for (const pid of nanPlayers) {
+      logError('error', 'NaN in points lookup', { fixture_id, player_id: pid }); // fire-and-forget
     }
 
     // C2: the retired wildcard +10% multiplier is no longer applied.
@@ -856,6 +843,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, U
       breakdown.bench_players = benchPlayers;
       breakdown.effective_captain_id = effectiveCaptainId;
       breakdown.is_triple_captain = isTripleCaptain;
+      breakdown.is_max_cap = isMaxCap;
       if (jokerPid) breakdown.joker_player_id = jokerPid;
       else delete breakdown.joker_player_id;
 

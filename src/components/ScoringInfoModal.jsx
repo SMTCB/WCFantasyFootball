@@ -235,7 +235,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             </div>
 
             <div style={{ margin: '10px 20px 0', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
-              CAPTAIN ×2 · TRIPLE CAPTAIN ×3 · JOKER ×2 · CHIPS DO NOT STACK — MAX APPLIES
+              CAPTAIN ×2 · TRIPLE CAPTAIN ×3 · MAX CAP ×2 (AUTO) · JOKER ×2 ON ONE OUTSIDE PLAYER · ONE CAPTAIN CHIP PER ROUND · EACH CHIP ONCE PER TOURNAMENT
             </div>
           </>
         )}

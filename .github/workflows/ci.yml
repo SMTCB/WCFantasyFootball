@@ -291,7 +291,7 @@ jobs:
   # ── 6. Playwright E2E ──────────────────────────────────────────────────────
   e2e:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright does not support ubuntu-26.04 yet (ubuntu-latest moved)
     needs: [security, lint, build, unit-tests]   # Only run if all prior gates pass
     timeout-minutes: 60    # Browser install (~10 min) + platform.spec.js x2 projects (~25 min)
     env:
@@ -364,7 +364,7 @@ jobs:
   # observed for a few runs before it's made merge-blocking.
   e2e-tier3:
     name: Tier 3 Local Full-Stack E2E
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright does not support ubuntu-26.04 yet (ubuntu-latest moved)
     needs: [security, lint]
     timeout-minutes: 45
     steps:
