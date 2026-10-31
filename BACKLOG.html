@@ -174,12 +174,12 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (197)</span>
+    <span class="chip" data-filter-kind="done">Shipped (198)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (27)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (6)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (3)</span>
-<span class="chip" data-filter-kind="other">Notes (5)</span>
+<span class="chip" data-filter-kind="other">Notes (4)</span>
   </div>
   <span id="result-count"></span>
 </div>
@@ -199,12 +199,12 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">197</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">198</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">27</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">6</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">3</span></div>
-<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">5</span></div>
+<div class="sidebar-item" data-jump-kind="other"><span class="swatch" style="--tab-color:#5b7285"></span>Notes<span class="sidebar-count">4</span></div>
     </div>
   </nav>
   <main class="main">
@@ -1396,8 +1396,41 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">197</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">198</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ chips revision — triple captain, joker ×2, max cap (2026-10-31) — live (pr #1130, migration 304, `calculate-scores` deployed) 
+
+- **spec** (from the product doc): triple captain ×3 once per tournament; joker = one player outside the squad scored **×2**, once per tournament (was ×1, once per matchday); max cap = no manual captain, ×2 to the round&#x27;s top-scoring starter, once per tournament. per-league admin switches for each chip. one captain chip (triple captain or max cap) per round. qualification bonus, wildcard and limitless remain open (lower priority, est. 2–3d / 1.5–2d / 2–3d).
+- **gap found**: no client code called `activate_chip` or wrote `daily_jokers` — chips scored correctly in the engine but managers had no way to activate them. the `chips-1` &quot;fully wired and live&quot; note referred to the engine only.
+- **built** (branch `claude/chips-ui-and-engine`): migration `304_chips_engine.sql` (`get_my_chips`, rewritten `activate_chip`, `set_joker`, `clear_joker`, `league_config(&#x27;chips_disabled&#x27;)`; open round taken from `matchday_deadlines`, not `squads.matchday_id`); `calculate-scores` chip maths moved into pure, unit-tested `scoring-logic.js` (`resolveeffectivecaptain`, `scoresquadtotal`); squad **chips** tab (`src/components/chips/`, `usechips`, `lib/chips.js`); commissioner &quot;chips&quot; switches; recap shows the joker ×2; scoring rules popup text corrected.
+- **tested**: migration dry-run on local postgres 16 with the production joker triggers — 30/30 checks; `tests/unit/scoring-logic.test.js` 41/41 incl. a 2,000-squad regression vs the old algorithm; chips panel driven in headless chromium at 375px with a mocked backend (activate → confirm → state change, joker picker, no overflow, no console errors); lint 0 errors, build green.
+- **shipped 2026-10-31**: db backed up (`backups/pre_migration_20261031_091538.sql`), migration 304 applied unedited, `calculate-scores` deployed + checksum updated, pr #1130 squash-merged (vercel healthy). ci also needed `ubuntu-24.04` pinn" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Chips revision — Triple Captain, Joker ×2, Max Cap</h3>
+        <p class="card-summary">Spec (from the product doc): Triple Captain ×3 once per tournament; Joker = one player outside the squad scored ×2 , once per tournament (was ×1, once per matchday); Max…</p>
+        <div class="card-foot"><span class="foot-date">2026-10-31</span><span class="foot-refs">LIVE (PR #1130, migration 304, <code>calculate-scores</code> deployed)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Chips revision — Triple Captain, Joker ×2, Max Cap</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Spec (from the product doc): Triple Captain ×3 once per tournament; Joker = one player outside the squad scored ×2 , once per tournament (was ×1, once per matchday); Max…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · LIVE (PR #1130, migration 304, <code>calculate-scores</code> deployed)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-10-31</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><ul>
+<li><strong>Spec</strong> (from the product doc): Triple Captain ×3 once per tournament; Joker = one player outside the squad scored <strong>×2</strong>, once per tournament (was ×1, once per matchday); Max Cap = no manual captain, ×2 to the round's top-scoring starter, once per tournament. Per-league admin switches for each chip. One captain chip (Triple Captain or Max Cap) per round. Qualification Bonus, Wildcard and Limitless remain open (lower priority, est. 2–3d / 1.5–2d / 2–3d).</li>
+<li><strong>Gap found</strong>: no client code called <code>activate_chip</code> or wrote <code>daily_jokers</code> — chips scored correctly in the engine but managers had no way to activate them. The <code>CHIPS-1</code> "fully wired and live" note referred to the engine only.</li>
+<li><strong>Built</strong> (branch <code>claude/chips-ui-and-engine</code>): migration <code>304_chips_engine.sql</code> (<code>get_my_chips</code>, rewritten <code>activate_chip</code>, <code>set_joker</code>, <code>clear_joker</code>, <code>league_config('chips_disabled')</code>; open round taken from <code>matchday_deadlines</code>, not <code>squads.matchday_id</code>); <code>calculate-scores</code> chip maths moved into pure, unit-tested <code>scoring-logic.js</code> (<code>resolveEffectiveCaptain</code>, <code>scoreSquadTotal</code>); Squad <strong>Chips</strong> tab (<code>src/components/chips/</code>, <code>useChips</code>, <code>lib/chips.js</code>); Commissioner "Chips" switches; Recap shows the Joker ×2; scoring rules popup text corrected.</li>
+<li><strong>Tested</strong>: migration dry-run on local Postgres 16 with the production Joker triggers — 30/30 checks; <code>tests/unit/scoring-logic.test.js</code> 41/41 incl. a 2,000-squad regression vs the old algorithm; Chips panel driven in headless Chromium at 375px with a mocked backend (activate → confirm → state change, Joker picker, no overflow, no console errors); lint 0 errors, build green.</li>
+<li><strong>Shipped 2026-10-31</strong>: DB backed up (<code>backups/pre_migration_20261031_091538.sql</code>), migration 304 applied unedited, <code>calculate-scores</code> deployed + checksum updated, PR #1130 squash-merged (Vercel healthy). CI also needed <code>ubuntu-24.04</code> pinned for the two Playwright jobs (<code>ubuntu-latest</code> moved to 26.04, unsupported by Playwright).</li>
+<li><strong>Verified</strong>: (a) replay of 481 finished squad-rounds (WC 429 + UCL 1593) — new maths equals the old formula on all 481; 31 stored totals differ from a recompute, all in the already-documented World Cup / test-league discrepancies (not caused by chips). (b) Live RPCs as a real user on <code>CHAMPS_2627_TEST</code> inside a rolled-back transaction (no residue): Triple Captain on/off, Max Cap blocked while TC active, Joker rejects an own-squad player, commissioner switch-off → chip status <code>disabled</code> and activation rejected (<code>CHIP_DISABLED</code>). (c) Scoring maths on sample data hand-checked: base 25, TC 28, Max Cap 31, Joker 35.</li>
+<li><strong>NOT verified live</strong>: the Chips tab in a signed-in browser (only mocked-backend headless test); a real <code>calculate-scores</code> run with a chip active (scoring any fixture rewrites all active leagues in the tournament, so it was not run). First chance: UCL round 4 (deadline 2026-11-03) — activate a chip on the test squad and check the stored total once the round settles.</li>
+<li><strong>Still open</strong>: Max Cap not reflected in Recap mid-round (only once the round is final); Qualification Bonus, Wildcard, Limitless.</li>
+<li><strong>Known limits</strong>: the lock is the matchday deadline, not first kickoff; existing multi-round <code>daily_jokers</code> rows are untouched, so a manager with several would see the Joker as used.</li>
+</ul></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ ucl round 3 (1593-r3) undercount fixed; wishlist draft + market fixes (2026-10-22) — prs #1103, #1110–#1117 
 
 - **symptom**: recap totals for gw3 lower than the sum of the player rows in draft champions 26/27, champignon &#x27;26/&#x27;27 and champions eder 26/27 (e.g. sb7 24 vs 44).
@@ -14759,38 +14792,8 @@ ORDER BY ge.published_at DESC</code></pre>
     </section>
 
     <section class="item-group" id="group-other" data-group="other">
-      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">5</span></h2>
+      <h2 class="group-title" style="--tab-color:#5b7285">Notes <span class="group-count">4</span></h2>
       <div class="card-grid">
-      <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 chips revision — triple captain, joker ×2, max cap (2026-10-31) — built and tested, not yet live: migration 304 + `calculate-scores` deploy pending 
-
-- **spec** (from the product doc): triple captain ×3 once per tournament; joker = one player outside the squad scored **×2**, once per tournament (was ×1, once per matchday); max cap = no manual captain, ×2 to the round&#x27;s top-scoring starter, once per tournament. per-league admin switches for each chip. one captain chip (triple captain or max cap) per round. qualification bonus, wildcard and limitless remain open (lower priority, est. 2–3d / 1.5–2d / 2–3d).
-- **gap found**: no client code called `activate_chip` or wrote `daily_jokers` — chips scored correctly in the engine but managers had no way to activate them. the `chips-1` &quot;fully wired and live&quot; note referred to the engine only.
-- **built** (branch `claude/chips-ui-and-engine`): migration `304_chips_engine.sql` (`get_my_chips`, rewritten `activate_chip`, `set_joker`, `clear_joker`, `league_config(&#x27;chips_disabled&#x27;)`; open round taken from `matchday_deadlines`, not `squads.matchday_id`); `calculate-scores` chip maths moved into pure, unit-tested `scoring-logic.js` (`resolveeffectivecaptain`, `scoresquadtotal`); squad **chips** tab (`src/components/chips/`, `usechips`, `lib/chips.js`); commissioner &quot;chips&quot; switches; recap shows the joker ×2; scoring rules popup text corrected.
-- **tested**: migration dry-run on local postgres 16 with the production joker triggers — 30/30 checks; `tests/unit/scoring-logic.test.js` 41/41 incl. a 2,000-squad regression vs the old algorithm; chips panel driven in headless chromium at 375px with a mocked backend (activate → confirm → state change, joker picker, no overflow, no console errors); lint 0 errors, build green.
-- **not done / remaining**: (1) back up db, apply migration 304 — **needs explicit approval and a working `supabase_access_token`** (the cloud-session token was rejected, so this moves to a local session); (2) deploy `c" style="--tab-color:#5b7285" tabindex="0" data-stamp="NOTE">
-        <div class="card-top"><span class="badge-mini k-other">NOTE</span></div>
-        <h3 class="card-title">Chips revision — Triple Captain, Joker ×2, Max Cap</h3>
-        <p class="card-summary">Spec (from the product doc): Triple Captain ×3 once per tournament; Joker = one player outside the squad scored ×2 , once per tournament (was ×1, once per matchday); Max…</p>
-        <div class="card-foot"><span class="foot-date">2026-10-31</span><span class="foot-refs">built and tested, NOT yet live: migration 304 + <code>calculate-scores</code> deploy pending</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini k-other">NOTE</span></div>
-      <h2 class="drawer-title">Chips revision — Triple Captain, Joker ×2, Max Cap</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Spec (from the product doc): Triple Captain ×3 once per tournament; Joker = one player outside the squad scored ×2 , once per tournament (was ×1, once per matchday); Max…</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>NOTE · built and tested, NOT yet live: migration 304 + <code>calculate-scores</code> deploy pending</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p>2026-10-31</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><ul>
-<li><strong>Spec</strong> (from the product doc): Triple Captain ×3 once per tournament; Joker = one player outside the squad scored <strong>×2</strong>, once per tournament (was ×1, once per matchday); Max Cap = no manual captain, ×2 to the round's top-scoring starter, once per tournament. Per-league admin switches for each chip. One captain chip (Triple Captain or Max Cap) per round. Qualification Bonus, Wildcard and Limitless remain open (lower priority, est. 2–3d / 1.5–2d / 2–3d).</li>
-<li><strong>Gap found</strong>: no client code called <code>activate_chip</code> or wrote <code>daily_jokers</code> — chips scored correctly in the engine but managers had no way to activate them. The <code>CHIPS-1</code> "fully wired and live" note referred to the engine only.</li>
-<li><strong>Built</strong> (branch <code>claude/chips-ui-and-engine</code>): migration <code>304_chips_engine.sql</code> (<code>get_my_chips</code>, rewritten <code>activate_chip</code>, <code>set_joker</code>, <code>clear_joker</code>, <code>league_config('chips_disabled')</code>; open round taken from <code>matchday_deadlines</code>, not <code>squads.matchday_id</code>); <code>calculate-scores</code> chip maths moved into pure, unit-tested <code>scoring-logic.js</code> (<code>resolveEffectiveCaptain</code>, <code>scoreSquadTotal</code>); Squad <strong>Chips</strong> tab (<code>src/components/chips/</code>, <code>useChips</code>, <code>lib/chips.js</code>); Commissioner "Chips" switches; Recap shows the Joker ×2; scoring rules popup text corrected.</li>
-<li><strong>Tested</strong>: migration dry-run on local Postgres 16 with the production Joker triggers — 30/30 checks; <code>tests/unit/scoring-logic.test.js</code> 41/41 incl. a 2,000-squad regression vs the old algorithm; Chips panel driven in headless Chromium at 375px with a mocked backend (activate → confirm → state change, Joker picker, no overflow, no console errors); lint 0 errors, build green.</li>
-<li><strong>Not done / remaining</strong>: (1) back up DB, apply migration 304 — <strong>needs explicit approval and a working <code>SUPABASE_ACCESS_TOKEN</code></strong> (the cloud-session token was rejected, so this moves to a local session); (2) deploy <code>calculate-scores</code>, then <code>npm run update:checksums</code>; (3) read-only replay of a finished round vs stored totals; (4) live test of every chip on a <code>TEST_</code> league; (5) open PR and merge (merge only after 1–2 — the Chips tab calls RPCs that don't exist until 304 is applied); (6) Max Cap is not reflected in the Recap screen mid-round (only once the round is final).</li>
-<li><strong>Known limits</strong>: the lock is the matchday deadline, not first kickoff; existing multi-round <code>daily_jokers</code> rows are untouched, so a manager with several would see the Joker as used.</li>
-</ul></dd></div>
-      </dl></template>
-      </article>
-
       <article class="card" data-status="closed" data-priority="none" data-kind="other" data-search="🟡 p2 — draft-20: optional 20-player squads + 5-substitution cap per matchday for draft leagues (2026-10-16) — open, spec only, no pr yet 
 
 **origin**: user suggestion, reviewed 2026-10-16. draft (&quot;noduplicate&quot;) leagues only; classic leagues and in-flight leagues are untouched.
