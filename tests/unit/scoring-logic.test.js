@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import {
   calcBPS, assignBonus, scorePlayer, buildBreakdown,
   isValidFormation, applyAutoSubs,
+  topScorer, resolveEffectiveCaptain, scoreSquadTotal,
 } from '../../supabase/functions/calculate-scores/scoring-logic.js';
 
 const POINTS = {
@@ -240,5 +241,111 @@ describe('applyAutoSubs', () => {
     const minutesLookup = { gk1: 90, d1: 90, d2: 90, d3: 90, d4: 90, m1: 90, m2: 90, m3: 90, m4: 90, f1: 90, f2: 90, f3: 90 };
     const result = applyAutoSubs(pitch, bench, minutesLookup, posLookup);
     assert.deepEqual(result, pitch);
+  });
+});
+
+// ── Chips: Triple Captain / Max Cap / Joker ×2 ──────────────────────────────
+
+describe('chip maths', () => {
+  const xi = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
+  const pts = { a: 2, b: 9, c: 4.6, d: 0, e: -2, f: 1, g: 3, h: 3, i: 1, j: 5, k: 0, out: 7.4, outNeg: -3 };
+
+  it('baseline: captain ×2, no chips', () => {
+    const { effectiveCaptainId } = resolveEffectiveCaptain({ captainId: 'b', pitchPlayers: xi, roundPoints: pts });
+    const { total } = scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId });
+    // sum of rounded = 2+9+5+0-2+1+3+3+1+5+0 = 27, captain b adds another 9
+    assert.equal(effectiveCaptainId, 'b');
+    assert.equal(total, 36);
+  });
+
+  it('Triple Captain: captain ×3', () => {
+    const { total } = scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId: 'b', isTripleCaptain: true });
+    assert.equal(total, 27 + 18);
+  });
+
+  it('Max Cap ignores the manager\'s captain and picks the top scorer', () => {
+    const r = resolveEffectiveCaptain({ captainId: 'a', pitchPlayers: xi, roundPoints: pts, isMaxCap: true });
+    assert.deepEqual(r, { effectiveCaptainId: 'b', moved: false });
+    assert.equal(scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId: 'b' }).total, 36);
+  });
+
+  it('Max Cap with no manager captain set still works', () => {
+    assert.equal(resolveEffectiveCaptain({ captainId: null, pitchPlayers: xi, roundPoints: pts, isMaxCap: true }).effectiveCaptainId, 'b');
+  });
+
+  it('Max Cap: nobody above 0 → no captain bonus (never amplifies a loss)', () => {
+    const bad = Object.fromEntries(xi.map(id => [id, -1]));
+    assert.equal(resolveEffectiveCaptain({ captainId: 'a', pitchPlayers: xi, roundPoints: bad, isMaxCap: true }).effectiveCaptainId, null);
+    assert.equal(topScorer(xi, { a: 0 }), null);
+  });
+
+  it('Max Cap tie: first starter in XI order wins (deterministic)', () => {
+    assert.equal(topScorer(['x', 'y'], { x: 5, y: 5 }), 'x');
+  });
+
+  it('captain outside the XI → bonus moves to top positive scorer and is flagged', () => {
+    const r = resolveEffectiveCaptain({ captainId: 'benched', pitchPlayers: xi, roundPoints: pts });
+    assert.deepEqual(r, { effectiveCaptainId: 'b', moved: true });
+  });
+
+  it('Triple Captain + moved captain: ×3 follows the new captain', () => {
+    const { effectiveCaptainId } = resolveEffectiveCaptain({ captainId: 'benched', pitchPlayers: xi, roundPoints: pts });
+    assert.equal(scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId, isTripleCaptain: true }).total, 27 + 18);
+  });
+
+  it('Joker: outside player counts ×2 on top of the XI (rounded first)', () => {
+    const { total } = scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId: 'b', jokerPid: 'out' });
+    assert.equal(total, 36 + Math.round(7.4) * 2);   // +14
+  });
+
+  it('Joker can lose points if the picked player scores negatively', () => {
+    const { total } = scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId: 'b', jokerPid: 'outNeg' });
+    assert.equal(total, 36 - 6);
+  });
+
+  it('Joker who did not play (no stats) adds 0', () => {
+    assert.equal(scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId: 'b', jokerPid: 'ghost' }).total, 36);
+  });
+
+  it('legacy guard: a Joker already in the XI is not double counted', () => {
+    assert.equal(scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId: 'b', jokerPid: 'g' }).total, 36);
+  });
+
+  it('Triple Captain + Joker together are independent', () => {
+    const { total } = scoreSquadTotal({ pitchPlayers: xi, roundPoints: pts, effectiveCaptainId: 'b', isTripleCaptain: true, jokerPid: 'out' });
+    assert.equal(total, 45 + 14);
+  });
+
+  it('NaN points are treated as 0 and reported', () => {
+    const r = scoreSquadTotal({ pitchPlayers: ['a', 'z'], roundPoints: { a: 3, z: NaN }, effectiveCaptainId: 'a' });
+    assert.equal(r.total, 6);
+    assert.deepEqual(r.nanPlayers, ['z']);
+  });
+
+  it('regression: with no chips the new maths equals the pre-chips algorithm on 2,000 random squads', () => {
+    // Verbatim copy of the previous in-line logic (captain ×2/×3, reassignment, joker ×1 removed
+    // because jokers did not exist in these inputs).
+    function legacy({ captainId, pitch, round, triple }) {
+      let eff = captainId;
+      if (captainId && !pitch.includes(captainId)) {
+        let best = null, bestRaw = 0;
+        for (const pid of pitch) { const raw = round[pid] ?? 0; if (raw > bestRaw) { bestRaw = raw; best = pid; } }
+        eff = best;
+      }
+      let total = 0;
+      for (const pid of pitch) total += Math.round(round[pid] ?? 0) * (pid === eff ? (triple ? 3 : 2) : 1);
+      return total;
+    }
+    let seed = 42; const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+    for (let i = 0; i < 2000; i++) {
+      const round = {};
+      const pitch = Array.from({ length: 11 }, (_, k) => `p${k}`);
+      for (const id of [...pitch, 'bench1']) round[id] = rnd() < 0.15 ? 0 : Math.round((rnd() * 24 - 4) * 4) / 4;
+      const captainId = rnd() < 0.2 ? 'bench1' : rnd() < 0.1 ? null : pitch[Math.floor(rnd() * 11)];
+      const triple = rnd() < 0.3;
+      const { effectiveCaptainId } = resolveEffectiveCaptain({ captainId, pitchPlayers: pitch, roundPoints: round });
+      const got = scoreSquadTotal({ pitchPlayers: pitch, roundPoints: round, effectiveCaptainId, isTripleCaptain: triple }).total;
+      assert.equal(got, legacy({ captainId, pitch, round, triple }), `mismatch at iteration ${i}`);
+    }
   });
 });

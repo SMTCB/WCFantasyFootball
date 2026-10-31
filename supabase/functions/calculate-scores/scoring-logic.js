@@ -177,3 +177,49 @@ export function applyAutoSubs(pitch, bench, minutesLookup, posLookup) {
   }
   return xi;
 }
+
+// ── Squad-level chip maths (Triple Captain / Max Cap / Joker) ────────────────
+
+// Highest STRICTLY-positive scorer among the XI, or null. A negative or zero score is
+// never chosen — a captain bonus must not amplify a loss.
+export function topScorer(pitchPlayers, roundPoints) {
+  let bestPid = null, bestRaw = 0;
+  for (const pid of pitchPlayers) {
+    const raw = roundPoints[pid] ?? 0;
+    if (raw > bestRaw) { bestRaw = raw; bestPid = pid; }
+  }
+  return bestPid;
+}
+
+// Who gets the captain multiplier this round.
+//   Max Cap chip: the manager's own pick is ignored — top scorer in the XI.
+//   Otherwise: the captain, unless they are not in the effective XI, in which case the
+//   bonus moves to the top scorer (null when nobody scored > 0 → no bonus).
+// `moved` is true only for that fallback (drives the "captain moved" notification).
+export function resolveEffectiveCaptain({ captainId, pitchPlayers, roundPoints, isMaxCap = false }) {
+  if (isMaxCap) return { effectiveCaptainId: topScorer(pitchPlayers, roundPoints), moved: false };
+  if (captainId && !pitchPlayers.includes(captainId)) {
+    return { effectiveCaptainId: topScorer(pitchPlayers, roundPoints), moved: true };
+  }
+  return { effectiveCaptainId: captainId, moved: false };
+}
+
+// Round total for one squad: each starter's points are rounded BEFORE the multiplier
+// (matches the UI display formula), captain ×2 (Triple Captain ×3), plus the Joker —
+// an outside player whose rounded points count ×2. `nanPlayers` lists ids whose points
+// were NaN and treated as 0 so the caller can log them.
+export function scoreSquadTotal({ pitchPlayers, roundPoints, effectiveCaptainId, isTripleCaptain = false, jokerPid = null }) {
+  let total = 0;
+  const nanPlayers = [];
+  for (const pid of pitchPlayers) {
+    let rawPts = roundPoints[pid] ?? 0;   // ?? preserves legitimate negative scores
+    if (Number.isNaN(rawPts)) { rawPts = 0; nanPlayers.push(pid); }
+    const captainMult = pid === effectiveCaptainId ? (isTripleCaptain ? 3 : 2) : 1;
+    total += Math.round(rawPts) * captainMult;
+  }
+  // Joker is always outside the squad (DB trigger); the includes guard covers legacy rows.
+  if (jokerPid && !pitchPlayers.includes(jokerPid)) {
+    total += Math.round(roundPoints[jokerPid] ?? 0) * 2;
+  }
+  return { total, nanPlayers };
+}
