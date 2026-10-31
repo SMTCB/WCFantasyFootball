@@ -668,13 +668,13 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       // Builds one breakdown row. Captain multiplier is applied AFTER rounding
       // the raw score (matches calculate-scores v27 / UI display formula), so
       // displayed player points sum to the GW total shown on the row above.
-      // The joker row (isJoker) is an extra player scored at ×1 — never captain.
+      // The joker row (isJoker) is an extra player scored at ×2 — never captain.
       function buildRow(pid, { isJoker = false, isBench = false } = {}) {
         const meta = playerMeta[pid] || { name: pid, position: '?' };
         const stats = statsByPlayer[pid];
         const isCaptain = !isJoker && !isBench && pid === captainId;
         const isTriple  = isCaptain && isTripleCaptain;
-        const mult = isTriple ? 3 : isCaptain ? 2 : 1;
+        const mult = isJoker ? 2 : isTriple ? 3 : isCaptain ? 2 : 1;
         return {
           id: pid, name: meta.name, position: meta.position,
           pts:       stats?.pts != null ? Math.round(stats.pts) * mult : null,

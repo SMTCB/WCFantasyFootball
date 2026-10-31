@@ -48,8 +48,9 @@ function ChipCard({ chip, info, busy, hasCaptain, onActivate, onDeactivate, onPi
       aria-label={`${chip.name} — ${status}`}
       style={{
         background: active ? `color-mix(in srgb, ${chip.tone} 8%, var(--card))` : 'var(--card)',
-        border: `1px solid ${active ? chip.tone : 'var(--rule)'}`,
-        borderLeft: `4px solid ${dim ? 'var(--rule)' : chip.tone}`,
+        borderStyle: 'solid',
+        borderWidth: '1px 1px 1px 4px',
+        borderColor: `${active ? chip.tone : 'var(--rule)'} ${active ? chip.tone : 'var(--rule)'} ${active ? chip.tone : 'var(--rule)'} ${dim ? 'var(--rule)' : chip.tone}`,
         padding: '14px 16px', opacity: dim ? 0.78 : 1,
       }}
     >
