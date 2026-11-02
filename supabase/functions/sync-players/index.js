@@ -168,38 +168,6 @@ Deno.serve(async (req) => {
       }));
     }
 
-    // ── 4b. Price brand-new players at their position's minimum ──────────────
-    // The upsert above omits price, so players first seen in this run land with NULL.
-    // Unpriced players show as €0 / break budget maths, so give them the floor for
-    // their position (lowest existing price in this tournament).
-    const { data: unpriced } = await supabase
-      .from('players')
-      .select('id, position')
-      .eq('tournament_id', forza_id)
-      .is('price', null);
-
-    if (unpriced?.length) {
-      for (const pos of new Set(unpriced.map(p => p.position))) {
-        const { data: floorRow } = await supabase
-          .from('players')
-          .select('price')
-          .eq('tournament_id', forza_id)
-          .eq('position', pos)
-          .gt('price', 0)
-          .order('price', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (floorRow?.price == null) continue;
-        const { error: floorErr } = await supabase
-          .from('players')
-          .update({ price: floorRow.price })
-          .eq('tournament_id', forza_id)
-          .eq('position', pos)
-          .is('price', null);
-        if (floorErr) errors.push(`floor price ${pos}: ${floorErr.message}`);
-      }
-    }
-
     // ── 5. Soft-delete players no longer in Forza's squad lists ──────────────
     // Only runs if we got a meaningful response (guards against API outages
     // wiping everyone as inactive when Forza returns empty).
