@@ -186,6 +186,7 @@ export default function LeagueScreen() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [draftAllocated, setDraftAllocated] = useState(false); // lottery ran and produced allocation
+  const [leagueDraftRan, setLeagueDraftRan] = useState(false); // any allocation exists in this league
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
   const [draftSubmissionCount, setDraftSubmissionCount] = useState(0); // how many managers submitted
@@ -618,6 +619,14 @@ export default function LeagueScreen() {
         .eq('user_id', uid)
         .maybeSingle();
       setDraftAllocated(!!(alloc?.allocated_players));
+
+      // League-wide: has the draft run for anyone? Drives the commissioner "set a deadline" nudge,
+      // which must not show once allocations exist (draft_deadline is null again after the run).
+      const { count: allocCount } = await supabase
+        .from('draft_allocations')
+        .select('id', { count: 'exact', head: true })
+        .eq('league_id', id);
+      setLeagueDraftRan((allocCount ?? 0) > 0);
 
       // Check if draft is open and manager hasn't submitted yet.
       // P1-2: only draft (no-duplicate) leagues run a draft — never show draft UI
@@ -1409,7 +1418,7 @@ export default function LeagueScreen() {
           if (draftAllocated && mySquadPlayerCount === null) {
             return <StatusBar tone="warn" action={act('Market', () => navigate(`/market?leagueId=${activeLeague?.league_id}`))}>No squad yet — head to the market to sign players.</StatusBar>;
           }
-          if (isDraft && !lg?.draft_deadline && isCommissioner) {
+          if (isDraft && !lg?.draft_deadline && isCommissioner && !draftAllocated && !leagueDraftRan) {
             return <StatusBar tone="warn" action={act('Admin', () => setView('commissioner'))}>Draft league — set a draft deadline in the Admin tab to open submissions.</StatusBar>;
           }
           if (isCommissioner && draftDeadlineDate && !draftAllocated) {
