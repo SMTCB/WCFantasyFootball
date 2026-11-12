@@ -686,7 +686,7 @@ During dev/testing, you discover a bug or gap.
 Where docs live and how to find them: [DOCS_MAP.md](DOCS_MAP.md). Rules:
 
 1. **One backlog.** Open work lives only in [BACKLOG.md](BACKLOG.md). Shipped work is logged in `docs/archive/BACKLOG_HISTORY_2026-11-12.md`.
-2. **One map.** A new doc gets one line in [DOCS_MAP.md](DOCS_MAP.md), placed in the right topic folder (`architecture`, `api`, `deployment`, `reference`, `testing`, `design`, `platform_revision`).
+2. **One map.** A new doc gets one line in [DOCS_MAP.md](DOCS_MAP.md), placed in the right topic folder (`architecture`, `api`, `deployment`, `reference`, `testing`, `design`, `product`, `platform_revision`).
 3. **Every doc ends with a `Last Updated: YYYY-MM-DD` line** and links to related docs with relative paths.
 4. **Superseded docs move to `docs/archive/`** (via `git mv`), they are not left in place or deleted.
 5. **No duplicated content.** Link instead of copying. No new files in the repo root without a line in DOCS_MAP.md.

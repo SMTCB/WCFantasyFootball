@@ -40,6 +40,7 @@ Finished work (shipped PRs, session logs, audits) is in [docs/archive/BACKLOG_HI
 | [docs/reference/](docs/reference/) | Developer setup, conventions, mobile development |
 | [docs/testing/](docs/testing/) | Test strategy, E2E playbook, results |
 | [docs/design/](docs/design/) | Current design work: design audit, redesign proposals, canvases |
+| [docs/product/](docs/product/) | Product assessments. [FRONTROW_ASSESSMENT_2026-11-12.html](docs/product/FRONTROW_ASSESSMENT_2026-11-12.html): why people do not come back and how the Clubhouse can fix it (evidence behind the J-xx and C-xx backlog items) |
 | [docs/platform_revision/](docs/platform_revision/) | Multi-sport / P2P / Clubhouse platform: architecture, module plans, due diligence, valuation, shipped `design_v2/` handoffs |
 | [docs/archive/](docs/archive/) | Historical only. Not maintained. See below |
 

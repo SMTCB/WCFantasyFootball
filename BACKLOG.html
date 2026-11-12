@@ -154,7 +154,7 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>103</strong><span>open</span></div>
+      <div class="total-pill"><strong>105</strong><span>open</span></div>
       <div class="total-pill"><strong>6</strong><span>closed</span></div>
     </div>
   </div>
@@ -167,8 +167,8 @@
   </div>
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
-    <span class="chip" data-filter-priority="p1">P1 — HIGH (23)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (47)</span>
+    <span class="chip" data-filter-priority="p1">P1 — HIGH (24)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (48)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (33)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
@@ -183,13 +183,13 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">103</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">105</span></button>
       <button class="status-btn" data-status="closed">Closed <span class="status-count">6</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
-      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">23</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">47</span></div>
+      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">24</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">48</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">33</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
@@ -203,7 +203,7 @@
     <div id="view-open" class="grid-view">
       
     <section class="item-group" id="group-p1" data-group="p1">
-      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">23</span></h2>
+      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">24</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="club-bet-1 move betting to clubhouse level — design decision, then build raised by the user 2026-08-22: *&quot;my idea is to have the betting at clubhouse level (and not on a specific league level)&quot;*. **half of this already exists.** there are two unrelated betting systems and they sit at different levels: **(a) league bets** — `bet_instances` + 26 `bet_templates`, commissioner-created, **`league_id`-scoped**, every template football-specific (goals/corners/cards/clean sheet/motm), reward is **fantasy points or budget, never coins**; 39 instances exist in prod. **(b) p2p coin challenges** — `p2p_challenges`, real coin stakes with escrow and 5% rake, **already `circle_id`-scoped** since migration 237, two bet types: `gw_total` (auto-resolved from squad points, **football-only** — requires `league_id` + `matchday_id`) and `freeform` (≤140-char question, any sport, human-settled). 0 exist in prod. **so system (b) already is the clubhouse-level betting the user is describing** — the gap is that its only *auto-resolving* type is football. **the decision to make**: (i) leave (a) league-scoped as a football league-flavour feature and put all cross-sport betting in (b); (ii) re-scope (a) to `circle_id` and write f1/tennis templates; or (iii) both. **recommendation: (i)** — (a) pays in fantasy points, which are per-competition and per-sport and therefore cannot settle a clubhouse-wide bet without inventing a cross-sport point scale (see `club-score-1`), whereas coins are already the one currency that is cross-sport, circle-scoped and escrowed. the concrete work under (i) is adding auto-resolving `p2p_challenges` bet types for f1 (settle on `f1_scores`) and tennis (settle on `tennis_tournament_scores`), so f1/tennis bets stop depending on `freeform`&#x27;s manual arbitration. **blocked on nothing**, but do not start before `l-9` proves the existing escrow lifecycle works end to end — building new bet types on an escrow path that has never once run in production is the wrong order. open" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -392,204 +392,221 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-01 prove one bet end to end with two test accounts: create, accept, settle, pay out journey. why: no bet has ever paid out in production (3 stakes, 0 payouts, 0 refunds). **approval needed:** test accounts in the live db. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-01 prove one bet end to end with two test accounts: create, accept, settle, pay out journey. why: no bet has ever paid out in production (3 stakes, 0 payouts, 0 refunds). **approval needed:** test accounts in the live db. evidence: 62 coin grants, 3 stakes, 0 payouts, 0 refunds; the 1-to-1 challenge (30 aug) never accepted and the group bet (3 sept) closed with nobody declaring a winner; never tested with two real accounts. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Prove one bet end to end with two test accounts: create, accept, settle, pay out</h3>
-        <p class="card-summary">Journey. Why: no bet has ever paid out in production (3 stakes, 0 payouts, 0 refunds). <strong>Approval needed:</strong> test accounts in the live DB.</p>
+        <p class="card-summary">Journey. Why: no bet has ever paid out in production (3 stakes, 0 payouts, 0 refunds). <strong>Approval needed:</strong> test accounts in the live DB. Evidence: 62 coin grants, 3 stakes, 0 payouts, 0 refunds; the 1-to-1 challenge (30 Aug) never accepted and the group bet (3 Sept) closed with nobody declaring a winner; never tested with two real accounts. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-01</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Prove one bet end to end with two test accounts: create, accept, settle, pay out</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Prove one bet end to end with two test accounts: create, accept, settle, pay out</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Why: no bet has ever paid out in production (3 stakes, 0 payouts, 0 refunds). <strong>Approval needed:</strong> test accounts in the live DB.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Why: no bet has ever paid out in production (3 stakes, 0 payouts, 0 refunds). <strong>Approval needed:</strong> test accounts in the live DB. Evidence: 62 coin grants, 3 stakes, 0 payouts, 0 refunds; the 1-to-1 challenge (30 Aug) never accepted and the group bet (3 Sept) closed with nobody declaring a winner; never tested with two real accounts. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-02 switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished journey. why: a 30 aug challenge is still pending and should have expired on 1 sept. **approval needed:** one job at a time. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-02 switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished journey. why: a 30 aug challenge is still pending and should have expired on 1 sept. **approval needed:** one job at a time. evidence: the 1-to-1 expiry and auto-settle jobs are off with no run history; the league prediction bet close/settle jobs are also paused (frozen after the world cup). assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
         <h3 class="card-title">Switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished</h3>
-        <p class="card-summary">Journey. Why: a 30 Aug challenge is still pending and should have expired on 1 Sept. <strong>Approval needed:</strong> one job at a time.</p>
+        <p class="card-summary">Journey. Why: a 30 Aug challenge is still pending and should have expired on 1 Sept. <strong>Approval needed:</strong> one job at a time. Evidence: the 1-to-1 expiry and auto-settle jobs are off with no run history; the league prediction bet close/settle jobs are also paused (frozen after the World Cup). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-02</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
       <h2 class="drawer-title">Switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Why: a 30 Aug challenge is still pending and should have expired on 1 Sept. <strong>Approval needed:</strong> one job at a time.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Why: a 30 Aug challenge is still pending and should have expired on 1 Sept. <strong>Approval needed:</strong> one job at a time. Evidence: the 1-to-1 expiry and auto-settle jobs are off with no run history; the league prediction bet close/settle jobs are also paused (frozen after the World Cup). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-03 release the 3 stakes held in the two stuck bets (100 and 250 coins) journey. **approval needed:** show the affected rows first. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-03 release the 3 stakes held in the two stuck bets (100 and 250 coins) journey. **approval needed:** show the affected rows first. evidence: 100 coins held in the 30 aug challenge, 250 in the 3 sept group bet. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
         <h3 class="card-title">Release the 3 stakes held in the two stuck bets (100 and 250 coins)</h3>
-        <p class="card-summary">Journey. <strong>Approval needed:</strong> show the affected rows first.</p>
+        <p class="card-summary">Journey. <strong>Approval needed:</strong> show the affected rows first. Evidence: 100 coins held in the 30 Aug challenge, 250 in the 3 Sept group bet. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-03</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
       <h2 class="drawer-title">Release the 3 stakes held in the two stuck bets (100 and 250 coins)</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Release the 3 stakes held in the two stuck bets (100 and 250 coins)</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. <strong>Approval needed:</strong> show the affected rows first.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. <strong>Approval needed:</strong> show the affected rows first. Evidence: 100 coins held in the 30 Aug challenge, 250 in the 3 Sept group bet. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-04 show an error when an invite code is wrong during the welcome journey. silent failure today; 12 of 62 accounts are in no clubhouse. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-04 show an error when an invite code is wrong during the welcome journey. silent failure today; 12 of 62 accounts are in no clubhouse. also: if the clubhouse cannot be created the welcome moves on as if it worked. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
         <h3 class="card-title">Show an error when an invite code is wrong during the welcome</h3>
-        <p class="card-summary">Journey. Silent failure today; 12 of 62 accounts are in no Clubhouse.</p>
+        <p class="card-summary">Journey. Silent failure today; 12 of 62 accounts are in no Clubhouse. Also: if the Clubhouse cannot be created the welcome moves on as if it worked. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-04</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
       <h2 class="drawer-title">Show an error when an invite code is wrong during the welcome</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Show an error when an invite code is wrong during the welcome</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Silent failure today; 12 of 62 accounts are in no Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Silent failure today; 12 of 62 accounts are in no Clubhouse. Also: if the Clubhouse cannot be created the welcome moves on as if it worked. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-05 fix welcome wording: frontrow not forza fantasy league, one step count, one currency, no keyboard hint on phones journey. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-05 fix welcome wording: frontrow not forza fantasy league, one step count, one currency, no keyboard hint on phones journey. evidence: second card reads &quot;welcome to forza fantasy league&quot;; one card shows &quot;step 1 of 4&quot; and &quot;4 / 6&quot;; welcome says $100m, market shows €100m; &quot;press →&quot; hint on phones. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
         <h3 class="card-title">Fix welcome wording: Frontrow not Forza Fantasy League, one step count, one currency, no keyboard hint on phones</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: second card reads "Welcome to Forza Fantasy League"; one card shows "Step 1 of 4" and "4 / 6"; welcome says $100M, Market shows €100M; "Press →" hint on phones. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-05</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
       <h2 class="drawer-title">Fix welcome wording: Frontrow not Forza Fantasy League, one step count, one currency, no keyboard hint on phones</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Fix welcome wording: Frontrow not Forza Fantasy League, one step count, one currency, no keyboard hint on phones</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: second card reads "Welcome to Forza Fantasy League"; one card shows "Step 1 of 4" and "4 / 6"; welcome says $100M, Market shows €100M; "Press →" hint on phones. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-06 remove the duplicate username step and end the welcome on home, not the transfer market journey. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-06 remove the duplicate username step and end the welcome on home, not the transfer market journey. evidence: username asked at sign-up and again in the welcome; the welcome ends on the market, showing squad 0/15, €0.0m and endless loading for anyone not in a football league. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
         <h3 class="card-title">Remove the duplicate username step and end the welcome on Home, not the transfer Market</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: username asked at sign-up and again in the welcome; the welcome ends on the Market, showing squad 0/15, €0.0M and endless loading for anyone not in a football league. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-06</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
       <h2 class="drawer-title">Remove the duplicate username step and end the welcome on Home, not the transfer Market</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Remove the duplicate username step and end the welcome on Home, not the transfer Market</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: username asked at sign-up and again in the welcome; the welcome ends on the Market, showing squad 0/15, €0.0M and endless loading for anyone not in a football league. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-07 call it bets everywhere; retire challenges, p2p, group bets, wagers as labels journey. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-07 call it bets everywhere; retire challenges, p2p, group bets, wagers as labels journey. evidence: the same thing is called bets, coins, coin challenges, p2p betting, challenge, group bet and freeform. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Call it Bets everywhere; retire Challenges, P2P, Group Bets, Wagers as labels</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: the same thing is called Bets, Coins, Coin challenges, P2P Betting, Challenge, Group bet and Freeform. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-07</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Call it Bets everywhere; retire Challenges, P2P, Group Bets, Wagers as labels</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Call it Bets everywhere; retire Challenges, P2P, Group Bets, Wagers as labels</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: the same thing is called Bets, Coins, Coin challenges, P2P Betting, Challenge, Group bet and Freeform. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-08 merge the bets and coins tabs into one bets tab with the wallet inside journey. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-08 merge the bets and coins tabs into one bets tab with the wallet inside journey. evidence: bets is read-only, creating a bet is only on coins; on a phone the wallet, season record and an explainer (&quot;escrow&quot;, &quot;5% rake burned&quot;) sit above the list of bets. move the jargon explainer out of the way. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Merge the Bets and Coins tabs into one Bets tab with the wallet inside</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: Bets is read-only, creating a bet is only on Coins; on a phone the wallet, season record and an explainer ("escrow", "5% rake burned") sit above the list of bets. Move the jargon explainer out of the way. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-08</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Merge the Bets and Coins tabs into one Bets tab with the wallet inside</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Merge the Bets and Coins tabs into one Bets tab with the wallet inside</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: Bets is read-only, creating a bet is only on Coins; on a phone the wallet, season record and an explainer ("escrow", "5% rake burned") sit above the list of bets. Move the jargon explainer out of the way. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-09 record the funnel: sign-up, clubhouse joined, first bet, return on day 1/7/30 journey. tracking today is a placeholder (see code-5). **approval maybe:** if events are stored in a new table. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-09 record the funnel: sign-up, clubhouse joined, first bet, return on day 1/7/30 journey. tracking today is a placeholder (see code-5). **approval maybe:** if events are stored in a new table. success measures to track (today): new people who place or accept a bet within 24h (not measurable; at most 3 of 62 ever); return after 7 days 32% (20 of 62); bets settled per active clubhouse per week 0. baseline: 7 of 62 active in last 7 days, 17 in 30 days. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Record the funnel: sign-up, Clubhouse joined, first bet, return on day 1/7/30</h3>
-        <p class="card-summary">Journey. Tracking today is a placeholder (see CODE-5). <strong>Approval maybe:</strong> if events are stored in a new table.</p>
+        <p class="card-summary">Journey. Tracking today is a placeholder (see CODE-5). <strong>Approval maybe:</strong> if events are stored in a new table. Success measures to track (today): new people who place or accept a bet within 24h (not measurable; at most 3 of 62 ever); return after 7 days 32% (20 of 62); bets settled per active Clubhouse per week 0. Baseline: 7 of 62 active in last 7 days, 17 in 30 days. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-09</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Record the funnel: sign-up, Clubhouse joined, first bet, return on day 1/7/30</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Record the funnel: sign-up, Clubhouse joined, first bet, return on day 1/7/30</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Tracking today is a placeholder (see CODE-5). <strong>Approval maybe:</strong> if events are stored in a new table.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Tracking today is a placeholder (see CODE-5). <strong>Approval maybe:</strong> if events are stored in a new table. Success measures to track (today): new people who place or accept a bet within 24h (not measurable; at most 3 of 62 ever); return after 7 days 32% (20 of 62); bets settled per active Clubhouse per week 0. Baseline: 7 of 62 active in last 7 days, 17 in 30 days. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="c-01 chat on phone: delete a message by tap, show an error when a send fails, fix sender name showing &quot;?&quot; clubhouse. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="c-01 chat on phone: delete a message by tap, show an error when a send fails, fix sender name showing &quot;?&quot; clubhouse. evidence: delete is hover-only, a failed send shows nothing; only 3 chat messages ever, 0 dms. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
         <h3 class="card-title">Chat on phone: delete a message by tap, show an error when a send fails, fix sender name showing "?"</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: delete is hover-only, a failed send shows nothing; only 3 chat messages ever, 0 DMs. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-01</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
       <h2 class="drawer-title">Chat on phone: delete a message by tap, show an error when a send fails, fix sender name showing "?"</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Chat on phone: delete a message by tap, show an error when a send fails, fix sender name showing "?"</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: delete is hover-only, a failed send shows nothing; only 3 chat messages ever, 0 DMs. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="c-02 invite says frontrow, not forza fantasy league, and uses the phone share sheet clubhouse. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="c-02 invite says frontrow, not forza fantasy league, and uses the phone share sheet clubhouse. evidence: whatsapp invite reads &quot;join my clubhouse on forza fantasy league&quot;. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
         <h3 class="card-title">Invite says Frontrow, not Forza Fantasy League, and uses the phone share sheet</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: WhatsApp invite reads "Join my Clubhouse on Forza Fantasy League". Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-02</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
       <h2 class="drawer-title">Invite says Frontrow, not Forza Fantasy League, and uses the phone share sheet</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Invite says Frontrow, not Forza Fantasy League, and uses the phone share sheet</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: WhatsApp invite reads "Join my Clubhouse on Forza Fantasy League". Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="c-11 empty clubhouse offers three actions: invite, make first bet, say hello clubhouse. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="c-11 empty clubhouse offers three actions: invite, make first bet, say hello clubhouse. evidence: 3 of 9 active clubhouses have a single member; a new clubhouse offers only &quot;create a competition&quot;. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Empty Clubhouse offers three actions: invite, make first bet, say hello</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: 3 of 9 active Clubhouses have a single member; a new Clubhouse offers only "create a competition". Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-11</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Empty Clubhouse offers three actions: invite, make first bet, say hello</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Empty Clubhouse offers three actions: invite, make first bet, say hello</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: 3 of 9 active Clubhouses have a single member; a new Clubhouse offers only "create a competition". Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-20 create-bet window dead end: with no clubhouse it says &quot;join one first&quot; and offers no way to do it journey. add a button that creates or joins a clubhouse (or starts the invite flow) from that window. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
+        <h3 class="card-title">Create-bet window dead end: with no Clubhouse it says "join one first" and offers no way to do it</h3>
+        <p class="card-summary">Journey. Add a button that creates or joins a Clubhouse (or starts the invite flow) from that window. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
+        <div class="card-foot"><span class="foot-id">J-20</span><span class="foot-effort">S</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
+      <h2 class="drawer-title">Create-bet window dead end: with no Clubhouse it says "join one first" and offers no way to do it</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Create-bet window dead end: with no Clubhouse it says "join one first" and offers no way to do it</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Add a button that creates or joins a Clubhouse (or starts the invite flow) from that window. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -598,7 +615,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">47</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">48</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="test-seed-1 `tests/unit/seed.sql` is a time bomb — a stale docker volume silently produces 7 false test failures found 2026-08-21, first thing that happened on returning from a 3-week pause: `npm run test:unit` reported **7 failures** (6 in `auction.test.js`, 1 in `bet.test.js`) with errors like `auction deadline passed` and `bet_still_open` never firing. **not a regression — a harness defect.** `seed.sql` seeds its time-sensitive fixtures relatively (`now() + interval &#x27;1 day&#x27;` for the auction listing, `+ 2 days` for the bet instance, `+ 7 days` for the matchday deadline) but every insert ends `on conflict (id) do nothing`. on a persistent local docker volume the rows keep whatever timestamp they were first seeded with, and **re-running the seed silently refreshes nothing** — so any developer returning after more than a day gets failures that look like real breakage in the money rpcs. confirmed empirically: local rows carried 2026-08-01 deadlines against a 2026-08-21 clock; re-stamping the three rows restored **56/56 green** with no code change. ci is unaffected (fresh db every run), which is exactly why this went unnoticed. **fix**: change the three time-sensitive inserts to `on conflict (id) do update set deadline_at = excluded.deadline_at` (or have `setup.js` re-stamp them unconditionally after seeding). cheap, and it removes a false-alarm trap that costs a confused half-hour every time. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
@@ -1020,255 +1037,272 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-10 bet invite link with its own page: friend sees the bet and sender before login, accepts in one tap, which creates the account and joins the sender&#x27;s clubhouse journey. depends on j-01 to j-03. **approval needed:** new db function. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-10 bet invite link with its own page: friend sees the bet and sender before login, accepts in one tap, which creates the account and joins the sender&#x27;s clubhouse journey. depends on j-01 to j-03. **approval needed:** new db function. evidence: 12 of 62 accounts never reached any clubhouse. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Bet invite link with its own page: friend sees the bet and sender before login, accepts in one tap, which creates the account and joins the sender's Clubhouse</h3>
-        <p class="card-summary">Journey. Depends on J-01 to J-03. <strong>Approval needed:</strong> new DB function.</p>
+        <p class="card-summary">Journey. Depends on J-01 to J-03. <strong>Approval needed:</strong> new DB function. Evidence: 12 of 62 accounts never reached any Clubhouse. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-10</span><span class="foot-effort">L</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Bet invite link with its own page: friend sees the bet and sender before login, accepts in one tap, which creates the account and joins the sender's Clubhouse</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Bet invite link with its own page: friend sees the bet and sender before login, accepts in one tap, which creates the account and joins the sender's Clubhouse</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Depends on J-01 to J-03. <strong>Approval needed:</strong> new DB function.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Depends on J-01 to J-03. <strong>Approval needed:</strong> new DB function. Evidence: 12 of 62 accounts never reached any Clubhouse. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-11 quick bet: three fields (question, stake, who); the rest under more options journey. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-11 quick bet: three fields (question, stake, who); the rest under more options journey. evidence: a group bet asks for question, answer type, options, who can join, stake, start and end. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Quick bet: three fields (question, stake, who); the rest under More options</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: a group bet asks for question, answer type, options, who can join, stake, start and end. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-11</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Quick bet: three fields (question, stake, who); the rest under More options</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Quick bet: three fields (question, stake, who); the rest under More options</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: a group bet asks for question, answer type, options, who can join, stake, start and end. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-12 three-step welcome: name, clubhouse, then first bet or a sport (replaces today&#x27;s six steps) journey. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-12 three-step welcome: name, clubhouse, then first bet or a sport (replaces today&#x27;s six steps) journey. evidence: today six steps and none on bets or friends. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Three-step welcome: name, Clubhouse, then first bet or a sport (replaces today's six steps)</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: today six steps and none on bets or friends. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-12</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Three-step welcome: name, Clubhouse, then first bet or a sport (replaces today's six steps)</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Three-step welcome: name, Clubhouse, then first bet or a sport (replaces today's six steps)</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: today six steps and none on bets or friends. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-13 lighter settlement: creator declares the result, others have 24h to object, then auto payout journey. **approval needed:** db and scheduled job. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-13 lighter settlement: creator declares the result, others have 24h to object, then auto payout journey. **approval needed:** db and scheduled job. evidence: nine settlement states incl. objection window and arbitration. also decide what happens when nobody declares a result (the 3 sept group bet is stuck that way). assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Lighter settlement: creator declares the result, others have 24h to object, then auto payout</h3>
-        <p class="card-summary">Journey. <strong>Approval needed:</strong> DB and scheduled job.</p>
+        <p class="card-summary">Journey. <strong>Approval needed:</strong> DB and scheduled job. Evidence: nine settlement states incl. objection window and arbitration. Also decide what happens when nobody declares a result (the 3 Sept group bet is stuck that way). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-13</span><span class="foot-effort">L</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Lighter settlement: creator declares the result, others have 24h to object, then auto payout</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Lighter settlement: creator declares the result, others have 24h to object, then auto payout</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. <strong>Approval needed:</strong> DB and scheduled job.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. <strong>Approval needed:</strong> DB and scheduled job. Evidence: nine settlement states incl. objection window and arbitration. Also decide what happens when nobody declares a result (the 3 Sept group bet is stuck that way). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-14 home as a your-move feed (bet to accept, result to confirm, lineup to set) journey. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-14 home as a your-move feed (bet to accept, result to confirm, lineup to set) journey. evidence: home is a directory of clubhouses and competitions, not a feed; when empty, home and the club tab show almost the same options. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Home as a your-move feed (bet to accept, result to confirm, lineup to set)</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: Home is a directory of Clubhouses and competitions, not a feed; when empty, Home and the Club tab show almost the same options. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-14</span><span class="foot-effort">L</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Home as a your-move feed (bet to accept, result to confirm, lineup to set)</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Home as a your-move feed (bet to accept, result to confirm, lineup to set)</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: Home is a directory of Clubhouses and competitions, not a feed; when empty, Home and the Club tab show almost the same options. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-15 one-tap sign-in (google, apple or email link) journey. **approval needed:** sign-in provider settings. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-15 one-tap sign-in (google, apple or email link) journey. **approval needed:** sign-in provider settings. evidence: sign-up asks four fields (username, email, password, confirm). assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">One-tap sign-in (Google, Apple or email link)</h3>
-        <p class="card-summary">Journey. <strong>Approval needed:</strong> sign-in provider settings.</p>
+        <p class="card-summary">Journey. <strong>Approval needed:</strong> sign-in provider settings. Evidence: sign-up asks four fields (username, email, password, confirm). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-15</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">One-tap sign-in (Google, Apple or email link)</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>One-tap sign-in (Google, Apple or email link)</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. <strong>Approval needed:</strong> sign-in provider settings.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. <strong>Approval needed:</strong> sign-in provider settings. Evidence: sign-up asks four fields (username, email, password, confirm). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-07 the room: one stream, chat and activity merged; channels and dms hidden clubhouse. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="j-21 first screen says what frontrow is before the login form journey. today: a logo, &quot;sign in&quot; and &quot;create account&quot;. the best line (&quot;every game you play lives in one room&quot;) only appears after sign-up. overlaps j-19. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">First screen says what Frontrow is before the login form</h3>
+        <p class="card-summary">Journey. Today: a logo, "Sign In" and "Create Account". The best line ("Every game you play lives in one room") only appears after sign-up. Overlaps J-19. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
+        <div class="card-foot"><span class="foot-id">J-21</span><span class="foot-effort">S</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">First screen says what Frontrow is before the login form</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>First screen says what Frontrow is before the login form</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Today: a logo, "Sign In" and "Create Account". The best line ("Every game you play lives in one room") only appears after sign-up. Overlaps J-19. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-07 the room: one stream, chat and activity merged; channels and dms hidden clubhouse. evidence: 0 chat messages in the largest clubhouse (14 members); slack-style channels and a dms tab for a group of friends. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">The Room: one stream, chat and activity merged; channels and DMs hidden</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: 0 chat messages in the largest Clubhouse (14 members); Slack-style channels and a DMs tab for a group of friends. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-07</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">The Room: one stream, chat and activity merged; channels and DMs hidden</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>The Room: one stream, chat and activity merged; channels and DMs hidden</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: 0 chat messages in the largest Clubhouse (14 members); Slack-style channels and a DMs tab for a group of friends. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-08 bets inside the room: create from the message box, take or pass on the card clubhouse. depends on j-01 to j-03. **approval needed.** open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-08 bets inside the room: create from the message box, take or pass on the card clubhouse. depends on j-01 to j-03. **approval needed.** evidence: the bet button in chat navigates away; a bet card in chat can only be viewed. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Bets inside the room: create from the message box, take or pass on the card</h3>
-        <p class="card-summary">Clubhouse. Depends on J-01 to J-03. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. Depends on J-01 to J-03. <strong>Approval needed.</strong> Evidence: the bet button in chat navigates away; a bet card in chat can only be viewed. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-08</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Bets inside the room: create from the message box, take or pass on the card</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Bets inside the room: create from the message box, take or pass on the card</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Depends on J-01 to J-03. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Depends on J-01 to J-03. <strong>Approval needed.</strong> Evidence: the bet button in chat navigates away; a bet card in chat can only be viewed. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-09 feed shows people: joins, bets made/taken/won, new newspaper edition clubhouse. **approval needed.** open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-09 feed shows people: joins, bets made/taken/won, new newspaper edition clubhouse. **approval needed.** evidence: the activity feed lists league events only (results, transfers, drafts). assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Feed shows people: joins, bets made/taken/won, new newspaper edition</h3>
-        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong> Evidence: the activity feed lists league events only (results, transfers, drafts). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-09</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Feed shows people: joins, bets made/taken/won, new newspaper edition</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Feed shows people: joins, bets made/taken/won, new newspaper edition</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong> Evidence: the activity feed lists league events only (results, transfers, drafts). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-03 six clubhouse tabs become three: room, competitions, people; settings behind a gear clubhouse. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-03 six clubhouse tabs become three: room, competitions, people; settings behind a gear clubhouse. evidence: today home, the frontrow, digest, chat, members, settings. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Six Clubhouse tabs become three: Room, Competitions, People; Settings behind a gear</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: today Home, The Frontrow, Digest, Chat, Members, Settings. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-03</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Six Clubhouse tabs become three: Room, Competitions, People; Settings behind a gear</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Six Clubhouse tabs become three: Room, Competitions, People; Settings behind a gear</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: today Home, The Frontrow, Digest, Chat, Members, Settings. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-04 one &quot;your move&quot; line replaces the three shortcut cards; coin balance in header clubhouse. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-04 one &quot;your move&quot; line replaces the three shortcut cards; coin balance in header clubhouse. evidence: wallet, p2p challenges, meta rank are three exit tiles in a sideways scroller, the first thing you see. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">One "your move" line replaces the three shortcut cards; coin balance in header</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: Wallet, P2P Challenges, Meta Rank are three exit tiles in a sideways scroller, the first thing you see. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-04</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">One "your move" line replaces the three shortcut cards; coin balance in header</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>One "your move" line replaces the three shortcut cards; coin balance in header</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: Wallet, P2P Challenges, Meta Rank are three exit tiles in a sideways scroller, the first thing you see. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-10 reactions on messages and feed items clubhouse. **approval needed.** open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-10 reactions on messages and feed items clubhouse. **approval needed.** evidence: 0 reactions on 34 newspaper editions; no reactions in chat or feed. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Reactions on messages and feed items</h3>
-        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong> Evidence: 0 reactions on 34 newspaper editions; no reactions in chat or feed. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-10</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Reactions on messages and feed items</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Reactions on messages and feed items</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong> Evidence: 0 reactions on 34 newspaper editions; no reactions in chat or feed. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-12 notifications about friends, opening the exact item in the room clubhouse. **approval needed.** open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-12 notifications about friends, opening the exact item in the room clubhouse. **approval needed.** evidence: only 17% of 375 notices opened, none about a person. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Notifications about friends, opening the exact item in the Room</h3>
-        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong> Evidence: only 17% of 375 notices opened, none about a person. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-12</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Notifications about friends, opening the exact item in the Room</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Notifications about friends, opening the exact item in the Room</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong> Evidence: only 17% of 375 notices opened, none about a person. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-05 people tab: each member&#x27;s record and a challenge button clubhouse. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-05 people tab: each member&#x27;s record and a challenge button clubhouse. evidence: members shows a letter, a join date and a trophy count only. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">People tab: each member's record and a Challenge button</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: Members shows a letter, a join date and a trophy count only. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-05</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">People tab: each member's record and a Challenge button</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>People tab: each member's record and a Challenge button</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: Members shows a letter, a join date and a trophy count only. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-06 clubhouse tidy-up: icons replace emoji, design-token colours, chat height on phone browsers clubhouse. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="c-06 clubhouse tidy-up: icons replace emoji, design-token colours, chat height on phone browsers clubhouse. evidence: emoji used as icons, hard-coded colours, chat height breaks with moving phone address bars. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
         <h3 class="card-title">Clubhouse tidy-up: icons replace emoji, design-token colours, chat height on phone browsers</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Evidence: emoji used as icons, hard-coded colours, chat height breaks with moving phone address bars. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-06</span><span class="foot-effort">S</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
       <h2 class="drawer-title">Clubhouse tidy-up: icons replace emoji, design-token colours, chat height on phone browsers</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Clubhouse tidy-up: icons replace emoji, design-token colours, chat height on phone browsers</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: emoji used as icons, hard-coded colours, chat height breaks with moving phone address bars. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -1806,17 +1840,17 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="j-16 re-engagement messages, email first, then phone notifications journey. only 63 of 375 in-app notices were ever read. overlaps push-1. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="j-16 re-engagement messages, email first, then phone notifications journey. only 63 of 375 in-app notices were ever read. overlaps push-1. evidence: no push or email today; 294 of 375 notices are the automated newspaper; 5 in 6 never opened. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Re-engagement messages, email first, then phone notifications</h3>
-        <p class="card-summary">Journey. Only 63 of 375 in-app notices were ever read. Overlaps PUSH-1.</p>
+        <p class="card-summary">Journey. Only 63 of 375 in-app notices were ever read. Overlaps PUSH-1. Evidence: no push or email today; 294 of 375 notices are the automated newspaper; 5 in 6 never opened. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-16</span><span class="foot-effort">L</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Re-engagement messages, email first, then phone notifications</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Re-engagement messages, email first, then phone notifications</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Only 63 of 375 in-app notices were ever read. Overlaps PUSH-1.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Only 63 of 375 in-app notices were ever read. Overlaps PUSH-1. Evidence: no push or email today; 294 of 375 notices are the automated newspaper; 5 in 6 never opened. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -1840,102 +1874,102 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="j-18 four words only: clubhouse, competition, bets, coins (removes league, paddock, player box, circle…) journey. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="j-18 four words only: clubhouse, competition, bets, coins (removes league, paddock, player box, circle…) journey. evidence: six names for bets alone (see j-07). assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Four words only: Clubhouse, Competition, Bets, Coins (removes League, Paddock, Player Box, Circle…)</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: six names for bets alone (see J-07). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-18</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Four words only: Clubhouse, Competition, Bets, Coins (removes League, Paddock, Player Box, Circle…)</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Four words only: Clubhouse, Competition, Bets, Coins (removes League, Paddock, Player Box, Circle…)</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: six names for bets alone (see J-07). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="j-19 public front page: the frontrow newspaper readable without an account journey. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="j-19 public front page: the frontrow newspaper readable without an account journey. evidence: nothing on the first screen says what frontrow is. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Public front page: the Frontrow newspaper readable without an account</h3>
-        <p class="card-summary">Journey.</p>
+        <p class="card-summary">Journey. Evidence: nothing on the first screen says what Frontrow is. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">J-19</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Public front page: the Frontrow newspaper readable without an account</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Public front page: the Frontrow newspaper readable without an account</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: nothing on the first screen says what Frontrow is. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-14 the frontrow as a weekly edition about the group, posted in the room, shareable as an image clubhouse. **approval needed.** open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-14 the frontrow as a weekly edition about the group, posted in the room, shareable as an image clubhouse. **approval needed.** evidence: 34 editions published, nobody reacted. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">The Frontrow as a weekly edition about the group, posted in the Room, shareable as an image</h3>
-        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong> Evidence: 34 editions published, nobody reacted. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-14</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">The Frontrow as a weekly edition about the group, posted in the Room, shareable as an image</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>The Frontrow as a weekly edition about the group, posted in the Room, shareable as an image</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong> Evidence: 34 editions published, nobody reacted. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-15 match-day prompts: a ready-made question before big events clubhouse. depends on j-01 to j-03; delivers j-17. **approval needed.** open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-15 match-day prompts: a ready-made question before big events clubhouse. depends on j-01 to j-03; delivers j-17. **approval needed.** example: &quot;benfica v porto, saturday. who is calling it?&quot; assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Match-day prompts: a ready-made question before big events</h3>
-        <p class="card-summary">Clubhouse. Depends on J-01 to J-03; delivers J-17. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. Depends on J-01 to J-03; delivers J-17. <strong>Approval needed.</strong> Example: "Benfica v Porto, Saturday. Who is calling it?" Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-15</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Match-day prompts: a ready-made question before big events</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Match-day prompts: a ready-made question before big events</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Depends on J-01 to J-03; delivers J-17. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Depends on J-01 to J-03; delivers J-17. <strong>Approval needed.</strong> Example: "Benfica v Porto, Saturday. Who is calling it?" Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-13 rivalries: head-to-head record between any two members clubhouse. **approval needed.** open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-13 rivalries: head-to-head record between any two members clubhouse. **approval needed.** idea: &quot;you are 2-5 against rui&quot; is the most re-shareable line. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Rivalries: head-to-head record between any two members</h3>
-        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong> Idea: "You are 2-5 against Rui" is the most re-shareable line. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-13</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Rivalries: head-to-head record between any two members</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Rivalries: head-to-head record between any two members</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong> Idea: "You are 2-5 against Rui" is the most re-shareable line. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-16 free picks: one-tap predictions with no coins clubhouse. **approval needed.** open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-16 free picks: one-tap predictions with no coins clubhouse. **approval needed.** lower commitment than a bet; shows who agreed with whom. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Free picks: one-tap predictions with no coins</h3>
-        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong></p>
+        <p class="card-summary">Clubhouse. <strong>Approval needed.</strong> Lower commitment than a bet; shows who agreed with whom. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-16</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Free picks: one-tap predictions with no coins</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Free picks: one-tap predictions with no coins</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. <strong>Approval needed.</strong> Lower commitment than a bet; shows who agreed with whom. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -1959,17 +1993,17 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-18 share cards for settled bets, rivalries and front pages (pairs with j-10) clubhouse. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
+      <article class="card" data-status="open" data-priority="p3" data-kind="none" data-search="c-18 share cards for settled bets, rivalries and front pages (pairs with j-10) clubhouse. same door as the bet invite (j-10): the content is the invitation. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p3 — low" style="--tab-color:#5b7285" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Share cards for settled bets, rivalries and front pages (pairs with J-10)</h3>
-        <p class="card-summary">Clubhouse.</p>
+        <p class="card-summary">Clubhouse. Same door as the bet invite (J-10): the content is the invitation. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
         <div class="card-foot"><span class="foot-id">C-18</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p3">P3 — LOW</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Share cards for settled bets, rivalries and front pages (pairs with J-10)</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Share cards for settled bets, rivalries and front pages (pairs with J-10)</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Same door as the bet invite (J-10): the content is the invitation. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P3 — LOW</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
