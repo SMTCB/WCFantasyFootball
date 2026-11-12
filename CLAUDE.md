@@ -23,15 +23,12 @@ Never run a migration, `db query --linked` write, or `functions deploy` without 
 
 ## 🚀 Quick Navigation — Start Here
 
-**First time in this project?** Use these guides in order:
-
-| Resource | Purpose | Link |
-|----------|---------|------|
-| **📋 DOCS_MAP** | Complete index of all documentation | [DOCS_MAP.md](DOCS_MAP.md) — Read this first to understand what docs exist |
-| **⚙️ Architecture Overview** | How the app is built (tech stack, components, systems) | See [Technical Stack & Architecture](#technical-stack--architecture) below |
-| **🌳 Repository Structure** | File organization and folder layout | See [Repository Structure](#repository-structure) below |
-| **📖 Ways of Working** | How Claude Code and you collaborate | See [Ways of Working](#ways-of-working) below |
-| **📊 Current Progress** | What's done, what's in progress | [BACKLOG.md](BACKLOG.md) + [Notion BACKLOG](https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac) |
+| Resource | Purpose |
+|----------|---------|
+| [DOCS_MAP.md](DOCS_MAP.md) | The one index of all documentation. Read first |
+| [BACKLOG.md](BACKLOG.md) | The single backlog (open items only, P0-P3). Also [Notion BACKLOG](https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac) |
+| [Ways of Working](#ways-of-working) | How Claude Code and you collaborate |
+| [Technical Stack](#technical-stack--architecture) | How the app is built |
 
 ---
 
@@ -76,10 +73,9 @@ Never modify an already-applied migration file. Always create a new numbered fil
 ## 📋 BACKLOG IS SINGLE SOURCE OF TRUTH
 
 **Critical governance rule:** [BACKLOG.md](BACKLOG.md) is the **authoritative** document for:
-- ✅ Completed features and session progress
 - 🚀 ALL open issues, bugs, and improvements (prioritized by tier: P0/P1/P2/P3)
-- ⏱️ Effort estimates and phase allocation for each item
-- 📊 Session notes and decision history
+- ⏱️ Effort estimates for each item
+- Finished work is **not** kept there: it moves to `docs/archive/BACKLOG_HISTORY_2026-11-12.md` when it ships.
 
 **If it's not in BACKLOG.md, it doesn't exist.** All task assignment, prioritization, and planning flows from this single document.
 
@@ -259,286 +255,23 @@ Claude Code creates worktrees under `.claude/worktrees/` — these are gitignore
 
 ---
 
-## Repository Structure
+## Repository Structure and Documentation
 
-### Complete Directory Tree
+The folder layout and the index of every doc live in **[DOCS_MAP.md](DOCS_MAP.md)**. Read it instead of a tree here (a tree in this file goes stale). Orientation in one glance:
 
-```
-forza-fantasy-league/
-│
-├── 📦 src/                                  # React application source (client-side)
-│   ├── screens/                            # Route-level page components (11 screens)
-│   │   ├── ScoresScreen.jsx               # Home: match fixtures & live scores
-│   │   ├── SquadScreen.jsx                # User's squad builder & formation
-│   │   ├── LeagueScreen.jsx               # League standings & chat interface
-│   │   ├── RecapScreen.jsx                # MY DIGEST: cross-league activity feed (gazette_entries all types + own transfers, 7 days)
-│   │   ├── LiveScreen.jsx                 # Live match updates & Joker chip
-│   │   ├── MarketScreen.jsx               # Transfer market player search
-│   │   ├── LeagueCreationWizard.jsx       # Multi-step league creation flow
-│   │   ├── LoginScreen.jsx                # Authentication entry point
-│   │   ├── OnboardingScreen.jsx           # First-time user setup
-│   │   ├── SettingsScreen.jsx             # User preferences & profile
-│   │   ├── ChipSelectorModal.jsx          # Chip selection UI overlay
-│   │   └── NotFoundScreen.jsx             # 404 error page
-│   │
-│   ├── components/                         # Reusable UI components
-│   │   ├── AppLayout.jsx                  # Main shell: nav, header, footer
-│   │   ├── OnboardingWizard.jsx           # 4-step full-screen overlay
-│   │   ├── BrandMark.jsx                  # Logo & branding component
-│   │   ├── NavIcons.jsx                   # Tactical icons for navigation
-│   │   ├── AvailabilityBadge.jsx          # Player availability flag UI
-│   │   ├── GazetteDraftReport.jsx         # Draft results publication card
-│   │   ├── LeagueSelector.jsx             # League dropdown picker
-│   │   ├── LeagueInviteCard.jsx           # Invite code display & sharing
-│   │   ├── PlayerCard.jsx                 # Squad card with stats/actions
-│   │   ├── PowerToolCard.jsx              # Chip & tool action buttons
-│   │   ├── ChipCard.jsx                   # Chip selection card (Joker, etc)
-│   │   ├── FormationDisplay.jsx           # Visual 11-player formation
-│   │   ├── H2HSheet.jsx                   # Head-to-head matchup details
-│   │   ├── LiveJokerCard.jsx              # Active Joker multiplier display
-│   │   ├── ScoringBreakdown.jsx           # Points calculation details
-│   │   └── ChatMessage*.jsx               # League chat components
-│   │
-│   ├── hooks/                              # Custom React hooks (state + logic)
-│   │   ├── useAuth.js                     # Supabase auth state management
-│   │   ├── useSquad.js                    # Squad fetching & management
-│   │   ├── useTransfer.js                 # Transfer logic & validation
-│   │   ├── useLeague.js                   # League & standings queries
-│   │   ├── useOnboarding.js               # Onboarding flow state
-│   │   ├── useAvailabilityFlag.js         # Player availability flag toggle
-│   │   ├── useChatMessages.js             # League chat real-time subscriptions
-│   │   ├── useChipSelection.js            # Chip selection state
-│   │   ├── useFormationValidator.js       # 11-player formation rules
-│   │   └── useLiveScores.js               # Live match data polling
-│   │
-│   ├── lib/                                # Utilities & client config
-│   │   ├── supabase.js                    # Supabase client initialization
-│   │   ├── capacitor.js                   # Native plugin setup & helpers
-│   │   ├── utils.js                       # General utilities (formatters, etc)
-│   │   └── api.js                         # API client & Forza Football integration
-│   │
-│   ├── context/                            # React Context providers
-│   │   └── AuthContext.jsx                # Global auth state (user, session)
-│   │
-│   ├── data/                               # Fallback data (demo/testing)
-│   │   ├── players.json                   # Dummy player list
-│   │   ├── squads.json                    # Demo squad data
-│   │   └── fixtures.json                  # Sample match fixtures
-│   │
-│   ├── App.jsx                            # Router setup & provider wrapping
-│   ├── index.css                          # Global styles (Tailwind imports)
-│   └── main.jsx                           # Entry point (Vite)
-│
-├── 🗄️ supabase/                            # Backend infrastructure
-│   ├── migrations/                        # SQL migration files (numbered sequence)
-│   │   ├── 01_initial_schema.sql          # Core tables: users, squads, leagues
-│   │   ├── 02_draft_system.sql            # Draft submissions & allocations
-│   │   ├── 03_draft_lottery_cron.sql      # Cron job for draft lottery
-│   │   ├── 04_transfer_window_enforcement.sql  # Transfer deadline triggers
-│   │   ├── 05_trade_listings.sql          # Player trade requests
-│   │   ├── 06_cup_pool_management.sql     # Cup tournament structure
-│   │   ├── 07_relaxation_formula.sql      # No-repeat relaxation rules
-│   │   ├── 08_reverse_draft_cron.sql      # Reverse-order draft automation
-│   │   ├── 09_scoring_schema.sql          # Points calculation tables
-│   │   ├── 13_scoring_schema_align.sql    # Match stats scoring columns
-│   │   ├── 14_fixtures_pl_clubs.sql       # Real Premier League fixtures
-│   │   ├── 15_player_status_pl_alerts.sql # Player injury/availability alerts
-│   │   └── 16_*.sql                       # (Next migration to create)
-│   │
-│   └── functions/                         # Deployed Edge Functions (Deno)
-│       ├── calculate-scores/              # Compute weekly fantasy points
-│       ├── process-transfer/              # Handle squad transfers & budgeting
-│       ├── process-trade/                 # League-wide trade approval logic
-│       ├── update-player-status/          # Sync injury/suspension from API
-│       └── handle-chat-notifications/     # Real-time chat notifications
-│
-├── 📄 public/                              # Static assets (served by Vite)
-│   ├── ffl-brandmark.svg                  # Logo (Editorial Brandmark)
-│   ├── nav-icons/                         # Tactical nav icons
-│   │   ├── scores.svg
-│   │   ├── squad.svg
-│   │   ├── league.svg
-│   │   ├── live.svg
-│   │   └── market.svg
-│   └── favicon.ico
-│
-├── 📚 docs/                                # Documentation (organized by topic)
-│   ├── architecture/                      # System design & technical foundation
-│   │   ├── DRAFT_SYSTEM_DESIGN.md         # Draft lottery rules & algorithm
-│   │   ├── FANTASY_POINTS_SCORING_LAYER.md   # Scoring formula, DB schema
-│   │   ├── APP_DYNAMICS.md                # Live-match updates, Realtime subscriptions
-│   │   └── FORMATION_RULES.md             # 11-player pitch validation rules
-│   │
-│   ├── api/                               # External integrations & API reference
-│   │   ├── FORZA_API_ASSESSMENT.md        # Forza Football API endpoints & gaps
-│   │   ├── API_INTEGRATION_REFERENCE.md   # How we consume the API
-│   │   ├── FIT_GAP_ANALYSIS.md            # Missing endpoints & workarounds
-│   │   └── FORZA_API_KNOWLEDGE.md         # API authentication & rate limits
-│   │
-│   ├── brand/                             # Visual identity & design
-│   │   ├── BRANDING.md                    # Color palette, typography, spacing
-│   │   ├── FORZAKIT-UI-Overhaul.md        # UI redesign specs & components
-│   │   ├── FORZAKIT-Pitch-Fixes.md        # Formation display fixes
-│   │   ├── tokens.css                     # CSS design tokens (--gold, --ink, etc)
-│   │   └── brand_guidelines/              # Brand asset folder
-│   │
-│   └── deployment/                        # Launch & DevOps
-│       ├── DATA_PIPELINE_RUNBOOK.md       # Supabase cron & data activation steps
-│       ├── DRY_RUN_PREP_CHECKLIST.md      # Pre-launch verification checklist
-│       ├── ADDING_A_NEW_TOURNAMENT.md     # New tournament cookbook (registration → live squads)
-│       └── SERVICE_KEY_ROTATION_RUNBOOK.md # API key rotation procedure
-│
-├── 📱 ios/                                 # Capacitor iOS native project
-│   ├── App/                               # Xcode project files
-│   ├── Podfile                            # CocoaPods dependencies
-│   └── (Xcode workspace)
-│
-├── 📱 android/                             # Capacitor Android native project
-│   ├── app/                               # Android Studio project
-│   ├── build.gradle                       # Gradle build config
-│   └── (Android Studio workspace)
-│
-├── 🧪 e2e/                                 # Playwright end-to-end tests
-│   ├── tests/                             # Test suites
-│   │   ├── auth.spec.js                  # Login/signup flows
-│   │   ├── squad.spec.js                 # Squad building & formation
-│   │   ├── transfer.spec.js               # Player trades & transfers
-│   │   ├── league.spec.js                 # League creation & management
-│   │   ├── chat.spec.js                   # League chat messaging
-│   │   └── live.spec.js                   # Live match & Joker chip
-│   │
-│   ├── playwright.config.js               # Test runner configuration
-│   └── (test reports in e2e-report/)
-│
-├── .github/
-│   └── workflows/                         # CI/CD automation
-│       ├── ci.yml                         # Web build + lint + E2E test pipeline
-│       └── mobile-build.yml               # iOS & Android CI builds
-│
-├── 🔧 .claude/                             # Claude Code session data (GITIGNORED)
-│   ├── worktrees/                         # Ephemeral session worktrees
-│   │   └── (e.g., elegant-burnell-aeccac/)
-│   └── (other Claude internal files)
-│
-├── 🌐 Root-level Config Files
-│   ├── package.json                       # Dependencies & npm scripts
-│   ├── package-lock.json                  # Lock file (commited)
-│   ├── vite.config.js                     # Vite bundler config
-│   ├── tailwind.config.js                 # Tailwind CSS configuration
-│   ├── eslint.config.js                   # ESLint rules (flat config v9)
-│   ├── playwright.config.js               # E2E test runner config
-│   ├── .gitignore                         # Git exclusions
-│   ├── .env.example                       # Environment template (copy to .env.local)
-│   └── capacitor.config.ts                # Capacitor native app config
-│
-├── 📋 Root-level Documentation
-│   ├── README.md                          # Project overview & quick-start
-│   ├── BACKLOG.md                         # Open issues, priorities, session notes
-│   │                                      # **UPDATE WEEKLY with progress**
-│   ├── PIPELINE.md                        # Product roadmap, sprint plan, timeline
-│   ├── APP_STORE_ASSESSMENT.md            # Mobile store strategy & launch readiness
-│   ├── GEMINI.md                          # Instructions for Google Antigravity (mobile AI)
-│   └── CLAUDE.md                          # THIS FILE — session onboarding & reference
-│
-├── 📦 Build & Dist (GITIGNORED)
-│   ├── dist/                              # Production build output
-│   ├── node_modules/                      # npm dependencies
-│   ├── e2e-report/                        # Playwright test report
-│   └── .env.local                         # Local environment secrets
-│
-└── 🚀 Deployment
-    └── Vercel                             # Auto-deployed from main branch
-        └── https://wc-fantasy-football.vercel.app
-```
+| Path | What |
+|------|------|
+| `src/` | React app: `screens/`, `components/`, `hooks/`, `lib/`, `context/` |
+| `supabase/migrations/` | Numbered SQL migrations. `ls` is the source of truth for the next number |
+| `supabase/functions/` | Deno Edge Functions (manual deploy) |
+| `e2e/`, `tests/` | Playwright E2E and unit tests |
+| `ios/`, `android/` | Capacitor native projects |
+| `docs/` | Documentation by topic (see DOCS_MAP.md) |
+| `BACKLOG.md` / `BACKLOG.html` | The single backlog and its generated view |
 
-### Key Points on Organization
-
-**`src/` Structure:**
-- **screens/** — Each file is one full-screen route view. 11 total screens cover all major flows.
-- **components/** — Reusable UI building blocks. If a component appears in 2+ screens, it belongs here.
-- **hooks/** — Business logic extracted from components. Each hook is a single responsibility (auth, squad data, etc).
-- **lib/** — Singleton clients: Supabase config, Capacitor init, utility functions.
-- **context/** — Global state that multiple screens share (e.g., authenticated user).
-
-**`supabase/` Structure:**
-- **migrations/** — Never modify existing; always create new numbered files. Current schema is at migration 15.
-- **functions/** — Deployed Deno code. Triggered by webhooks, crons, or RPC calls.
-
-**`docs/` Structure:**
-- **Organized by topic**, not chronologically. Each folder is a self-contained subject.
-- Markdown files stay current with code changes. Always update after architectural shifts.
-
-**Build & Testing:**
-- `dist/` — Production build output. Generated by `npm run build`. **Gitignored**.
-- `node_modules/` — npm dependencies. Excluded from git; restored by `npm install`.
-- `e2e-report/` — Playwright HTML test report. Gitignored but crucial for debugging failures.
-
-**Root-level Config:**
-- All config files are committed to git (except `.env.local` and `.claude/worktrees/`).
-- **vite.config.js** — Build system, import aliases, dev server port.
-- **tailwind.config.js** — Design tokens, spacing scale, custom utilities.
-- **eslint.config.js** — Flat config (v9). Rules for React, hooks, code quality.
-- **capacitor.config.ts** — Native app bundling, splash screen, app ID.
-
-**Key Gitignore Patterns:**
-```
-dist/                           # Build output
-node_modules/                   # Dependencies
-.env.local                       # Secrets
-.claude/worktrees/              # Session ephemeral data
-e2e-report/                     # Test artifacts
-.DS_Store                        # macOS system files
-```
+Reading order for a new session: this file, then [BACKLOG.md](BACKLOG.md), then the topic doc for the area you touch ([docs/architecture/](docs/architecture/), [docs/api/](docs/api/), [docs/deployment/](docs/deployment/)). `COMPETITION_MODEL.md` in `docs/architecture/` must be read before touching F1 or tennis competition logic.
 
 ---
-
-## Key Reference Documents
-
-**Root-level (always updated):**
-| File | Purpose |
-|------|---------|
-| `BACKLOG.md` | Session progress, completed features, post-MVP gaps — **UPDATE WEEKLY** |
-| **Notion BACKLOG** | **https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac** — Kanban board for task prioritization & tracking |
-| `PIPELINE.md` | Product roadmap, sprint plan, timeline |
-| `APP_STORE_ASSESSMENT.md` | Mobile store strategy & launch readiness |
-| `docs/reference/MOBILE_DEVELOPMENT.md` | Capacitor setup & native plugin docs |
-
-**Architecture Docs** (`docs/architecture/`):
-| File | Purpose |
-|------|---------|
-| `COMPETITION_MODEL.md` | **Read before touching F1/tennis competition logic.** League (⚽) / Paddock (🏁) / Player Box (🎾) are the same concept, sport-flavored name — each is a real, circle-scoped container with its own membership + invite flow, not a "global" competition. Covers the membership-filtered-leaderboard pattern, `trophy_ledger`'s sport-polymorphic columns, and per-sport RPC auth.uid()-under-service-role gotchas |
-| `DRAFT_SYSTEM_DESIGN.md` | Draft lottery & transfer window rules |
-| `FANTASY_POINTS_SCORING_LAYER.md` | Scoring formula & database schema |
-| `APP_DYNAMICS.md` | Live-match, real-time, Realtime subscriptions |
-
-**API Docs** (`docs/api/`):
-| File | Purpose |
-|------|---------|
-| `FORZA_API_ASSESSMENT.md` | Forza Football API assessment & gaps |
-| `API_INTEGRATION_REFERENCE.md` | Endpoints, auth, data shapes |
-| `FIT_GAP_ANALYSIS.md` | Feature coverage & missing endpoints |
-
-**Brand Docs** (`docs/brand/`):
-| File | Purpose |
-|------|---------|
-| `BRANDING.md` | Brand identity, colors, typography |
-| `FORZAKIT-UI-Overhaul.md` | UI design overhaul notes |
-
-**Deployment** (`docs/deployment/`):
-| File | Purpose |
-|------|---------|
-| `DATA_PIPELINE_RUNBOOK.md` | Supabase cron setup & data activation |
-| `DRY_RUN_PREP_CHECKLIST.md` | Pre-launch verification checklist |
-| `ADDING_A_NEW_TOURNAMENT.md` | **New tournament cookbook** — step-by-step from Forza registration to live squads; includes friendly/test tournament pattern, squad setup, and 6-point dry run checklist |
-
-**Special Docs:**
-| File | Purpose |
-|------|---------|
-| `GEMINI.md` | Instructions for Google Antigravity (mobile AI) |
-| `docs/testing/TEST_RESULTS.md` | Latest test results & coverage |
-
----
-
 ## Key Commands
 
 ```bash
@@ -743,47 +476,15 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
    npm run build         # Rolldown TDZ check — must produce zero errors
    ```
 
-5. **After merge:** update [BACKLOG.md](BACKLOG.md) (and `TRACKER.md` if the work touched platform-revision modules) and move the Notion card to Done.
-   - **If BACKLOG.md changed:** regenerate `BACKLOG.html` in the same PR by running `python scripts/generate_backlog_html.py` and committing the result — the two must never drift apart. If it's not feasible in-session, say so explicitly rather than leaving it stale.
-   - **If root files, `src/` structure, `supabase/functions/`, or `docs/` were added/removed/materially changed:** check whether [DOCS_INDEX.html](DOCS_INDEX.html) needs a corresponding card added/updated/removed (it's hand-authored, not generated — use judgment on section/tags/description) and update it in the same PR.
+5. **After merge:** update [BACKLOG.md](BACKLOG.md) (delete shipped rows, log them in the history file; `TRACKER.md` only if the work touched platform-revision modules) and move the Notion card to Done.
+   - **If BACKLOG.md changed:** regenerate `BACKLOG.html` in the same PR by running `python scripts/generate_backlog_html.py` and committing the result. The two must never drift apart. If it's not feasible in-session, say so explicitly rather than leaving it stale.
+   - **If root files, `src/` structure, `supabase/functions/`, or `docs/` were added/removed/materially changed:** update [DOCS_MAP.md](DOCS_MAP.md) in the same PR (one line per doc, in the right topic section).
 
 6. **Before any DB migration** — dump a full backup first: `npx supabase db dump --linked > backups/pre_migration_$(date +%Y%m%d_%H%M%S).sql` (Docker is available on this machine). If Docker is ever down, fall back to `SELECT`ing the affected rows and saving to `backups/*.json`; see [Pilot Safeguards](#️-pilot-safeguards--read-before-every-db-operation)
 
 7. **Dev server:** `npm run dev` → http://localhost:5173
 
 8. **Edge Functions are NOT auto-deployed by Vercel** — after any PR touching `supabase/functions/`, manually deploy each changed function
-
----
-
-## 📂 Root-Level Files Reference
-
-**Project critical** (read first):
-- `CLAUDE.md` ← You are here (project instructions)
-- `DOCS_MAP.md` ← Documentation index (read after this file)
-- `BACKLOG.md` ← Session progress & completed work
-- `README.md` ← Project overview
-- `PIPELINE.md` ← Roadmap & strategy
-
-**Reference docs**:
-- `docs/testing/TEST_RESULTS.md` — Test results & coverage (historical)
-- `CODE_REVIEW_REPORT.md` — Recent code quality assessment
-- `APP_STORE_ASSESSMENT.md` — Mobile launch readiness
-- `docs/reference/MOBILE_DEVELOPMENT.md` — Capacitor setup & native plugins
-- `CLEANUP_REPORT.md` — Git/docs organization audit
-- `GEMINI.md` — Google Antigravity mobile AI instructions
-
-**Archived/Stale** (reference only, don't use for decisions):
-- `GIT_AND_CODE_WALKTHROUGH.md` — Superseded by CLAUDE.md and DOCS_MAP.md
-
-**Configuration** (build tools — don't edit):
-- `package.json`, `package-lock.json` — Dependencies
-- `vite.config.js` — Web bundler
-- `eslint.config.js` — Code linting
-- `playwright.config.js` — E2E tests
-- `capacitor.config.ts` — Native app configuration
-- `vercel.json` — Deployment settings
-- `.env.example` — Environment template
-- `index.html` — Entry point
 
 ---
 
@@ -840,12 +541,11 @@ grep -n "^import" src/screens/LeagueScreen.jsx
 
 **Two-tier system for task tracking:**
 
-### 1. **BACKLOG.md** (Source of Truth)
+### 1. **BACKLOG.md** (Source of Truth, open items only)
 - **Location**: Root project file (`BACKLOG.md`)
-- **Purpose**: Primary record of completed/in-progress work, session notes, audit history
-- **Update Timing**: After every major milestone or session completion
-- **Key Rule**: If it's done and merged to main, it must be in BACKLOG.md
-
+- **Purpose**: Every open bug, feature and tech-debt item, grouped P0-P3. Nothing finished stays there.
+- **Update Timing**: When an item ships, delete its row and add a one-line entry to `docs/archive/BACKLOG_HISTORY_2026-11-12.md` in the same PR
+- **Key Rule**: If it is open, it is in BACKLOG.md. If it is done, it is in the history file.
 ### 2. **Notion BACKLOG Database** (Open Items Board)
 - **Location**: https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac
 - **Purpose**: Visual kanban board for prioritization, sprint planning, and real-time status tracking
@@ -981,220 +681,15 @@ During dev/testing, you discover a bug or gap.
 
 ---
 
-## Documentation Structure Standards
+## Documentation Standards
 
-**Every new documentation file must follow these standards for consistency and discoverability.**
+Where docs live and how to find them: [DOCS_MAP.md](DOCS_MAP.md). Rules:
 
-### Documentation Categories & Locations
+1. **One backlog.** Open work lives only in [BACKLOG.md](BACKLOG.md). Shipped work is logged in `docs/archive/BACKLOG_HISTORY_2026-11-12.md`.
+2. **One map.** A new doc gets one line in [DOCS_MAP.md](DOCS_MAP.md), placed in the right topic folder (`architecture`, `api`, `deployment`, `reference`, `testing`, `design`, `platform_revision`).
+3. **Every doc ends with a `Last Updated: YYYY-MM-DD` line** and links to related docs with relative paths.
+4. **Superseded docs move to `docs/archive/`** (via `git mv`), they are not left in place or deleted.
+5. **No duplicated content.** Link instead of copying. No new files in the repo root without a line in DOCS_MAP.md.
+6. Naming: `{FEATURE}_{TYPE}.md` for design docs, `{ACTION}_{SUBJECT}.md` for runbooks, `{TOPIC}_STRATEGY.md` for strategy.
 
-| Category | Location | Purpose | File Examples |
-|----------|----------|---------|----------------|
-| **Architecture** | `docs/architecture/` | System design, data flow, algorithms | DRAFT_SYSTEM_DESIGN.md, FANTASY_POINTS_SCORING_LAYER.md |
-| **API** | `docs/api/` | External integrations, endpoints, auth | FORZA_API_ASSESSMENT.md, API_INTEGRATION_REFERENCE.md |
-| **Brand** | `docs/brand/` | Design system, visual identity, tokens | BRANDING.md, FORZAKIT-UI-Overhaul.md, tokens.css |
-| **Deployment** | `docs/deployment/` | DevOps, infrastructure, launch checklists | DATA_PIPELINE_RUNBOOK.md, DRY_RUN_PREP_CHECKLIST.md |
-| **Testing** | `docs/testing/` | Test strategy, frameworks, coverage | TESTING_STRATEGY.md, E2E_TEST_PLAYBOOK.md |
-| **Product** | `docs/product/` | Roadmap, strategy, timeline | PIPELINE.md, 12_MONTH_ROADMAP_2026_2027.md |
-| **Reference** | `docs/reference/` | Developer setup, conventions, lookup | LOCAL_DEVELOPMENT.md, CONVENTIONS.md |
-| **Archive** | `docs/archive/` | Stale, intermediate, or reference work | Audit files, old strategic docs |
-
-### Standard File Structure
-
-**Every documentation file should follow this structure:**
-
-```markdown
-# Document Title
-
-**One-line summary of purpose and audience.**
-
----
-
-## Quick Navigation (Optional)
-
-Use this if the document has multiple sections or audiences:
-- **For X**: Links to sections 1, 2, 3
-- **For Y**: Links to sections A, B, C
-
----
-
-## Context / Overview
-
-Brief explanation of what this document covers, why it matters, and key assumptions.
-
----
-
-## Main Content
-
-Organized in clear sections with:
-- Headings that are self-documenting
-- Tables for reference data (not paragraph form)
-- Code blocks for examples
-- Links to related documents
-
----
-
-## Related Documents
-
-- [Related Doc 1](path/to/doc.md) — Brief description
-- [Related Doc 2](path/to/doc.md) — Brief description
-
----
-
-Last Updated: **YYYY-MM-DD**
-```
-
-### Specific Category Templates
-
-#### 🏗️ Architecture Docs
-- **Format**: System overview → Design decisions → Data schemas → Diagrams (if applicable)
-- **Length**: 1000–3000 words
-- **Update Frequency**: When architecture changes
-- **Example**: `FANTASY_POINTS_SCORING_LAYER.md`
-
-```markdown
-# Feature Name — System Design
-
-**Complete specification and design for [feature].**
-
----
-
-## Overview
-[What is this system? Why does it exist?]
-
----
-
-## Core Components
-[Key parts, data structures, algorithms]
-
----
-
-## Design Decisions
-[Why this approach? What were the alternatives?]
-
----
-
-## Database Schema
-[Tables, constraints, indexes if applicable]
-
----
-
-## Integration Points
-[How it connects to other systems]
-
----
-
-## Related Documents
-[Links to related architecture docs]
-
-Last Updated: YYYY-MM-DD
-```
-
-#### 🎯 Product Docs
-- **Format**: Index/overview → Roadmap/timeline → Details
-- **Length**: 500–2000 words
-- **Update Frequency**: After each release or roadmap change
-- **Example**: `PIPELINE.md`
-
-#### 🧪 Testing Docs
-- **Format**: Overview → Framework/tools → Test organization → How to run → Examples
-- **Length**: 1000–3000 words
-- **Update Frequency**: When testing strategy changes
-- **Example**: `TESTING_STRATEGY.md`
-
-#### 📚 Reference Docs
-- **Format**: Quick start → Detailed sections → Troubleshooting → Tips
-- **Length**: 1000–4000 words (comprehensive reference)
-- **Update Frequency**: When setup or conventions change
-- **Example**: `LOCAL_DEVELOPMENT.md`, `CONVENTIONS.md`
-
-### File Naming Conventions
-
-| Pattern | Usage | Examples |
-|---------|-------|----------|
-| `{FEATURE}_{TYPE}.md` | Architecture/design | `DRAFT_SYSTEM_DESIGN.md`, `FANTASY_POINTS_SCORING_LAYER.md` |
-| `{NAME}_OVERVIEW.md` or `README.md` | Category index/intro | `docs/testing/README.md` |
-| `{ACTION}_{SUBJECT}.md` | How-to / guide | `LOCAL_DEVELOPMENT.md`, `DATA_PIPELINE_RUNBOOK.md` |
-| `{TOPIC}_STRATEGY.md` | Strategy/approach | `TESTING_STRATEGY.md`, `OBSERVABILITY_STRATEGY.md` |
-| `{CHECKLIST_TITLE}.md` | Pre-launch/verification | `DRY_RUN_PREP_CHECKLIST.md` |
-
-### Maintenance Rules
-
-**Every documentation file MUST:**
-1. ✅ Have a "Last Updated" date at the bottom
-2. ✅ Link to related documents (avoid orphaned docs)
-3. ✅ Be indexed in [DOCS_MAP.md](DOCS_MAP.md) (if top-level or category-defining)
-4. ✅ Use clear headings and short sections (max 500 words per section)
-5. ✅ Avoid duplication (reference instead of copy)
-6. ✅ Be kept current (update within 1 week of code changes affecting it)
-
-**Never:**
-- ❌ Create new files in root without adding to DOCS_MAP.md
-- ❌ Duplicate content across multiple files (use links instead)
-- ❌ Keep stale files in active folders (move to `docs/archive/`)
-- ❌ Leave "Last Updated" dates older than the current sprint
-- ❌ Add docs without considering where they belong in the category system
-
-### How to Add a New Document
-
-1. **Identify the category** — Which folder does this belong in?
-   - If unsure, check [DOCS_MAP.md](DOCS_MAP.md) and BACKLOG.md for guidance
-
-2. **Choose a filename** — Follow naming conventions above
-   - Example: `docs/testing/LOAD_TESTING_GUIDE.md`
-
-3. **Use the standard structure** — Follow the template above
-   - Title + summary
-   - Quick navigation (if needed)
-   - Clear sections
-   - Related documents
-   - Last Updated date
-
-4. **Update DOCS_MAP.md** — Add entry to the appropriate section
-   - Table entry in the category section
-   - One-line description in the file tree
-
-5. **Commit with a clear message**:
-   ```
-   docs(category): add new document title
-   ```
-   Example:
-   ```
-   docs(testing): add load testing guide and stress test procedures
-   ```
-
-### When to Archive vs Update
-
-**Archive a document** (move to `docs/archive/`) if:
-- It documents a system that was replaced
-- It's an audit or intermediate analysis file (snapshot in time)
-- It's a template from a previous session
-- It has not been updated in 3+ months and is not actively referenced
-
-**Update a document** if:
-- The feature/system it describes changed
-- Code snippets are no longer accurate
-- New sections needed based on recent work
-- The timestamp is older than current sprint
-
-### Cross-Referencing Best Practices
-
-**Always use relative links** for docs in the same repo:
-```markdown
-[BACKLOG.md](../BACKLOG.md)           # From docs/testing/
-[CONVENTIONS.md](CONVENTIONS.md)       # From docs/reference/
-[BRANDING.md](../brand/BRANDING.md)   # From docs/testing/
-```
-
-**Link by category**, not just file names:
-```markdown
-❌ Bad: See TESTING_STRATEGY.md
-✅ Good: See [Testing Strategy](../testing/TESTING_STRATEGY.md) for framework details
-```
-
-### Examples in the Codebase
-
-These files follow the standards above and can serve as templates:
-- [docs/testing/TESTING_STRATEGY.md](docs/testing/TESTING_STRATEGY.md) — Comprehensive strategy doc
-- [docs/reference/LOCAL_DEVELOPMENT.md](docs/reference/LOCAL_DEVELOPMENT.md) — Detailed how-to guide
-- [docs/reference/CONVENTIONS.md](docs/reference/CONVENTIONS.md) — Reference doc with tables and examples
-- [docs/product/README.md](docs/product/README.md) — Category index with quick navigation
+Last Updated: **2026-11-12**
