@@ -1,0 +1,69 @@
+# Frontrow — Documentation Map
+
+**The one entry point to the repo's documentation.** Open work is in one file ([BACKLOG.md](BACKLOG.md)); everything else is organised by topic below.
+
+---
+
+## Start here
+
+| Read | Why |
+|---|---|
+| [CLAUDE.md](CLAUDE.md) | Rules for working in this repo: single `main` branch, PR workflow, database safeguards, tech stack |
+| [BACKLOG.md](BACKLOG.md) | **The single backlog.** Open items only, grouped P0–P3. Also viewable as [BACKLOG.html](BACKLOG.html) (generated, never edited by hand) |
+| [README.md](README.md) | Project overview and quick start |
+
+Finished work (shipped PRs, session logs, audits) is in [docs/archive/BACKLOG_HISTORY_2026-11-12.md](docs/archive/BACKLOG_HISTORY_2026-11-12.md).
+
+---
+
+## Code and infrastructure
+
+| Folder | Purpose |
+|---|---|
+| `src/` | React app: screens, components, hooks, lib |
+| `supabase/migrations/` | SQL migrations (append-only, numbered; `ls` is the source of truth for the next number) |
+| `supabase/functions/` | Deno Edge Functions (not auto-deployed; `_shared/` is helper code) |
+| `e2e/`, `tests/` | Playwright end-to-end tests and unit tests |
+| `ios/`, `android/` | Capacitor native projects |
+| `scripts/` | Developer utilities (backlog HTML generator, function-drift check, simulators) |
+| `infra/` | nginx config |
+
+---
+
+## Documentation by topic
+
+| Folder | What is in it |
+|---|---|
+| [docs/architecture/](docs/architecture/) | How the football game works: scoring, draft, transfers, auctions, chips, competition model. [MIGRATION_LOG.md](docs/architecture/MIGRATION_LOG.md) is the migration history |
+| [docs/api/](docs/api/) | Forza Football API: endpoints, gaps, integration reference |
+| [docs/deployment/](docs/deployment/) | Runbooks: data pipeline, adding a tournament / F1 season / tennis tournament, key rotation, observability, local Docker |
+| [docs/reference/](docs/reference/) | Developer setup, conventions, mobile development |
+| [docs/testing/](docs/testing/) | Test strategy, E2E playbook, results |
+| [docs/design/](docs/design/) | Current design work: design audit, redesign proposals, canvases |
+| [docs/platform_revision/](docs/platform_revision/) | Multi-sport / P2P / Clubhouse platform: architecture, module plans, due diligence, valuation, shipped `design_v2/` handoffs |
+| [docs/archive/](docs/archive/) | Historical only. Not maintained. See below |
+
+### Platform revision: historical records
+
+[TRACKER.md](docs/platform_revision/TRACKER.md) (migration-by-migration verification log) and [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) (the v2 cutover runbook) are audit trails, not working documents. Read them only when a task needs that history.
+
+### Archive
+
+| Item | Contents |
+|---|---|
+| [BACKLOG_HISTORY_2026-11-12.md](docs/archive/BACKLOG_HISTORY_2026-11-12.md) | The former 6,500-line backlog: every shipped item, session log and audit |
+| [DOCS_INDEX_2026-10-17.html](docs/archive/DOCS_INDEX_2026-10-17.html) | The retired hand-authored interactive index |
+| `brand-forza-dark/` | Original "Forza Dark" design handoffs |
+| `completed-sprint-plans/`, `stale-launch-docs/`, `stale-product-plans/`, `session-audits/`, `superseded-dd-2026-06-30/`, `legacy-configs/` | Superseded plans and audits |
+
+---
+
+## Rules for keeping this tidy
+
+1. One backlog: new work goes into BACKLOG.md as a row; when it ships, delete the row and log it in the history file.
+2. One map: a new doc gets one line in this file, in the right topic folder.
+3. Every doc ends with a `Last Updated` line.
+4. Superseded docs move to `docs/archive/`, they are not left in place.
+5. Link with relative paths.
+
+Last Updated: **2026-11-12**
