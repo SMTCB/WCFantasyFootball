@@ -6533,3 +6533,13 @@ Foundation work phase complete. Delivered 3 major features: keyboard navigation,
   - Pending manual application via Supabase dashboard
   - Identified 5 other gaps (notifications, auto-options, edge cases) — deferred post-launch
 
+---
+
+## Backlog triage 2026-11-12 (closed after checking code and live DB, read-only)
+
+- DD-P0-2: closed 2026-11-12 in the backlog triage. cron freeze lifted: 25 of 36 pg_cron jobs active (checked 2026-11-12, read-only).
+- DD-P0-3: closed 2026-11-12 in the backlog triage. live football competition exists: 72 fixtures with a future kickoff (checked 2026-11-12).
+- COIN-1: closed 2026-11-12 in the backlog triage. wallet backfill done: 62 users, 62 wallets, none missing; signup trigger fixed in migration 284 (checked 2026-11-12).
+- CHIPS-1: closed 2026-11-12 in the backlog triage. chips revision shipped (PR #1130, 2026-10-31).
+- CI-UT1: closed 2026-11-12 in the backlog triage. the Unit Tests job passes on main (checked 2026-11-12).
+- B-13-CLUBHOUSE: closed 2026-11-12 in the backlog triage. Clubhouse archive toggle shipped (migration 281, circles.archived read in useClubhouse).
