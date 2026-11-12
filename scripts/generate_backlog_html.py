@@ -581,8 +581,9 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forza Fantasy League — Backlog</title>
+<title>Frontrow — Backlog</title>
 <style>
 {css}
 </style>
@@ -590,8 +591,8 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <body>
 <header>
   <div class="header-left">
-    <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — {generated_at}. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <h1>Frontrow — Backlog</h1>
+    <p>Generated from <code>BACKLOG.md</code> — {generated_at}. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>. Docs index: <a href="DOCS_MAP.html">DOCS_MAP.html</a>.</p>
     <div class="badge-bar">{badges}</div>
   </div>
   <div class="header-right">
@@ -677,13 +678,14 @@ def build_css():
     --danger: #b91c1c;
     --radius: 10px;
   }
+  :root { color-scheme: light; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--paper); min-height: 100vh; }
 
-  header { background: var(--shell); color: white; padding: 20px 32px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  header { background: #ffffff; color: var(--paper); border-bottom: 1px solid var(--border); padding: 20px 32px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .header-left h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
-  .header-left p { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-  .header-left code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 4px; }
+  .header-left p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .header-left code { background: #eef2f6; padding: 1px 5px; border-radius: 4px; }
   .badge-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px; }
   .badge-green { background: #166534; color: #dcfce7; }
@@ -692,9 +694,9 @@ def build_css():
   .badge-red   { background: #991b1b; color: #fee2e2; }
 
   .totals { display: flex; gap: 8px; }
-  .total-pill { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 6px 14px; text-align: center; min-width: 64px; }
+  .total-pill { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 6px 14px; text-align: center; min-width: 64px; }
   .total-pill strong { display: block; font-size: 17px; font-weight: 800; }
-  .total-pill span { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+  .total-pill span { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
 
   .controls { background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 32px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
   .search-wrap { position: relative; flex: 1; min-width: 220px; }
