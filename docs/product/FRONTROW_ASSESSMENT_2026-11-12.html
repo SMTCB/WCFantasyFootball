@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light"><title>Frontrow Assessment</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F7F3ED; --card: #FFFFFF; --rule: #E2DDD5;
+  --ink: #18202E; --ink-soft: #3F4A5C; --mute: #6B7483;
+  --gold: #B8720E; --gold-text: #925A0A; --gold-soft: #FAF0DE;
+  --accent: #1D4E79; --accent-soft: #E6F0F7;
+  --crit: #B91C1C; --crit-soft: #FBE9E9;
+  --ok: #2F6B4F; --ok-soft: #E4F1EA;
+  --track: #ECE7DE;
+  --display: 'Archivo Black', 'Arial Black', Impact, sans-serif;
+  --body: 'Archivo', 'Segoe UI', Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+*{box-sizing:border-box}
+.idlist { background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 0.25rem 1.1rem; }
+.idrow { display: grid; grid-template-columns: 3.6rem minmax(0, 1fr); gap: 0.75rem; padding: 0.95rem 0; border-top: 1px solid var(--rule); }
+.idrow:first-child { border-top: 0; }
+.idrow .id { font-family: var(--mono); font-size: 0.8rem; font-weight: 600; color: var(--gold-text); padding-top: 0.15rem; }
+.idrow h3 { font-family: var(--body); font-weight: 700; font-size: 1rem; line-height: 1.3; }
+.idrow p { font-size: 0.95rem; color: var(--ink-soft); margin-top: 0.2rem; }
+.idrow .chip { margin-left: 0.35rem; vertical-align: 0.1rem; }
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+@media (max-width: 620px) { .compare { grid-template-columns: 1fr; } }
+.phone { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 0.9rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
+.phone h3 { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); font-weight: 400; }
+.mtabs { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.mtabs span { font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--track); color: var(--ink-soft); font-weight: 600; }
+.mtabs span.on { background: var(--ink); color: var(--bg); }
+.mrow { border: 1px solid var(--rule); border-radius: 8px; padding: 0.5rem 0.65rem; background: var(--bg); }
+.mrow small { display: block; color: var(--mute); font-size: 0.75rem; }
+.mrow.out { border-style: dashed; }
+.mrow.bet { border-color: var(--gold); background: var(--gold-soft); }
+.mbtns { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
+.mbtn { font-weight: 700; font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 6px; background: var(--ink); color: var(--bg); }
+.mbtn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+.composer { display: flex; align-items: center; border: 1px solid var(--rule); border-radius: 999px; padding: 0.4rem 0.75rem; color: var(--mute); }
+.composer b { margin-left: auto; color: var(--gold-text); font-size: 0.78rem; }
+
+body {
+  margin: 0;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 4rem;
+}
+.page { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+.col { max-width: 46rem; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+section { display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
+
+h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.12; }
+h1 { font-size: clamp(2rem, 6vw, 3.25rem); letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.4rem, 3.6vw, 1.9rem); }
+h3 { font-size: 1.05rem; line-height: 1.25; }
+p { margin: 0; }
+strong { font-weight: 700; }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-soft); }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--gold-text); }
+.note { font-size: 0.9rem; color: var(--mute); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+a { color: var(--accent); }
+
+.verdicts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.verdict { padding: 1.25rem 1.25rem 1.4rem 0; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.verdict + .verdict { padding-left: 1.25rem; border-left: 1px solid var(--rule); }
+.verdict .big { font-family: var(--display); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.verdict .big small { font-family: var(--mono); font-size: 0.85rem; color: var(--mute); font-weight: 400; }
+.verdict p { font-size: 0.97rem; color: var(--ink-soft); line-height: 1.45; }
+@media (max-width: 720px) {
+  .verdicts { grid-template-columns: 1fr; }
+  .verdict { padding: 1.1rem 0; }
+  .verdict + .verdict { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+}
+
+.figure { background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.figure > h3 { font-family: var(--body); font-weight: 700; font-size: 1rem; }
+.figs { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.25rem; align-items: start; }
+@media (max-width: 860px) { .figs { grid-template-columns: 1fr; } }
+
+.bars { display: flex; flex-direction: column; gap: 0.6rem; }
+.bar { display: grid; grid-template-columns: minmax(0, 13.5rem) minmax(0, 1fr) 4.6rem; gap: 0.75rem; align-items: center; font-size: 0.92rem; }
+.bar .label { color: var(--ink-soft); line-height: 1.3; }
+.bar .track { background: var(--track); height: 0.95rem; border-radius: 2px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--accent); border-radius: 2px; min-width: 2px; display: block; }
+.bar.warn .fill { background: var(--gold); }
+.bar.crit .fill { background: var(--crit); }
+.bar .val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.85rem; text-align: right; white-space: nowrap; }
+.bar .val small { color: var(--mute); font-size: 0.78rem; }
+.bars .sep { border-top: 1px dashed var(--rule); margin-block: 0.25rem; }
+@media (max-width: 560px) {
+  .bar { grid-template-columns: minmax(0, 1fr) 4.6rem; row-gap: 0.25rem; }
+  .bar .label { grid-column: 1 / -1; }
+}
+
+.cols { display: flex; align-items: flex-end; gap: 0.5rem; height: 11rem; border-bottom: 1px solid var(--ink-soft); }
+.colbar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; gap: 0.3rem; }
+.colbar .v { font-family: var(--mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+.colbar .b { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 1px; }
+.colbar.peak .b { background: var(--gold); }
+.colaxis { display: flex; gap: 0.5rem; }
+.colaxis span { flex: 1 1 0; min-width: 0; text-align: center; font-family: var(--mono); font-size: 0.72rem; color: var(--mute); letter-spacing: 0.04em; text-transform: uppercase; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem 1.5rem; }
+.fact { display: flex; flex-direction: column; gap: 0.15rem; border-top: 1px solid var(--rule); padding-top: 0.7rem; min-width: 0; }
+.fact .n { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fact .d { font-size: 0.9rem; color: var(--ink-soft); line-height: 1.4; }
+
+.chip { display: inline-block; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18rem 0.5rem; border-radius: 3px; white-space: nowrap; }
+.chip.crit { background: var(--crit-soft); color: var(--crit); }
+.chip.warn { background: var(--gold-soft); color: var(--gold-text); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.src { background: var(--accent-soft); color: var(--accent); }
+
+.scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); }
+table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.8rem 1rem; border-bottom: 1px solid var(--rule); }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); font-weight: 400; }
+td:first-child { font-weight: 700; }
+
+.journey { display: flex; flex-direction: column; border-top: 2px solid var(--ink); }
+.stage { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 0.5rem 2rem; padding-block: 1.5rem; border-bottom: 1px solid var(--rule); }
+.stage .head { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+.stage .step { font-family: var(--mono); font-size: 0.75rem; color: var(--mute); letter-spacing: 0.08em; text-transform: uppercase; }
+.stage .body { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; max-width: 44rem; }
+.stage ul { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.stage li { color: var(--ink-soft); }
+.stage li strong { color: var(--ink); }
+.stage .srcs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.quote { font-family: var(--mono); font-size: 0.86rem; background: var(--track); padding: 0.05rem 0.35rem; border-radius: 3px; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .stage { grid-template-columns: 1fr; } .stage .head { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.6rem; } }
+
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; counter-reset: step; margin: 0; padding: 0; list-style: none; }
+.flow li { counter-increment: step; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.flow li::before { content: counter(step); font-family: var(--display); font-size: 1.5rem; color: var(--gold-text); line-height: 1; }
+.flow p { font-size: 0.93rem; color: var(--ink-soft); line-height: 1.45; }
+@media (max-width: 860px) { .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .flow { grid-template-columns: 1fr; } }
+
+.plan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; }
+.tier { display: flex; flex-direction: column; gap: 0.9rem; border-top: 2px solid var(--ink); padding-top: 1rem; min-width: 0; }
+.tier .when { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
+.tier ol { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; font-size: 0.96rem; }
+.tier li { line-height: 1.45; color: var(--ink-soft); }
+.tier li strong { color: var(--ink); }
+@media (max-width: 860px) { .plan { grid-template-columns: 1fr; } }
+
+.callout { border-left: 3px solid var(--gold); background: var(--gold-soft); padding: 1rem 1.2rem; border-radius: 0 6px 6px 0; max-width: 46rem; }
+.callout p { color: var(--ink); }
+.list { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.list li { color: var(--ink-soft); }
+.list li strong { color: var(--ink); }
+footer { border-top: 1px solid var(--rule); padding-top: 1.25rem; }
+</style></head><body>
+
+<div class="page">
+
+<header class="col">
+  <p class="eyebrow">Frontrow · assessment · 12 November 2026</p>
+  <h1>Why people do not come back, and how the Clubhouse can fix it</h1>
+  <p class="lede">The consultant said the journey is make or break for return visits, and that the product should be a social platform built around direct bets. This page tests both against the live product. Part one covers the user journey and the bets. Part two covers the Clubhouse: what to improve in its look, its experience, and what to build on top. The work items are in BACKLOG.md (J-01 to J-21 and C-01 to C-18).</p>
+</header>
+
+<section aria-label="Three findings">
+  <div class="verdicts">
+    <div class="verdict">
+      <span class="eyebrow">Return</span>
+      <span class="big">7 <small>of 62</small></span>
+      <p>people used Frontrow in the last 7 days. 51 of the 62 accounts were created in June for the World Cup, and most have not been seen since. Nobody has signed up since 7 September.</p>
+    </div>
+    <div class="verdict">
+      <span class="eyebrow">Direct bets</span>
+      <span class="big">0 <small>settled, ever</small></span>
+      <p>Two bets between friends have been created in production. Neither finished. The feature is built, but it has never paid out once, so it is not proven to work.</p>
+    </div>
+    <div class="verdict">
+      <span class="eyebrow">First five minutes</span>
+      <span class="big">6 <small>steps, 0 on bets</small></span>
+      <p>The welcome sequence introduces a football fantasy game under the old product name. Friends, coins and bets are never mentioned, and it ends on a screen that is empty for most newcomers.</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>The consultant is right on both points, and they are the same point. The social layer and the bets are the reason to open the app between tournaments, and today a new person cannot reach them without already understanding how the product is organised. The fix is mostly about order and wording, with a small amount of repair work on the bets themselves.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">What the numbers say</p>
+    <h2>A World Cup crowd that left when the tournament ended</h2>
+    <p>These figures come straight from the production database, read on 12 November 2026. They cover every account ever created. The pilot is small, so read the percentages as direction, not precision.</p>
+  </div>
+
+  <div class="figs">
+    <div class="figure">
+      <h3>From sign-up to still here</h3>
+      <div class="bars">
+        <div class="bar"><span class="label">Created an account</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="val">62</span></div>
+        <div class="bar"><span class="label">Joined a Clubhouse</span><span class="track"><span class="fill" style="width:80.6%"></span></span><span class="val">50 <small>81%</small></span></div>
+        <div class="bar"><span class="label">Joined a football league</span><span class="track"><span class="fill" style="width:71%"></span></span><span class="val">44 <small>71%</small></span></div>
+        <div class="bar"><span class="label">Finished building a squad</span><span class="track"><span class="fill" style="width:59.7%"></span></span><span class="val">37 <small>60%</small></span></div>
+        <div class="sep"></div>
+        <div class="bar warn"><span class="label">Came back after day one</span><span class="track"><span class="fill" style="width:38.7%"></span></span><span class="val">24 <small>39%</small></span></div>
+        <div class="bar warn"><span class="label">Came back after a week</span><span class="track"><span class="fill" style="width:32.3%"></span></span><span class="val">20 <small>32%</small></span></div>
+        <div class="bar warn"><span class="label">Came back after a month</span><span class="track"><span class="fill" style="width:25.8%"></span></span><span class="val">16 <small>26%</small></span></div>
+        <div class="sep"></div>
+        <div class="bar crit"><span class="label">Active in the last 30 days</span><span class="track"><span class="fill" style="width:27.4%"></span></span><span class="val">17 <small>27%</small></span></div>
+        <div class="bar crit"><span class="label">Active in the last 7 days</span><span class="track"><span class="fill" style="width:11.3%"></span></span><span class="val">7 <small>11%</small></span></div>
+        <div class="bar crit"><span class="label">Ever put coins on a bet with a friend</span><span class="track"><span class="fill" style="width:4.8%"></span></span><span class="val">3 <small>5%</small></span></div>
+      </div>
+      <p class="note">Bars are drawn to scale against 62 accounts. "Active" means the app refreshed that person's session in the period. The last row counts stake transactions, so it is an upper limit on people.</p>
+    </div>
+
+    <div class="figure">
+      <h3>New accounts by month, 2026</h3>
+      <div>
+        <div class="cols" role="img" aria-label="New accounts per month: April 2, May 1, June 51, July 0, August 5, September 3, October 0, November 0">
+          <div class="colbar"><span class="v">2</span><span class="b" style="height:3.9%"></span></div>
+          <div class="colbar"><span class="v">1</span><span class="b" style="height:2%"></span></div>
+          <div class="colbar peak"><span class="v">51</span><span class="b" style="height:85%"></span></div>
+          <div class="colbar"><span class="v">0</span><span class="b" style="height:0"></span></div>
+          <div class="colbar"><span class="v">5</span><span class="b" style="height:8.3%"></span></div>
+          <div class="colbar"><span class="v">3</span><span class="b" style="height:5%"></span></div>
+          <div class="colbar"><span class="v">0</span><span class="b" style="height:0"></span></div>
+          <div class="colbar"><span class="v">0</span><span class="b" style="height:0"></span></div>
+        </div>
+        <div class="colaxis"><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span></div>
+      </div>
+      <p class="note">June is the World Cup. 37 of the 62 accounts last logged in that month.</p>
+    </div>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><span class="n">3</span><span class="d">Clubhouse chat messages sent, ever. None in the last 30 days.</span></div>
+    <div class="fact"><span class="n">0</span><span class="d">Direct messages sent, ever.</span></div>
+    <div class="fact"><span class="n">5 in 6</span><span class="d">In-app notifications never opened (63 read out of 375 sent).</span></div>
+    <div class="fact"><span class="n">12</span><span class="d">Accounts that never got into any Clubhouse. Three more Clubhouses have a single member.</span></div>
+    <div class="fact"><span class="n">16</span><span class="d">People who placed a league prediction bet, the older in-league kind. Interest in betting exists.</span></div>
+  </div>
+
+  <div class="callout">
+    <p><strong>There is no way to see where people drop off.</strong> The app's tracking code only writes to the browser console and stores nothing. Everything on this page had to be reconstructed from database records. Until basic funnel tracking exists, every journey change is a guess.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Are direct bets up and running?</p>
+    <h2>Built, partly switched on, never completed</h2>
+    <p>The answer is no, not yet. All the pieces are there, but no bet between friends has ever run from creation to payout in the live product, and one of the two types has its automation turned off.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Piece</th><th>State today</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>One-to-one challenge</td>
+          <td><span class="chip crit">Stuck</span><br>One created on 30 August. Never accepted. It was due to expire on 1 September and is still open, with the creator's 100 coins held.</td>
+          <td>The background jobs that expire and auto-settle challenges are switched off and have no run history.</td>
+        </tr>
+        <tr>
+          <td>Group bet</td>
+          <td><span class="chip warn">Stalled</span><br>One created on 3 September with a 250-coin stake. Two people joined. It closed the next day and nobody declared a winner.</td>
+          <td>Its three background jobs are on and ran successfully, but they cannot settle a bet no one declares.</td>
+        </tr>
+        <tr>
+          <td>Coins</td>
+          <td><span class="chip crit">No payouts</span><br>62 welcome grants, 3 stakes, 0 payouts, 0 refunds.</td>
+          <td>Every coin ever staked is still held. Buying coins is marked "Coming Soon".</td>
+        </tr>
+        <tr>
+          <td>Testing</td>
+          <td><span class="chip warn">Unverified</span><br>Never tested by two real accounts in a browser.</td>
+          <td>The project's own tracker says so on each bets release.</td>
+        </tr>
+        <tr>
+          <td>League prediction bets</td>
+          <td><span class="chip warn">Paused</span><br>The jobs that close and settle them are also switched off.</td>
+          <td>Part of the group of football jobs frozen after the World Cup.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <p>None of this is a large build. It is one supervised test with two accounts, three switches, and a decision about what happens when nobody declares a result. It should happen before anyone new is invited, because a first bet that hangs forever is worse than no bets at all.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">The journey as it is today</p>
+    <h2>Seven moments, walked at phone size</h2>
+    <p>Each stage lists what a new person meets and how it was checked. "Live site" means the public address. "Walk-through" means the app run locally at 375px wide. "Code" means read in the source.</p>
+  </div>
+
+  <div class="journey">
+
+    <div class="stage">
+      <div class="head"><span class="step">Moment 1</span><h3>Arriving</h3><span class="chip warn">Weak</span></div>
+      <div class="body">
+        <ul>
+          <li><strong>The first screen is a login form.</strong> A logo, "Sign In" and "Create Account". Nothing says what Frontrow is or why a friend sent the link.</li>
+          <li>The best one-line description in the product, <span class="quote">Every game you play lives in one room</span>, only appears after an account exists.</li>
+        </ul>
+        <div class="srcs"><span class="chip src">Live site</span></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="head"><span class="step">Moment 2</span><h3>Signing up</h3><span class="chip warn">Friction</span></div>
+      <div class="body">
+        <ul>
+          <li><strong>Four fields before anything happens:</strong> username, email, password, confirm password.</li>
+          <li>No Google or Apple sign-in and no email link. For a product people join because a friend nudged them on a phone, each field costs sign-ups.</li>
+        </ul>
+        <div class="srcs"><span class="chip src">Live site</span></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="head"><span class="step">Moment 3</span><h3>The welcome sequence</h3><span class="chip crit">Wrong product</span></div>
+      <div class="body">
+        <ul>
+          <li><strong>It introduces a different product.</strong> The second card reads <span class="quote">Welcome to Forza Fantasy League</span> and describes a football fantasy league. F1, tennis, coins, bets and chat are never mentioned.</li>
+          <li><strong>The step counts disagree.</strong> One card shows "Step 1 of 4" and "4 / 6" at the same time.</li>
+          <li>It asks for a username again, straight after sign-up asked for it.</li>
+          <li>It quotes a <span class="quote">$100M</span> budget. The Market shows <span class="quote">€100M</span>.</li>
+          <li><strong>A wrong invite code fails silently.</strong> If the code is mistyped or the Clubhouse cannot be created, the sequence moves on as if it worked. This is one possible reason 12 people ended up in no Clubhouse.</li>
+          <li>On a phone it shows the hint "Press → to advance".</li>
+        </ul>
+        <div class="srcs"><span class="chip src">Walk-through</span><span class="chip src">Code</span></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="head"><span class="step">Moment 4</span><h3>The first real screen</h3><span class="chip crit">Dead end</span></div>
+      <div class="body">
+        <ul>
+          <li><strong>The sequence ends by opening the Market.</strong> For anyone not yet in a football league it shows squad 0/15, budget €0.0M and rows that load forever.</li>
+          <li>Someone who came for F1, tennis or a bet with a friend lands in a football transfer screen with nothing they can do.</li>
+        </ul>
+        <div class="srcs"><span class="chip src">Walk-through</span></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="head"><span class="step">Moment 5</span><h3>Home</h3><span class="chip warn">No pull</span></div>
+      <div class="body">
+        <ul>
+          <li><strong>Home is a directory, not a feed.</strong> It lists the Clubhouses and competitions you belong to. It does not say what happened since your last visit or what is waiting on you.</li>
+          <li>When empty, Home and the Club tab show almost the same three options, so two of the five bottom tabs look identical to a newcomer.</li>
+          <li>Inside a Clubhouse, bets are one small tile labelled "P2P Challenges", next to the coin wallet.</li>
+        </ul>
+        <div class="srcs"><span class="chip src">Walk-through</span><span class="chip src">Code</span></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="head"><span class="step">Moment 6</span><h3>Making a first bet</h3><span class="chip crit">Buried</span></div>
+      <div class="body">
+        <ul>
+          <li><strong>Two tabs for one idea.</strong> "Bets" is a read-only list. To create a bet you must go to "Coins". Nothing on the Bets tab says so.</li>
+          <li><strong>Six names for the same thing:</strong> Bets, Coins, Coin challenges, P2P Betting, Challenge, Group bet, plus "Freeform".</li>
+          <li>Without a Clubhouse the create window says to join one first and offers no button to do it.</li>
+          <li>On a phone, the wallet, a season record and a long explainer sit above the list of actual bets. The explainer uses the words "escrow" and "5% rake burned".</li>
+          <li><strong>The form is long and the ending is longer.</strong> A group bet asks for question, answer type, options, who can join, stake, start and end. Settling it can pass through nine states, including an objection window and arbitration.</li>
+        </ul>
+        <div class="srcs"><span class="chip src">Walk-through</span><span class="chip src">Code</span></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="head"><span class="step">Moment 7</span><h3>Coming back</h3><span class="chip crit">Nothing calls</span></div>
+      <div class="body">
+        <ul>
+          <li><strong>There is no channel outside the app.</strong> No push notification and no email when a friend challenges you, a bet settles or a race weekend starts.</li>
+          <li>The automated newspaper produces most notifications (294 of 375). Five in six of all notifications are never opened.</li>
+          <li>Between tournaments there is nothing new to do. Bets on anything are the natural filler, and they are the hardest thing in the app to find.</li>
+        </ul>
+        <div class="srcs"><span class="chip src">Production data</span><span class="chip src">Code</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">What is already working</p>
+    <h2>The parts worth keeping</h2>
+    <ul class="list">
+      <li><strong>The Clubhouse idea is sound.</strong> One room for a group of friends, with every sport inside it, is exactly the social structure the consultant described. 81% of sign-ups got into one.</li>
+      <li><strong>A core group returns without being asked.</strong> 17 people were active in the last month with no reminders of any kind.</li>
+      <li><strong>People do bet when it is in front of them.</strong> 16 placed league prediction bets and 6 placed F1 race bets, both shown inside the competition they were already using.</li>
+      <li><strong>The breadth is real.</strong> Football, F1 and tennis all run. The problem is that a newcomer meets all of it at once.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">The journey to aim for</p>
+    <h2>Start with a bet from a friend</h2>
+    <p>Make the invitation itself the product. A person should meet a real bet from someone they know before they meet a form, a wizard or a squad builder.</p>
+  </div>
+  <ol class="flow">
+    <li><h3>A friend sends a bet</h3><p>The link opens a page that shows the bet: who is asking, the question, the stake. No login wall in front of it.</p></li>
+    <li><h3>One tap to join</h3><p>Sign in with Google, Apple or an email link. Joining puts you in that friend's Clubhouse automatically.</p></li>
+    <li><h3>Take the bet</h3><p>One line explains the 500 free coins. One button accepts. The first minute ends with something at stake.</p></li>
+    <li><h3>Home shows your move</h3><p>Bets waiting on you, results, what friends did. Fantasy competitions appear as the next thing to try, not the entry fee.</p></li>
+  </ol>
+  <div class="col">
+    <p>This keeps everything already built. It changes which door people come through and what they see first.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Part two · the Clubhouse</p>
+    <h2>The Clubhouse is a lobby. It needs to be the room.</h2>
+    <p>Today the Clubhouse home shows three shortcuts, a grid of competitions and a feed of league news. Each of them sends you somewhere else to act. The social part, chat, sits in a separate tab and has almost never been used. The idea behind everything below: what friends do together (bet, talk, react, gloat) should happen inside the room, in one stream, without leaving.</p>
+  </div>
+  <div class="facts">
+    <div class="fact"><span class="n">0</span><span class="d">chat messages in the largest Clubhouse (14 members). 3 ever across 9 active ones.</span></div>
+    <div class="fact"><span class="n">0</span><span class="d">reactions on 34 Clubhouse newspaper editions published.</span></div>
+    <div class="fact"><span class="n">17%</span><span class="d">of 375 notifications opened. All are newspaper or news alerts; none is about a person.</span></div>
+    <div class="fact"><span class="n">3 of 9</span><span class="d">active Clubhouses have a single member.</span></div>
+  </div>
+  <p class="note col">Screens reviewed in code and, for the empty lobby, at phone size. The populated Clubhouse cannot be opened in the local demo, so findings on it come from the code.</p>
+
+  <div class="compare">
+    <div class="phone">
+      <h3>Today</h3>
+      <div class="mtabs"><span class="on">Home</span><span>The Frontrow</span><span>Digest</span><span>Chat</span><span>Members</span><span>Settings</span></div>
+      <div class="mrow out">Coin Wallet<small>leaves to the wallet page</small></div>
+      <div class="mrow out">P2P Challenges<small>leaves to the bets page</small></div>
+      <div class="mrow out">Meta Rank<small>leaves to the trophy page</small></div>
+      <div class="mrow">Competitions grid<small>"Enter" leaves to the league</small></div>
+      <div class="mrow">Newspaper teaser</div>
+      <div class="mrow">Activity<small>league results, transfers, drafts. No bets, no people.</small></div>
+    </div>
+    <div class="phone">
+      <h3>Proposed</h3>
+      <div class="mtabs"><span class="on">Room</span><span>Competitions</span><span>People</span></div>
+      <div class="mrow bet"><strong>Your move:</strong> Rui bets 50 that Benfica win Saturday<div class="mbtns"><span class="mbtn">Take it</span><span class="mbtn ghost">Pass</span></div></div>
+      <div class="mrow">Ana: no chance, Sporting by two<small>👍 3 · 😂 1</small></div>
+      <div class="mrow">Marta beat João 64–51 in the League<small>tap to react</small></div>
+      <div class="mrow">This week's Frontrow is out<small>Worst call of the week: João</small></div>
+      <div class="mrow">Tiago joined the Clubhouse</div>
+      <div class="composer">Say something…<b>+ Bet</b></div>
+    </div>
+  </div>
+
+  <div class="col"><h2>What to improve in the look</h2><p class="note">Checked against the ui-ux-pro-max rule set. The first two are faults, not taste.</p></div>
+  <div class="idlist">
+    <div class="idrow"><span class="id">C-01</span><div><h3>Chat faults on a phone <span class="chip warn">S</span></h3><p>Deleting a message only appears on mouse hover, so it cannot be done on a touch screen. A message that fails to send shows nothing. A sender's name can show as "?" because of a small logic slip.</p></div></div>
+    <div class="idrow"><span class="id">C-02</span><div><h3>Invite still says the old name <span class="chip warn">S</span></h3><p>The WhatsApp invite reads "Join my Clubhouse on Forza Fantasy League". Rename to Frontrow and use the phone's own share sheet so it works with any app.</p></div></div>
+    <div class="idrow"><span class="id">C-03</span><div><h3>Six tabs down to three <span class="chip warn">M</span></h3><p>Home, The Frontrow, Digest, Chat, Members, Settings becomes Room, Competitions, People. Settings moves behind a gear for the owner. The newspaper becomes a card in the Room.</p></div></div>
+    <div class="idrow"><span class="id">C-04</span><div><h3>One "your move" line instead of three shortcut cards <span class="chip warn">S</span></h3><p>Wallet, challenges and rank are three exits in a sideways scroller, the first thing you see. Replace with one line that only appears when something waits for you, and a small coin balance in the header.</p></div></div>
+    <div class="idrow"><span class="id">C-05</span><div><h3>People, not a list of names <span class="chip warn">M</span></h3><p>Members shows a letter, a join date and a trophy count. Give each person a record and one button: Challenge.</p></div></div>
+    <div class="idrow"><span class="id">C-06</span><div><h3>Tidy-up <span class="chip warn">S</span></h3><p>Emoji used as icons replaced with the app's icon set; hard-coded colours moved to design tokens; chat height fixed for phone browsers where the address bar moves.</p></div></div>
+  </div>
+
+  <div class="col"><h2>What to improve in the experience</h2></div>
+  <div class="idlist">
+    <div class="idrow"><span class="id">C-07</span><div><h3>One room, one stream <span class="chip warn">M</span></h3><p>Merge chat and activity into a single feed. Drop the Slack layout (channels, "select a channel", a DMs tab): a group of friends has one conversation. Keep the data, hide the structure.</p></div></div>
+    <div class="idrow"><span class="id">C-08</span><div><h3>Bets happen in the room <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>The bet button in chat currently navigates away, and a bet card in chat can only be viewed, not accepted. Make "+ Bet" open a short sheet over the chat, and let friends take or pass on the card itself. Depends on J-01 to J-03.</p></div></div>
+    <div class="idrow"><span class="id">C-09</span><div><h3>The feed is about people <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>Activity lists league events only. Add: someone joined, a bet was made, taken, won; a new newspaper edition.</p></div></div>
+    <div class="idrow"><span class="id">C-10</span><div><h3>Reactions on everything <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>The cheapest social act there is, and it is missing from chat and from the feed. One tap on a result or a lost bet is how a quiet room starts talking.</p></div></div>
+    <div class="idrow"><span class="id">C-11</span><div><h3>An empty room that tells you what to do <span class="chip warn">S</span></h3><p>A new Clubhouse offers one button: create a competition. Offer three instead: invite, make the first bet, say hello.</p></div></div>
+    <div class="idrow"><span class="id">C-12</span><div><h3>Notifications about friends, landing in the right place <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>Notify on "Rui challenged you", "you won 50", "Ana replied", and open that exact item in the Room instead of a general bets page.</p></div></div>
+  </div>
+
+  <div class="col"><h2>What to build on top</h2><p class="note">Each gives the group a reason to come back that does not depend on a fantasy deadline.</p></div>
+  <div class="idlist">
+    <div class="idrow"><span class="id">C-13</span><div><h3>Rivalries <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>A head-to-head record between any two members: bets won and lost, fantasy meetings, coins exchanged. "You are 2–5 against Rui" is the most re-shareable line the product can produce.</p></div></div>
+    <div class="idrow"><span class="id">C-14</span><div><h3>The Frontrow as a weekly ritual about the group <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>The newspaper is the most distinctive thing here and nobody reacts to it. Make it weekly and about the people (bet of the week, worst call, biggest climber), post it into the Room, and make it shareable as an image.</p></div></div>
+    <div class="idrow"><span class="id">C-15</span><div><h3>Match-day prompts <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>Before a big fixture, race or final, the Room gets a ready-made question: "Benfica v Porto, Saturday. Who's calling it?" One tap to pick, one more to put coins on it. Delivers J-17 where the friends are.</p></div></div>
+    <div class="idrow"><span class="id">C-16</span><div><h3>Free picks as the on-ramp to bets <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>A one-tap prediction with no coins at stake. Lower commitment than a bet, and it shows who agreed with whom.</p></div></div>
+    <div class="idrow"><span class="id">C-17</span><div><h3>Season ledger and awards <span class="chip warn">M</span><span class="chip crit">approval</span></h3><p>A running table of who is up and down in coins inside this Clubhouse, with end-of-season awards feeding the Trophy cabinet.</p></div></div>
+    <div class="idrow"><span class="id">C-18</span><div><h3>Share cards <span class="chip warn">M</span></h3><p>A settled bet, a rivalry record or a newspaper front page as an image for WhatsApp, with a link back. Same door as the bet invite (J-10): the content is the invitation.</p></div></div>
+  </div>
+  <p class="note col">S is about a day, M a few days. "Approval" means a database or server change that will be named and confirmed before it runs.</p>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Recommended order of work</p>
+    <h2>Repair, then simplify, then grow</h2>
+    <p>One dependency rules the rest: the bet invite (J-10) and bets in the room (C-08) both need a bet that completes end to end, so J-01 to J-03 stay first. The small Clubhouse fixes C-01, C-02 and C-11 have no dependencies and can go alongside. The Room redesign (C-07 to C-09, with C-03 and C-04) is one piece of work and belongs in the second tier.</p>
+  </div>
+  <div class="plan">
+    <div class="tier">
+      <span class="when">Now · days</span>
+      <h3>Repair what is broken</h3>
+      <ol>
+        <li><strong>Prove one bet end to end</strong> with two test accounts, then switch the paused bet jobs back on and release the three held stakes. Each needs your approval.</li>
+        <li><strong>Fix the welcome sequence:</strong> correct name, one step count, one currency, show an error on a bad invite code, drop the second username step, end on Home.</li>
+        <li><strong>Call it "Bets" everywhere</strong> and merge the Bets and Coins tabs into one.</li>
+        <li><strong>Record the funnel:</strong> sign-up, Clubhouse joined, first bet, return on day 1, 7 and 30.</li>
+        <li><strong>Clubhouse quick fixes:</strong> chat on a phone, invite wording, a helpful empty room (C-01, C-02, C-11).</li>
+      </ol>
+    </div>
+    <div class="tier">
+      <span class="when">Next · 2 to 4 weeks</span>
+      <h3>Simplify the path</h3>
+      <ol>
+        <li><strong>Bet invite link</strong> with its own landing page, as described above.</li>
+        <li><strong>Three-step welcome:</strong> your name, your Clubhouse, your first bet or sport.</li>
+        <li><strong>Quick bet:</strong> question, stake, who. Everything else behind "More options".</li>
+        <li><strong>Lighter settlement</strong> for friendly bets: the creator declares, others have 24 hours to object, then it pays out by itself.</li>
+        <li><strong>Home as a feed</strong> with "your move" at the top.</li>
+        <li><strong>One-tap sign-in.</strong></li>
+        <li><strong>The Room:</strong> one stream of chat, bets and results, three tabs, bets taken in place, reactions and friend notifications (C-03 to C-10, C-12).</li>
+      </ol>
+    </div>
+    <div class="tier">
+      <span class="when">Later · structural</span>
+      <h3>Give people a reason to return</h3>
+      <ol>
+        <li><strong>A channel outside the app.</strong> Email first because it is cheap, push once the mobile app ships.</li>
+        <li><strong>A public front page</strong> that says what Frontrow is.</li>
+        <li><strong>Fewer words.</strong> Clubhouse, Competition, Bets, Coins. Fold the rest into those.</li>
+        <li><strong>Ready-made bets per event</strong> for a race, a match or a tennis final, so there is something to do every week, not only during a World Cup.</li>
+        <li><strong>Built on the Room:</strong> weekly Frontrow, rivalries, free picks, season ledger, share cards (C-13 to C-18).</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">How to know it worked</p>
+    <h2>Three numbers to watch</h2>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Measure</th><th>Today</th><th>Why this one</th></tr></thead>
+      <tbody>
+        <tr><td>New people who place or accept a bet within 24 hours</td><td class="num">not measurable; at most 3 of 62 ever</td><td>The single best sign that someone reached the social core.</td></tr>
+        <tr><td>Return after 7 days</td><td class="num">32% (20 of 62)</td><td>The consultant's make-or-break number.</td></tr>
+        <tr><td>Bets settled per active Clubhouse per week</td><td class="num">0</td><td>Shows the loop is closing, not only opening.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="col">
+  <p class="eyebrow">Limits of this assessment</p>
+  <ul class="list note">
+    <li>The populated Clubhouse could not be opened in the local demo, so part two rests on the code and on database counts, plus a phone-size look at the empty lobby.</li>
+    <li>No account was created on the live site. Signed-in screens were walked in the local demo build, where bet actions are blocked, so the bet forms were read in code and not submitted.</li>
+    <li>No two-account bet test was run. That is the first recommended action.</li>
+    <li>62 accounts is a friends-and-family pilot. The pattern is clear; the exact percentages would move with a larger group.</li>
+    <li>Nothing in the product or database was changed to produce this page. All database access was read-only.</li>
+  </ul>
+  <p class="note">Snapshot of the Claude Docs/Artifact "Frontrow Assessment" of 2026-11-12. The numbers are as of that date. The work items live in <a href="../../BACKLOG.md">BACKLOG.md</a> (J-01 to J-21, C-01 to C-18). Last Updated: 2026-11-12</p>
+</footer>
+
+</div>
+
+</body></html>
