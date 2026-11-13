@@ -17,6 +17,7 @@ import { IconTrophy } from './UiIcons';
 import { useState, useRef, useEffect } from 'react';
 import { domToPng } from 'modern-screenshot';
 import { supabase } from '../lib/supabase';
+import { PLATFORM_NAME } from '../lib/brand';
 
 const BASE_URL = window.location.origin;
 
@@ -48,7 +49,7 @@ export default function LeagueInviteCard({ league, onDone }) {
 
   const joinUrl     = `${BASE_URL}/join?code=${league.join_code}`;
   const waMessage   = encodeURIComponent(
-    `🏆 Join my Forza Fantasy League ${tournamentName} fantasy league!\n\nLeague: ${league.name}\nJoin code: ${league.join_code}\n\nSign up & enter the code at: ${joinUrl}`
+    `🏆 Join my ${tournamentName} league on ${PLATFORM_NAME}!\n\nLeague: ${league.name}\nJoin code: ${league.join_code}\n\nSign up & enter the code at: ${joinUrl}`
   );
   const waUrl = `https://wa.me/?text=${waMessage}`;
 
@@ -131,7 +132,7 @@ export default function LeagueInviteCard({ league, onDone }) {
             <span style={{ fontSize: 'var(--fs-title)' }}><IconTrophy size={28} /></span>
             <div>
               <div style={{ fontSize: 'var(--fs-label)', fontFamily: 'Archivo Black, sans-serif', color: 'var(--positive)', fontWeight: 800 }}>
-                Forza Fantasy League · {tournamentName}
+                {PLATFORM_NAME} · {tournamentName}
               </div>
               <div style={{ fontSize: 'var(--fs-label)', color: 'rgba(240,242,245,0.4)', fontFamily: 'Archivo Black, sans-serif' }}>
                 Fantasy League
