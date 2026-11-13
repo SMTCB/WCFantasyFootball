@@ -5,8 +5,10 @@
 -- ALL IDs are fixed UUIDs so tests can reference them directly.
 -- Does NOT call any Supabase-specific extensions (pgcron, pg_net, auth schema).
 --
--- IMPORTANT: this file must be idempotent (INSERT … ON CONFLICT DO NOTHING)
--- so it can be re-run safely.
+-- IMPORTANT: this file must be idempotent so it can be re-run safely
+-- (INSERT … ON CONFLICT DO NOTHING). The four rows seeded with a relative
+-- NOW() + INTERVAL timestamp use DO UPDATE on that column instead: a stale
+-- local Docker volume would otherwise keep the old, expired date forever.
 
 -- ── Fixed IDs ─────────────────────────────────────────────────────────────────
 -- Users
@@ -124,7 +126,7 @@ ON CONFLICT (league_id, config_key) DO NOTHING;
 INSERT INTO matchday_deadlines (tournament_id, matchday_id, deadline_at)
 VALUES
   ('TEST_429', 'TEST_429-r1', NOW() + INTERVAL '7 days')
-ON CONFLICT (matchday_id) DO NOTHING;
+ON CONFLICT (matchday_id) DO UPDATE SET deadline_at = EXCLUDED.deadline_at;
 
 -- ── Teams (clubs referenced by players.forza_team_id) ──────────────────────────
 
@@ -264,7 +266,7 @@ VALUES (
   'England', 'France', 'CLUB_ENG', 'CLUB_FRA',
   NOW() + INTERVAL '2 days', 'Test World Cup 2026', 'scheduled'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET kickoff_at = EXCLUDED.kickoff_at;
 
 -- ── Coin wallets ──────────────────────────────────────────────────────────────
 
@@ -293,7 +295,7 @@ VALUES (
   'match',
   'open'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET deadline_at = EXCLUDED.deadline_at;
 
 -- ── Auction listing ───────────────────────────────────────────────────────────
 
@@ -311,4 +313,4 @@ VALUES (
   'open',
   NOW() + INTERVAL '1 day'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET deadline_at = EXCLUDED.deadline_at;

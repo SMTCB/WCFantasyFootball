@@ -211,3 +211,5 @@ After our own testing, asked two questions:
    - `/v1/tournaments/{wc_id}/teams` returns tournament-specific team registrations (each with a WC-scoped team_id and a squad of exactly the 26 submitted players), OR
    - National teams have a single global team_id and `/v1/teams/{id}/squad` returns their current roster at time of call (sync timing would then determine which players appear)
    Need to confirm before squad-building can open for the WC. This determines when and how to run `sync-players` for the WC tournament.
+
+Last Updated: 2026-05-10

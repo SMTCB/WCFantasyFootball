@@ -138,3 +138,5 @@ If Forza ever exposes a `save` sub-type on goal events, update `processPeriodsDa
 - [x] Bonus points (+3/+2/+1 BPS) ✅
 
 **All scoring rules now covered.**
+
+Last Updated: 2026-05-10

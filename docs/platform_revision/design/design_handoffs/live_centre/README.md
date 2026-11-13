@@ -321,3 +321,5 @@ design_handoff_live_centre/
 2. **Empty states.** Not designed yet — needed: "no leagues yet" (rare), "no live fixtures right now" (replace fixtures strip with a mute "Next kickoff in 2h 14m" caption), "no events yet" (the empty-feed copy is currently `AWAITING KICKOFF…` per the original screen).
 3. **Performance.** The events feed can grow unbounded over a gameweek. Recommend virtualised list (e.g. `react-virtual`) for the desktop right column and a windowed render on mobile if more than ~60 events are loaded.
 4. **Accessibility.** Add `aria-pressed` to league selector buttons, `role="tablist"` on the mobile tab row, and ensure the `fkPulse` animation respects `prefers-reduced-motion` (clamp opacity to 1).
+
+Last Updated: 2026-06-26

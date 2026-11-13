@@ -58,3 +58,5 @@ No image assets — coin icon is a CSS gradient circle, all avatars are colored 
 - `Coin Challenges — Clubhouse Scope.html` — all design frames (S01–S10 + doc panel)
 - `README_COIN.md` — original product brief this design responds to (scope, priorities, data-model pointers)
 - `kit-tokens.css` — Kit Light design tokens referenced above
+
+Last Updated: 2026-07-25

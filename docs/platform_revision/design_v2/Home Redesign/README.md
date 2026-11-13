@@ -94,3 +94,5 @@ No other external image assets are used — avatars are colored initial circles 
 ## Files
 - `Clubhouse Home Redesign.html` — all 8 screens, desktop + mobile, on a pannable canvas. Open directly in a browser.
 - `../logo/` — Frontrow logo + sport mark SVGs and their spec (sibling folder, `design_v2/logo/`).
+
+Last Updated: 2026-07-25

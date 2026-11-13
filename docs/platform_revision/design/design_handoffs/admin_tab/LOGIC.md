@@ -219,3 +219,5 @@ admin.lifecycle.score.recalculate      { fixtureId, scoresChanged }
 ```
 
 These are recommendations — wire them to whatever analytics the codebase already uses.
+
+Last Updated: 2026-06-26

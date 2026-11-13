@@ -135,3 +135,5 @@ Forza API
 2. Focus MVP on PoC features marked "✅ Green Light"
 3. Defer features requiring missing data (budget, predictions) to Phase 2
 4. Plan fallback: if Forza lacks critical data, have budget for alternate provider (StatsBomb, Opta, or data enrichment service)
+
+Last Updated: 2026-05-10

@@ -710,3 +710,5 @@ ON player_match_stats(match_id);
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-04-22 | Initial document: Scoring rules, data flow, SQL implementation, testing strategy |
+
+Last Updated: 2026-06-06

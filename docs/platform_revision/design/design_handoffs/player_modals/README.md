@@ -354,3 +354,5 @@ src/
       playerModal.types.ts            ← Player, GWRecord, BreakdownItem interfaces
       playerModal.constants.ts        ← POS_STATS_CFG, SCORING_RULES
 ```
+
+Last Updated: 2026-06-26

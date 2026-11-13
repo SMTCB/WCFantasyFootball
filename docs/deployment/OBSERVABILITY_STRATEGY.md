@@ -283,3 +283,5 @@ When the user reports something broken:
 4. Copy the `context` JSONB from the row into a Claude session: "this failed with this context, why?"
 
 Done. No dashboards to build, no SaaS to configure.
+
+Last Updated: 2026-05-28
