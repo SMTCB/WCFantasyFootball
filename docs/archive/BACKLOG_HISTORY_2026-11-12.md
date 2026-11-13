@@ -6543,3 +6543,127 @@ Foundation work phase complete. Delivered 3 major features: keyboard navigation,
 - CHIPS-1: closed 2026-11-12 in the backlog triage. chips revision shipped (PR #1130, 2026-10-31).
 - CI-UT1: closed 2026-11-12 in the backlog triage. the Unit Tests job passes on main (checked 2026-11-12).
 - B-13-CLUBHOUSE: closed 2026-11-12 in the backlog triage. Clubhouse archive toggle shipped (migration 281, circles.archived read in useClubhouse).
+
+---
+
+## Appendix: Launch Plan — Pilot Relaunch (written 2026-08, retired 2026-11-13)
+
+> Moved here from BACKLOG.md on 2026-11-13. It was stale after the 2026-08-30 relaunch. The live plan is now the "Work sessions" section of BACKLOG.md.
+
+
+**This is the active plan. Unlike the dated audit entries below it, this section is edited in place — tick steps off, move the target date, add steps.** It supersedes the "Recommended order before inviting testers" table inside the [2026-08-01 Pre-Pilot Due Diligence](#-pre-pilot-due-diligence--technical--functional-2026-08-01), which was a snapshot and should be read as history.
+
+**Operational detail is not duplicated here.** Each step links to the runbook that already documents it — [ADDING_A_NEW_TOURNAMENT.md](docs/deployment/ADDING_A_NEW_TOURNAMENT.md), [CUTOVER_PLAN.md §4 Phase 4](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert), [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md), [DOCKER_LOCAL_DEV.md](docs/deployment/DOCKER_LOCAL_DEV.md). Keep it that way — this section is a sequence, not a fourth copy of the commands.
+
+### Scope decisions (user, 2026-08-21)
+
+| Decision | Choice | Consequence for this plan |
+|---|---|---|
+| **Launch sport** | **Football + F1 + tennis — all three** | Football needs a tournament registered and loaded before crons can be unfrozen (`L-1`); F1 (11 upcoming races) and tennis (4 upcoming tournaments) already have forward calendars. Maximum validation surface. |
+| **Coins / P2P** | **In scope — testers will use them** | Promotes `TEST-P2P-1` (8 untested escrow RPCs) into Week 1 as blocking work. No Stripe: the 500-coin signup grant is the only faucet and that is sufficient — see `PAY-1`. |
+| **Real money** | **None — fictional coins only, Stripe stays off** (confirmed 2026-08-22) | Verified feasible against the code, not assumed: the 500-coin signup grant (`_create_user_wallet()` trigger, `type='admin'`) is the faucet, `purchase-coins` already 503s, and **no cash-out path exists anywhere in the codebase**, so coins cannot become money even in principle. Three gaps this exposes are now tracked as `COIN-1`/`COIN-2`/`COIN-3`. Note the economy is *structurally* deflationary — 5% rake is burned on every settled bet against a one-time grant — so a longer pilot needs `COIN-3`'s top-up path. |
+| **Direct bets on F1 / tennis** | **Via `freeform`, human-settled** | Not a limitation to fix, a fact to communicate. `gw_total` auto-resolves from squad points and is **football-only** (needs league + matchday); F1 and tennis bets use `freeform` — a ≤140-char question, circle-scoped, settled declare → confirm → dispute → arbitrate by the Clubhouse owner. Same escrow, same 5% rake, same payout. Testers must be told, or they will file it as a bug. |
+
+> ⚠️ **Known timeline risk, accepted by the user 2026-08-21.** This scope means validating four surfaces that have *never* been executed by a human in production (P2P escrow, player boxes, trophies, F1 race scoring) plus 14 screens with zero E2E coverage, inside two weeks. Week 2 is validation-saturated. If something slips, it will be the reopen date — not a reason to skip `L-8`, which is the go/no-go gate.
+
+### Legend
+
+🔒 = approval-gated per [CLAUDE.md](CLAUDE.md#-pilot-safeguards--read-before-every-db-operation). Needs an explicit per-item "yes, run it" from the user **in the session that performs it**. Approval does not carry across sessions or items.
+
+### Week 1 — make it playable and observable (2026-08-22 → 2026-08-28)
+
+| # | Step | Item | Gate / why here |
+|---|------|------|-----------------|
+| **L-1** | 🔒 Register + load a football tournament; correct the 4 stale `status='active'` tournaments | `DD-P0-3` | **First, because everything downstream needs something to act on.** 0 fixtures in the whole DB have a future kickoff. Runbook: [ADDING_A_NEW_TOURNAMENT.md](docs/deployment/ADDING_A_NEW_TOURNAMENT.md). |
+| **L-2** | Verify the F1 and tennis forward calendars before anything fires against them | `DD-P0-3` | Read-only sanity pass. Confirmed 2026-08-21: 11 upcoming F1 races, 4 genuinely-future tennis tournaments. Re-confirm dates and that one tennis tournament stuck in `roster_open` (the Wimbledon dry run) is cleaned up — see `DD-P1-1`. |
+| **L-3** | 🔒 Set backend `SENTRY_DSN` Supabase secret + schedule `check-cron-health` | `OPS-SENTRY` | **Must precede `L-4`.** Confirmed absent 2026-08-21 (`supabase secrets list`). Unfreezing 22 crons with no backend error reporting means the first live scoring run in six weeks is invisible. |
+| **L-4** | 🔒 Unfreeze the 22 pg_cron jobs + commit a freeze/unfreeze runbook | `DD-P0-2` | Only meaningful once `L-1`/`L-2` give them real data. Steps: [CUTOVER_PLAN.md §4 Phase 4 step 1](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert). Pull the live list first — `SELECT jobname FROM cron.job WHERE NOT active;` |
+| **L-5** | 🔒 Remove test/dry-run data from the pilot DB; backfill the 21 missing wallets; hide the GBP price list | `DD-P1-1`, `COIN-1`, `COIN-2` | Cheap, and it is what a tester would otherwise browse into ("Smoke Test League", the stuck tennis tournament, 4 empty circles). Pilot Safeguard #4. **`COIN-1` gates `L-9`**: 21 of 75 users predate the wallet trigger and hit `WALLET_NOT_FOUND` on their first stake, so the escrow walkthrough fails if a pre-migration-202 account is used. `COIN-2` is here because £1.99/£4.99/£12.99 buttons in a no-real-money pilot generate exactly the wrong bug reports. |
+| **L-6** | Write the P2P challenge / escrow test suite | `TEST-P2P-1` | **Blocking, because coins are in scope.** 8 money-moving RPCs with escrow have 0 tests and 0 production rows. Extends the existing `tests/unit/` harness — no new infrastructure. |
+| **L-7** | Analytics / funnel instrumentation | `CODE-5` | **Only has value before testers arrive.** Retrofitting loses the first cohort's drop-off data permanently. TODO already marked at `src/hooks/useOnboarding.js:36`. |
+
+### Week 2 — validate, then open (2026-08-29 → 2026-09-04)
+
+| # | Step | Item | Gate / why here |
+|---|------|------|-----------------|
+| **L-8** | Walk the cold-start funnel end to end with a fresh real account | `DD-P1-2` | **This is the go/no-go gate. Everything above is preparation for it.** 34 of 75 users are in no Clubhouse and no league — exactly where a new tester lands. The empty state exists in code and has never been walked with real credentials. |
+| **L-9** | Manually exercise the four never-used surfaces | `DD-P2-3` | One P2P challenge through full escrow (stake → accept → resolve → payout), one Player Box created by a real user, one trophy award landing in the cabinet, one F1 race scored. All four are "code merged", none is "validated by a human". |
+| **L-10** | ✅ **Done 2026-08-28** — E2E coverage for the 14 uncovered screens, plus the 6 screens with none at all | `TEST-E2E-1` | F1 (7 screens) + tennis (7 screens) covered by `e2e/f1-screens.spec.js`/`e2e/tennis-screens.spec.js`. Wallet, Challenge, Trophy Cabinet, Settings, Auth covered by 5 new smoke specs; Draft's gap turned out to be `BUG-DRAFT-SVC` blocking existing `draft-mode-complete.spec.js` coverage from running, not a missing spec — fixed same session. `npm run test:e2e:local` now also wired into CI as a new, non-blocking `e2e-tier3` job. |
+| **L-11** | Docs + repo hygiene pass | `TEST-SEED-1`, `DOCS-2`, `DOCS-3`, `REPO-1` | Batched deliberately — all four are XS and none blocks a tester. Do them while `L-8`/`L-9` findings are being fixed. |
+| **L-12** | 🔒 `MAINTENANCE_MODE` decision → reopen | — | **Entirely the user's call**, listed only so the sequence is complete. Per CLAUDE.md's standing instruction no session touches this flag without an explicit ask in that session. Steps: [CUTOVER_PLAN.md §4 Phase 4](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert). |
+
+> 🧭 **Clubhouse-level betting and cross-sport scoring are post-relaunch (decided 2026-08-22).** The user's direction is to move betting to Clubhouse level; `CLUB-BET-1` records that P2P coin challenges **already are** circle-scoped, so the pilot can run on what exists — the missing piece is auto-resolving F1/tennis bet types, which is deliberately sequenced *after* `L-9` proves the escrow lifecycle works at all. `CLUB-SCORE-1` records that the clubhouse aggregate already exists as `get_circle_meta_standings` and is trophy-based, with a recommendation not to build a cross-sport point sum. Neither blocks the 2026-09-04 reopen; both are inputs to what comes after it. `COIN-3` was declined — manual SQL top-ups are the accepted mechanism.
+
+### Explicitly *not* in this plan
+
+`DATA-1`, `OPS-1`, `DATA-RECON`, `ARCH-2`/`ARCH-3`, the GDPR items, `MOBILE-1`, and the whole P3 block are post-launch. None gates a tester pilot. `PAY-1` (Stripe) is a product decision deferred by the coins scope decision above, not launch work.
+
+### Verification baseline (re-run 2026-08-21, all green)
+
+Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where noted. `npm run lint` 0 errors / 2 warnings (`DD-P3-1`) · `npm run build` clean, 8.5s · `npm run test:unit` **56/56** (after clearing a stale local fixture — see `TEST-SEED-1`) · `platform.spec.js` **84/84** · `npm run check:drift` 21/21 functions match deployed · **0 public tables without RLS** (`DD-P0-1` confirmed fixed) · 0 `error_logs` rows in 30 days · no open PRs. Live DB state unchanged in 21 days: `cron_active = 0`, `future_fixtures = 0`, `p2p_challenges`/`player_boxes`/`trophy_ledger`/`chips_used` all still 0 rows.
+
+---
+
+---
+
+---
+
+## Appendix: Launch Plan — Pilot Relaunch (written 2026-08, retired 2026-11-13)
+
+> Moved here from BACKLOG.md on 2026-11-13. It was stale after the 2026-08-30 relaunch. The live plan is now the "Work sessions" section of BACKLOG.md.
+
+
+**This is the active plan. Unlike the dated audit entries below it, this section is edited in place — tick steps off, move the target date, add steps.** It supersedes the "Recommended order before inviting testers" table inside the [2026-08-01 Pre-Pilot Due Diligence](#-pre-pilot-due-diligence--technical--functional-2026-08-01), which was a snapshot and should be read as history.
+
+**Operational detail is not duplicated here.** Each step links to the runbook that already documents it — [ADDING_A_NEW_TOURNAMENT.md](docs/deployment/ADDING_A_NEW_TOURNAMENT.md), [CUTOVER_PLAN.md §4 Phase 4](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert), [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md), [DOCKER_LOCAL_DEV.md](docs/deployment/DOCKER_LOCAL_DEV.md). Keep it that way — this section is a sequence, not a fourth copy of the commands.
+
+### Scope decisions (user, 2026-08-21)
+
+| Decision | Choice | Consequence for this plan |
+|---|---|---|
+| **Launch sport** | **Football + F1 + tennis — all three** | Football needs a tournament registered and loaded before crons can be unfrozen (`L-1`); F1 (11 upcoming races) and tennis (4 upcoming tournaments) already have forward calendars. Maximum validation surface. |
+| **Coins / P2P** | **In scope — testers will use them** | Promotes `TEST-P2P-1` (8 untested escrow RPCs) into Week 1 as blocking work. No Stripe: the 500-coin signup grant is the only faucet and that is sufficient — see `PAY-1`. |
+| **Real money** | **None — fictional coins only, Stripe stays off** (confirmed 2026-08-22) | Verified feasible against the code, not assumed: the 500-coin signup grant (`_create_user_wallet()` trigger, `type='admin'`) is the faucet, `purchase-coins` already 503s, and **no cash-out path exists anywhere in the codebase**, so coins cannot become money even in principle. Three gaps this exposes are now tracked as `COIN-1`/`COIN-2`/`COIN-3`. Note the economy is *structurally* deflationary — 5% rake is burned on every settled bet against a one-time grant — so a longer pilot needs `COIN-3`'s top-up path. |
+| **Direct bets on F1 / tennis** | **Via `freeform`, human-settled** | Not a limitation to fix, a fact to communicate. `gw_total` auto-resolves from squad points and is **football-only** (needs league + matchday); F1 and tennis bets use `freeform` — a ≤140-char question, circle-scoped, settled declare → confirm → dispute → arbitrate by the Clubhouse owner. Same escrow, same 5% rake, same payout. Testers must be told, or they will file it as a bug. |
+
+> ⚠️ **Known timeline risk, accepted by the user 2026-08-21.** This scope means validating four surfaces that have *never* been executed by a human in production (P2P escrow, player boxes, trophies, F1 race scoring) plus 14 screens with zero E2E coverage, inside two weeks. Week 2 is validation-saturated. If something slips, it will be the reopen date — not a reason to skip `L-8`, which is the go/no-go gate.
+
+### Legend
+
+🔒 = approval-gated per [CLAUDE.md](CLAUDE.md#-pilot-safeguards--read-before-every-db-operation). Needs an explicit per-item "yes, run it" from the user **in the session that performs it**. Approval does not carry across sessions or items.
+
+### Week 1 — make it playable and observable (2026-08-22 → 2026-08-28)
+
+| # | Step | Item | Gate / why here |
+|---|------|------|-----------------|
+| **L-1** | 🔒 Register + load a football tournament; correct the 4 stale `status='active'` tournaments | `DD-P0-3` | **First, because everything downstream needs something to act on.** 0 fixtures in the whole DB have a future kickoff. Runbook: [ADDING_A_NEW_TOURNAMENT.md](docs/deployment/ADDING_A_NEW_TOURNAMENT.md). |
+| **L-2** | Verify the F1 and tennis forward calendars before anything fires against them | `DD-P0-3` | Read-only sanity pass. Confirmed 2026-08-21: 11 upcoming F1 races, 4 genuinely-future tennis tournaments. Re-confirm dates and that one tennis tournament stuck in `roster_open` (the Wimbledon dry run) is cleaned up — see `DD-P1-1`. |
+| **L-3** | 🔒 Set backend `SENTRY_DSN` Supabase secret + schedule `check-cron-health` | `OPS-SENTRY` | **Must precede `L-4`.** Confirmed absent 2026-08-21 (`supabase secrets list`). Unfreezing 22 crons with no backend error reporting means the first live scoring run in six weeks is invisible. |
+| **L-4** | 🔒 Unfreeze the 22 pg_cron jobs + commit a freeze/unfreeze runbook | `DD-P0-2` | Only meaningful once `L-1`/`L-2` give them real data. Steps: [CUTOVER_PLAN.md §4 Phase 4 step 1](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert). Pull the live list first — `SELECT jobname FROM cron.job WHERE NOT active;` |
+| **L-5** | 🔒 Remove test/dry-run data from the pilot DB; backfill the 21 missing wallets; hide the GBP price list | `DD-P1-1`, `COIN-1`, `COIN-2` | Cheap, and it is what a tester would otherwise browse into ("Smoke Test League", the stuck tennis tournament, 4 empty circles). Pilot Safeguard #4. **`COIN-1` gates `L-9`**: 21 of 75 users predate the wallet trigger and hit `WALLET_NOT_FOUND` on their first stake, so the escrow walkthrough fails if a pre-migration-202 account is used. `COIN-2` is here because £1.99/£4.99/£12.99 buttons in a no-real-money pilot generate exactly the wrong bug reports. |
+| **L-6** | Write the P2P challenge / escrow test suite | `TEST-P2P-1` | **Blocking, because coins are in scope.** 8 money-moving RPCs with escrow have 0 tests and 0 production rows. Extends the existing `tests/unit/` harness — no new infrastructure. |
+| **L-7** | Analytics / funnel instrumentation | `CODE-5` | **Only has value before testers arrive.** Retrofitting loses the first cohort's drop-off data permanently. TODO already marked at `src/hooks/useOnboarding.js:36`. |
+
+### Week 2 — validate, then open (2026-08-29 → 2026-09-04)
+
+| # | Step | Item | Gate / why here |
+|---|------|------|-----------------|
+| **L-8** | Walk the cold-start funnel end to end with a fresh real account | `DD-P1-2` | **This is the go/no-go gate. Everything above is preparation for it.** 34 of 75 users are in no Clubhouse and no league — exactly where a new tester lands. The empty state exists in code and has never been walked with real credentials. |
+| **L-9** | Manually exercise the four never-used surfaces | `DD-P2-3` | One P2P challenge through full escrow (stake → accept → resolve → payout), one Player Box created by a real user, one trophy award landing in the cabinet, one F1 race scored. All four are "code merged", none is "validated by a human". |
+| **L-10** | ✅ **Done 2026-08-28** — E2E coverage for the 14 uncovered screens, plus the 6 screens with none at all | `TEST-E2E-1` | F1 (7 screens) + tennis (7 screens) covered by `e2e/f1-screens.spec.js`/`e2e/tennis-screens.spec.js`. Wallet, Challenge, Trophy Cabinet, Settings, Auth covered by 5 new smoke specs; Draft's gap turned out to be `BUG-DRAFT-SVC` blocking existing `draft-mode-complete.spec.js` coverage from running, not a missing spec — fixed same session. `npm run test:e2e:local` now also wired into CI as a new, non-blocking `e2e-tier3` job. |
+| **L-11** | Docs + repo hygiene pass | `TEST-SEED-1`, `DOCS-2`, `DOCS-3`, `REPO-1` | Batched deliberately — all four are XS and none blocks a tester. Do them while `L-8`/`L-9` findings are being fixed. |
+| **L-12** | 🔒 `MAINTENANCE_MODE` decision → reopen | — | **Entirely the user's call**, listed only so the sequence is complete. Per CLAUDE.md's standing instruction no session touches this flag without an explicit ask in that session. Steps: [CUTOVER_PLAN.md §4 Phase 4](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert). |
+
+> 🧭 **Clubhouse-level betting and cross-sport scoring are post-relaunch (decided 2026-08-22).** The user's direction is to move betting to Clubhouse level; `CLUB-BET-1` records that P2P coin challenges **already are** circle-scoped, so the pilot can run on what exists — the missing piece is auto-resolving F1/tennis bet types, which is deliberately sequenced *after* `L-9` proves the escrow lifecycle works at all. `CLUB-SCORE-1` records that the clubhouse aggregate already exists as `get_circle_meta_standings` and is trophy-based, with a recommendation not to build a cross-sport point sum. Neither blocks the 2026-09-04 reopen; both are inputs to what comes after it. `COIN-3` was declined — manual SQL top-ups are the accepted mechanism.
+
+### Explicitly *not* in this plan
+
+`DATA-1`, `OPS-1`, `DATA-RECON`, `ARCH-2`/`ARCH-3`, the GDPR items, `MOBILE-1`, and the whole P3 block are post-launch. None gates a tester pilot. `PAY-1` (Stripe) is a product decision deferred by the coins scope decision above, not launch work.
+
+### Verification baseline (re-run 2026-08-21, all green)
+
+Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where noted. `npm run lint` 0 errors / 2 warnings (`DD-P3-1`) · `npm run build` clean, 8.5s · `npm run test:unit` **56/56** (after clearing a stale local fixture — see `TEST-SEED-1`) · `platform.spec.js` **84/84** · `npm run check:drift` 21/21 functions match deployed · **0 public tables without RLS** (`DD-P0-1` confirmed fixed) · 0 `error_logs` rows in 30 days · no open PRs. Live DB state unchanged in 21 days: `cron_active = 0`, `future_fixtures = 0`, `p2p_challenges`/`player_boxes`/`trophy_ledger`/`chips_used` all still 0 rows.
+
+---
+
+---

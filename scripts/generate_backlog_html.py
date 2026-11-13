@@ -636,6 +636,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   </nav>
   <main class="main">
     <div id="view-open" class="grid-view">
+      {plan_html}
       {open_groups_html}
     </div>
     <div id="view-closed" class="grid-view" style="display:none">
@@ -786,6 +787,9 @@ def build_css():
   .field dd pre code { background: none; color: inherit; padding: 0; }
   .field dd p { margin-bottom: 8px; }
   .field dd p:last-child { margin-bottom: 0; }
+  .plan-block { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 22px; font-size: 13px; line-height: 1.5; }
+  .plan-block h2 { margin: 0 0 8px; font-size: 17px; }
+  .plan-block .md-table { font-size: 12px; }
   .md-table-wrap { overflow-x: auto; margin: 8px 0; }
   .md-table { border-collapse: collapse; width: 100%; font-size: 11.5px; }
   .md-table th, .md-table td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; vertical-align: top; }
@@ -989,6 +993,14 @@ def main():
         for slug in KIND_GROUP_ORDER if slug in kind_meta
     )
 
+    # The "Work sessions" plan has no priority tables, only prose and session tables,
+    # so parse_open_section returns it as intro_html. Show it above the priority groups.
+    plan_html = "\n".join(
+        '<section class="plan-block"><h2>' + esc(section_label_for(sec["heading"])) + "</h2>" + sec["intro_html"] + "</section>"
+        for sec in open_items_sections
+        if "Work sessions" in sec["heading"] and sec["intro_html"].strip()
+    )
+
     page = PAGE_TEMPLATE.format(
         css=build_css(),
         js=build_js(),
@@ -1000,6 +1012,7 @@ def main():
         kind_chips=kind_chips,
         sidebar_open=sidebar_open,
         sidebar_closed=sidebar_closed,
+        plan_html=plan_html,
         open_groups_html=open_groups_html,
         closed_groups_html=closed_groups_html,
     )
