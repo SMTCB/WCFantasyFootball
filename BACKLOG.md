@@ -2,13 +2,14 @@
 
 **Single source of truth for open work.** Open items only, grouped P0–P3. Everything finished lives in [docs/archive/BACKLOG_HISTORY_2026-11-12.md](docs/archive/BACKLOG_HISTORY_2026-11-12.md) (the former 6,500-line BACKLOG.md, kept whole: shipped work, session logs, audits).
 
-**Last Updated**: 2026-11-13 (owner decision: league-level bets stay until the end of the season, noted in C-20, CLUB-BET-1, J-07, J-08; design decisions recorded: logo "The Seat", direction "The Table" redrawn in light mode only, the word "clubhouse" for a group's space, leagues inside it, bets at clubhouse level. BRAND-1 to BRAND-3, J-05, J-08, J-11, J-14, J-18, J-19, J-21, C-02, C-03, C-04, C-08, C-11, C-14 updated; BRAND-4, C-19, C-20 added; dark mode put on hold)
+**Last Updated**: 2026-11-13 (work sessions plan added: every open row is in exactly one of 25 sessions, grouped by code area; the stale Launch Plan moved to the history file; new rows UI-AUDIT-LIVE-1, UI-AUDIT-LIVE-2, DRAFT-20, SEASON-1, TROPHY-1, FALLBACK-1 give the untriaged findings an ID; earlier today: league-level bets stay until the end of the season, design decisions recorded, dark mode on hold)
 
 **Live App**: https://wc-fantasy-football.vercel.app
 
 **How to use this file**
 - When an item ships, delete its row here and add a one-line entry to the history file in the same PR. Do not leave ✅ rows behind.
 - Regenerate the HTML view in the same PR: `python scripts/generate_backlog_html.py`.
+- **Start here:** the "Work sessions" section just below. It says what to do in which session and why items are grouped. The P0 to P3 tables after it are the full list.
 - Start-of-session rule: check an item against `git log` and the code before assuming it is still open.
 - Rows tagged **⚠️ VERIFY** were written before the 2026-08-30 relaunch or before a later release and may already be done. Confirm, then close or update them.
 - Items marked **Approval needed** change the live database, scheduled jobs or auth settings and need an explicit per-item yes in the session (see CLAUDE.md).
@@ -16,6 +17,89 @@
 **Goal behind the J/C items:** a new person places or accepts a bet with a friend inside their first day. Effort: S under a day, M 1–3 days, L a week or more.
 
 **Success measures** (journey assessment, 2026-11-12): new people who place or accept a bet within 24h (not measured; at most 3 of 62 ever staked; target: most newcomers arrive by a bet link) · 7-day return (20 of 62, 32%; target: rising month on month) · bets settled per active Clubhouse per week (0; target: at least 1).
+
+---
+
+## 🚀 Open Backlog — Work sessions
+
+**The plan for working through this backlog.** Written 2026-11-13. Every open row below belongs to exactly one session (checked when this was written; re-check when rows are added). Rows that touch the same screens, hooks or functions share a session, so each session is tested once and the risk of breaking something elsewhere is lower. Sessions are in the order to do them; the wave says how urgent they are. Priority tiers (P0 to P3) still tell you how important a single row is; this plan tells you what to do together.
+
+**Rules for every session**
+- Start from clean `main` on a `claude/…` branch; one pull request per session (a very large one may be two); `npm run lint`, `npm run build` and `npx playwright test` before pushing.
+- Sessions with items marked **Approval needed** (the "Needs your yes" column) ask for an explicit yes per item before touching the live database, jobs, sign-in settings or functions; a backup is dumped first.
+- A session does only its listed rows. Anything new found on the way becomes a new backlog row, not extra work in the session.
+- When a session finishes: delete its rows here, log them in the history file, regenerate `BACKLOG.html`, and tick the session off in the "Done sessions" line below.
+- League-level bets (the commissioner-created ones) stay until the end of this season; no session removes them (owner decision, 2026-11-13). Dark mode is on hold.
+
+**Done sessions:** none yet.
+
+**Wave 1 — Now: get ready, prove the bet, fix the welcome**
+
+Start here. Nothing in the Clubhouse redesign is worth building until one bet has paid out (S2) and a newcomer can get through the welcome (S4).
+
+| Session | Theme and why these belong together | Rows | Needs your yes | Test afterwards |
+|---|---|---|---|---|
+| **S1: Clean start** | Repo, docs and CI hygiene only. No app behaviour changes, so it is safe first and leaves CI green for every later session. | CI-T3, TEST-SEED-1, DD-P3-1, REPO-1, DOCS-1, DOCS-3, INFRA-3, SEC-4 | No. SEC-4 has one manual step that is yours: revoke the old token at github.com/settings/tokens. | A PR shows every CI job green, including Tier 3. `npm run lint` shows no warnings. `git worktree list` is clean. |
+| **S2: Prove the bet** | Everything that touches the money engine in the live database: bet functions, wallet trigger, paused jobs, test rows. One session means one backup and one pair of test accounts cover all of it. | J-01, J-02, J-03, BUG-CW1, DD-P1-1, TEST-P2P-1, DD-P2-3 | Yes, each item separately (test accounts, jobs one at a time, releasing stakes, deleting test rows, the trigger fix). Backup first. Order inside: DD-P1-1, BUG-CW1, J-01, then check what is left before J-03 (the expiry job in J-02 may release the 30 Aug stake by itself), then J-02. | Two accounts: create, accept, settle, pay out; wallet totals add up; `tests/unit/p2p-challenges.test.js` passes; no `TEST_` rows left; every re-enabled job has a run in its history. |
+| **S3: Watch and protect** | Error reporting and abuse limits all sit on the same secrets and Edge Functions setup. | OPS-SENTRY, DD-P2-1, LOW-3 | Yes: set a secret, schedule a job, change a table policy, deploy functions. | A deliberate test error appears in Sentry; anonymous writes to the error log are limited; `npm run check:drift` passes. |
+| **S4: Welcome fixes** | Same files: the welcome steps, the invite pieces and the sign-in copy. Use one platform-name constant so the rename in S6 changes it in one place. | J-04, J-05, J-06, C-02, DD-P1-2 | No. | Walk the whole welcome with a fresh account on a phone (this is DD-P1-2): wrong invite code shows an error, one step count, no duplicate username, ends on Home; invite uses the phone share sheet. `platform.spec.js` green. |
+| **S5: Create a bet and the Bets tab** | The create-bet window, the Bets and Coins tabs and the wallet are the same screens and hooks. | J-20, J-11, COIN-2, J-07, J-08 | No (interface only). | Create a bet with and without a Clubhouse; the wallet shows no prices; the bottom bar works on phone and desktop (`platform.spec.js` navigation tests change with J-08). Existing league-level bets still open from their league screens (owner decision, 2026-11-13). |
+
+**Wave 2 — Next: name, look and front door**
+
+Do the rename and look before building the new Clubhouse screens, so the new screens are written in the new words and colours once.
+
+| Session | Theme and why these belong together | Rows | Needs your yes | Test afterwards |
+|---|---|---|---|---|
+| **S6: Name and look** | Rename, logo, identity rules and the four-word vocabulary all change wording or assets on every screen. Do once, early. | BRAND-3, BRAND-1, J-18, BRAND-2 | No. App ID and web address are separate decisions; BRAND-4 stays later. | Read every main screen for old names; page title, installed-app name and icon on a phone; link preview; `npm run build`; `platform.spec.js` (text assertions will need updating). |
+| **S7: Colours and legibility** | Contrast, tokens and tap sizes live in the same style files. After S6 so the final colours are the ones fixed. Dark mode (UI-AUDIT-THM-01) is on hold and not in this session. | UI-AUDIT-LIVE-1, UI-AUDIT-SYS-04, UI-AUDIT-A11Y-02, UI-AUDIT-LIVE-2, UI-AUDIT-TCH-01, LOW-9 | No. | Repeat the contrast walk over the 8 signed-in routes (method in the Design Audit section): nothing below 4.5:1 (3:1 for large text); tap targets at least 44px; `platform.spec.js` both browsers. |
+| **S8: Sign in and bet link** | The pages a person sees before they have an account: first screen, one-tap sign-in, and the page a bet link opens. | J-21, J-15, J-10 | Yes: J-15 changes sign-in settings; J-10 lets one bet be read without login. | In a browser with no session: open a bet link, see the bet and who sent it, sign in with Google, accept in one tap. Wrong or expired link shows a clear message. |
+| **S9: New-user journey and measurement** | Rebuild the welcome to three steps and add the funnel events in the same session, so the new steps are measured from day one. | J-12, J-09, CODE-5 | Maybe: J-09 if events go in a new table. | A fresh account reaches a first bet or a sport inside the welcome; one event appears per step; day-1, day-7 and day-30 return can be counted. |
+
+**Wave 3 — Next: bets and people in the Clubhouse**
+
+The redesign proper. Order matters: settlement first (S10), then the room, then bets inside it, then the "your move" line that reads from bets.
+
+| Session | Theme and why these belong together | Rows | Needs your yes | Test afterwards |
+|---|---|---|---|---|
+| **S10: Settlement** | One flow and one set of database functions and jobs: declare, 24h to object, automatic payout. Also decides what happens when nobody declares. | J-13 | Yes (database and scheduled job). | Full lifecycle with two accounts, including an objection and a bet nobody declares; unit tests for the settlement functions. |
+| **S11: The Room: one stream** | Same files: the Clubhouse screen, its chat and its front page. Chat bug fixes and tidy-up go first because the merge builds on them. | C-01, C-06, C-07, C-11, CLUB-2 | No. | On a phone: delete a message by tap, a failed send shows an error, sender names show, chat height holds when the address bar moves; empty Clubhouse offers three actions. |
+| **S12: Tabs and people** | The tab structure and the People tab belong together; the cross-sport score decision decides what People and Leagues show. | C-03, C-05, CLUB-SCORE-1 | Maybe: CLUB-SCORE-1 after its decision. | Three tabs; old tab links and settings still reachable; member records match the standings. |
+| **S13: Bets in the Room** | All four read and write the same bet hooks (`useChallenges`, `useGroupBets`, `useMyBets`). Leagues keep the commissioner-created bets as they are until the end of the season. | CLUB-BET-1, C-08, C-20, C-19 | Yes (messages tied to a bet need a database change). | Create a bet from the message box; take or pass on its card; open it as its own conversation; league-level bets still work unchanged. |
+| **S14: Your move** | One "things waiting for me" query feeds both the Home screen and the line at the top of the Room. | J-14, C-04 | No. | A bet to accept, a result to confirm and a lineup to set each show once and clear when done; counts match on Home and in the Room. |
+| **S15: Friends and notices** | Feed items, reactions, in-app notices and how they reach a phone: one notice pipeline. | C-09, C-10, C-12, PUSH-1, J-16 | Yes (new tables or columns, push keys, a job). | A notice opens the exact item in the Room; push arrives on an installed app on iPhone and Android; email goes first for people who have not opened the app. |
+
+**Wave 4 — Later: strengthen and extend**
+
+Safe to reorder. Each session is one code area, so any of them can be done on its own.
+
+| Session | Theme and why these belong together | Rows | Needs your yes | Test afterwards |
+|---|---|---|---|---|
+| **S16: Shared building blocks** | Buttons, inputs, icons, loading states, the shared sheet and the component catalogue are one family of shared components. Heed the Rolldown rule in CLAUDE.md: check that a new import is not already imported by LeagueScreen before adding it to a child. | UI-AUDIT-SYS-02, UI-AUDIT-FRM-04, UI-AUDIT-ICN-01, UI-AUDIT-FBK-01, CODE-6, M0-BOTTOMSHEET, LOW-2, UX-DESKTOP-1 | No. | `npx madge --circular src/`; `npm run build` (the crash only shows in the production build); `platform.spec.js` both browsers; spot check the screens each component replaced. |
+| **S17: Test coverage** | Do after the screens above settle, so the tests are not written for screens that are about to change. | TEST-E2E-1, CODE-4 | No. | New specs pass in CI and fail when the behaviour they cover is broken on purpose. |
+| **S18: League bets** | The commissioner-created league bets: same commissioner panel and the same settlement function. Kept alive until the end of the season; improve, do not remove. | FB-28, FB-30, FB-29 | Yes (new functions, payout formula, schema for FB-29). | Create, lock, reopen and settle a league bet; payouts match the formula on a past bet; old bets unchanged. |
+| **S19: Football scoring and seasons** | The scoring function, the trophy job and the season handling all live in the football edge functions and share the same safety steps. | FALLBACK-1, TROPHY-1, SEASON-1, B-04b | Yes (function deploys, a job, possible data change). Switching the trophy job on is a separate yes. | `npm run test:unit` for `calculate-scores`; re-score a past matchday and compare; run the trophy job in dry-run mode on the completed World Cup. |
+| **S20: Draft and squad** | Squad size is shared with scoring, so after S19. The bench slots and the draft screen are the same code. | FB-24, DRAFT-20, B-01 | Yes (schema). | Run a full draft with 15 and with 20 players; a scoring run counts the right 15; the substitution cap holds. |
+| **S21: Market and player cards** | Same screen and same card component. | FB-15, PCARD-2 | No. | Sort by price, form and minutes; cards show flags and photos with a fallback; 375px layout. |
+| **S22: Data foundation** | Schema baseline, reconciliation and the forza_id rename all change how the migration folder matches production. | DATA-1, DATA-2, DATA-RECON, DD-P2-2, ARCH-2, ARCH-3 | Yes. Backup first, per CLAUDE.md. | A replay of the migration folder on an empty database matches production; the rename changes no behaviour. |
+| **S23: Infrastructure and supply chain** | Staging, point-in-time recovery, dependency hardening and the runbooks. | OPS-1, DEPS-2, SEC-5, INFRA-1, INFRA-2 | Yes for OPS-1 and INFRA-2. | A restore drill on staging; the audit gate still passes. |
+| **S24: Before the stores** | Legal, privacy, naming and the store checklist. Push for the native app (LOW-6) needs MOBILE-1 first, so they sit together. | GDPR-1, GDPR-2, GDPR-3, LEGAL-1, PAY-1, BIZ-1, BRAND-4, MOBILE-1, LOW-6 | Partly: GDPR-2, GDPR-3, LEGAL-1 change data; the rest are decisions or documents. | Export and erasure work for one test account; the checklist in MOBILE-1 is ticked. |
+
+**Wave 5 — Ideas for later**
+
+All of these build on the Room and on working bets. Do not start before S13.
+
+| Session | Theme and why these belong together | Rows | Needs your yes | Test afterwards |
+|---|---|---|---|---|
+| **S25: Growth ideas** | Rivalries, awards, the weekly paper, match-day prompts, free picks, share cards, ready-made bets and the public front page all stack on the Room and on bets. | C-13, C-14, C-15, C-16, C-17, C-18, J-17, J-19 | Yes for most (new tables or jobs). | Decide per item when it is picked up. |
+
+**Parked: no session until the owner asks**
+
+- B-08: Multi-competition leagues, 3 to 4 weeks, needs a design decision first.
+- CODE-2: TypeScript migration, 4 to 6 weeks if done wholesale.
+- UI-AUDIT-THM-01: Dark mode, on hold by owner decision 2026-11-13.
+
+**Are all assessment findings in the backlog?** Yes (checked 2026-11-13). The journey and Clubhouse assessment findings are rows J-01 to J-21 and C-01 to C-18; the brand review is BRAND-1 to BRAND-4; the live design audit findings 15 to 21 became UI-AUDIT-LIVE-1 and UI-AUDIT-LIVE-2 on this date; the older written-up items without an ID (DRAFT-20, SEASON-1, TROPHY-1, FALLBACK-1) now have rows. The June 2026 technical assessments (multi-sport, peer-to-peer betting, data provider) described the build, not open defects, so they have no rows of their own; what they left open is already in rows such as ARCH-2, ARCH-3 and TEST-P2P-1.
 
 ---
 
@@ -55,6 +139,7 @@
 | C-02 | **[BUG] Invite uses the platform name, not Forza Fantasy League, and uses the phone share sheet** | S | Clubhouse. Evidence: WhatsApp invite reads "Join my Clubhouse on Forza Fantasy League". Use the platform name: Clubhouse once BRAND-1 lands, Frontrow until then. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. |
 | C-11 | **[FEATURE] Empty Clubhouse offers three actions: invite, make first bet, say hello** | S | Clubhouse. Evidence: 3 of 9 active Clubhouses have a single member; a new Clubhouse offers only "create a competition". Design decided 2026-11-13: lead with one main button, "Invite with a bet", and a quiet "Share a link instead" under it; saying hello is the message box in the Room. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. Mockups (empty clubhouse): docs/product/CLUBHOUSE_BRAND_AND_SCREENS_2026-11-13.html. |
 | J-20 | **[BUG] Create-bet window dead end: with no Clubhouse it says "join one first" and offers no way to do it** | S | Journey. Add a button that creates or joins a Clubhouse (or starts the invite flow) from that window. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. |
+| UI-AUDIT-LIVE-1 | **[BUG] Four critical contrast and legibility failures found on live screens: bottom-bar active label, "Beta" badge, red LIVE badge and Market position chips, Live empty-state caption** | S | Design audit. Triaged 2026-11-13 from the live verification pass (findings 15, 16, 17, 18, see the audit section below). (1) Bottom-bar active label, info blue on the page background, 3.02:1, on every screen. (2) Header "Beta" badge, raw gold used as text, 3.49 to 4.24:1, drawn at 6.5px. (3) Red on dark surfaces: the LIVE badge 2.53:1 and the Market GK/DEF/MID/FWD count chips 2.33:1. (4) Live screen empty-state caption ("Points Log will appear here when a match is live"), off-white on off-white, 1.22:1, the worst ratio found. Target: 4.5:1 for normal text, 3:1 for large text. Do after BRAND-3 so the final colours are used. Evidence and exact colours: docs/design/DESIGN_AUDIT_2026-08.html ledger rows 15 to 18. |
 
 ### P2 — MEDIUM
 
@@ -113,6 +198,7 @@
 | UI-AUDIT-ICN-01 | **[TECH DEBT] Emoji to icons** | L | ~280 inline emoji left (sport glyphs ⚽🎾🏁 are brand identity and stay). |
 | UI-AUDIT-FBK-01 | **[TECH DEBT] Remaining "Loading…" strings to skeletons** | S | ~15 admin/inline strings left. |
 | UI-AUDIT-THM-01 | **[FEATURE] Dark mode** | L | Blocked on SYS-04. **On hold:** decided 2026-11-13 that the Clubhouse look is light mode only (BRAND-3). Left here until the owner confirms it can be removed. |
+| UI-AUDIT-LIVE-2 | **[BUG] Three high contrast failures found on live screens: muted text on raised surfaces, muted text on Market captions, old gold button with white text** | M | Design audit. Triaged 2026-11-13 from the live verification pass (findings 19, 20, 21). (1) The muted text colour on the raised surface colour is 4.26:1 (needs 4.5:1); it carries almost every field label, helper caption and the Save button text on Settings. (2) The muted text colour directly on the page background is 3.19:1 on the Market Budget and Price captions (missed by the earlier 18-site sweep). (3) Old gold used as a solid button fill with white text, 3.85:1 (League "Join →"); same root cause as UI-AUDIT-A11Y-02. Fix by adjusting the tokens once rather than site by site. Evidence: docs/design/DESIGN_AUDIT_2026-08.html ledger rows 19 to 21. |
 
 ### P3 — LOW
 
@@ -152,6 +238,10 @@
 | C-17 | **[FEATURE] Season ledger and awards inside the Clubhouse** | M | Clubhouse. **Approval needed.** |
 | C-18 | **[FEATURE] Share cards for settled bets, rivalries and front pages (pairs with J-10)** | M | Clubhouse. Same door as the bet invite (J-10): the content is the invitation. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. |
 | BRAND-4 | **[TECH DEBT] Name check for "Clubhouse" before the app goes to the stores: registration, store listing name, web address, logo similarity** | S | Brand. Deferred by decision on 2026-11-13 (not critical now). A social audio app already uses the name. Needs someone qualified: whether the name can be registered for this kind of product, whether the App Store and Google Play accept the listing name, which web address is free, and whether "The Seat" logo is too close to an existing mark. Fallback: list the app with a describing phrase, for example "Clubhouse: bets with friends". Must be done before store submission and before a web address is bought. Notes: docs/product/CLUBHOUSE_BRAND_AND_SCREENS_2026-11-13.html. |
+| DRAFT-20 | **[FEATURE] Optional 20-player draft squads with a cap of 5 substitutions per matchday (the spec for FB-24)** | Very High, multi-week (same work as FB-24) | Football draft. Do together with FB-24: this is the written spec, FB-24 is the same ask raised from the source doc. Full spec in the "DRAFT-20" section below. **Approval needed** (schema). Touches the squad-size constant that scoring also uses, so schedule after the scoring session. |
+| SEASON-1 | **[TECH DEBT] Football data provider reuses tournament IDs every season: add durable season-boundary handling** | Decision first (~1h), then M–L | Football data. Written 2026-09-01, given an ID 2026-11-13. A recurring competition (for example the Champions League) keeps the same provider ID each season, so last season's fixtures and players stay mixed with the new ones. The 2026-09-01 fix was by hand; nothing stops it recurring next season. Also the reason tournament status is not auto-completed. Detail and the two suggested directions: section "SEASON-1" below. **Approval needed** (data and edge function). |
+| TROPHY-1 | **[BUG] `award-season-trophies` ignores a tournament already marked completed, so a finished World Cup would never get its trophies** | XS (~30 min) | Football data. Written 2026-09-13, given an ID 2026-11-13. The football branch filters on `status = 'active'` with an end date in the past; a tournament set to `completed` by hand falls outside it. The job is switched off today, so nothing is lost yet; fix before switching it back on. Detail: section "TROPHY-1" below. **Approval needed** (edge function deploy; switching the job on is a separate yes). |
+| FALLBACK-1 | **[BUG] Fallback scoring rules never apply the conceded-goals penalty (field name mismatch in `calculate-scores`)** | XS (~30 min) | Football scoring. Written 2026-09-06, given an ID 2026-11-13. `FALLBACK_POINTS` uses `conceded_per_goal` but `scorePlayer` reads `conceded_2plus_penalty`, so a tournament with no scoring-rules row silently skips the penalty for goalkeepers and defenders. Detail: section "FALLBACK-1" below. **Approval needed** (edge function deploy). |
 
 
 #### PUSH-1 detail — Web Push notifications via installed PWA
@@ -214,14 +304,14 @@
 ---
 
 
-## 🟡 P3 — Fallback conceded-penalty is silently always 0 due to a field-name mismatch — open, no PR yet (2026-09-06, found during Scoring v3 Phase 1)
+## 🟡 P3 — FALLBACK-1: Fallback conceded-penalty is silently always 0 due to a field-name mismatch — open, no PR yet (2026-09-06, found during Scoring v3 Phase 1)
 
 `FALLBACK_POINTS` in [calculate-scores/index.js](supabase/functions/calculate-scores/index.js) names the goals-conceded-penalty field `conceded_per_goal`, but [scoring-logic.js](supabase/functions/calculate-scores/scoring-logic.js)'s `scorePlayer`/`buildBreakdown` reads `rules.conceded_2plus_penalty` — so any tournament falling back to `FALLBACK_POINTS` (no `scoring_rules` DB row, e.g. a future EPL/426 tournament) silently never applies the conceded-goals penalty for GK/DEF, with no error. Pre-existing bug, not introduced by Phase 1 — found while auditing the fallback constants for that PR, deliberately left out of its scope. Fix: rename `conceded_per_goal` → `conceded_2plus_penalty` in `FALLBACK_POINTS` (both GK and DEF rows currently have it at value `0` anyway, so no scoring change today — but the field name needs to match before that value is ever made non-zero, or before a tournament without a DB row goes live).
 
 ---
 
 
-## 🟡 P2 — Forza tournament IDs are reused every season — no durable season-boundary handling (2026-09-01) — open, no PR yet
+## 🟡 P2 — SEASON-1: Forza tournament IDs are reused every season — no durable season-boundary handling (2026-09-01) — open, no PR yet
 
 **Context**: Preparing to load UEFA Champions League 2026-27, discovered `tournaments.forza_id=1593` was still carrying **all of last season's** (2025-26) data — 281 stale fixtures and ~3,400 players from clubs no longer in this year's competition, still `sync_enabled`-adjacent in the DB even though the season had ended. Forza does not mint a new tournament ID per season — it reuses the same `forza_id` and just rolls `current_season` forward internally, while its `round` field resets to 1 each season. Under our schema, `round_number` (and the derived `matchday_id = '{forza_id}-r{round_number}'`) is scoped only by `tournament_id`, not by season — so once a new season's fixtures land on top of an old season's under the same forza_id, round numbers collide (e.g. two completely different sets of 18 matches both claiming to be "round 1"), and `sync-players`' team list (derived from *all* current `fixtures` rows for that `tournament_id`, not season-filtered — see [supabase/functions/sync-players/index.js](supabase/functions/sync-players/index.js)) gets contaminated with stale clubs, pulling in retired/relegated teams and their full squads.
 
@@ -240,7 +330,7 @@
 ---
 
 
-## 🟡 P2 — `award-season-trophies` cron will never see a completed World Cup once turned on (2026-09-13, open, no PR yet)
+## 🟡 P2 — TROPHY-1: `award-season-trophies` cron will never see a completed World Cup once turned on (2026-09-13, open, no PR yet)
 
 **Context**: found while marking the WC 2026 tournament `status='completed'` this session (see the completed-work entry above). `award-season-trophies`'s football branch filters on `status='active' AND ends_at < now()` — a tournament that's already flipped to `status='completed'` (like WC now) permanently falls outside that filter. The cron itself is currently `active=false` (frozen, per prior session notes), so this hasn't caused a missed award yet — but the moment it's turned on, it will never award WC's season-champion trophies, because WC no longer matches its own filter.
 
@@ -253,7 +343,7 @@
 ---
 
 
-## 🔍 Design Audit — Live Verification Pass (2026-08-23) — findings 15–21, not yet triaged
+## 🔍 Design Audit — Live Verification Pass (2026-08-23) — findings 15–21, triaged 2026-11-13 into UI-AUDIT-LIVE-1 and UI-AUDIT-LIVE-2
 
 **Context**: the 2026-08 audit (`docs/design/DESIGN_AUDIT_2026-08.html`) had one acknowledged gap — "signed-in screens were assessed from source rather than exercised live." The user asked how to give live access; local demo mode (`VITE_AUTH_ENABLED=false` in `.env.local`, gitignored, session-local only — no credentials involved) turned out to already be a built feature flag ([src/context/AuthContext.jsx](src/context/AuthContext.jsx)), so no new setup was needed. With it enabled, the user said "yes" to running the live pass.
 
@@ -272,68 +362,6 @@
 
 **Also confirmed** (not a defect): the leagueless demo-account empty states across Squad, League, Live, Market, Recap, Trophy Cabinet all render cleanly — sensible copy, working CTAs, no crashes or broken layouts. Two background `401`s fire on page load under demo mode (queries assuming a real session); cosmetic, don't block the UI.
 
-**Not yet done**: these 7 findings are not triaged into P0–P3 tiers or given action IDs/effort estimates — that's a separate scoping pass. The one remaining live-verification gap: the demo account has no seeded league/clubhouse, so squad-builder, league-standings, draft and trade flows with real data are still unverified against live rendering.
+**Triaged 2026-11-13**: findings 15 to 18 (critical) are row UI-AUDIT-LIVE-1 in P1; findings 19 to 21 (high) are row UI-AUDIT-LIVE-2 in P3. The one remaining live-verification gap: the demo account has no seeded league/clubhouse, so squad-builder, league-standings, draft and trade flows with real data are still unverified against live rendering.
 
 **Docs updated**: `docs/design/DESIGN_AUDIT_2026-08.html` (new ledger rows 15–21, updated "Method & limits" and summary counts), `docs/design/README.md` (status line + live-pass summary). No code changed this session.
-
----
-
----
-
-
-## 🚀 Launch Plan — Pilot Relaunch (written 2026-08, likely stale after the 2026-08-30 relaunch: verify before using)
-
-**This is the active plan. Unlike the dated audit entries below it, this section is edited in place — tick steps off, move the target date, add steps.** It supersedes the "Recommended order before inviting testers" table inside the [2026-08-01 Pre-Pilot Due Diligence](#-pre-pilot-due-diligence--technical--functional-2026-08-01), which was a snapshot and should be read as history.
-
-**Operational detail is not duplicated here.** Each step links to the runbook that already documents it — [ADDING_A_NEW_TOURNAMENT.md](docs/deployment/ADDING_A_NEW_TOURNAMENT.md), [CUTOVER_PLAN.md §4 Phase 4](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert), [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md), [DOCKER_LOCAL_DEV.md](docs/deployment/DOCKER_LOCAL_DEV.md). Keep it that way — this section is a sequence, not a fourth copy of the commands.
-
-### Scope decisions (user, 2026-08-21)
-
-| Decision | Choice | Consequence for this plan |
-|---|---|---|
-| **Launch sport** | **Football + F1 + tennis — all three** | Football needs a tournament registered and loaded before crons can be unfrozen (`L-1`); F1 (11 upcoming races) and tennis (4 upcoming tournaments) already have forward calendars. Maximum validation surface. |
-| **Coins / P2P** | **In scope — testers will use them** | Promotes `TEST-P2P-1` (8 untested escrow RPCs) into Week 1 as blocking work. No Stripe: the 500-coin signup grant is the only faucet and that is sufficient — see `PAY-1`. |
-| **Real money** | **None — fictional coins only, Stripe stays off** (confirmed 2026-08-22) | Verified feasible against the code, not assumed: the 500-coin signup grant (`_create_user_wallet()` trigger, `type='admin'`) is the faucet, `purchase-coins` already 503s, and **no cash-out path exists anywhere in the codebase**, so coins cannot become money even in principle. Three gaps this exposes are now tracked as `COIN-1`/`COIN-2`/`COIN-3`. Note the economy is *structurally* deflationary — 5% rake is burned on every settled bet against a one-time grant — so a longer pilot needs `COIN-3`'s top-up path. |
-| **Direct bets on F1 / tennis** | **Via `freeform`, human-settled** | Not a limitation to fix, a fact to communicate. `gw_total` auto-resolves from squad points and is **football-only** (needs league + matchday); F1 and tennis bets use `freeform` — a ≤140-char question, circle-scoped, settled declare → confirm → dispute → arbitrate by the Clubhouse owner. Same escrow, same 5% rake, same payout. Testers must be told, or they will file it as a bug. |
-
-> ⚠️ **Known timeline risk, accepted by the user 2026-08-21.** This scope means validating four surfaces that have *never* been executed by a human in production (P2P escrow, player boxes, trophies, F1 race scoring) plus 14 screens with zero E2E coverage, inside two weeks. Week 2 is validation-saturated. If something slips, it will be the reopen date — not a reason to skip `L-8`, which is the go/no-go gate.
-
-### Legend
-
-🔒 = approval-gated per [CLAUDE.md](CLAUDE.md#-pilot-safeguards--read-before-every-db-operation). Needs an explicit per-item "yes, run it" from the user **in the session that performs it**. Approval does not carry across sessions or items.
-
-### Week 1 — make it playable and observable (2026-08-22 → 2026-08-28)
-
-| # | Step | Item | Gate / why here |
-|---|------|------|-----------------|
-| **L-1** | 🔒 Register + load a football tournament; correct the 4 stale `status='active'` tournaments | `DD-P0-3` | **First, because everything downstream needs something to act on.** 0 fixtures in the whole DB have a future kickoff. Runbook: [ADDING_A_NEW_TOURNAMENT.md](docs/deployment/ADDING_A_NEW_TOURNAMENT.md). |
-| **L-2** | Verify the F1 and tennis forward calendars before anything fires against them | `DD-P0-3` | Read-only sanity pass. Confirmed 2026-08-21: 11 upcoming F1 races, 4 genuinely-future tennis tournaments. Re-confirm dates and that one tennis tournament stuck in `roster_open` (the Wimbledon dry run) is cleaned up — see `DD-P1-1`. |
-| **L-3** | 🔒 Set backend `SENTRY_DSN` Supabase secret + schedule `check-cron-health` | `OPS-SENTRY` | **Must precede `L-4`.** Confirmed absent 2026-08-21 (`supabase secrets list`). Unfreezing 22 crons with no backend error reporting means the first live scoring run in six weeks is invisible. |
-| **L-4** | 🔒 Unfreeze the 22 pg_cron jobs + commit a freeze/unfreeze runbook | `DD-P0-2` | Only meaningful once `L-1`/`L-2` give them real data. Steps: [CUTOVER_PLAN.md §4 Phase 4 step 1](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert). Pull the live list first — `SELECT jobname FROM cron.job WHERE NOT active;` |
-| **L-5** | 🔒 Remove test/dry-run data from the pilot DB; backfill the 21 missing wallets; hide the GBP price list | `DD-P1-1`, `COIN-1`, `COIN-2` | Cheap, and it is what a tester would otherwise browse into ("Smoke Test League", the stuck tennis tournament, 4 empty circles). Pilot Safeguard #4. **`COIN-1` gates `L-9`**: 21 of 75 users predate the wallet trigger and hit `WALLET_NOT_FOUND` on their first stake, so the escrow walkthrough fails if a pre-migration-202 account is used. `COIN-2` is here because £1.99/£4.99/£12.99 buttons in a no-real-money pilot generate exactly the wrong bug reports. |
-| **L-6** | Write the P2P challenge / escrow test suite | `TEST-P2P-1` | **Blocking, because coins are in scope.** 8 money-moving RPCs with escrow have 0 tests and 0 production rows. Extends the existing `tests/unit/` harness — no new infrastructure. |
-| **L-7** | Analytics / funnel instrumentation | `CODE-5` | **Only has value before testers arrive.** Retrofitting loses the first cohort's drop-off data permanently. TODO already marked at `src/hooks/useOnboarding.js:36`. |
-
-### Week 2 — validate, then open (2026-08-29 → 2026-09-04)
-
-| # | Step | Item | Gate / why here |
-|---|------|------|-----------------|
-| **L-8** | Walk the cold-start funnel end to end with a fresh real account | `DD-P1-2` | **This is the go/no-go gate. Everything above is preparation for it.** 34 of 75 users are in no Clubhouse and no league — exactly where a new tester lands. The empty state exists in code and has never been walked with real credentials. |
-| **L-9** | Manually exercise the four never-used surfaces | `DD-P2-3` | One P2P challenge through full escrow (stake → accept → resolve → payout), one Player Box created by a real user, one trophy award landing in the cabinet, one F1 race scored. All four are "code merged", none is "validated by a human". |
-| **L-10** | ✅ **Done 2026-08-28** — E2E coverage for the 14 uncovered screens, plus the 6 screens with none at all | `TEST-E2E-1` | F1 (7 screens) + tennis (7 screens) covered by `e2e/f1-screens.spec.js`/`e2e/tennis-screens.spec.js`. Wallet, Challenge, Trophy Cabinet, Settings, Auth covered by 5 new smoke specs; Draft's gap turned out to be `BUG-DRAFT-SVC` blocking existing `draft-mode-complete.spec.js` coverage from running, not a missing spec — fixed same session. `npm run test:e2e:local` now also wired into CI as a new, non-blocking `e2e-tier3` job. |
-| **L-11** | Docs + repo hygiene pass | `TEST-SEED-1`, `DOCS-2`, `DOCS-3`, `REPO-1` | Batched deliberately — all four are XS and none blocks a tester. Do them while `L-8`/`L-9` findings are being fixed. |
-| **L-12** | 🔒 `MAINTENANCE_MODE` decision → reopen | — | **Entirely the user's call**, listed only so the sequence is complete. Per CLAUDE.md's standing instruction no session touches this flag without an explicit ask in that session. Steps: [CUTOVER_PLAN.md §4 Phase 4](docs/platform_revision/CUTOVER_PLAN.md#phase-4--reopen-or-revert). |
-
-> 🧭 **Clubhouse-level betting and cross-sport scoring are post-relaunch (decided 2026-08-22).** The user's direction is to move betting to Clubhouse level; `CLUB-BET-1` records that P2P coin challenges **already are** circle-scoped, so the pilot can run on what exists — the missing piece is auto-resolving F1/tennis bet types, which is deliberately sequenced *after* `L-9` proves the escrow lifecycle works at all. `CLUB-SCORE-1` records that the clubhouse aggregate already exists as `get_circle_meta_standings` and is trophy-based, with a recommendation not to build a cross-sport point sum. Neither blocks the 2026-09-04 reopen; both are inputs to what comes after it. `COIN-3` was declined — manual SQL top-ups are the accepted mechanism.
-
-### Explicitly *not* in this plan
-
-`DATA-1`, `OPS-1`, `DATA-RECON`, `ARCH-2`/`ARCH-3`, the GDPR items, `MOBILE-1`, and the whole P3 block are post-launch. None gates a tester pilot. `PAY-1` (Stripe) is a product decision deferred by the coins scope decision above, not launch work.
-
-### Verification baseline (re-run 2026-08-21, all green)
-
-Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where noted. `npm run lint` 0 errors / 2 warnings (`DD-P3-1`) · `npm run build` clean, 8.5s · `npm run test:unit` **56/56** (after clearing a stale local fixture — see `TEST-SEED-1`) · `platform.spec.js` **84/84** · `npm run check:drift` 21/21 functions match deployed · **0 public tables without RLS** (`DD-P0-1` confirmed fixed) · 0 `error_logs` rows in 30 days · no open PRs. Live DB state unchanged in 21 days: `cron_active = 0`, `future_fixtures = 0`, `p2p_challenges`/`player_boxes`/`trophy_ledger`/`chips_used` all still 0 rows.
-
----
-
----
