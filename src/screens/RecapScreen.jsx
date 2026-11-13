@@ -15,7 +15,7 @@ const ENTRY_META = {
   auction_result: { badge: 'AUCTION',   color: 'var(--positive)' },
   trade_result:   { badge: 'TRADE',     color: 'var(--accent)'     },
   p2p_challenge:  { badge: 'CHALLENGE', color: 'var(--gold)'     },
-  p2p_result:     { badge: 'P2P',       color: 'var(--gold)'     },
+  p2p_result:     { badge: 'BET',       color: 'var(--gold)'     },
 };
 const TRANSFER_META = { badge: 'TRANSFER', color: 'var(--accent)' };
 

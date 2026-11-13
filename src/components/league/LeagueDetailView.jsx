@@ -18,7 +18,7 @@ const ENTRY_META = {
   transfer:         { filter: 'TRADES', badge: 'TRANSFER',   color: 'var(--positive)' },
   classified:       { filter: 'GAME',   badge: 'CLASSIFIED', color: 'var(--gold-text)' },
   p2p_challenge:    { filter: 'TRADES', badge: 'CHALLENGE',  color: 'var(--gold-text)' },
-  p2p_result:       { filter: 'TRADES', badge: 'P2P',        color: 'var(--gold-text)' },
+  p2p_result:       { filter: 'TRADES', badge: 'BET',        color: 'var(--gold-text)' },
   wishlist_draft_report: { filter: 'GAME', badge: 'WISHLIST', color: 'var(--gold-text)' },
 };
 

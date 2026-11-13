@@ -30,7 +30,6 @@ export default function WalletScreen() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { wallet, loading } = useWallet(user?.id);
-  const [buyStatus, setBuyStatus] = useState(null); // null | 'loading' | 'coming_soon' | 'error'
   const [econStats, setEconStats] = useState(null);
 
   const balance      = wallet?.balance      ?? 0;
@@ -89,70 +88,18 @@ export default function WalletScreen() {
         )}
       </div>
 
-      {/* Buy coins — Stripe-ready (returns 503 until keys are configured) */}
+      {/* Pilot coins are free credits; there is nothing to buy. */}
       <div style={{
         background: 'var(--elev)',
         border: '1px solid var(--rule)',
         borderRadius: 'var(--radius)',
-        padding: '20px 24px',
+        padding: '16px 24px',
         marginBottom: 28,
+        fontSize: 'var(--fs-label)',
+        color: 'var(--mute)',
+        lineHeight: 1.5,
       }}>
-        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}>
-          Buy coins
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {[
-            { coins: 500,  price: '£1.99' },
-            { coins: 1500, price: '£4.99' },
-            { coins: 5000, price: '£12.99' },
-          ].map(({ coins, price }) => (
-            <button
-              key={coins}
-              disabled={buyStatus === 'loading'}
-              onClick={async () => {
-                setBuyStatus('loading');
-                try {
-                  const { error } = await supabase.functions.invoke('purchase-coins/create-payment-intent', {
-                    body: { pack_coins: coins },
-                  });
-                  // 503 means Stripe not yet configured — expected for now
-                  if (error?.context?.status === 503 || error?.message?.includes('STRIPE_NOT_CONFIGURED')) {
-                    setBuyStatus('coming_soon');
-                  } else if (error) {
-                    setBuyStatus('error');
-                  }
-                  // When Stripe IS configured: handle client_secret here with Stripe.js
-                } catch {
-                  setBuyStatus('coming_soon');
-                }
-                setTimeout(() => setBuyStatus(null), 3000);
-              }}
-              style={{
-                flex: 1,
-                minWidth: 90,
-                minHeight: 'var(--tap)', padding: '10px 8px',
-                borderRadius: 'var(--radius)',
-                border: '1px solid var(--rule)',
-                background: 'var(--card)',
-                cursor: buyStatus === 'loading' ? 'wait' : 'pointer',
-                opacity: buyStatus === 'loading' ? 0.6 : 1,
-              }}
-            >
-              <div className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--accent)' }}>
-                {coins.toLocaleString()}
-              </div>
-              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
-                {price}
-              </div>
-            </button>
-          ))}
-        </div>
-        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 12, textAlign: 'center' }}>
-          {buyStatus === 'coming_soon' && 'Payments coming soon'}
-          {buyStatus === 'error' && 'Something went wrong — try again'}
-          {buyStatus === 'loading' && 'Connecting…'}
-          {!buyStatus && 'Payments coming soon'}
-        </div>
+        Coins are free play credits. They have no cash value and nothing here costs real money.
       </div>
 
       {/* Quick link to Challenges */}
