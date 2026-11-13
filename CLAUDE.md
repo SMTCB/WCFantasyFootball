@@ -278,7 +278,7 @@ Reading order for a new session: this file, then [BACKLOG.md](BACKLOG.md), then 
 npm run dev              # Dev server (http://localhost:5173)
 npm run build            # Production build → dist/
 npm run lint             # ESLint (CI-enforced)
-npx playwright test      # CI spec only: platform.spec.js (36 tests × 2 browsers, ~3 min)
+npx playwright test      # CI spec only: platform.spec.js (42 tests × 2 browsers = 84, ~3 min)
                          # Full suite (all 9 specs, requires live DB): npx playwright test e2e/
 npm run build && npx cap sync   # Build + sync to native projects
 npx cap open ios         # Open Xcode
@@ -429,7 +429,7 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
 - **Player Status**: Injury alerts, suspension tracking, injury history
 - **Design**: Editorial Brandmark, tactical navigation icons, dark theme with gold accents
 - **Mobile**: Capacitor wrapper for iOS/Android, responsive layout at 375px+
-- **E2E Tests**: `platform.spec.js` (36 tests × 2 browsers) in CI; 8 additional integration specs run manually against live Supabase data
+- **E2E Tests**: `platform.spec.js` (42 tests × 2 browsers = 84) in CI; 8 additional integration specs run manually against live Supabase data
 
 ### 🚧 In Progress / Planned
 - **Trade System**: Submit/approve player swap requests between managers
@@ -442,7 +442,6 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
 - **Offline Mode**: Draft & view squad without internet (Capacitor OfflineDB)
 
 ### 🔴 Known Issues & Debt
-- **React Compiler**: 3 pre-existing memoization warnings in `useAvailabilityFlag.js` (downgraded to warnings)
 - **Android Build**: Gradle/signing issues in CI (mobile builds pending local debug)
 - **E2E Coverage**: `platform.spec.js` (36 UI tests) green in CI. Integration specs (draft, scoring, bets) run manually — they query live production data and are not suitable for automated CI.
 - **Capacitor Sync**: Native projects not yet built for store submission
@@ -524,7 +523,7 @@ grep -n "^import" src/screens/LeagueScreen.jsx
 
 ---
 
-- **E2E**: `platform.spec.js` must stay green — CI runs it automatically on every PR (36 tests × 2 browsers, ~3 min). Integration specs (draft/scoring/bets) run manually: `npx playwright test e2e/<spec>.spec.js`
+- **E2E**: `platform.spec.js` must stay green — CI runs it automatically on every PR (42 tests × 2 browsers = 84, ~3 min). Integration specs (draft/scoring/bets) run manually: `npx playwright test e2e/<spec>.spec.js`
 - **Mobile-first**: All UI tested at 375px viewport minimum (use DevTools device emulation)
 - **RLS**: Never bypass Supabase Row Level Security — always filter by `auth.uid()`
 - **Secrets**: Never commit `.env.local` or credentials — use `.env.example` as template

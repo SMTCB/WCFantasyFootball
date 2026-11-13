@@ -149,3 +149,5 @@ Priority screens for the Kit direction:
 - The design canvas has a pan/zoom interface — scroll and zoom to explore artboards
 - Refer to the Platform Assessment for context on what's broken in the current app
 - The white-label angle should inform every decision: if a screen feels "branded" rather than "platform", reconsider it
+
+Last Updated: 2026-06-26

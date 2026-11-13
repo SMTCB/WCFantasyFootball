@@ -6667,3 +6667,15 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 ---
 
 ---
+
+## 2026-11-13 — Session S1 (clean start)
+
+- CI-T3: closed, not reproducible. The latest completed CI runs on main (2bd46ac, 7f7954b) pass all 7 jobs including Tier 3 (311 tests).
+- TEST-SEED-1: the four relative-timestamp rows in `tests/unit/seed.sql` now `ON CONFLICT … DO UPDATE` their date, so a stale Docker volume refreshes on re-seed.
+- DD-P3-1: both `react-hooks/exhaustive-deps` warnings fixed (`BetCreatorPanel.jsx` dependency now `selectedFixture`; `useClubhouse.js` unused `fetchMyCircles` dependency removed).
+- REPO-1: closed. The 5 stale branches and dead worktrees were already gone; stale remote-tracking refs for 10 merged branches pruned.
+- DOCS-1: CLAUDE.md platform.spec count corrected to 84 (42 x 2), stale React Compiler known-issue removed; `CHIPS_ENABLED`/`KNOCKOUT_DRAFT_ENABLED` marked historical in MIGRATION_LOG.md. The tree and missing root files were already gone from CLAUDE.md.
+- INFRA-3: already done; Dockerfile is `node:24-alpine`, matching `engines`.
+- DOCS-3 (part): 21 docs under `docs/` given a `Last Updated` line.
+
+Last Updated: 2026-11-13

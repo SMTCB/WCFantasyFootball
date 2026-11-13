@@ -51,3 +51,5 @@ Where `--signal` is one of `--positive`, `--warn`, `--danger`, or `--cyan`.
 ---
 
 FORZAKIT · June 2026
+
+Last Updated: 2026-06-26

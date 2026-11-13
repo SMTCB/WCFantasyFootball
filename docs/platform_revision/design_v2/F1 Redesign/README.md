@@ -129,3 +129,5 @@ P1 exact 10 · P2 exact 8 · P3 exact 6 · right driver wrong podium spot 3 · c
 | `src/lib/f1/f1-data.js`, `scoring.js`, `openf1.js` | Driver/team lists, scoring logic, OpenF1 API client |
 | `src/components/competition/CompetitionResultsHeader.jsx` | Shared standings table (also used by Football/Tennis) |
 | `src/components/CompetitionTopBar.jsx`, `CompetitionScreenNav.jsx` | Global nav chrome F1 plugs into |
+
+Last Updated: 2026-07-25

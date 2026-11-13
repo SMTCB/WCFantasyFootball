@@ -173,7 +173,7 @@ export function useClubhouse() {
     setMyCircles(prev => [optimistic, ...prev]);
     setActiveCircleId(data.circle_id);
     return data;
-  }, [fetchMyCircles, setActiveCircleId]);
+  }, [setActiveCircleId]);
 
   const joinCircleByCode = useCallback(async (code) => {
     const trimmed = code.trim().toUpperCase();

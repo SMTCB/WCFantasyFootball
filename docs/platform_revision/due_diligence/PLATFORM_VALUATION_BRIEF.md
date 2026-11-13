@@ -200,3 +200,5 @@ A single-page React client (also wrapped natively for mobile) talks directly to 
 ---
 
 *Prepared for independent valuation, 2026-07-01. Factual claims are drawn from the current `v2` codebase and the project's technical due-diligence pack. For engineering depth, read [TECH_DOCUMENTATION.md](TECH_DOCUMENTATION.md); for the itemised remediation backlog, read [TECHNICAL_DUE_DILIGENCE.md](TECHNICAL_DUE_DILIGENCE.md).*
+
+Last Updated: 2026-07-01

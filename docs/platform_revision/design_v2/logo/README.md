@@ -70,3 +70,5 @@ All are plain vector SVGs (no external font/image dependencies) — safe to impo
 
 ## Files
 `reference/Frontrow Logo Concepts.html` — the original interactive exploration canvas (all rejected directions removed), useful for visual context on how these marks read at different sizes and lockups. Not for direct reuse — the SVGs in `assets/` are the source of truth.
+
+Last Updated: 2026-07-24

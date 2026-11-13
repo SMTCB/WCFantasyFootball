@@ -370,7 +370,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, leagueId, template?.slug, windowFrom, deadline, selectedFixture?.id]);
+  }, [tournamentId, leagueId, template?.slug, windowFrom, deadline, selectedFixture]);
 
   // ── Trigger data fetches when template or relevant state changes ─────────
   useEffect(() => {

@@ -250,3 +250,5 @@ Then follow the same Steps 4–6 above with `forza_id = '<WC_FORZA_ID>'`.
 | `sync-player-status` | `{ forza_id }` | Daily (T-24h each matchday) | `player_status` |
 | `ingest-match-events` | `{ forza_match_id }` | Every 60s per live match | `player_match_stats`, `match_events` |
 | `calculate-scores` | `{ fixture_id }` | Auto-called by ingest; also callable directly | `player_match_stats`, `fantasy_points`, `league_members` |
+
+Last Updated: 2026-06-01

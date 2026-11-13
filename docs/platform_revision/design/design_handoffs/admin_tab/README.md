@@ -217,3 +217,5 @@ If your codebase has an icon system, substitute equivalent icons. Suggested repl
 2. **Fixture / player lookup.** The prototype hard-codes `MOCK_FIXTURES` and `MOCK_PLAYERS`. In production, these should fetch the current gameweek's fixtures and an active-player roster from the data layer.
 3. **Confirmations.** `RUN ALLOCATION`, `SEED CUP CLUBS`, and `CLOSE NOW` are not yet wrapped in a confirm dialog in the prototype. The behaviour spec (LOGIC.md) requires them to be.
 4. **Permissions.** The tab assumes the viewer is the commissioner. The route should guard on role; non-admins should not see the tab at all (the `⚙ ADMIN` pill should not render for them).
+
+Last Updated: 2026-06-26

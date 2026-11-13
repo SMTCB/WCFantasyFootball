@@ -211,3 +211,5 @@ Every screen must address the relevant ones:
 ---
 
 *FantasyKit · Design Handoff · Kit (Light) · June 2026*
+
+Last Updated: 2026-06-26
