@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clubhouse Brand Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F7F3ED; --card:#FFFFFF; --elev:#EDEAE2; --rule:#E2DDD5;
+  --ink:#18202E; --ink2:#4B5568; --mute:#5C6878;
+  --accent:#1A6FA8; --accent-soft:#E6F0F7;
+  --gold:#B8720E; --gold-text:#925A0A; --gold-soft:#FAF0DE;
+  --good:#166534; --good-soft:#E3F0E6; --crit:#B91C1C; --crit-soft:#FBE9E9;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto;padding-block:36px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:400 clamp(30px,5.4vw,50px)/1.02 'Archivo Black',sans-serif;letter-spacing:-.01em;margin:12px 0 16px;text-wrap:balance}
+h2{font:400 clamp(23px,3.2vw,31px)/1.1 'Archivo Black',sans-serif;margin:6px 0 10px;text-wrap:balance}
+h3{font:800 18px/1.25 'Archivo',sans-serif;margin:0 0 6px}
+p{margin:0 0 12px}
+a{color:var(--accent)}
+.kicker{font:700 12.5px/1.2 'Archivo',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-text)}
+.lede{font-size:18px;color:var(--ink2);max-width:70ch}
+.note{font-size:14px;color:var(--mute)}
+section{margin-top:68px;scroll-margin-top:60px}
+.intro{max-width:74ch;color:var(--ink2)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.jump{display:flex;gap:8px;overflow-x:auto;padding:10px 0;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--rule);margin-top:26px;scrollbar-width:none}
+.jump a{white-space:nowrap;text-decoration:none;font:600 13.5px/1 'Archivo',sans-serif;color:var(--ink2);padding:9px 13px;border:1px solid var(--rule);border-radius:99px;background:var(--card)}
+.jump a:hover{border-color:var(--ink);color:var(--ink)}
+.short{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:22px}
+.short .card{padding:16px 18px}
+.short b{display:block;font:800 15px/1.3 'Archivo',sans-serif;margin-bottom:4px}
+.short span{font-size:14.5px;color:var(--ink2)}
+.short .n{font:400 13px/1 'Archivo Black',sans-serif;color:var(--gold-text);margin-bottom:8px;display:block}
+ul.find{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+ul.find li{display:grid;grid-template-columns:26px 1fr;gap:10px;font-size:15px;color:var(--ink2)}
+ul.find li b{color:var(--ink)}
+.pinn{width:22px;height:22px;border-radius:50%;background:var(--crit);color:#fff;font:800 12px/22px 'Archivo',sans-serif;text-align:center;flex-shrink:0;margin-top:1px}
+.pinn.ok{background:var(--good)}
+.tag{display:inline-block;font:700 11.5px/1 'Archivo',sans-serif;letter-spacing:.04em;padding:5px 8px;border-radius:6px;background:var(--elev);color:var(--ink2);margin-right:4px}
+.tag.rec{background:var(--gold-soft);color:var(--gold-text)}
+.tag.no{background:var(--crit-soft);color:var(--crit)}
+.tag.id{background:var(--accent-soft);color:var(--accent)}
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:14px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14.5px}
+th{text-align:left;font:700 12.5px/1.2 'Archivo',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:12px 14px;border-bottom:1px solid var(--rule);background:var(--elev)}
+td{padding:12px 14px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink)}
+td s{color:var(--mute)}
+
+/* logos */
+.mk{color:#18202E;--mg:#B8720E;--m2:#1A6FA8;--mk:#FFFFFF}
+.mk.inv{color:#F7F3ED;--mg:#E8A93D;--m2:#5FB3E5;--mk:#18202E}
+.logo{display:flex;flex-direction:column;gap:12px}
+.logo .stage{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:30px 14px;display:flex;justify-content:center;align-items:center;gap:14px}
+.wm{font:400 30px/1 'Archivo Black',sans-serif;color:#18202E;letter-spacing:-.01em}
+.uses{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.appi{width:58px;height:58px;border-radius:14px;display:grid;place-items:center;background:#18202E;flex-shrink:0}
+.appi.lt{background:#F7F3ED;border:1px solid var(--rule)}
+.appi.gd{background:#B8720E}
+.sizes{display:flex;align-items:flex-end;gap:10px;padding:8px 10px;border:1px solid var(--rule);border-radius:10px;background:#fff}
+.dk{background:#18202E;border-radius:10px;padding:11px 14px;display:flex;gap:9px;align-items:center}
+.dk span{font:400 17px/1 'Archivo Black',sans-serif;color:#F7F3ED}
+.logo p{font-size:14.5px;color:var(--ink2);margin:0}
+.logo .pc2{font-size:14px;color:var(--ink2);margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.logo .pc2 li::before{content:"+ ";font-weight:800;color:var(--good)}
+.logo .pc2 li.m::before{content:"− ";color:var(--crit)}
+.logo.pick{border:2px solid var(--gold);box-shadow:0 10px 30px -20px rgba(184,114,14,.7)}
+
+/* swatches */
+.sw{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}
+.sw i{width:34px;height:34px;border-radius:9px;border:1px solid rgba(24,32,46,.14);display:block}
+.dirhead{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start}
+.dirhead .big{font:400 26px/1.05 'Archivo Black',sans-serif;margin:8px 0 8px}
+.pcs{display:grid;gap:6px;font-size:14.5px;color:var(--ink2)}
+.pcs b{color:var(--ink)}
+.dir{margin-top:44px;padding-top:28px;border-top:2px solid var(--ink)}
+
+/* phones */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(264px,1fr));gap:30px 18px;margin-top:24px}
+figure.pw{max-width:292px;width:100%;margin:0 auto}
+.pw figcaption{font-size:13.5px;color:var(--ink2);margin-top:11px;line-height:1.45}
+.pw figcaption b{color:var(--ink);display:block;font-size:14px}
+.ph{height:634px;border:7px solid #18202E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;background:var(--pb);color:var(--pi);font:500 12.5px/1.4 'Archivo',sans-serif;position:relative;box-shadow:0 16px 30px -20px rgba(24,32,46,.55)}
+.k0{--pb:#F7F3ED;--pc:#FFFFFF;--pe:#EDEAE2;--pr:#E2DDD5;--pi:#18202E;--p2:#4B5568;--pm:#5C6878;--pa:#1A6FA8;--pon:#FFFFFF;--pp:#1A6FA8;--ppo:#FFFFFF;--pg:#B8720E;--pgt:#925A0A;--pgs:#FAF0DE;--pd:'Archivo Black',sans-serif;--pdw:400;--prad:8px}
+.d1{--pb:#F7F3ED;--pc:#FFFFFF;--pe:#EDEAE2;--pr:#E2DDD5;--pi:#18202E;--p2:#4B5568;--pm:#5C6878;--pa:#1A6FA8;--pon:#FFFFFF;--pp:#18202E;--ppo:#F7F3ED;--pg:#B8720E;--pgt:#925A0A;--pgs:#FAF0DE;--pd:'Archivo Black',sans-serif;--pdw:400;--prad:13px}
+.d2{--pb:#F2EBDC;--pc:#FBF7EE;--pe:#E8DFCC;--pr:#D8CCB2;--pi:#1F2A24;--p2:#46524A;--pm:#5B665D;--pa:#1E5B45;--pon:#FBF7EE;--pp:#1E5B45;--ppo:#FBF7EE;--pg:#A8741A;--pgt:#7E5510;--pgs:#F3E6C8;--pd:'Fraunces',Georgia,serif;--pdw:700;--prad:6px}
+.d3{--pb:#0B0F14;--pc:#141A22;--pe:#1C242E;--pr:#2E3846;--pi:#F2EEE5;--p2:#C3CAD6;--pm:#93A0B1;--pa:#5FB3E5;--pon:#0B0F14;--pp:#E5B45C;--ppo:#0B0F14;--pg:#E5B45C;--pgt:#E5B45C;--pgs:#2C2312;--pd:'Archivo Black',sans-serif;--pdw:400;--prad:16px}
+.ph .t{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;background:var(--pc);border-bottom:1px solid var(--pr)}
+.ph .b{flex:1;min-height:0;overflow:hidden;padding:12px;display:flex;flex-direction:column;gap:9px}
+.ph .n{display:flex;background:var(--pc);border-top:1px solid var(--pr);padding:7px 4px 11px}
+.ph .n span{flex:1;text-align:center;font-size:10.5px;font-weight:600;color:var(--pm)}
+.ph .n span.on{color:var(--pi);font-weight:800}
+.ph .n svg{display:block;margin:0 auto 2px}
+.ic{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ph .h1{font-family:var(--pd);font-weight:var(--pdw);font-size:21px;line-height:1.1;margin:0;letter-spacing:-.01em}
+.ph .h2{font:800 12px/1.2 'Archivo',sans-serif;color:var(--p2);margin:2px 0 0;display:flex;align-items:center;gap:6px}
+.ph .c{background:var(--pc);border:1px solid var(--pr);border-radius:var(--prad);padding:10px 11px}
+.ph .r{display:flex;align-items:center;gap:7px}
+.ph .sp{flex:1;min-width:0}
+.ph .mu{color:var(--pm)}
+.ph .sm{font-size:11.5px}
+.ph .bd{font-weight:700}
+.ph .bt{height:38px;border-radius:var(--prad);background:var(--pp);color:var(--ppo);font:700 13px/1 'Archivo',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;white-space:nowrap}
+.ph .bt.g{background:transparent;color:var(--pi);border:1.5px solid var(--pr)}
+.ph .bt.s{height:30px;font-size:12px;padding:0 12px}
+.ph .bt.w{flex:1}
+.ph .av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:800 10.5px/1 'Archivo',sans-serif;color:#fff;flex-shrink:0;background:#1A6FA8}
+.ph .av.a2{background:#8C49C9}.ph .av.a3{background:#1B7A52}.ph .av.a4{background:#B91C1C}.ph .av.a5{background:#4B5568}
+.ph .av.me{background:var(--pg);color:#18202E}
+.ph .av.lg{width:34px;height:34px;font-size:12.5px}
+.ph .stack .av{margin-left:-7px;border:2px solid var(--pc)}
+.ph .stack .av:first-child{margin-left:0}
+.ph .gd{width:8px;height:8px;border-radius:50%;background:var(--pg);flex-shrink:0}
+.ph .ch{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 11px;border-radius:99px;border:1.5px solid var(--pr);font:600 11.5px/1 'Archivo',sans-serif;white-space:nowrap;color:var(--pi)}
+.ph .ch.on{background:var(--pp);border-color:var(--pp);color:var(--ppo)}
+.ph .chs{display:flex;gap:6px;flex-wrap:wrap}
+.ph .coin{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px 0 8px;border-radius:99px;background:var(--pgs);color:var(--pgt);font:800 12px/1 'Archivo',sans-serif}
+.ph .coin::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--pg)}
+.ph .lk{color:var(--pa);font-weight:700}
+.ph .nm{font-size:10.5px;color:var(--pm);margin:0 0 -6px 31px}
+.ph .m{display:flex;gap:7px;align-items:flex-end}
+.ph .bb{background:var(--pe);padding:7px 10px;border-radius:13px 13px 13px 4px;max-width:80%}
+.ph .m.me{justify-content:flex-end}
+.ph .m.me .bb{background:var(--pa);color:var(--pon);border-radius:13px 13px 4px 13px}
+.ph .bet{border:1px solid var(--pr);border-left:4px solid var(--pg);background:var(--pc);border-radius:var(--prad);padding:9px 11px;display:grid;gap:7px}
+.ph .sys{text-align:center;font-size:11px;color:var(--pm)}
+.ph .cmp{display:flex;gap:7px;align-items:center;padding:8px 10px;border-top:1px solid var(--pr);background:var(--pc)}
+.ph .cmp .in{flex:1;height:34px;border-radius:99px;background:var(--pe);padding:0 13px;display:flex;align-items:center;color:var(--pm)}
+.ph .cmp .pl{height:34px;padding:0 13px;border-radius:99px;background:var(--pp);color:var(--ppo);font-weight:800;display:flex;align-items:center;gap:4px}
+.ph .seg{display:flex;background:var(--pe);border-radius:10px;padding:3px;gap:2px}
+.ph .seg span{flex:1;text-align:center;font:700 11.5px/26px 'Archivo',sans-serif;border-radius:8px;color:var(--pm)}
+.ph .seg span.on{background:var(--pc);color:var(--pi);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.ph .scrim{position:absolute;inset:0;background:rgba(24,32,46,.5)}
+.ph .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--pc);border-radius:22px 22px 0 0;padding:8px 14px 16px;display:grid;gap:10px}
+.ph .sheet::before{content:"";width:38px;height:4px;border-radius:9px;background:var(--pr);margin:0 auto 2px}
+.ph .fld{border:1.5px solid var(--pr);border-radius:var(--prad);padding:9px 11px;font-size:14px;font-weight:700}
+.ph .lbl{font:700 11px/1.2 'Archivo',sans-serif;color:var(--pm);margin-bottom:-4px}
+.ph .in0{height:36px;border-radius:6px;background:var(--pe);border:1px solid var(--pr);padding:0 11px;display:flex;align-items:center;color:var(--pm)}
+.ph .pin{position:absolute;width:20px;height:20px;border-radius:50%;background:#B91C1C;color:#fff;font:800 11px/20px 'Archivo',sans-serif;text-align:center;box-shadow:0 0 0 2px #fff;z-index:3}
+.ph .rel{position:relative}
+/* direction 2 pieces */
+.d2 .tk{display:flex;background:var(--pc);border:1px solid var(--pr);border-radius:8px;overflow:hidden}
+.d2 .tk .stub{width:52px;flex-shrink:0;border-right:1.5px dashed var(--pr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--pgs);color:var(--pgt);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.d2 .tk .stub b{font:700 19px/1 'Fraunces',serif;letter-spacing:0;color:var(--pi)}
+.d2 .tk .bdy{flex:1;min-width:0;padding:8px 10px;display:grid;gap:6px}
+.d2 .plq{background:var(--pa);color:var(--pon);border-radius:8px;padding:11px 12px}
+.d2 .plq .mu{color:#BFD3C6}
+.d2 .frame{border:1px solid var(--pr);border-radius:4px;padding:5px;background:var(--pc)}
+.d2 .frame>div{border:1px solid var(--pg);border-radius:2px;padding:16px 14px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center}
+.d2 .ey{font:700 10.5px/1 'Archivo',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--pgt)}
+.d2 .ln{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--pr);padding:7px 0}
+.d2 .ln span{font-size:11.5px;color:var(--pm);width:54px;flex-shrink:0}
+.d2 .ln b{font:600 15px/1.2 'Fraunces',serif}
+/* direction 3 pieces */
+.d3 .xl{font:400 29px/1.02 'Archivo Black',sans-serif;letter-spacing:-.02em;margin:0}
+.d3 .xl em{font-style:normal;color:var(--pg)}
+.d3 .live{display:inline-flex;align-items:center;gap:5px;font:800 10.5px/1 'Archivo',sans-serif;letter-spacing:.06em;color:#F08B8B}
+.d3 .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#F08B8B}
+.d3 .sw2{display:flex;gap:10px;align-items:flex-start}
+.d3 .sw2 div{display:grid;justify-items:center;gap:3px;font-size:10px;color:var(--pm)}
+.d3 .ring{padding:2px;border-radius:50%;border:2px solid transparent}
+.d3 .ring.on{border-color:var(--pg)}
+.d3 .tok{border-bottom:2.5px solid var(--pg);color:var(--pg);padding-bottom:1px}
+.d3 .fab{width:46px;height:46px;border-radius:50%;background:var(--pp);color:var(--ppo);display:grid;place-items:center;margin:-22px auto 0;box-shadow:0 0 0 5px var(--pc)}
+.d3 .score{font:400 22px/1 'Archivo Black',sans-serif}
+/* application */
+.appgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(264px,1fr));gap:30px 18px;margin-top:24px}
+.share{background:#E7F6DD;border-radius:14px;padding:8px;max-width:300px}
+.share .pv{background:#18202E;border-radius:9px 9px 0 0;padding:20px 16px;display:grid;gap:10px;color:#F7F3ED}
+.share .pv b{font:400 19px/1.1 'Archivo Black',sans-serif}
+.share .pv span{font-size:13px;color:#C3CAD6}
+.share .mt{background:#D6EBCA;border-radius:0 0 9px 9px;padding:9px 12px;font-size:12.5px;color:#2E4630}
+.share .mt b{display:block;font-size:13.5px;color:#18202E}
+.share .tx{font-size:13.5px;padding:8px 6px 2px;color:#18202E}
+@keyframes orbit{to{transform:rotate(360deg)}}
+.orb{transform-origin:23px 24px;animation:orbit 2.2s linear infinite}
+@media (prefers-reduced-motion:reduce){.orb{animation:none}}
+.spt{display:flex;gap:10px;flex-wrap:wrap}
+.spt div{width:58px;height:58px;border-radius:14px;background:#fff;border:1px solid var(--rule);display:grid;place-items:center;position:relative}
+.spt div::after{content:"";position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:#B8720E}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;font-size:15px;color:var(--ink2)}
+.steps li::before{content:counter(s);font:400 20px/1.1 'Archivo Black',sans-serif;color:var(--gold-text)}
+.steps b{color:var(--ink)}
+footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--mute)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="m-seat" viewBox="0 0 48 48"><path d="M32.64 12.51A15 15 0 1 0 32.64 35.49" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><circle cx="39" cy="24" r="4.6" fill="var(--mg)"/></symbol>
+    <symbol id="m-room" viewBox="0 0 48 48"><path d="M24 5 42 19.5V35a5 5 0 0 1-5 5H19.5L11 46.5V40a5 5 0 0 1-5-5V19.5Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16.5" cy="28.5" r="2.8" fill="var(--mk)"/><circle cx="24" cy="28.5" r="2.8" fill="var(--mk)"/><circle cx="31.5" cy="28.5" r="2.8" fill="var(--mg)"/></symbol>
+    <symbol id="m-roof" viewBox="0 0 48 48"><path d="M6 21 24 7l18 14" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="11" y="25.5" width="26" height="5" rx="2.5" fill="var(--mg)"/><rect x="11" y="33" width="26" height="5" rx="2.5" fill="var(--m2)"/><rect x="11" y="40.5" width="26" height="5" rx="2.5" fill="var(--m2)"/></symbol>
+    <symbol id="m-pav" viewBox="0 0 48 48"><path d="M7 24 24 11l17 13v19H7Z" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M19.5 44V32.5a4.5 4.5 0 0 1 9 0V44Z" fill="var(--mg)"/><path d="M24 11V3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M25.3 3.4 33.5 6.3l-8.2 2.9Z" fill="var(--mg)"/></symbol>
+    <symbol id="m-crest" viewBox="0 0 48 48"><path d="M24 4 41 9v14c0 10-7 17-17 21C14 40 7 33 7 23V9Z" fill="currentColor"/><path d="M15 25.5 24 17l9 8.5" fill="none" stroke="var(--mk)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="31.5" r="3.4" fill="var(--mg)"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z"/></symbol>
+    <symbol id="i-club" viewBox="0 0 24 24"><path d="M15.6 7.2a6 6 0 1 0 0 9.6"/><circle cx="18.6" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-bet" viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Z"/><path d="M14 9v6" stroke-dasharray="1.5 2.5"/></symbol>
+    <symbol id="i-you" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0ZM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M9 20h6"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8.5v7"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><circle cx="12" cy="12" r="7.4" stroke-dasharray="3.2 2.6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15ZM10 20.5a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 6h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3v-3H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></symbol>
+    <symbol id="tiers" viewBox="0 0 80 45"><rect width="26" height="11" rx="4" fill="#B8720E"/><rect y="17" width="48" height="11" rx="4" fill="#1A6FA8"/><rect y="34" width="70" height="11" rx="4" fill="#1A6FA8"/></symbol>
+    <symbol id="table" viewBox="0 0 200 124">
+      <path d="M119.28 39.02A30 30 0 1 0 119.28 84.98" fill="none" stroke="var(--tb,#18202E)" stroke-width="13" stroke-linecap="round"/>
+      <g font-family="Archivo,sans-serif" font-weight="800" font-size="11" text-anchor="middle" fill="#fff">
+        <circle cx="100" cy="14" r="13" fill="#1A6FA8"/><text x="100" y="18">R</text>
+        <circle cx="52" cy="36" r="13" fill="#8C49C9"/><text x="52" y="40">M</text>
+        <circle cx="52" cy="88" r="13" fill="#1B7A52"/><text x="52" y="92">T</text>
+        <circle cx="100" cy="110" r="13" fill="#B91C1C"/><text x="100" y="114">I</text>
+        <circle cx="140" cy="62" r="15" fill="var(--tg,#B8720E)"/><text x="140" y="66" fill="#18202E" font-size="10.5">You</text>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<header>
+  <div class="kicker">Part three · Design review · 13 November 2026</div>
+  <h1>Clubhouse: the new brand and the main screens</h1>
+  <p class="lede">A senior designer's read of the first screen, Home, the Club room and betting as they are today, followed by five logo options for the new name, three design directions drawn as phone mockups, and how the Clubhouse identity shows up across the product.</p>
+
+  <div class="short">
+    <div class="card"><span class="n">Logo</span><b>"The Seat": a C-shaped table with one gold seat left for you</b><span>Works at 16 pixels, carries the invitation idea, and continues the gold dot and bird's-eye drawing style you already own.</span></div>
+    <div class="card"><span class="n">Direction</span><b>"The Table": keep today's light look, fix its rules, rebuild four screens</b><span>Lowest cost. It reuses colours that were already tuned for readability and puts all effort into the journey.</span></div>
+    <div class="card"><span class="n">Identity</span><b>Evolve, do not replace</b><span>Paper background, navy ink and Archivo stay. Buttons become one colour. Gold gets one meaning: this is about you.</span></div>
+    <div class="card"><span class="n">Name</span><b>Clubhouse is the platform. A group of friends is a Club.</b><span>Check the name is free to use before any asset work: a social audio app is already called Clubhouse.</span></div>
+  </div>
+
+  <nav class="jump" aria-label="Sections">
+    <a href="#today">1 · Today</a><a href="#name">2 · The name</a><a href="#logos">3 · Logos</a><a href="#identity">4 · Identity</a><a href="#directions">5 · Three directions</a><a href="#compare">6 · Recommendation</a><a href="#apply">7 · Clubhouse everywhere</a><a href="#next">8 · Next steps</a>
+  </nav>
+</header>
+
+<!-- ───────────── 1 TODAY ───────────── -->
+<section id="today">
+  <div class="kicker">1 · Where we are</div>
+  <h2>What the main screens do today</h2>
+  <p class="intro">Checked on the live site and on a local copy at phone size (375 pixels wide), plus the screen code. The first two phones are redrawn from what is on screen. The third is redrawn from the code, because the demo account has no club to open. Mockups on this page are about three-quarter size.</p>
+
+  <div class="phones">
+    <figure class="pw">
+      <div class="ph k0">
+        <div class="b" style="justify-content:center;padding:18px">
+          <div class="r rel" style="justify-content:center;gap:10px;margin-bottom:18px"><svg width="46" height="26"><use href="#tiers"/></svg><span style="font:400 22px/1 'Archivo Black',sans-serif">Frontrow</span><i class="pin" style="right:6px;top:-22px">1</i></div>
+          <div class="c" style="padding:18px;border-radius:6px;display:grid;gap:11px">
+            <div class="r rel" style="border-bottom:1px solid var(--pr);text-align:center;font:400 11.5px/1.2 'Archivo Black',sans-serif"><span class="sp" style="padding:9px 0;border-bottom:2px solid var(--pa)">Sign In</span><span class="sp mu" style="padding:3px 0">Create<br>Account</span><i class="pin" style="right:-8px;top:-8px">2</i></div>
+            <div class="lbl">Email</div><div class="in0">your@email.com</div>
+            <div class="lbl">Password</div><div class="in0">••••••••</div>
+            <div class="bt rel" style="background:#1A6FA8;border-radius:6px;letter-spacing:.14em;font:400 11.5px/1 'Archivo Black',sans-serif">SIGN IN<i class="pin" style="right:-8px;top:-8px">3</i></div>
+            <div class="mu" style="text-align:center;letter-spacing:.14em;font:400 9.5px/1 'Archivo Black',sans-serif;padding:4px 0">FORGOT PASSWORD?</div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>First screen</b>A logo and a login form. Nothing says what this is or why to join.</figcaption>
+    </figure>
+
+    <figure class="pw">
+      <div class="ph k0">
+        <div class="t"><span class="bd sp">Demo Manager</span><svg class="ic"><use href="#i-gear"/></svg></div>
+        <div class="b">
+          <div class="r rel" style="margin-top:2px"><span style="width:4px;height:24px;border-radius:2px;background:var(--pa)"></span><span class="sp" style="font:400 22px/1 'Archivo Black',sans-serif">Home</span><span style="width:34px;height:34px;border-radius:50%;background:#E6F0F7;border:1px solid var(--pr);display:grid;place-items:center;color:var(--pa)"><svg class="ic"><use href="#i-plus"/></svg></span><i class="pin" style="left:92px;top:-4px">4</i></div>
+          <div class="mu">Jump into any competition across every Clubhouse you are part of, or find a new one to join.</div>
+          <div class="bd">Get started</div>
+          <div class="c rel" style="border-left:3px solid var(--pa);display:grid;gap:5px"><span class="sm mu">Start fresh</span><span class="bd" style="font:400 13px/1.2 'Archivo Black',sans-serif">Create a Clubhouse</span><span class="sm mu">Name it, invite your group, add competitions as you go</span><div class="bt s" style="margin-top:3px">Create a new Clubhouse</div><i class="pin" style="right:-8px;top:-8px">5</i></div>
+          <div class="c" style="display:grid;gap:5px"><span class="sm mu">Have a code?</span><span style="font:400 13px/1.2 'Archivo Black',sans-serif">Join with an invite</span><div class="in0" style="letter-spacing:.14em">FK-XXXXX</div><div class="bt s" style="opacity:.45">Join Clubhouse</div></div>
+          <div class="c" style="display:grid;gap:5px"><span class="sm mu">Search public Clubhouses</span><div class="r"><div class="in0 sp">Search by name…</div><div class="bt s" style="background:var(--pm)">Search</div></div></div>
+        </div>
+        <div class="n rel"><span class="on"><svg class="ic"><use href="#i-home"/></svg>Home</span><span><svg class="ic"><use href="#i-club"/></svg>Club</span><span><svg class="ic"><use href="#i-trophy"/></svg>Trophy</span><span><svg class="ic"><use href="#i-bet"/></svg>Bets</span><span><svg class="ic"><use href="#i-coin"/></svg>Coins</span><i class="pin" style="right:26px;top:-10px">6</i></div>
+      </div>
+      <figcaption><b>Home, new member</b>Three forms of equal weight and a paragraph explaining the screen.</figcaption>
+    </figure>
+
+    <figure class="pw">
+      <div class="ph k0">
+        <div class="t" style="align-items:flex-start;padding-bottom:12px">
+          <div class="sp" style="display:grid;gap:6px"><span style="font:400 17px/1.1 'Archivo Black',sans-serif">Friday Night Crew</span><div class="r stack"><span class="av">R</span><span class="av a2">M</span><span class="av a3">T</span><span class="sm mu" style="margin-left:8px">6 members</span></div><div class="bt s" style="width:76px">Invite</div></div>
+          <div style="text-align:right;display:flex;gap:10px"><div><b style="font:400 16px/1 'Archivo Black',sans-serif">2</b><div class="sm mu">Sports</div></div><div><b style="font:400 16px/1 'Archivo Black',sans-serif">3</b><div class="sm mu">Comps</div></div></div>
+        </div>
+        <div class="r rel" style="gap:14px;padding:0 12px;border-bottom:1px solid var(--pr);background:var(--pc);font-weight:700;white-space:nowrap;overflow:hidden"><span style="padding:9px 0;border-bottom:2px solid var(--pa)">Home</span><span class="mu">The Frontrow</span><span class="mu">Digest</span><span class="mu">Chat</span><span class="mu">Members</span><i class="pin" style="right:8px;top:6px">7</i></div>
+        <div class="b">
+          <div class="r rel" style="gap:8px;margin-right:-30px"><div class="c sp" style="min-width:112px"><div class="sm mu">Coin Wallet</div><div class="bd">1,250 coins</div><div class="sm mu">100 in escrow</div></div><div class="c sp" style="min-width:112px"><div class="sm mu">P2P Challenges</div><div class="bd">2 open</div><div class="sm mu">1 awaiting your move</div></div><div class="c" style="min-width:60px"><div class="sm mu">Meta Ra</div><div class="bd">#2 of</div></div><i class="pin" style="left:100px;top:-9px">8</i></div>
+          <div class="bd">Competitions</div>
+          <div class="c r"><span class="sp"><span class="bd">Friday Night League</span><div class="sm mu">Football · Matchday 12</div></span><span class="lk">Enter</span></div>
+          <div class="c r"><span class="sp"><span class="bd">Crew Paddock</span><div class="sm mu">F1 · São Paulo next</div></span><span class="lk">Enter</span></div>
+          <div class="c" style="border-left:4px solid var(--pg)"><div class="sm" style="color:var(--pgt)">The Frontrow · Edition #14</div><div style="font-family:Georgia,serif">Marta goes top as Tiago's captain blanks</div><div class="lk sm">Read the Frontrow</div></div>
+          <div class="bd rel">Activity<i class="pin" style="left:62px;top:-3px">9</i></div>
+          <div class="sm mu">Rui joined Crew Paddock · 2h</div>
+        </div>
+        <div class="n"><span><svg class="ic"><use href="#i-home"/></svg>Home</span><span class="on"><svg class="ic"><use href="#i-club"/></svg>Club</span><span><svg class="ic"><use href="#i-trophy"/></svg>Trophy</span><span><svg class="ic"><use href="#i-bet"/></svg>Bets</span><span><svg class="ic"><use href="#i-coin"/></svg>Coins</span></div>
+      </div>
+      <figcaption><b>Club room, Home tab</b>The chat, where the friends actually are, is the fourth tab on a phone.</figcaption>
+    </figure>
+  </div>
+
+  <div class="grid" style="margin-top:30px">
+    <div class="card">
+      <h3>First screen and welcome</h3>
+      <ul class="find">
+        <li><span class="pinn">1</span><span><b>No promise.</b> The first screen is a logo and a form. A friend who taps an invite has no idea what they are joining. <span class="tag id">J-21</span></span></li>
+        <li><span class="pinn">2</span><span><b>"Create Account" breaks onto two lines</b> at phone width, so the two tabs sit at different heights.</span></li>
+        <li><span class="pinn">3</span><span><b>Two voices.</b> This screen shouts in spaced capitals (SIGN IN, FORGOT PASSWORD?). The rest of the app speaks in normal sentence case.</span></li>
+        <li><span class="pinn">+</span><span><b>Too many questions before any fun.</b> Sign-up asks for four fields including the password twice, then an email confirmation, then a six-step welcome whose first step asks for the manager name again. <span class="tag id">J-06</span><span class="tag id">J-12</span></span></li>
+        <li><span class="pinn">+</span><span><b>Two main button colours.</b> Sign In is blue. The welcome's Continue is gold. A person learns "the coloured button moves me forward" only if it is always the same colour.</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Home and navigation</h3>
+      <ul class="find">
+        <li><span class="pinn">4</span><span><b>The screen explains itself.</b> A title called Home plus a paragraph describing what Home is for. A good home screen needs no caption.</span></li>
+        <li><span class="pinn">5</span><span><b>Three equal doors.</b> Create, join by code, search. A newcomer has to stop and choose. One main door, two quiet ones.</span></li>
+        <li><span class="pinn">6</span><span><b>Five tabs, two for the same thing.</b> "Bets" opens My Bets and "Coins" opens the challenges screen. The label and the destination do not match. <span class="tag id">J-07</span><span class="tag id">J-08</span></span></li>
+        <li><span class="pinn">+</span><span><b>It counts instead of asking.</b> "1 Clubhouse, 3 Competitions" is an inventory. The returning member wants to know what is waiting for them. <span class="tag id">J-14</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Club room and bets</h3>
+      <ul class="find">
+        <li><span class="pinn">7</span><span><b>Five tabs in a strip that scrolls,</b> six for the owner. Digest leaves the screen entirely. Chat is fourth. <span class="tag id">C-03</span><span class="tag id">C-07</span></span></li>
+        <li><span class="pinn">8</span><span><b>Insider words:</b> P2P Challenges, Meta Rank, escrow. The cards also scroll sideways, so the third is cut off. <span class="tag id">C-04</span><span class="tag id">J-18</span></span></li>
+        <li><span class="pinn">9</span><span><b>Activity is about competitions, not people,</b> and sits at the very bottom. <span class="tag id">C-09</span></span></li>
+        <li><span class="pinn">+</span><span><b>A bet is made somewhere else.</b> To bet a friend you leave the room, open another tab and fill a long form. The bet should be made where the argument happens. <span class="tag id">C-08</span><span class="tag id">J-11</span></span></li>
+        <li><span class="pinn">+</span><span><b>Emoji stand in for icons</b> (ball, flag, speech bubble on the Invite button). They render differently on every phone. <span class="tag id">C-06</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What is already good</h3>
+      <ul class="find">
+        <li><span class="pinn ok">✓</span><span><b>The light "paper" look is calm and readable.</b> Colours were already adjusted to pass contrast checks.</span></li>
+        <li><span class="pinn ok">✓</span><span><b>Touch targets are a proper 44 pixels</b> and type has a 12 pixel floor.</span></li>
+        <li><span class="pinn ok">✓</span><span><b>The newspaper is a real asset.</b> Nothing else in this market writes a paper about your own friends.</span></li>
+        <li><span class="pinn ok">✓</span><span><b>The sport badges are a system:</b> every sport drawn from above, with one gold dot. The new logo can join that family.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 2 NAME ───────────── -->
+<section id="name">
+  <div class="kicker">2 · The name</div>
+  <h2>Clubhouse, and what that does to the words inside the app</h2>
+  <p class="intro">The product currently answers to four names. The web address says WC Fantasy Football. An old brand file and some welcome and invite wording still say Forza Fantasy League. Invite codes start with FK, from FantasyKit. The logo says Frontrow. One clean rename fixes all of them at once, which is a good reason to do it now.</p>
+  <p class="intro">There is one catch. Today "Clubhouse" is the word for a group of friends, and it appears about 300 times across 32 screen files. If the platform takes the name, the group needs its own word. The bottom tab already says <b>Club</b>, so that is the natural choice.</p>
+
+  <div class="tw" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Thing</th><th>Today</th><th>Proposed</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><b>The platform</b></td><td><s>Frontrow</s></td><td><b>Clubhouse</b></td><td>Your decision. It names the place, not the activity, which suits a social product.</td></tr>
+        <tr><td><b>A group of friends</b></td><td><s>Clubhouse</s> (and Circle in the code)</td><td><b>Club</b></td><td>"Rui's club", "start a club", "join the club" all read naturally. The tab is already called Club.</td></tr>
+        <tr><td><b>The main screen of a club</b></td><td><s>Home tab + Chat tab</s></td><td><b>Room</b></td><td>One stream of chat, bets and results.</td></tr>
+        <tr><td><b>A wager</b></td><td><s>P2P Challenge, Challenge, Group Bet</s></td><td><b>Bet</b></td><td>Already agreed in J-07.</td></tr>
+        <tr><td><b>Coins held in open bets</b></td><td><s>In escrow</s></td><td><b>On the table</b></td><td>Plain words, and it fits the logo idea.</td></tr>
+        <tr><td><b>Ranking inside a club</b></td><td><s>Meta Rank</s></td><td><b>Club table</b></td><td>Everyone knows what a league table is.</td></tr>
+        <tr><td><b>The newspaper</b></td><td><s>The Frontrow</s></td><td><b>The Paper</b>, with the club's own name on the masthead: "The Friday Night Gazette"</td><td>Keeps the old brand name out of the new product and makes the paper feel like theirs.</td></tr>
+        <tr><td><b>Invite codes</b></td><td><s>FK-XXXXX</s></td><td><b>A link, not a code.</b> If a code is needed: CH-XXXXX</td><td>FK is two brand names old.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:16px;border-left:4px solid var(--gold)">
+    <h3>Check the name before spending on it</h3>
+    <p style="color:var(--ink2);margin:0">"Clubhouse" is a common English word and is already the name of a social audio app. A project-management tool that used the name changed it in 2021. That does not mean you cannot use it, but three things are worth a short check with someone qualified before logo files are produced: whether the name can be registered for this kind of product in your markets, whether the App Store and Google Play will accept the listing name, and which web address is available. A practical fallback is to list the app with a describing phrase, for example "Clubhouse: bets with friends". This is a flag, not legal advice.</p>
+  </div>
+</section>
+
+<!-- ───────────── 3 LOGOS ───────────── -->
+<section id="logos">
+  <div class="kicker">3 · Logos</div>
+  <h2>Five options for the Clubhouse mark</h2>
+  <p class="intro">Each is shown as a full logo, as an app icon, at browser-tab sizes (32, 20 and 16 pixels) and on a dark surface. The wordmark stays in Archivo Black, mixed case, exactly as Frontrow is set today, so the change feels like the same company growing up.</p>
+
+  <div class="grid" style="margin-top:20px">
+    <div class="card logo pick">
+      <div><span class="tag rec">A · Recommended</span></div>
+      <div class="stage"><svg class="mk" width="60" height="60"><use href="#m-seat"/></svg><span class="wm">Clubhouse</span></div>
+      <div class="uses"><div class="appi"><svg class="mk inv" width="40" height="40"><use href="#m-seat"/></svg></div><div class="appi lt"><svg class="mk" width="40" height="40"><use href="#m-seat"/></svg></div><div class="sizes"><svg class="mk" width="32" height="32"><use href="#m-seat"/></svg><svg class="mk" width="20" height="20"><use href="#m-seat"/></svg><svg class="mk" width="16" height="16"><use href="#m-seat"/></svg></div><div class="dk"><svg class="mk inv" width="24" height="24"><use href="#m-seat"/></svg><span>Clubhouse</span></div></div>
+      <h3>The Seat</h3>
+      <p>A table seen from above, shaped like the letter C, with one gold seat pulled up. The gold seat is you.</p>
+      <ul class="pc2"><li>Reads clearly at 16 pixels: one ring, one dot</li><li>It is an invitation. "Rui saved you a seat" writes itself</li><li>Continues what you own: the gold dot and the bird's-eye drawings of pitch, court and circuit</li><li>Gives the product a rule: gold means "this is about you"</li><li class="m">A ring with a dot is a simple shape. Run a similarity check with the name check</li></ul>
+    </div>
+
+    <div class="card logo">
+      <div><span class="tag">B · Runner-up</span></div>
+      <div class="stage"><svg class="mk" width="60" height="60" style="color:#1A6FA8"><use href="#m-room"/></svg><span class="wm">Clubhouse</span></div>
+      <div class="uses"><div class="appi" style="background:#1A6FA8"><svg class="mk" width="40" height="40" style="color:#fff;--mk:#1A6FA8;--mg:#F5C465"><use href="#m-room"/></svg></div><div class="appi lt"><svg class="mk" width="40" height="40" style="color:#1A6FA8"><use href="#m-room"/></svg></div><div class="sizes"><svg class="mk" width="32" height="32" style="color:#1A6FA8"><use href="#m-room"/></svg><svg class="mk" width="20" height="20" style="color:#1A6FA8"><use href="#m-room"/></svg><svg class="mk" width="16" height="16" style="color:#1A6FA8"><use href="#m-room"/></svg></div><div class="dk"><svg class="mk inv" width="24" height="24" style="color:#5FB3E5"><use href="#m-room"/></svg><span>Clubhouse</span></div></div>
+      <h3>The Room</h3>
+      <p>A house that is also a speech bubble. Three dots inside, as if someone is typing. The gold one is your turn.</p>
+      <ul class="pc2"><li>Says "a place where friends talk" at a glance</li><li>Friendly, good for a social product</li><li class="m">The three dots blur below 20 pixels</li><li class="m">House-plus-bubble is a well-used idea in messaging apps</li></ul>
+    </div>
+
+    <div class="card logo">
+      <div><span class="tag">C · Safest change</span></div>
+      <div class="stage"><svg class="mk" width="60" height="60"><use href="#m-roof"/></svg><span class="wm">Clubhouse</span></div>
+      <div class="uses"><div class="appi"><svg class="mk inv" width="40" height="40"><use href="#m-roof"/></svg></div><div class="appi lt"><svg class="mk" width="40" height="40"><use href="#m-roof"/></svg></div><div class="sizes"><svg class="mk" width="32" height="32"><use href="#m-roof"/></svg><svg class="mk" width="20" height="20"><use href="#m-roof"/></svg><svg class="mk" width="16" height="16"><use href="#m-roof"/></svg></div><div class="dk"><svg class="mk inv" width="24" height="24"><use href="#m-roof"/></svg><span>Clubhouse</span></div></div>
+      <h3>Roof on the Tiers</h3>
+      <p>Today's three Frontrow bars, with a roof over them. The stands became a house.</p>
+      <ul class="pc2"><li>Existing members recognise it straight away</li><li>Same colours, nothing else has to change</li><li class="m">Three colours and four shapes: busy at small sizes</li><li class="m">Looks back at the old name instead of forward</li></ul>
+    </div>
+
+    <div class="card logo">
+      <div><span class="tag">D · Most literal</span></div>
+      <div class="stage"><svg class="mk" width="60" height="60"><use href="#m-pav"/></svg><span class="wm">Clubhouse</span></div>
+      <div class="uses"><div class="appi"><svg class="mk inv" width="40" height="40"><use href="#m-pav"/></svg></div><div class="appi lt"><svg class="mk" width="40" height="40"><use href="#m-pav"/></svg></div><div class="sizes"><svg class="mk" width="32" height="32"><use href="#m-pav"/></svg><svg class="mk" width="20" height="20"><use href="#m-pav"/></svg><svg class="mk" width="16" height="16"><use href="#m-pav"/></svg></div><div class="dk"><svg class="mk inv" width="24" height="24"><use href="#m-pav"/></svg><span>Clubhouse</span></div></div>
+      <h3>The Pavilion</h3>
+      <p>A sports pavilion with a flag on the roof and a lit doorway. The door is open.</p>
+      <ul class="pc2"><li>Nobody has to be told what it is</li><li>Warm, a little nostalgic</li><li class="m">Can be read as a property or home app</li><li class="m">The flag disappears at small sizes</li></ul>
+    </div>
+
+    <div class="card logo">
+      <div><span class="tag no">E · Not advised</span></div>
+      <div class="stage"><svg class="mk" width="60" height="60"><use href="#m-crest"/></svg><span class="wm">Clubhouse</span></div>
+      <div class="uses"><div class="appi lt"><svg class="mk" width="40" height="40"><use href="#m-crest"/></svg></div><div class="appi gd"><svg class="mk" width="40" height="40" style="--mg:#F7F3ED"><use href="#m-crest"/></svg></div><div class="sizes"><svg class="mk" width="32" height="32"><use href="#m-crest"/></svg><svg class="mk" width="20" height="20"><use href="#m-crest"/></svg><svg class="mk" width="16" height="16"><use href="#m-crest"/></svg></div><div class="dk"><svg class="mk inv" width="24" height="24" style="color:#F7F3ED"><use href="#m-crest"/></svg><span>Clubhouse</span></div></div>
+      <h3>The Crest</h3>
+      <p>A club shield with a roof and a gold dot. The obvious "sports club" answer.</p>
+      <ul class="pc2"><li>Instantly sporty</li><li class="m">The app is full of real team badges. A shield logo would look like one more team</li><li class="m">Football-only feeling, while the product also covers F1 and tennis</li></ul>
+    </div>
+
+    <div class="card logo">
+      <div><span class="tag">Wordmark and line</span></div>
+      <div class="stage" style="flex-direction:column;gap:6px;padding:22px 14px"><span class="wm" style="font-size:34px">Clubhouse</span><span style="font:600 14px/1 'Archivo',sans-serif;color:#4B5568">Pull up a chair.</span></div>
+      <h3>The words around the mark</h3>
+      <p>Three candidate lines. The first pairs with The Seat and works as an invitation.</p>
+      <ul class="pc2"><li><b>Pull up a chair.</b></li><li>Bets between friends.</li><li>Your people. Your bets. One room.</li></ul>
+      <p class="note">Describing sentence for stores and the first screen: "Fantasy leagues and friendly bets with your own people. Coins are play money."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 4 IDENTITY ───────────── -->
+<section id="identity">
+  <div class="kicker">4 · Design identity</div>
+  <h2>Keep the base, fix the rules, give gold one job</h2>
+  <p class="intro">The current identity (warm paper, navy ink, one blue, one gold, Archivo type) is sound and recently cleaned up. It does not need replacing. What it lacks is a small set of rules that every screen follows, and a little warmth. A rename is the right moment to set them.</p>
+
+  <div class="tw" style="margin-top:18px">
+    <table>
+      <thead><tr><th style="width:16%">Verdict</th><th style="width:28%">Item</th><th>What I found, and what to do</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag" style="background:var(--good-soft);color:var(--good)">Keep</span></td><td><b>Paper background and navy ink</b></td><td>Calm, readable, different from the dark neon look of most betting and fantasy apps. It suits "a room with friends".</td></tr>
+        <tr><td><span class="tag" style="background:var(--good-soft);color:var(--good)">Keep</span></td><td><b>Archivo Black and Archivo</b></td><td>Strong headlines, friendly body text, already loaded. The wordmark keeps the same letterforms.</td></tr>
+        <tr><td><span class="tag" style="background:var(--good-soft);color:var(--good)">Keep</span></td><td><b>Sport badges drawn from above, gold dot</b></td><td>A real system. The Seat logo is the same idea applied to a table.</td></tr>
+        <tr><td><span class="tag rec">Fix</span></td><td><b>One colour for the main button</b></td><td>Today it is blue on sign-in and gold in the welcome. Proposal: main buttons are navy ink everywhere. Blue is for links and selected items.</td></tr>
+        <tr><td><span class="tag rec">Fix</span></td><td><b>One way of writing labels</b></td><td>Sentence case everywhere. No spaced capitals on buttons. Small technical-looking type only for numbers and codes.</td></tr>
+        <tr><td><span class="tag rec">Fix</span></td><td><b>One corner size</b></td><td>The sign-in card uses 6 pixel corners while cards elsewhere use 12. Use 12 for cards and fields, fully round for chips.</td></tr>
+        <tr><td><span class="tag rec">Fix</span></td><td><b>Icons, not emoji</b></td><td>Already listed as C-06. The mockups below use one simple line-icon set.</td></tr>
+        <tr><td><span class="tag rec">Fix</span></td><td><b>Leftovers from older brands</b></td><td>The installed-app settings still carry the old black and cyan colours, so the app opens on a black splash before a cream screen. One old logo file still reads Forza Fantasy League on a dark background.</td></tr>
+        <tr><td><span class="tag id">Change</span></td><td><b>Gold means "you"</b></td><td>Gold currently marks captains, deadlines, warnings and midfielders. Give it one meaning in the social parts: your move, your seat, your winnings. Warnings get their own amber.</td></tr>
+        <tr><td><span class="tag id">Change</span></td><td><b>Fewer typefaces</b></td><td>Four families are loaded and a fifth (Georgia) is used for the paper. Keep Archivo Black and Archivo for the app, and one serif for the paper only.</td></tr>
+        <tr><td><span class="tag id">Change</span></td><td><b>Faces before figures</b></td><td>Social screens lead with people's avatars and names, then numbers. Today the Club header leads with "2 Sports, 3 Competitions".</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ───────────── 5 DIRECTIONS ───────────── -->
+<section id="directions">
+  <div class="kicker">5 · Three directions</div>
+  <h2>The same four screens, designed three ways</h2>
+  <p class="intro">Each direction shows the screen a friend lands on from an invite, Home for a returning member, the Club room, and making a bet. The content is the same in all three so they can be compared: Rui bets 100 coins that Benfica beat Porto, in a club called Friday Night Crew. All names, fixtures and numbers are sample content.</p>
+
+  <!-- ══════ DIRECTION 1 ══════ -->
+  <div class="dir" id="d-table">
+    <div class="dirhead">
+      <div>
+        <span class="tag rec">Direction 1 · Recommended base</span>
+        <div class="big">The Table</div>
+        <p style="color:var(--ink2)">Today's look, tidied and warmed up. Navy buttons, gold only where it is your turn, faces everywhere. The structure does the work: Home asks what is waiting for you, and the Club opens on one stream where bets are taken in place.</p>
+        <div class="sw"><i style="background:#F7F3ED"></i><i style="background:#FFFFFF"></i><i style="background:#18202E"></i><i style="background:#1A6FA8"></i><i style="background:#B8720E"></i></div>
+        <p class="note">Archivo Black for headlines, Archivo for everything else. Four tabs at the bottom instead of five.</p>
+      </div>
+      <div class="card pcs">
+        <div><b>Good at:</b> clarity for a first-time visitor. Nothing to relearn for current members.</div>
+        <div><b>Work needed:</b> the least of the three. Colours and type already exist. The effort is in screen structure, which the backlog already describes (J-10, J-11, J-14, C-03, C-04, C-07, C-08).</div>
+        <div><b>Watch out for:</b> it can feel polite rather than exciting. The table drawing, the avatars and the gold "your move" dots carry the personality, so they must not be cut.</div>
+      </div>
+    </div>
+
+    <div class="phones">
+      <figure class="pw">
+        <div class="ph d1">
+          <div class="b" style="padding:16px 16px 14px;gap:10px">
+            <div class="r" style="justify-content:center;gap:7px"><svg class="mk" width="24" height="24"><use href="#m-seat"/></svg><span style="font:400 16px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+            <svg viewBox="0 0 200 124" style="width:100%;height:118px;margin:2px 0"><use href="#table"/></svg>
+            <p class="h1" style="text-align:center">Rui saved you a seat.</p>
+            <div class="bet" style="border-left-width:1px;text-align:center;gap:4px"><span class="sm mu">Friday Night Crew · Sun 18:00</span><span class="bd" style="font-size:14px">Rui bets you 100 coins that Benfica beat Porto.</span></div>
+            <div class="bt">Take the bet</div>
+            <div class="bt g">Not this one</div>
+            <div class="sm mu" style="text-align:center">You pick a name next. It takes 20 seconds.</div>
+            <div class="sp"></div>
+            <div class="sm mu" style="text-align:center;border-top:1px solid var(--pr);padding-top:10px">Clubhouse is where friends run fantasy leagues and bet coins on sport. Coins are play money.<br><span class="lk">Already a member? Sign in</span></div>
+          </div>
+        </div>
+        <figcaption><b>Arriving from an invite</b>The friend and the bet come first. The account is created after the answer, not before.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d1">
+          <div class="t"><svg class="mk" width="22" height="22"><use href="#m-seat"/></svg><span class="sp" style="font:400 15px/1 'Archivo Black',sans-serif">Clubhouse</span><span class="coin">1,250</span><span class="av me">A</span></div>
+          <div class="b">
+            <div class="r"><p class="h1 sp">Your move</p><span class="coin" style="background:var(--pg);color:#fff;padding:0 10px">3</span></div>
+            <div class="c" style="display:grid;gap:8px"><div class="r" style="align-items:flex-start"><span class="gd" style="margin-top:8px"></span><span class="av">R</span><span class="sp"><span class="bd">Rui bet you 100</span><div class="sm mu">Benfica beat Porto · Sun 18:00</div></span></div><div class="r"><div class="bt s w">Take it</div><div class="bt s g w">Pass</div></div></div>
+            <div class="c" style="display:grid;gap:8px"><div class="r" style="align-items:flex-start"><span class="gd" style="margin-top:8px"></span><span class="av a2">M</span><span class="sp"><span class="bd">Marta says she won</span><div class="sm mu">Norris ahead of Verstappen · 200 coins</div></span></div><div class="r"><div class="bt s w">Agree</div><div class="bt s g w">Disagree</div></div></div>
+            <div class="c r"><span class="gd"></span><span class="sp"><span class="bd">Set your lineup</span><div class="sm mu">Friday Night League · closes Sat 12:00</div></span><span class="lk">Open</span></div>
+            <p class="h2" style="margin-top:6px">Your clubs</p>
+            <div class="c r"><span class="av lg a5">FN</span><span class="sp"><span class="bd">Friday Night Crew</span><div class="sm mu">Tiago: "Porto are not losing at home"</div></span><span class="coin" style="padding:0 9px">4</span></div>
+            <div class="r sm mu" style="padding:0 4px"><span class="sp">Office Paddock · quiet today</span><span class="lk">All clubs</span></div>
+          </div>
+          <div class="n"><span class="on"><svg class="ic"><use href="#i-home"/></svg>Home</span><span><svg class="ic"><use href="#i-club"/></svg>Clubs</span><span><svg class="ic"><use href="#i-bet"/></svg>Bets</span><span><svg class="ic"><use href="#i-you"/></svg>You</span></div>
+        </div>
+        <figcaption><b>Home</b>A short list of what is waiting for you, each answerable in one tap. Clubs show the latest message, not a count.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d1">
+          <div class="t"><svg class="ic"><use href="#i-back"/></svg><span class="sp" style="font:400 14px/1.1 'Archivo Black',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Friday Night Crew</span><svg class="ic mu"><use href="#i-gear"/></svg></div>
+          <div style="padding:9px 12px 0"><div class="seg"><span class="on">Room</span><span>Competitions</span><span>People</span></div></div>
+          <div class="b">
+            <div class="sys">Marta joined the club · say hello</div>
+            <div class="nm">Tiago</div>
+            <div class="m"><span class="av a3">T</span><div class="bb">Porto are not losing at home, relax</div></div>
+            <div class="bet"><div class="r"><span class="av">R</span><span class="sp"><span class="bd">Rui bets 100 coins</span><div class="sm mu">Benfica beat Porto · Sun 18:00</div></span></div><div class="r"><div class="bt s w">Take it</div><div class="bt s g w">Pass</div></div><div class="sm mu r"><span class="stack r"><span class="av a2" style="width:18px;height:18px;font-size:9px">M</span><span class="av a4" style="width:18px;height:18px;font-size:9px">I</span></span>Marta and Inês are in · 300 on the table</div></div>
+            <div class="m me"><div class="bb">Easy money</div></div>
+            <div class="bet" style="border-left-color:#166534"><div class="r"><span class="av a4">I</span><span class="sp"><span class="bd">Inês won 200 from Tiago</span><div class="sm mu">Sinner in straight sets</div></span></div></div>
+            <div class="nm">Rui</div>
+            <div class="m"><span class="av">R</span><div class="bb">Tiago paying for everyone again</div></div>
+          </div>
+          <div class="cmp"><span class="pl"><svg class="ic" style="width:15px;height:15px;stroke-width:2.4"><use href="#i-plus"/></svg>Bet</span><span class="in">Message the club</span></div>
+        </div>
+        <figcaption><b>Club room</b>Three tabs instead of five. Chat, bets and results in one stream. A bet is taken on its card.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d1">
+          <div class="t"><svg class="ic"><use href="#i-back"/></svg><span class="sp" style="font:400 14.5px/1.1 'Archivo Black',sans-serif">Friday Night Crew</span></div>
+          <div class="b"><div class="nm">Tiago</div><div class="m"><span class="av a3">T</span><div class="bb">Porto are not losing at home, relax</div></div></div>
+          <div class="scrim"></div>
+          <div class="sheet">
+            <p class="h1" style="font-size:19px">New bet</p>
+            <div class="lbl">What is the bet?</div>
+            <div class="fld">Benfica beat Porto</div>
+            <div class="chs"><span class="ch on">Sun · Benfica v Porto</span><span class="ch">São Paulo GP</span><span class="ch">ATP Finals</span></div>
+            <div class="lbl" style="margin-top:2px">How much?</div>
+            <div class="chs"><span class="ch">50</span><span class="ch on">100</span><span class="ch">200</span><span class="ch">Other</span></div>
+            <div class="lbl" style="margin-top:2px">With whom?</div>
+            <div class="chs"><span class="ch on">The whole club</span><span class="ch"><span class="av" style="width:16px;height:16px;font-size:8px">R</span>Rui</span><span class="ch"><span class="av a2" style="width:16px;height:16px;font-size:8px">M</span>Marta</span></div>
+            <div class="bt" style="margin-top:4px">Put 100 on the table</div>
+            <div class="sm lk" style="text-align:center">More options</div>
+          </div>
+        </div>
+        <figcaption><b>Making a bet</b>Opens from the message box. Three questions, each answered with a tap. Everything else sits under More options.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <!-- ══════ DIRECTION 2 ══════ -->
+  <div class="dir" id="d-members">
+    <div class="dirhead">
+      <div>
+        <span class="tag">Direction 2 · Warmest</span>
+        <div class="big">Members' Club</div>
+        <p style="color:var(--ink2)">The clubhouse taken literally: cream paper, baize green, brass. Bets are paper slips with a tear-off stub. The Club has a plaque and an honours board. It feels like a place with history, even on day one.</p>
+        <div class="sw"><i style="background:#F2EBDC"></i><i style="background:#FBF7EE"></i><i style="background:#1F2A24"></i><i style="background:#1E5B45"></i><i style="background:#A8741A"></i></div>
+        <p class="note">Fraunces, a soft serif, for headlines. Archivo stays for small text and buttons.</p>
+      </div>
+      <div class="card pcs">
+        <div><b>Good at:</b> charm and belonging. The slip is a memorable object people will screenshot and share.</div>
+        <div><b>Work needed:</b> medium. A new colour set, a new headline typeface and a slip component, applied across every screen.</div>
+        <div><b>Watch out for:</b> it may read as older and more formal than your audience. The green also sits very close to the green already used to mean tennis and to draw football pitches.</div>
+      </div>
+    </div>
+
+    <div class="phones">
+      <figure class="pw">
+        <div class="ph d2">
+          <div class="b" style="padding:16px;justify-content:center;gap:12px">
+            <div class="frame"><div>
+              <svg class="mk" width="34" height="34" style="color:#1E5B45;--mg:#A8741A"><use href="#m-seat"/></svg>
+              <span class="ey">You are invited to</span>
+              <p class="h1" style="font-size:24px">Friday Night Crew</p>
+              <span class="sm mu">Rui has a bet waiting for you</span>
+              <div class="tk" style="width:100%;text-align:left"><div class="stub"><b>100</b>coins</div><div class="bdy"><span class="bd" style="font:600 14.5px/1.25 'Fraunces',serif">Benfica beat Porto.</span><span class="sm mu">Sunday 18:00 · against Rui</span></div></div>
+              <div class="bt" style="width:100%">Take the bet</div>
+              <div class="bt g" style="width:100%">Not this one</div>
+            </div></div>
+            <div class="sm mu" style="text-align:center">Clubhouse. Fantasy leagues and friendly bets, in play-money coins.<br><span class="lk">Already a member? Sign in</span></div>
+          </div>
+        </div>
+        <figcaption><b>Arriving from an invite</b>A printed invitation card with the bet attached as a slip.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d2">
+          <div class="t"><svg class="mk" width="22" height="22" style="color:#1E5B45;--mg:#A8741A"><use href="#m-seat"/></svg><span class="sp" style="font:700 16px/1 'Fraunces',serif">Clubhouse</span><span class="coin">1,250</span></div>
+          <div class="b">
+            <p class="h1">Evening, Alex.</p>
+            <p class="h2">On the board for you</p>
+            <div class="tk"><div class="stub"><b>100</b>coins</div><div class="bdy"><span><span class="bd">Rui:</span> Benfica beat Porto</span><div class="r"><div class="bt s w">Take it</div><div class="bt s g w">Pass</div></div></div></div>
+            <div class="tk"><div class="stub"><b>200</b>coins</div><div class="bdy"><span><span class="bd">Marta</span> says she won: Norris ahead of Verstappen</span><div class="r"><div class="bt s w">Agree</div><div class="bt s g w">Disagree</div></div></div></div>
+            <div class="tk"><div class="stub" style="background:var(--pe);color:var(--pm)"><b>Sat</b>12:00</div><div class="bdy"><span><span class="bd">Set your lineup</span><br><span class="sm mu">Friday Night League</span></span></div></div>
+            <p class="h2" style="margin-top:4px">Your clubs</p>
+            <div class="plq"><div class="r"><span class="sp" style="font:700 16px/1.1 'Fraunces',serif">Friday Night Crew</span><span class="sm mu">Est. 2026</span></div><div class="sm mu" style="margin-top:5px">1 Marta · 2 You · 3 Rui</div></div>
+          </div>
+          <div class="n"><span class="on"><svg class="ic"><use href="#i-home"/></svg>Home</span><span><svg class="ic"><use href="#i-club"/></svg>Clubs</span><span><svg class="ic"><use href="#i-bet"/></svg>Bets</span><span><svg class="ic"><use href="#i-you"/></svg>You</span></div>
+        </div>
+        <figcaption><b>Home</b>A noticeboard. Each thing waiting for you is a slip with the stake on the stub.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d2">
+          <div style="padding:10px 10px 0"><div class="plq"><div class="r"><svg class="ic" style="color:#FBF7EE"><use href="#i-back"/></svg><span class="sp" style="font:700 17px/1.1 'Fraunces',serif">Friday Night Crew</span><span class="sm mu">6 members</span></div>
+            <div class="r" style="margin-top:9px;gap:5px;font-size:11.5px"><span class="sp" style="background:rgba(255,255,255,.12);border-radius:5px;padding:6px 7px"><b style="font-family:'Fraunces',serif;color:#E9C77C">1</b> Marta<br><span class="mu">1,840</span></span><span class="sp" style="background:rgba(255,255,255,.12);border-radius:5px;padding:6px 7px"><b style="font-family:'Fraunces',serif;color:#E9C77C">2</b> You<br><span class="mu">1,610</span></span><span class="sp" style="background:rgba(255,255,255,.12);border-radius:5px;padding:6px 7px"><b style="font-family:'Fraunces',serif;color:#E9C77C">3</b> Rui<br><span class="mu">1,420</span></span></div></div></div>
+          <div class="r" style="gap:16px;padding:9px 14px 0;font-weight:700;border-bottom:1px solid var(--pr)"><span style="padding-bottom:7px;border-bottom:2px solid var(--pa)">Room</span><span class="mu" style="padding-bottom:7px">Competitions</span><span class="mu" style="padding-bottom:7px">People</span></div>
+          <div class="b">
+            <div class="nm">Tiago</div>
+            <div class="m"><span class="av a3">T</span><div class="bb">Porto are not losing at home, relax</div></div>
+            <div class="tk"><div class="stub"><b>100</b>coins</div><div class="bdy"><span><span class="bd">Rui:</span> Benfica beat Porto<br><span class="sm mu">Sun 18:00 · Marta and Inês are in</span></span><div class="r"><div class="bt s w">Take it</div><div class="bt s g w">Pass</div></div></div></div>
+            <div class="m me"><div class="bb">Easy money</div></div>
+            <div class="tk"><div class="stub" style="background:#DCE9DD;color:#1E5B45"><b style="font-size:13px">Paid</b>200</div><div class="bdy"><span><span class="bd">Inês beat Tiago</span><br><span class="sm mu">Sinner in straight sets</span></span></div></div>
+          </div>
+          <div class="cmp"><span class="pl"><svg class="ic" style="width:15px;height:15px;stroke-width:2.4"><use href="#i-plus"/></svg>Bet</span><span class="in">Message the club</span></div>
+        </div>
+        <figcaption><b>Club room</b>A plaque with the top three, then the same single stream. Settled bets get a "Paid" stamp.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d2">
+          <div class="t"><svg class="ic"><use href="#i-back"/></svg><span class="sp" style="font:700 16px/1 'Fraunces',serif">Write a bet</span></div>
+          <div class="b" style="padding:14px">
+            <div class="c" style="padding:6px 14px 12px;border-radius:8px">
+              <div class="ln"><span>I bet</span><b>100 coins</b></div>
+              <div class="ln"><span>that</span><b>Benfica beat Porto</b></div>
+              <div class="ln"><span>against</span><b>the whole club</b></div>
+              <div class="ln" style="border-bottom:1.5px dashed var(--pr)"><span>settled</span><b>Sunday, full time</b></div>
+              <div class="r" style="padding-top:10px"><span class="sm mu sp">Friday Night Crew<br>Slip no. 0147</span><span class="av me lg">A</span></div>
+            </div>
+            <p class="h2">Quick picks this week</p>
+            <div class="chs"><span class="ch on">Benfica v Porto</span><span class="ch">São Paulo GP</span><span class="ch">ATP Finals</span></div>
+            <p class="h2">Stake</p>
+            <div class="chs"><span class="ch">50</span><span class="ch on">100</span><span class="ch">200</span><span class="ch">Other</span></div>
+            <div class="sp"></div>
+            <div class="bt">Pin it to the board</div>
+          </div>
+        </div>
+        <figcaption><b>Making a bet</b>You fill in a slip, sentence by sentence. It is the same slip everyone else then sees.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <!-- ══════ DIRECTION 3 ══════ -->
+  <div class="dir" id="d-matchday">
+    <div class="dirhead">
+      <div>
+        <span class="tag">Direction 3 · Boldest</span>
+        <div class="big">Matchday</div>
+        <p style="color:var(--ink2)">The group chat is the app. Dark, loud type, live scores at the top. There is no separate Home: you open straight into your club, with a tray of what is waiting. Every bet becomes its own conversation.</p>
+        <div class="sw"><i style="background:#0B0F14"></i><i style="background:#141A22"></i><i style="background:#F2EEE5"></i><i style="background:#5FB3E5"></i><i style="background:#E5B45C"></i></div>
+        <p class="note">Archivo Black, used very large. Two tabs and one big gold button.</p>
+      </div>
+      <div class="card pcs">
+        <div><b>Good at:</b> energy on match days and a younger, messaging-app feel. The strongest "social" statement of the three.</div>
+        <div><b>Work needed:</b> the most. Dark colour values exist in the stylesheet but no screen uses them yet, so every screen needs checking, including squad, market and draft. Navigation changes for everyone.</div>
+        <div><b>Watch out for:</b> the last move from dark to light left many invisible elements that had to be found and fixed. Going back risks the same. It also looks like every other sports app.</div>
+      </div>
+    </div>
+
+    <div class="phones">
+      <figure class="pw">
+        <div class="ph d3">
+          <div class="b" style="padding:18px 16px 16px;gap:12px">
+            <div class="r" style="gap:7px"><svg class="mk inv" width="24" height="24" style="--mg:#E5B45C"><use href="#m-seat"/></svg><span style="font:400 15px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+            <div class="sp"></div>
+            <div class="r"><span class="av lg">R</span><span class="sm mu">Rui · Friday Night Crew</span></div>
+            <p class="xl">Rui bets you 100.<br><em>Benfica beat Porto.</em></p>
+            <div class="r sm mu"><span class="stack r"><span class="av a2">M</span><span class="av a4">I</span><span class="av a3">T</span></span>Sun 18:00 · 3 friends already in</div>
+            <div class="sp"></div>
+            <div class="bt" style="height:46px;font-size:15px">I'm in</div>
+            <div class="bt g" style="height:46px;font-size:15px">No chance</div>
+            <div class="sm mu" style="text-align:center">Play-money coins. Your group chat, with bets.<br><span class="lk">Already a member? Sign in</span></div>
+          </div>
+        </div>
+        <figcaption><b>Arriving from an invite</b>The dare, as large as the screen allows. Two answers.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d3">
+          <div class="t" style="padding-bottom:9px"><div class="sw2 sp"><div><span class="ring on"><span class="av lg a5">FN</span></span>Friday</div><div><span class="ring"><span class="av lg a3">OP</span></span>Office</div><div><span class="ring"><span class="av lg" style="background:var(--pe);color:var(--pm)"><svg class="ic" style="width:15px;height:15px"><use href="#i-plus"/></svg></span></span>New</div></div><span class="coin">1,250</span></div>
+          <div class="b">
+            <div class="c" style="display:grid;gap:6px"><div class="r"><span class="live">LIVE 63'</span><span class="sp"></span><span class="sm mu">3 bets riding on this</span></div><div class="r"><span class="sp bd">Benfica</span><span class="score">1 – 0</span><span class="sp bd" style="text-align:right">Porto</span></div></div>
+            <div class="c" style="border-color:var(--pg);display:grid;gap:8px"><div class="r"><span class="gd"></span><span class="bd sp">Your move</span><span class="sm mu">1 of 3</span></div><div class="r"><span class="av a2">M</span><span class="sp">Marta says she won 200<div class="sm mu">Norris ahead of Verstappen</div></span></div><div class="r"><div class="bt s w">Agree</div><div class="bt s g w">Disagree</div></div></div>
+            <div class="nm">Tiago</div>
+            <div class="m"><span class="av a3">T</span><div class="bb">Told you. Porto are done</div></div>
+            <div class="m me"><div class="bb">63 minutes. Calm down</div></div>
+            <div class="nm">Rui</div>
+            <div class="m"><span class="av">R</span><div class="bb">Double it?</div></div>
+          </div>
+          <div class="n" style="padding-top:0"><span class="on" style="padding-top:9px"><svg class="ic"><use href="#i-chat"/></svg>Club</span><span><div class="fab"><svg class="ic" style="width:22px;height:22px;stroke-width:2.4"><use href="#i-plus"/></svg></div>Bet</span><span style="padding-top:9px"><svg class="ic"><use href="#i-you"/></svg>You</span></div>
+        </div>
+        <figcaption><b>Home is the club</b>Switch clubs along the top. Live score, then what is waiting for you, then the chat.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d3">
+          <div class="t"><svg class="ic"><use href="#i-back"/></svg><span class="sp bd">Rui v You</span><span class="live">LIVE 63'</span></div>
+          <div class="b">
+            <div class="c" style="display:grid;gap:9px;text-align:center"><span class="sm mu">Benfica beat Porto</span><div class="r" style="justify-content:center;gap:14px"><span style="display:grid;justify-items:center;gap:3px"><span class="av lg">R</span><span class="sm">Rui: yes</span></span><span><span class="score" style="color:var(--pg)">200</span><div class="sm mu">on the table</div></span><span style="display:grid;justify-items:center;gap:3px"><span class="av lg me">A</span><span class="sm">You: no</span></span></div><div class="r" style="justify-content:center;gap:8px"><span class="bd">Benfica</span><span class="score" style="font-size:17px">1 – 0</span><span class="bd">Porto</span></div><div class="sm" style="color:#F08B8B">Rui is winning this one</div></div>
+            <div class="nm">Rui</div>
+            <div class="m"><span class="av">R</span><div class="bb">Start counting your coins</div></div>
+            <div class="m me"><div class="bb">Porto score in the last ten. Always</div></div>
+            <div class="nm">Marta</div>
+            <div class="m"><span class="av a2">M</span><div class="bb">I want in on this</div></div>
+            <div class="sp"></div>
+            <div class="r"><div class="bt s w">Double it</div><div class="bt s g w">Share</div></div>
+          </div>
+          <div class="cmp"><span class="in">Say something</span></div>
+        </div>
+        <figcaption><b>A bet is its own conversation</b>Who is on which side, what is at stake, the live score, and the banter underneath.</figcaption>
+      </figure>
+
+      <figure class="pw">
+        <div class="ph d3">
+          <div class="t"><svg class="ic"><use href="#i-back"/></svg><span class="sp bd">New bet</span><span class="sm mu">Friday Night Crew</span></div>
+          <div class="b" style="padding:16px 14px;gap:12px">
+            <p class="xl" style="font-size:26px;line-height:1.28">I bet <span class="tok">the club</span> <span class="tok">100</span> coins that <span class="tok">Benfica</span> <span class="tok">beat</span> <span class="tok">Porto</span>.</p>
+            <div class="sm mu">Tap any gold word to change it.</div>
+            <p class="h2" style="margin-top:6px">This weekend</p>
+            <div class="chs"><span class="ch on">Benfica v Porto</span><span class="ch">São Paulo GP</span><span class="ch">ATP Finals</span></div>
+            <p class="h2">Stake</p>
+            <div class="chs"><span class="ch">50</span><span class="ch on">100</span><span class="ch">200</span><span class="ch">All in</span></div>
+            <div class="sp"></div>
+            <div class="bt" style="height:46px;font-size:15px">Send it</div>
+          </div>
+        </div>
+        <figcaption><b>Making a bet</b>The bet is written as one sentence. Tap a word to change it.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 6 COMPARE ───────────── -->
+<section id="compare">
+  <div class="kicker">6 · Recommendation</div>
+  <h2>Build The Table, borrow one idea from each of the others</h2>
+
+  <div class="tw" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Direction</th><th>Feels like</th><th>Best for</th><th>Work needed</th><th>Main risk</th></tr></thead>
+      <tbody>
+        <tr><td><b>1 · The Table</b> <span class="tag rec">Pick</span></td><td>A tidy, friendly room</td><td>A first-time visitor understanding the product in ten seconds</td><td>Smallest. Structure changes that are already in the backlog</td><td>Too polite if the avatars and the table drawing are cut</td></tr>
+        <tr><td><b>2 · Members' Club</b></td><td>A pavilion with history</td><td>Charm, and things worth sharing</td><td>Medium. New colours and a headline typeface on every screen</td><td>Feels older. Its green clashes with tennis and pitch greens</td></tr>
+        <tr><td><b>3 · Matchday</b></td><td>A group chat on match night</td><td>Energy and a younger audience</td><td>Largest. A dark version of every screen and new navigation</td><td>Repeats the dark-to-light clean-up in reverse. Looks like other sports apps</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid" style="margin-top:16px">
+    <div class="card"><h3>Why The Table</h3><p style="color:var(--ink2);margin:0">The consultant's point was the journey, not the paint. Direction 1 spends every hour on the journey: a first screen that shows the friend and the bet, a Home that asks one question, a room where the bet is made and taken. It needs no new colours, so it carries the least risk for a small team.</p></div>
+    <div class="card"><h3>Borrow from Members' Club</h3><p style="color:var(--ink2);margin:0"><b>The slip.</b> Give the bet card a stub with the stake on it. It turns a bet into an object people recognise and share. Also the club-named paper and the "Paid" stamp on settled bets.</p></div>
+    <div class="card"><h3>Borrow from Matchday</h3><p style="color:var(--ink2);margin:0"><b>The bet as its own conversation,</b> with the live score on top. This is where friends will spend match night. The one-sentence bet builder is worth a later test against the three-question sheet.</p></div>
+  </div>
+</section>
+
+<!-- ───────────── 7 APPLY ───────────── -->
+<section id="apply">
+  <div class="kicker">7 · Clubhouse everywhere</div>
+  <h2>How the identity shows up across the product</h2>
+  <p class="intro">Using the recommended logo and Direction 1. The idea is one thought repeated: there is a seat for you, and gold shows where it is.</p>
+
+  <div class="appgrid">
+    <figure class="pw">
+      <div class="ph d1" style="background:#18202E;color:#F7F3ED">
+        <div class="b" style="align-items:center;justify-content:center;gap:16px">
+          <svg class="mk inv" width="92" height="92"><use href="#m-seat"/></svg>
+          <span style="font:400 30px/1 'Archivo Black',sans-serif">Clubhouse</span>
+          <span style="color:#C3CAD6;font-size:14px">Pull up a chair.</span>
+        </div>
+      </div>
+      <figcaption><b>Opening screen</b>Navy, warm white and one gold seat. Replaces today's black and cyan app settings.</figcaption>
+    </figure>
+
+    <figure class="pw">
+      <div class="ph d1">
+        <div class="b" style="padding:20px 16px 16px;gap:11px">
+          <div class="r" style="gap:8px"><svg class="mk" width="28" height="28"><use href="#m-seat"/></svg><span style="font:400 18px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+          <div class="sp"></div>
+          <p class="h1" style="font-size:27px">Bets between friends.</p>
+          <div class="mu" style="font-size:13.5px">Start a club with your people. Bet coins on football, F1 and tennis. Run fantasy leagues together.</div>
+          <div class="c r" style="background:var(--pgs);border-color:transparent"><span class="gd"></span><span class="sm" style="color:var(--pgt);font-weight:700">Coins are play money. No real money changes hands.</span></div>
+          <div class="sp"></div>
+          <div class="bt">Start a club</div>
+          <div class="bt g">I have an invite</div>
+          <div class="sm lk" style="text-align:center;padding-top:2px">Sign in</div>
+        </div>
+      </div>
+      <figcaption><b>First screen without an invite</b>One sentence on what it is, one main button. The login form moves behind "Sign in".</figcaption>
+    </figure>
+
+    <figure class="pw">
+      <div class="ph d1">
+        <div class="t"><svg class="ic"><use href="#i-back"/></svg><span class="sp" style="font:400 14.5px/1.1 'Archivo Black',sans-serif">Friday Night Crew</span><svg class="ic mu"><use href="#i-gear"/></svg></div>
+        <div class="b" style="align-items:center;text-align:center;justify-content:center;gap:11px;padding:16px">
+          <svg viewBox="0 0 200 124" style="width:86%;height:auto"><path d="M119.28 39.02A30 30 0 1 0 119.28 84.98" fill="none" stroke="#18202E" stroke-width="13" stroke-linecap="round"/><g fill="none" stroke="#C9C2B6" stroke-width="1.6" stroke-dasharray="4 4"><circle cx="100" cy="14" r="13"/><circle cx="52" cy="36" r="13"/><circle cx="52" cy="88" r="13"/><circle cx="100" cy="110" r="13"/></g><circle cx="140" cy="62" r="15" fill="#B8720E"/><text x="140" y="66" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="800" font-size="10.5" fill="#18202E">You</text></svg>
+          <p class="h1">Your table is empty.</p>
+          <div class="mu">Save a seat for someone. The quickest way is to bet them something.</div>
+          <div class="bt" style="width:100%">Invite with a bet</div>
+          <div class="bt g" style="width:100%">Share a link</div>
+        </div>
+      </div>
+      <figcaption><b>Empty club</b>The logo becomes the picture: empty seats to fill. One main action, the bet invite.</figcaption>
+    </figure>
+
+    <figure class="pw">
+      <div class="share">
+        <div class="pv"><div style="display:flex;align-items:center;gap:8px"><svg class="mk inv" width="26" height="26"><use href="#m-seat"/></svg><span style="font:400 15px/1 'Archivo Black',sans-serif;color:#F7F3ED">Clubhouse</span></div><b>Rui saved you a seat.</b><span>100 coins says Benfica beat Porto.</span></div>
+        <div class="mt"><b>Take the bet · Friday Night Crew</b>your-web-address/b/7KQ2</div>
+        <div class="tx">Sunday. You and me. 👀</div>
+      </div>
+      <figcaption style="margin-top:14px"><b>The invite in a messaging app</b>The link preview is the first screen most new people will ever see. It carries the friend's name and the bet.</figcaption>
+
+      <div class="card" style="margin-top:20px;display:grid;gap:14px">
+        <div><h3 style="font-size:15px">App icon and browser tab</h3><div class="uses"><div class="appi"><svg class="mk inv" width="40" height="40"><use href="#m-seat"/></svg></div><div class="appi lt"><svg class="mk" width="40" height="40"><use href="#m-seat"/></svg></div><div class="appi gd"><svg class="mk" width="40" height="40" style="--mg:#F7F3ED"><use href="#m-seat"/></svg></div><div class="sizes"><svg class="mk" width="32" height="32"><use href="#m-seat"/></svg><svg class="mk" width="16" height="16"><use href="#m-seat"/></svg></div></div></div>
+        <div><h3 style="font-size:15px">Loading</h3><div class="uses"><svg width="46" height="46" viewBox="0 0 48 48"><path d="M32.64 12.51A15 15 0 1 0 32.64 35.49" fill="none" stroke="#18202E" stroke-width="8" stroke-linecap="round" opacity=".18"/><circle cx="23" cy="24" r="15" fill="none" stroke="#18202E" stroke-width="8" opacity=".08"/><g class="orb"><circle cx="39" cy="24" r="4.6" fill="#B8720E"/></g></svg><span class="note" style="flex:1;min-width:150px">The gold seat walks around the table.</span></div></div>
+        <div><h3 style="font-size:15px">Sport badges stay</h3><div class="spt">
+          <div><svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#1E7A4C" stroke-width="2.2"><rect x="5" y="8" width="24" height="18" rx="2"/><path d="M17 8v18"/><circle cx="17" cy="17" r="3.6"/></svg></div>
+          <div><svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#7A3FA0" stroke-width="2.2"><rect x="8" y="5" width="18" height="24" rx="1.5"/><path d="M8 17h18M12 5v24M22 5v24M12 11h10M12 23h10"/></svg></div>
+          <div><svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#C7402B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 24c-3-4-1-10 4-11 4-1 5-6 9-6s7 4 6 8-5 3-6 7-9 7-13 2Z"/><path d="M14 11.5v3.5" stroke-width="1.8"/></svg></div>
+        </div></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="card" style="margin-top:28px">
+    <h3>Where the old names still live</h3>
+    <p style="color:var(--ink2)">A rename is only finished when the old name is nowhere a member can see it. These are the places found in this review.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Place</th><th>What it says today</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><b>Logo in the app</b></td><td>Frontrow, with the three bars</td><td>One component draws it everywhere, so one change covers all screens.</td></tr>
+        <tr><td><b>Browser tab and installed-app name</b></td><td>Frontrow</td><td>The installed-app colours are also still black and cyan.</td></tr>
+        <tr><td><b>Screens and server messages</b></td><td>"Frontrow" 25 times in 11 files. "Forza Fantasy" 7 times in 5 files</td><td>Includes the welcome and the invite text (J-05, C-02).</td></tr>
+        <tr><td><b>"Clubhouse" meaning a group</b></td><td>About 300 times in 32 files</td><td>Only the words members see need to change to "Club". Internal names can stay.</td></tr>
+        <tr><td><b>Web address</b></td><td>wc-fantasy-football.vercel.app</td><td>Needs a proper address once the name check is done.</td></tr>
+        <tr><td><b>Phone app identifier</b></td><td>com.forza.fantasyleague</td><td>Can still be changed, because nothing has been submitted to the stores yet.</td></tr>
+        <tr><td><b>Invite codes</b></td><td>FK-XXXXX</td><td>Shown as the example in two screens.</td></tr>
+        <tr><td><b>Emails</b></td><td>Not checked in this review</td><td>Confirmation and password emails need the new name and logo.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ───────────── 8 NEXT ───────────── -->
+<section id="next">
+  <div class="kicker">8 · Next steps</div>
+  <h2>What I need from you, and what happens after</h2>
+  <ol class="steps">
+    <li><span><b>Choose a logo.</b> My pick is A, The Seat. B is the alternative if you want the mark to say "chat" more loudly.</span></li>
+    <li><span><b>Choose a direction.</b> My pick is 1, The Table, with the slip from direction 2 and the bet conversation from direction 3.</span></li>
+    <li><span><b>Confirm the words.</b> Clubhouse for the platform, Club for a group, Room for its main screen.</span></li>
+    <li><span><b>Have the name checked</b> for registration, store listing and web address. This is the one step only you can start.</span></li>
+    <li><span><b>Then I build in this order:</b> the rename and logo files, the identity rules, the first screen and invite page, Home, the Club room, the quick bet.</span></li>
+  </ol>
+  <p class="note" style="margin-top:14px">Nothing on this page has been built. These are drawings to decide from. The screen changes map onto backlog items that already exist (J-07, J-08, J-10, J-11, J-12, J-14, J-21, C-03, C-04, C-06 to C-09). The rename, the logo and the identity rules are new items.</p>
+</section>
+
+<footer>
+  Part three of the product assessment. Parts one and two: journey and Clubhouse experience, in the Frontrow Assessment of 12 November 2026.<br>
+  Last Updated: 2026-11-13
+</footer>
+
+</div>
+
+</body>
+</html>
