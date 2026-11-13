@@ -6688,4 +6688,10 @@ Last Updated: 2026-11-13
 - C-02: Clubhouse and league invites use `PLATFORM_NAME`; Clubhouse invite gains a "Share in another app" button (phone share sheet) where the browser supports it.
 - DD-P1-2 stays open: the cold-start walkthrough with a fresh account on a phone is still the owner's.
 
+## 2026-11-13 — Session S5 part A (Create a bet)
+
+- COIN-2: Wallet no longer shows GBP coin-pack prices; Challenges screen drops the disabled "Buy Coins" buttons. Coins are described as free play credits.
+- J-20: the create-bet window with no Clubhouse now offers "Create or join a Clubhouse" instead of a dead end.
+- J-07 (part): bet screens, toasts, My Bets copy and P2P badges say "Bets". Nav label and Settings/commissioner labels remain.
+
 Last Updated: 2026-11-13

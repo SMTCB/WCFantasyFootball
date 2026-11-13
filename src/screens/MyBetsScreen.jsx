@@ -119,7 +119,7 @@ export default function MyBetsScreen() {
           <span aria-hidden style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: 'var(--accent)', flexShrink: 0 }} />
           <div>
             <h1 style={{ margin: 0, fontFamily: DISPLAY, fontSize: 'var(--fs-title)', lineHeight: 1.1 }}>My bets</h1>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 4 }}>Every group bet you've joined, across all Clubhouses.</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 4 }}>Every bet you've joined, across all Clubhouses.</div>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderTop: '1px solid var(--rule)' }}>
@@ -158,9 +158,9 @@ export default function MyBetsScreen() {
         {!loading && !error && sections.every(s => !s.bets.length) && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
             <div style={{ fontSize: 'var(--fs-title)' }}>🎲</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>No group bets yet</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>No bets yet</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', maxWidth: 320, textAlign: 'center' }}>
-              Join or create a group bet from any Clubhouse's Group Bets tab and it'll show up here.
+              Join or create a bet in any Clubhouse and it'll show up here.
             </div>
           </div>
         )}

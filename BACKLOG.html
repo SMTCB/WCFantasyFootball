@@ -157,7 +157,7 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>108</strong><span>open</span></div>
+      <div class="total-pill"><strong>106</strong><span>open</span></div>
       <div class="total-pill"><strong>5</strong><span>closed</span></div>
     </div>
   </div>
@@ -170,7 +170,7 @@
   </div>
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
-    <span class="chip" data-filter-priority="p1">P1 — HIGH (20)</span>
+    <span class="chip" data-filter-priority="p1">P1 — HIGH (18)</span>
 <span class="chip" data-filter-priority="p2">P2 — MEDIUM (53)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (35)</span>
   </div>
@@ -185,12 +185,12 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">108</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">106</span></button>
       <button class="status-btn" data-status="closed">Closed <span class="status-count">5</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
-      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">20</span></div>
+      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">18</span></div>
 <div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">53</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">35</span></div>
     </div>
@@ -211,7 +211,7 @@
 <li>When a session finishes: delete its rows here, log them in the history file, regenerate <code>BACKLOG.html</code>, and tick the session off in the "Done sessions" line below.</li>
 <li>League-level bets (the commissioner-created ones) stay until the end of this season; no session removes them (owner decision, 2026-11-13). Dark mode is on hold.</li>
 </ul>
-<p><strong>Done sessions:</strong> S1 (2026-11-13), S4 (2026-11-13, except DD-P1-2: you walk it on a phone with a fresh account), except two leftovers: SEC-4 (you revoke the old token at github.com/settings/tokens) and the open part of DOCS-3 (rewrite the testing and API docs).</p>
+<p><strong>Done sessions:</strong> S1 (2026-11-13), S5 part A: COIN-2, J-20 (2026-11-13; J-07 part done, J-08 and J-11 still open), S4 (2026-11-13, except DD-P1-2: you walk it on a phone with a fresh account), except two leftovers: SEC-4 (you revoke the old token at github.com/settings/tokens) and the open part of DOCS-3 (rewrite the testing and API docs).</p>
 <p><strong>Wave 1 — Now: get ready, prove the bet, fix the welcome</strong></p>
 <p>Start here. Nothing in the Clubhouse redesign is worth building until one bet has paid out (S2) and a newcomer can get through the welcome (S4).</p>
 <div class="md-table-wrap"><table class="md-table"><thead><tr><th>Session</th><th>Theme and why these belong together</th><th>Rows</th><th>Needs your yes</th><th>Test afterwards</th></tr></thead><tbody><tr><td><strong>S1: Clean start</strong></td><td>Repo, docs and CI hygiene only. No app behaviour changes, so it is safe first and leaves CI green for every later session.</td><td>CI-T3, TEST-SEED-1, DD-P3-1, REPO-1, DOCS-1, DOCS-3, INFRA-3, SEC-4</td><td>No. SEC-4 has one manual step that is yours: revoke the old token at github.com/settings/tokens.</td><td>A PR shows every CI job green, including Tier 3. <code>npm run lint</code> shows no warnings. <code>git worktree list</code> is clean.</td></tr><tr><td><strong>S2: Prove the bet</strong></td><td>Everything that touches the money engine in the live database: bet functions, wallet trigger, paused jobs, test rows. One session means one backup and one pair of test accounts cover all of it.</td><td>J-01, J-02, J-03, BUG-CW1, DD-P1-1, TEST-P2P-1, DD-P2-3</td><td>Yes, each item separately (test accounts, jobs one at a time, releasing stakes, deleting test rows, the trigger fix). Backup first. Order inside: DD-P1-1, BUG-CW1, J-01, then check what is left before J-03 (the expiry job in J-02 may release the 30 Aug stake by itself), then J-02.</td><td>Two accounts: create, accept, settle, pay out; wallet totals add up; <code>tests/unit/p2p-challenges.test.js</code> passes; no <code>TEST_</code> rows left; every re-enabled job has a run in its history.</td></tr><tr><td><strong>S3: Watch and protect</strong></td><td>Error reporting and abuse limits all sit on the same secrets and Edge Functions setup.</td><td>OPS-SENTRY, DD-P2-1, LOW-3</td><td>Yes: set a secret, schedule a job, change a table policy, deploy functions.</td><td>A deliberate test error appears in Sentry; anonymous writes to the error log are limited; <code>npm run check:drift</code> passes.</td></tr><tr><td><strong>S4: Welcome fixes</strong></td><td>Same files: the welcome steps, the invite pieces and the sign-in copy. Use one platform-name constant so the rename in S6 changes it in one place.</td><td>J-04, J-05, J-06, C-02, DD-P1-2</td><td>No.</td><td>Walk the whole welcome with a fresh account on a phone (this is DD-P1-2): wrong invite code shows an error, one step count, no duplicate username, ends on Home; invite uses the phone share sheet. <code>platform.spec.js</code> green.</td></tr><tr><td><strong>S5: Create a bet and the Bets tab</strong></td><td>The create-bet window, the Bets and Coins tabs and the wallet are the same screens and hooks.</td><td>J-20, J-11, COIN-2, J-07, J-08</td><td>No (interface only).</td><td>Create a bet with and without a Clubhouse; the wallet shows no prices; the bottom bar works on phone and desktop (<code>platform.spec.js</code> navigation tests change with J-08). Existing league-level bets still open from their league screens (owner decision, 2026-11-13).</td></tr></tbody></table></div>
@@ -237,7 +237,7 @@
 <hr></section>
       
     <section class="item-group" id="group-p1" data-group="p1">
-      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">20</span></h2>
+      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">18</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="club-bet-1 move betting to clubhouse level — design decision, then build **update 2026-11-13: the owner confirmed betting moves to the clubhouse (c-20) but league-level bets (a below) stay as they are for now, at least until the end of this season, because users are used to them. option (i) below fits this: (a) is left alone.** raised by the user 2026-08-22: *&quot;my idea is to have the betting at clubhouse level (and not on a specific league level)&quot;*. **half of this already exists.** there are two unrelated betting systems and they sit at different levels: **(a) league bets** — `bet_instances` + 26 `bet_templates`, commissioner-created, **`league_id`-scoped**, every template football-specific (goals/corners/cards/clean sheet/motm), reward is **fantasy points or budget, never coins**; 39 instances exist in prod. **(b) p2p coin challenges** — `p2p_challenges`, real coin stakes with escrow and 5% rake, **already `circle_id`-scoped** since migration 237, two bet types: `gw_total` (auto-resolved from squad points, **football-only** — requires `league_id` + `matchday_id`) and `freeform` (≤140-char question, any sport, human-settled). 0 exist in prod. **so system (b) already is the clubhouse-level betting the user is describing** — the gap is that its only *auto-resolving* type is football. **the decision to make**: (i) leave (a) league-scoped as a football league-flavour feature and put all cross-sport betting in (b); (ii) re-scope (a) to `circle_id` and write f1/tennis templates; or (iii) both. **recommendation: (i)** — (a) pays in fantasy points, which are per-competition and per-sport and therefore cannot settle a clubhouse-wide bet without inventing a cross-sport point scale (see `club-score-1`), whereas coins are already the one currency that is cross-sport, circle-scoped and escrowed. the concrete work under (i) is adding auto-resolving `p2p_challenges` bet types for f1 (settle on `f1_scores`) and tennis (settle on `tennis_tournament_scores`), so f1/tennis bets stop de" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -284,23 +284,6 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Clubhouse header reads a <code>total_points</code> column that <code>get_circle_meta_standings</code> does not return</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p><strong>Checked 2026-11-12 — still open: the RPC still returns no total_points; the screen now guards the undefined (checked 2026-11-12).</strong> Found 2026-08-22 while answering the aggregate-score question. <a href="src/screens/ClubhouseScreen.jsx:955" target="_blank" rel="noopener">ClubhouseScreen.jsx:955-956</a> computes <code>leadPoints = metaStandings[0]?.total_points</code> and <code>pointsBehind = leadPoints - myStanding.total_points</code>, but the RPC returns only <code>user_id</code>/<code>username</code>/<code>trophy_count</code>/<code>gold_count</code>/<code>silver_count</code>/<code>bronze_count</code>/<code>rank</code>. <strong>There is no <code>total_points</code></strong>, so <code>leadPoints</code> is permanently <code>undefined</code> and <code>pointsBehind</code> permanently <code>null</code>. Neither is referenced anywhere else in the file, so this is dead code rather than a visible defect — but it is the same read-a-column-that-does-not-exist class as the <code>TrophyCabinetScreen</code> bug fixed under <code>ARCH-1</code>, and it is <strong>evidence that a points-based meta standing was designed and then replaced by trophies</strong> (see <code>CLUB-SCORE-1</code>). <strong>Fix</strong>: delete both lines, or repoint them at <code>trophy_count</code> if a "trophies behind the leader" stat is wanted.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
-      </article>
-
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="coin-2 wallet screen advertises real gbp prices during a no-real-money pilot **checked 2026-11-12 — still open: walletscreen.jsx:105-107 still shows the gbp prices (checked 2026-11-12).** found 2026-08-22. [walletscreen.jsx:104-107](src/screens/walletscreen.jsx:104) renders a &quot;buy coins&quot; block with three packs priced **£1.99 / £4.99 / £12.99**. clicking one invokes `purchase-coins`, gets the 503 `stripe_not_configured`, and falls back to a &quot;coming soon&quot; state — so nothing can actually be bought, but **the prices are displayed as fact**. user decision 2026-08-21/22: the relaunch pilot runs on fictional coins with no stripe, so testers being shown a price list will either believe coins cost money or file it as a bug — either way it pollutes the feedback this pilot exists to collect. **fix**: gate the whole block on the same condition that gates stripe (an env flag, or simply hide it until `stripe_secret_key` exists) and replace it with a line stating coins are free pilot credits. related: `pay-1` (the faucet question) and `legal-1` (no-real-money materially reduces, but does not remove, the exposure). open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
-        <h3 class="card-title">Wallet screen advertises real GBP prices during a no-real-money pilot</h3>
-        <p class="card-summary"><strong>Checked 2026-11-12 — still open: WalletScreen.jsx:105-107 still shows the GBP prices (checked 2026-11-12).</strong> Found 2026-08-22. <a href="src/screens/WalletScreen.jsx:104" target="_blank" rel="noopener">WalletScreen.jsx:104-107</a> renders a "BUY COINS" block with three packs priced <strong>£1.99 / £4.99 / £12.99</strong>. Clicking one invokes <code>purchase-coins</code>, gets the 503 <code>STRIPE_NOT_CONFIGURED</code>, and falls back to a "coming soon" state — so nothing can actually be bought, but <strong>the prices are displayed as fact</strong>. User decision 2026-08-21/22: the relaunch pilot runs on fictional coins with no Stripe, so testers being shown a price list will either believe coins cost money or file it as a bug — either way it pollutes the feedback this pilot exists to collect. <strong>Fix</strong>: gate the whole block on the same condition that gates Stripe (an env flag, or simply hide it until <code>STRIPE_SECRET_KEY</code> exists) and replace it with a line stating coins are free pilot credits. Related: <code>PAY-1</code> (the faucet question) and <code>LEGAL-1</code> (no-real-money materially reduces, but does not remove, the exposure).</p>
-        <div class="card-foot"><span class="foot-id">COIN-2</span><span class="foot-effort">XS (~15 min)</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
-      <h2 class="drawer-title">Wallet screen advertises real GBP prices during a no-real-money pilot</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Wallet screen advertises real GBP prices during a no-real-money pilot</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p><strong>Checked 2026-11-12 — still open: WalletScreen.jsx:105-107 still shows the GBP prices (checked 2026-11-12).</strong> Found 2026-08-22. <a href="src/screens/WalletScreen.jsx:104" target="_blank" rel="noopener">WalletScreen.jsx:104-107</a> renders a "BUY COINS" block with three packs priced <strong>£1.99 / £4.99 / £12.99</strong>. Clicking one invokes <code>purchase-coins</code>, gets the 503 <code>STRIPE_NOT_CONFIGURED</code>, and falls back to a "coming soon" state — so nothing can actually be bought, but <strong>the prices are displayed as fact</strong>. User decision 2026-08-21/22: the relaunch pilot runs on fictional coins with no Stripe, so testers being shown a price list will either believe coins cost money or file it as a bug — either way it pollutes the feedback this pilot exists to collect. <strong>Fix</strong>: gate the whole block on the same condition that gates Stripe (an env flag, or simply hide it until <code>STRIPE_SECRET_KEY</code> exists) and replace it with a line stating coins are free pilot credits. Related: <code>PAY-1</code> (the faucet question) and <code>LEGAL-1</code> (no-real-money materially reduces, but does not remove, the exposure).</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -460,17 +443,17 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-07 call it bets everywhere; retire challenges, p2p, group bets, wagers as labels journey. evidence: the same thing is called bets, coins, coin challenges, p2p betting, challenge, group bet and freeform. decided 2026-11-13: a bet belongs to the clubhouse, not to a league (c-20), but league-level bets stay for now (see c-20), so the renaming covers both places. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-07 call it bets everywhere; retire challenges, p2p, group bets, wagers as labels journey. evidence: the same thing is called bets, coins, coin challenges, p2p betting, challenge, group bet and freeform. decided 2026-11-13: a bet belongs to the clubhouse, not to a league (c-20), but league-level bets stay for now (see c-20), so the renaming covers both places. assessment: docs/product/frontrow_assessment_2026-11-12.html. **part done 2026-11-13 (s5 pr a): the screens, buttons and toasts in the bet screens, my bets, and the p2p badges now say bets. still to do: the bottom-bar &quot;coins&quot; label (goes with j-08), the settings and commissioner labels.** open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Call it Bets everywhere; retire Challenges, P2P, Group Bets, Wagers as labels</h3>
-        <p class="card-summary">Journey. Evidence: the same thing is called Bets, Coins, Coin challenges, P2P Betting, Challenge, Group bet and Freeform. Decided 2026-11-13: a bet belongs to the clubhouse, not to a league (C-20), but league-level bets stay for now (see C-20), so the renaming covers both places. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
+        <p class="card-summary">Journey. Evidence: the same thing is called Bets, Coins, Coin challenges, P2P Betting, Challenge, Group bet and Freeform. Decided 2026-11-13: a bet belongs to the clubhouse, not to a league (C-20), but league-level bets stay for now (see C-20), so the renaming covers both places. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. <strong>Part done 2026-11-13 (S5 PR A): the screens, buttons and toasts in the bet screens, My Bets, and the P2P badges now say Bets. Still to do: the bottom-bar "Coins" label (goes with J-08), the Settings and commissioner labels.</strong></p>
         <div class="card-foot"><span class="foot-id">J-07</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
       <h2 class="drawer-title">Call it Bets everywhere; retire Challenges, P2P, Group Bets, Wagers as labels</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Call it Bets everywhere; retire Challenges, P2P, Group Bets, Wagers as labels</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: the same thing is called Bets, Coins, Coin challenges, P2P Betting, Challenge, Group bet and Freeform. Decided 2026-11-13: a bet belongs to the clubhouse, not to a league (C-20), but league-level bets stay for now (see C-20), so the renaming covers both places. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Evidence: the same thing is called Bets, Coins, Coin challenges, P2P Betting, Challenge, Group bet and Freeform. Decided 2026-11-13: a bet belongs to the clubhouse, not to a league (C-20), but league-level bets stay for now (see C-20), so the renaming covers both places. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. <strong>Part done 2026-11-13 (S5 PR A): the screens, buttons and toasts in the bet screens, My Bets, and the P2P badges now say Bets. Still to do: the bottom-bar "Coins" label (goes with J-08), the Settings and commissioner labels.</strong></p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -539,23 +522,6 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Empty Clubhouse offers three actions: invite, make first bet, say hello</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>Clubhouse. Evidence: 3 of 9 active Clubhouses have a single member; a new Clubhouse offers only "create a competition". Design decided 2026-11-13: lead with one main button, "Invite with a bet", and a quiet "Share a link instead" under it; saying hello is the message box in the Room. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. Mockups (empty clubhouse): docs/product/CLUBHOUSE_BRAND_AND_SCREENS_2026-11-13.html.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
-      </article>
-
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-20 create-bet window dead end: with no clubhouse it says &quot;join one first&quot; and offers no way to do it journey. add a button that creates or joins a clubhouse (or starts the invite flow) from that window. assessment: docs/product/frontrow_assessment_2026-11-12.html. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
-        <h3 class="card-title">Create-bet window dead end: with no Clubhouse it says "join one first" and offers no way to do it</h3>
-        <p class="card-summary">Journey. Add a button that creates or joins a Clubhouse (or starts the invite flow) from that window. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p>
-        <div class="card-foot"><span class="foot-id">J-20</span><span class="foot-effort">S</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
-      <h2 class="drawer-title">Create-bet window dead end: with no Clubhouse it says "join one first" and offers no way to do it</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Create-bet window dead end: with no Clubhouse it says "join one first" and offers no way to do it</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Add a button that creates or joins a Clubhouse (or starts the invite flow) from that window. Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>

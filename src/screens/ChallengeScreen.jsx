@@ -1,7 +1,7 @@
 import { LoadingRows } from '../components/Skeleton';
 import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useChallenges } from '../hooks/useChallenges';
 import { useGroupBets } from '../hooks/useGroupBets';
@@ -779,7 +779,7 @@ function CreateGroupBetModal({
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>New Group Bet</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>New Bet</div>
             <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>{circleName ?? 'Clubhouse'}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -998,7 +998,7 @@ function CreateGroupBetModal({
                 opacity: submitting ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Creating…' : '🎲 Create Group Bet'}
+              {submitting ? 'Creating…' : '🎲 Create bet'}
             </button>
           </>
         )}
@@ -1504,40 +1504,14 @@ function WalletTabContent({ wallet, walletLoading }) {
                     {escrow.toLocaleString()} coins locked in challenges
                   </div>
                 )}
-                <button
-                  disabled
-                  style={{
-                    width: '100%', minHeight: 'var(--tap)', padding: '8px 0', borderRadius: 'var(--radius)',
-                    border: '1.5px solid var(--rule)', background: 'transparent',
-                    fontSize: 'var(--fs-label)',
-                    color: 'var(--mute)', cursor: 'not-allowed', opacity: 0.5,
-                  }}
-                >
-                  Buy Coins — Coming Soon
-                </button>
               </>
             )}
           </div>
         </div>
 
-        {/* Coin packs */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Buy coins</div>
-          </div>
-          <div style={{ padding: '16px 16px', display: 'flex', gap: 10, opacity: 0.5 }}>
-            {[{ coins: 500, price: '£1.99' }, { coins: 1500, price: '£4.99' }, { coins: 5000, price: '£12.99' }].map(({ coins, price }) => (
-              <div key={coins} style={{
-                flex: 1, padding: '12px 8px', borderRadius: 'var(--radius)',
-                border: '1px solid var(--rule)', background: 'var(--elev)',
-                textAlign: 'center', cursor: 'not-allowed',
-              }}>
-                <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', letterSpacing: '-0.02em', color: 'var(--gold)' }}>{coins.toLocaleString()}</div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 3 }}>{price}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ padding: '0 16px 12px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>Payments coming soon</div>
+        {/* Pilot coins are free credits; there is nothing to buy. */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
+          Coins are free play credits. They have no cash value and nothing here costs real money.
         </div>
 
         {/* Economy stats */}
@@ -1784,7 +1758,7 @@ function CreateChallengeModal({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 0 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>New Challenge</div>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>New Bet</div>
               <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)' }}>{isFreeform ? 'Send a Freeform Bet' : 'Send a GW Total Bet'}</div>
             </div>
             <button
@@ -1997,7 +1971,7 @@ function CreateChallengeModal({
                 opacity: submitting ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Sending…' : isOpenChallenge ? '🎲 Post Open Challenge' : '⚔ Send Challenge'}
+              {submitting ? 'Sending…' : isOpenChallenge ? '🎲 Post open bet' : '⚔ Send bet'}
             </button>
           </>
         )}
@@ -2058,6 +2032,42 @@ function BetKindPicker({ onPick, onClose, hasCompetitions }) {
   );
 }
 
+// A bet always lives in a Clubhouse. With none yet, send the person to where they
+// can create or join one instead of leaving them at a dead end.
+function NoClubhousePrompt({ onClose }) {
+  const navigate = useNavigate();
+  const go = () => { onClose(); navigate('/clubhouse'); };
+  return createPortal(
+    <div role="presentation"
+      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div style={{
+        width: '100%', maxWidth: 520, background: 'var(--card)',
+        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
+        padding: '22px 24px 24px',
+      }}>
+        <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', marginBottom: 8 }}>Bets live in a Clubhouse</div>
+        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5, marginBottom: 18 }}>
+          Create a Clubhouse for your friends, or join one with an invite code. Then you can start a bet.
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            onClick={go}
+            style={{ minHeight: 'var(--tap)', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 'var(--fs-body)', ...HEAD }}
+          >Create or join a Clubhouse</button>
+          <button
+            onClick={onClose}
+            style={{ minHeight: 'var(--tap)', padding: 12, borderRadius: 10, border: '1px solid var(--rule)', cursor: 'pointer', background: 'transparent', color: 'var(--mute)', fontSize: 'var(--fs-label)', ...HEAD }}
+          >Not now</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 function NewBetModal({
   onClose, onCreateChallenge, onCreateBet, wallet, circleId, circleName,
   currentUserId, members, footballLeagues, betsEnabled,
@@ -2065,6 +2075,8 @@ function NewBetModal({
   const hasCompetitions = (footballLeagues ?? []).length > 0;
   const [betKind, setBetKind] = useState(() => (hasCompetitions ? null : 'freeform'));
   const backToPicker = hasCompetitions ? () => setBetKind(null) : undefined;
+
+  if (!circleId) return <NoClubhousePrompt onClose={onClose} />;
 
   if (betKind === null) {
     return <BetKindPicker onPick={setBetKind} onClose={onClose} hasCompetitions={hasCompetitions} />;
@@ -2157,15 +2169,6 @@ function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNew
               {escrow.toLocaleString()} coins locked in challenges
             </div>
           )}
-          <button
-            disabled
-            style={{
-              width: '100%', minHeight: 'var(--tap)', padding: '8px 0', borderRadius: 'var(--radius)', border: '1.5px solid var(--rule)',
-              background: 'transparent', cursor: 'not-allowed',
-              fontSize: 'var(--fs-label)', color: 'var(--mute)',
-              opacity: 0.5,
-            }}
-          >Buy Coins — Coming Soon</button>
         </div>
       </div>
 
@@ -2277,21 +2280,21 @@ export default function ChallengeScreen() {
 
   async function handleAccept(id) {
     setAction(true);
-    try { await acceptChallenge(id); showToast('Challenge accepted — coins staked!'); }
+    try { await acceptChallenge(id); showToast('Bet accepted — coins staked!'); }
     catch (e) { showToast(e.message, true); }
     setAction(false);
   }
 
   async function handleDecline(id) {
     setAction(true);
-    try { await declineChallenge(id); showToast('Challenge declined.'); }
+    try { await declineChallenge(id); showToast('Bet declined.'); }
     catch (e) { showToast(e.message, true); }
     setAction(false);
   }
 
   async function handleClaim(id) {
     setAction(true);
-    try { await claimChallenge(id); showToast('Challenge claimed — accept it to stake your coins!'); }
+    try { await claimChallenge(id); showToast('Bet claimed — accept it to stake your coins!'); }
     catch (e) {
       const friendly = {
         ALREADY_CLAIMED:            'Someone already claimed this challenge',
@@ -2308,7 +2311,7 @@ export default function ChallengeScreen() {
 
   async function handleCancel(id) {
     setAction(true);
-    try { await cancelChallenge(id); showToast('Challenge cancelled — coins returned.'); }
+    try { await cancelChallenge(id); showToast('Bet cancelled — coins returned.'); }
     catch (e) { showToast(e.message, true); }
     setAction(false);
   }
@@ -2461,8 +2464,8 @@ export default function ChallengeScreen() {
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: isMobile ? '14px 16px 0' : '14px 26px 0', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 12, gap: 16 }}>
           <div>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>P2P Betting</div>
-            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.025em', color: 'var(--paper)', lineHeight: 1 }}>Coin challenges</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>Bets with friends</div>
+            <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.025em', color: 'var(--paper)', lineHeight: 1 }}>Bets</div>
           </div>
           {/* Key stats */}
           <div style={{ display: 'flex', gap: isMobile ? 14 : 22, alignItems: 'flex-start', paddingTop: 2 }}>
