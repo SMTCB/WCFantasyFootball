@@ -241,6 +241,46 @@ details.rec .dir{margin-top:26px}
 .steps li::before{content:counter(s);font:400 20px/1.1 'Archivo Black',sans-serif;color:var(--gold-text)}
 .steps b{color:var(--ink)}
 footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--mute)}
+/* desktop drawings */
+.desk{display:grid;grid-template-columns:minmax(0,1fr);gap:44px;margin-top:26px}
+figure.dw{margin:0;min-width:0}
+figure.dw figcaption{font-size:13.5px;color:var(--ink2);margin-top:11px;line-height:1.45;max-width:760px}
+figure.dw figcaption b{color:var(--ink);display:block;font-size:14px}
+.dsc{max-width:1122px;overflow:hidden;border-radius:12px;border:1px solid #18202E;box-shadow:0 16px 30px -20px rgba(24,32,46,.55);background:#18202E}
+.dsi{width:1120px;transform-origin:0 0}
+.ph.dt{height:660px;border:0;border-radius:0;box-shadow:none;font-size:13px}
+.dt .bar{height:34px;flex-shrink:0;display:flex;align-items:center;gap:7px;padding:0 14px;background:#18202E}
+.dt .bar i{width:10px;height:10px;border-radius:50%;background:#4B5568}
+.dt .bar .url{margin-left:14px;flex:0 1 380px;height:22px;border-radius:6px;background:#2A3344;color:#C3CAD6;font-size:11.5px;display:flex;align-items:center;padding:0 10px;white-space:nowrap}
+.dt .app{flex:1;min-height:0;display:grid;grid-template-columns:232px 1fr 320px}
+.dt .app.one{grid-template-columns:1fr}
+.dt .app.one .main{gap:18px}
+.dt .hero{flex:1;min-height:0;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center}
+.dt .nav{border-right:1px solid var(--pr);padding:18px 14px 12px;display:flex;flex-direction:column;gap:3px;min-height:0}
+.dt .nav .brand{gap:9px;padding:2px 8px 16px}
+.dt .nav .it{display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border-radius:10px;font-weight:700;color:var(--p2)}
+.dt .nav .it.on{background:var(--pc);color:var(--pi)}
+.dt .nav .hd{font:700 11px/1.2 'Archivo',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--pm);margin:18px 10px 6px}
+.dt .me-row{display:flex;align-items:center;gap:9px;padding:12px 6px 2px;border-top:1px solid var(--pr)}
+.dt .av.sq{border-radius:7px;font-size:9.5px}
+.dt .main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.dt .t{padding:18px 24px 8px}
+.dt .tabs{padding:0 24px;font-size:13px}
+.dt .cmp{padding:8px 24px 16px}
+.dt .bbet{max-width:440px} .dt .bb{max-width:68%}
+.dt .aside{border-left:1px solid var(--pr);padding:18px 16px;display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
+.dt .rw.you{background:var(--pgs);margin:0 -12px;padding:10px 12px;border-top-color:transparent}
+.dt .rw.you:first-child{border-radius:14px 14px 0 0}
+.dt .rw.lg2{padding:16px 0;gap:14px}
+.dt .cards2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dt .cardp{padding:14px;display:grid;gap:8px}
+.dt .thread{background:var(--pc);gap:9px}
+.dt .thread .ls{background:var(--pb)}
+.dt .thread .bb{background:var(--pe)}
+.dt .thread .cmp .in{background:var(--pe)}
+.dt .dlg{position:absolute;top:92px;left:50%;transform:translateX(-50%);width:760px;background:var(--pc);border-radius:18px;padding:20px 24px;display:grid;gap:18px;box-shadow:0 24px 50px -20px rgba(0,0,0,.55);z-index:2}
+.dt .dlg2{display:grid;grid-template-columns:1.3fr 1fr;gap:30px}
+@media (max-width:640px){.desk{gap:32px}}
 </style>
 </head>
 <body>
@@ -287,7 +327,7 @@ footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--rule);font-si
 <header>
   <div class="kicker">Part three · Design review · 13 November 2026 · Revised after your decisions</div>
   <h1>Clubhouse: the new brand and the main screens</h1>
-  <p class="lede">A senior designer's read of the first screen, Home, the clubhouse and betting as they are today, then the decisions you took on the logo, the direction and the words. Direction 1, The Table, is redrawn here as six screens in light mode only, with the one-sentence bet and the bet conversation borrowed from Direction 3.</p>
+  <p class="lede">A senior designer's read of the first screen, Home, the clubhouse and betting as they are today, then the decisions you took on the logo, the direction and the words. Direction 1, The Table, is redrawn here as six screens, on a phone and on a computer, in light mode only, with the one-sentence bet and the bet conversation borrowed from Direction 3.</p>
 
   <div class="short">
     <div class="card"><span class="n">Logo · decided</span><b>"The Seat": a C-shaped table with one gold seat left for you</b><span>Option A. Works at 16 pixels, carries the invitation idea, and continues the gold dot and bird's-eye drawing style you already own.</span></div>
@@ -712,6 +752,317 @@ footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--rule);font-si
         <figcaption><b>6 · Inside a clubhouse: Leagues</b>One list for every sport the group plays. Bets are not in here. They belong to the clubhouse.</figcaption>
       </figure>
     </div>
+    <div id="d-table-desktop" style="margin-top:56px">
+      <span class="tag id">Direction 1 · Same six screens, on a computer</span>
+      <h3 style="font-size:22px;margin:10px 0 8px">The Table on a wide screen</h3>
+      <p class="intro">The same six screens, the same sample content, drawn for a laptop or desktop browser. Nothing new is invented: the wider screen is used to keep things in view that a phone has to hide behind a tap.</p>
+      <div class="tw" style="margin-top:14px">
+        <table>
+          <thead><tr><th style="width:30%">On a phone</th><th>On a computer</th></tr></thead>
+          <tbody>
+            <tr><td><b>Bottom bar: Home, Bets, You</b></td><td>A left column with the same three, plus your clubhouses listed under them, so you can jump between groups in one click.</td></tr>
+            <tr><td><b>The open-bets line at the top of the Room</b></td><td>A right column that lists the clubhouse's open bets. It stays there on both the Room and Leagues tabs, because bets belong to the clubhouse, not to a league.</td></tr>
+            <tr><td><b>A bet opens on its own screen</b></td><td>A bet opens beside the Room, in the right column. You follow the bet and the main chat at the same time.</td></tr>
+            <tr><td><b>Making a bet is a full screen</b></td><td>A window over the Room: the sentence on the left, this weekend's matches on the right.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note" style="margin-top:10px">The drawings are made for a 1,120-pixel-wide window and shrink to fit. On a phone they are too small to read, so open this page on a computer to see them properly.</p>
+
+      <div class="desk">
+
+        <!-- D1 invite -->
+        <figure class="dw">
+          <div class="dsc"><div class="dsi">
+            <div class="ph t1 dt">
+              <div class="bar"><i></i><i></i><i></i><span class="url">Clubhouse · Rui saved you a seat</span></div>
+              <div class="app one">
+                <div class="main" style="padding:22px 40px 22px">
+                  <div class="r"><svg class="mk" width="26" height="26"><use href="#m-seat"/></svg><span class="sp" style="font:400 17px/1 'Archivo Black',sans-serif">Clubhouse</span><span class="lk">Sign in</span></div>
+                  <div class="hero">
+                    <svg viewBox="0 0 200 124" style="width:100%;height:330px"><use href="#table"/></svg>
+                    <div style="display:grid;gap:18px;max-width:440px">
+                      <div class="mu" style="font-size:14px">Rui saved you a seat at <b style="color:var(--pi)">Friday Night Crew</b></div>
+                      <p class="xl" style="font-size:40px;line-height:1.08">Rui bets you 100 coins that Benfica beat Porto.</p>
+                      <div class="r mu"><span class="stack r"><span class="av a2">M</span><span class="av a4">I</span><span class="av a3">T</span></span>Sun 18:00 · 3 friends at the table</div>
+                      <div class="r" style="gap:20px;margin-top:6px"><div class="bt" style="padding:0 30px;height:46px;font-size:14px">Take the bet</div><span class="q" style="font-size:13px">Not this one</span></div>
+                    </div>
+                  </div>
+                  <div class="sm mu" style="text-align:center;border-top:1px solid var(--pr);padding-top:14px">Clubhouse is where friends bet coins and run fantasy leagues together. Coins are play money. No real money changes hands.</div>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <figcaption><b>1 · Arriving from an invite</b>The table on the left, the bet in Rui's words on the right, one button. Still no account form before the answer.</figcaption>
+        </figure>
+
+        <!-- D2 home -->
+        <figure class="dw">
+          <div class="dsc"><div class="dsi">
+            <div class="ph t1 dt">
+              <div class="bar"><i></i><i></i><i></i><span class="url">Clubhouse · Home</span></div>
+              <div class="app">
+                <div class="nav">
+                  <div class="r brand"><svg class="mk" width="24" height="24"><use href="#m-seat"/></svg><span style="font:400 16px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+                  <div class="it on"><svg class="ic"><use href="#i-home"/></svg><span class="sp">Home</span><span class="cnt">3</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-bet"/></svg><span class="sp">Bets</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-you"/></svg><span class="sp">You</span></div>
+                  <div class="hd">Your clubhouses</div>
+                  <div class="it"><span class="av a5 sq">FN</span><span class="sp">Friday Night Crew</span><span class="cnt" style="background:var(--pa)">4</span></div>
+                  <div class="it"><span class="av a3 sq">TO</span><span class="sp">The Office</span></div>
+                  <div class="it lk">+ Start or join</div>
+                  <div class="sp"></div>
+                  <div class="me-row"><span class="av me">A</span><span class="sp"><span class="bd">Ana</span><div class="sm mu">Your account</div></span><span class="coin">1,250</span></div>
+                </div>
+                <div class="main">
+                  <div class="t"><span class="ttl sp" style="font-size:19px">Good evening, Ana</span><svg class="ic mu"><use href="#i-bell"/></svg></div>
+                  <div class="b" style="padding:10px 24px 20px;gap:12px">
+                    <p class="ttl">Your move <span class="cnt">3</span></p>
+                    <div class="ls">
+                      <div class="rw"><span class="av">R</span><span class="sp"><span class="bd">Rui bets you 100 coins</span><div class="sm mu">Benfica beat Porto · Friday Night Crew · Sun 18:00</div></span><span class="q">Pass</span><div class="bt s">Take it</div></div>
+                      <div class="rw"><span class="av a2">M</span><span class="sp"><span class="bd">Marta says she won</span><div class="sm mu">Norris beat Verstappen · The Office</div></span><span class="q">Disagree</span><div class="bt s">Agree</div></div>
+                      <div class="rw"><span class="sbx" style="color:#1E7A4C"><svg><use href="#s-foot"/></svg></span><span class="sp"><span class="bd">Set your lineup</span><div class="sm mu">Friday Night League · by Sat 12:00</div></span><div class="bt s">Open</div></div>
+                    </div>
+                    <p class="ttl" style="margin-top:8px">Your clubhouses</p>
+                    <div class="cards2">
+                      <div class="ls cardp"><div class="r"><span class="av lg a5">FN</span><span class="sp"><span class="bd">Friday Night Crew</span><div class="sm mu">6 friends · 3 leagues</div></span><span class="cnt" style="background:var(--pa)">4</span></div><div class="sm" style="color:var(--p2)"><b>Tiago:</b> Porto are not losing at home</div><div class="sm mu"><span class="gd" style="display:inline-block;margin-right:5px"></span>3 open bets · 400 coins on the table</div></div>
+                      <div class="ls cardp"><div class="r"><span class="av lg a3">TO</span><span class="sp"><span class="bd">The Office</span><div class="sm mu">9 friends · 1 league</div></span></div><div class="sm mu">Quiet today</div><div class="sm mu">1 open bet</div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="aside">
+                  <div class="ls" style="padding:14px 14px 12px;display:grid;gap:4px">
+                    <div class="sm mu bd">Your coins</div>
+                    <div class="r"><span class="score" style="font-size:26px">1,250</span></div>
+                    <div class="sm mu">300 on the table in 3 bets</div>
+                  </div>
+                  <p class="ttl">This weekend</p>
+                  <div class="ls">
+                    <div class="rw"><span class="sbx" style="color:#1E7A4C"><svg><use href="#s-foot"/></svg></span><span class="sp"><span class="bd">Benfica v Porto</span><div class="sm mu">Sun 18:00</div></span><div class="bt s g">Bet</div></div>
+                    <div class="rw"><span class="sbx" style="color:#C7402B"><svg><use href="#s-f1"/></svg></span><span class="sp"><span class="bd">São Paulo GP</span><div class="sm mu">Sun 17:00</div></span><div class="bt s g">Bet</div></div>
+                    <div class="rw"><span class="sbx" style="color:#7A3FA0"><svg><use href="#s-ten"/></svg></span><span class="sp"><span class="bd">ATP Finals</span><div class="sm mu">All week</div></span><div class="bt s g">Bet</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <figcaption><b>2 · Home</b>"Your move" with both answers on each row, your clubhouses as two cards with the latest message, and your coins and this weekend's matches on the right.</figcaption>
+        </figure>
+
+        <!-- D3 room -->
+        <figure class="dw">
+          <div class="dsc"><div class="dsi">
+            <div class="ph t1 dt">
+              <div class="bar"><i></i><i></i><i></i><span class="url">Clubhouse · Friday Night Crew · Room</span></div>
+              <div class="app">
+                <div class="nav">
+                  <div class="r brand"><svg class="mk" width="24" height="24"><use href="#m-seat"/></svg><span style="font:400 16px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-home"/></svg><span class="sp">Home</span><span class="cnt">3</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-bet"/></svg><span class="sp">Bets</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-you"/></svg><span class="sp">You</span></div>
+                  <div class="hd">Your clubhouses</div>
+                  <div class="it on"><span class="av a5 sq">FN</span><span class="sp">Friday Night Crew</span></div>
+                  <div class="it"><span class="av a3 sq">TO</span><span class="sp">The Office</span></div>
+                  <div class="it lk">+ Start or join</div>
+                  <div class="sp"></div>
+                  <div class="me-row"><span class="av me">A</span><span class="sp"><span class="bd">Ana</span><div class="sm mu">Your account</div></span><span class="coin">1,250</span></div>
+                </div>
+                <div class="main">
+                  <div class="t"><span class="ttl sp" style="font-size:19px">Friday Night Crew</span><span class="stack r"><span class="av">R</span><span class="av a2">M</span><span class="av a3">T</span><span class="av a4">I</span></span><svg class="ic mu"><use href="#i-gear"/></svg></div>
+                  <div class="tabs"><span class="on">Room</span><span>Leagues</span><span>People</span></div>
+                  <div class="b" style="padding:14px 24px 12px">
+                    <div class="sys">Marta joined · say hello</div>
+                    <div class="nm">Tiago</div>
+                    <div class="m"><span class="av a3">T</span><div class="bb">Porto are not losing at home, relax</div></div>
+                    <div class="nm" style="color:var(--pgt);font-weight:700">Rui · a bet waiting for you</div>
+                    <div class="m"><span class="av">R</span><div class="bbet you"><span class="say">I bet you 100 coins that Benfica beat Porto.</span><div class="r"><div class="bt s">Take it</div><span class="q" style="padding:0 6px">Pass</span><span class="sp"></span><span class="sm mu">Sun 18:00</span></div></div></div>
+                    <div class="m me"><div class="bb">Easy money</div></div>
+                    <div class="done"><svg class="ic" style="width:13px;height:13px;stroke-width:2.6"><use href="#i-check"/></svg>Settled · Inês won 200 from Tiago</div>
+                    <div class="nm">Marta</div>
+                    <div class="m"><span class="av a2">M</span><div class="bb">Tiago paying for everyone again</div></div>
+                  </div>
+                  <div class="cmp"><span class="pl"><svg class="ic" style="width:15px;height:15px;stroke-width:2.4"><use href="#i-plus"/></svg>Bet</span><span class="in">Message Friday Night Crew</span></div>
+                </div>
+                <div class="aside">
+                  <p class="ttl"><span class="gd"></span>Open bets <span class="cnt" style="background:var(--pi)">3</span></p>
+                  <div class="sm mu" style="margin-top:-6px">400 coins on the table</div>
+                  <div class="ls">
+                    <div class="rw you"><span class="av">R</span><span class="sp"><span class="bd">Rui v You · 100</span><div class="sm mu">Benfica beat Porto</div></span><span class="sm" style="color:var(--pgt);font-weight:800">Your move</span></div>
+                    <div class="rw"><span class="av a2">M</span><span class="sp"><span class="bd">Marta v Tiago · 200</span><div class="sm mu">Norris beat Verstappen</div></span><span class="live">LIVE</span></div>
+                    <div class="rw"><span class="av a4">I</span><span class="sp"><span class="bd">Inês v everyone · 100</span><div class="sm mu">Sinner wins the ATP Finals</div></span><span class="sm mu">Sun</span></div>
+                  </div>
+                  <p class="ttl" style="margin-top:6px">At the table</p>
+                  <div class="r"><span class="stack r"><span class="av">R</span><span class="av a2">M</span><span class="av a3">T</span><span class="av a4">I</span><span class="av a5">J</span><span class="av me">A</span></span><span class="sp"></span><span class="lk sm">Invite with a bet</span></div>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <figcaption><b>3 · Inside a clubhouse: the Room</b>The stream in the middle, the clubhouse's open bets always visible on the right. Your clubhouses stay one click away on the left.</figcaption>
+        </figure>
+
+        <!-- D4 bet conversation -->
+        <figure class="dw">
+          <div class="dsc"><div class="dsi">
+            <div class="ph t1 dt">
+              <div class="bar"><i></i><i></i><i></i><span class="url">Clubhouse · Friday Night Crew · Rui v You</span></div>
+              <div class="app" style="grid-template-columns:232px 1fr 392px">
+                <div class="nav">
+                  <div class="r brand"><svg class="mk" width="24" height="24"><use href="#m-seat"/></svg><span style="font:400 16px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-home"/></svg><span class="sp">Home</span><span class="cnt">2</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-bet"/></svg><span class="sp">Bets</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-you"/></svg><span class="sp">You</span></div>
+                  <div class="hd">Your clubhouses</div>
+                  <div class="it on"><span class="av a5 sq">FN</span><span class="sp">Friday Night Crew</span></div>
+                  <div class="it"><span class="av a3 sq">TO</span><span class="sp">The Office</span></div>
+                  <div class="it lk">+ Start or join</div>
+                  <div class="sp"></div>
+                  <div class="me-row"><span class="av me">A</span><span class="sp"><span class="bd">Ana</span><div class="sm mu">Your account</div></span><span class="coin">1,150</span></div>
+                </div>
+                <div class="main">
+                  <div class="t"><span class="ttl sp" style="font-size:19px">Friday Night Crew</span><svg class="ic mu"><use href="#i-gear"/></svg></div>
+                  <div class="tabs"><span class="on">Room</span><span>Leagues</span><span>People</span></div>
+                  <div class="b" style="padding:14px 22px 12px">
+                    <div class="nm">Tiago</div>
+                    <div class="m"><span class="av a3">T</span><div class="bb">Porto are not losing at home, relax</div></div>
+                    <div class="sys"><b style="color:var(--pi)">You took Rui's bet</b> · 100 coins each</div>
+                    <div class="m me"><div class="bb">Easy money</div></div>
+                    <div class="done"><svg class="ic" style="width:13px;height:13px;stroke-width:2.6"><use href="#i-check"/></svg>Settled · Inês won 200 from Tiago</div>
+                    <div class="nm">Marta</div>
+                    <div class="m"><span class="av a2">M</span><div class="bb">Tiago paying for everyone again</div></div>
+                    <div class="nm">João</div>
+                    <div class="m"><span class="av a5">J</span><div class="bb">Who is watching at mine?</div></div>
+                  </div>
+                  <div class="cmp"><span class="pl"><svg class="ic" style="width:15px;height:15px;stroke-width:2.4"><use href="#i-plus"/></svg>Bet</span><span class="in">Message Friday Night Crew</span></div>
+                </div>
+                <div class="aside thread">
+                  <div class="r"><span class="sp"><span class="ttl">Rui v You</span><span class="sm mu">A bet in Friday Night Crew</span></span><span class="live">LIVE 63'</span><svg class="ic mu" style="transform:rotate(45deg)"><use href="#i-plus"/></svg></div>
+                  <div class="ls" style="padding:16px 14px 14px;display:grid;gap:11px;text-align:center;justify-items:center">
+                    <p class="xl" style="font-size:22px">Benfica beat Porto.</p>
+                    <div class="r" style="gap:20px;align-items:flex-start;justify-content:center">
+                      <span class="side"><span class="av lg">R</span><span>Rui says <b>yes</b></span></span>
+                      <span class="side" style="padding-top:5px"><span class="score">200</span><span class="mu">on the table</span></span>
+                      <span class="side"><span class="av lg me">A</span><span>You say <b>no</b></span></span>
+                    </div>
+                    <div class="r" style="background:var(--pc);border-radius:99px;padding:7px 16px;gap:9px"><span class="bd">Benfica</span><span class="score" style="font-size:15px">1 – 0</span><span class="bd">Porto</span></div>
+                    <div class="sm mu">Rui is ahead. 27 minutes to go.</div>
+                    <div class="r" style="gap:14px;justify-content:center"><div class="bt s">Double it</div><span class="q">Share</span></div>
+                  </div>
+                  <div class="nm">Rui</div>
+                  <div class="m"><span class="av">R</span><div class="bb">Start counting your coins</div></div>
+                  <div class="m me"><div class="bb">Porto score in the last ten. Always</div></div>
+                  <div class="nm">Marta</div>
+                  <div class="m"><span class="av a2">M</span><div class="bb">I want in on this</div></div>
+                  <div class="sp"></div>
+                  <div class="cmp" style="padding:0;background:transparent"><span class="in">Say something about this bet</span></div>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <figcaption><b>4 · A bet opens as its own conversation</b>It opens beside the Room instead of replacing it: the bet, the live score and its own chat on the right, the clubhouse still talking in the middle.</figcaption>
+        </figure>
+
+        <!-- D5 making a bet -->
+        <figure class="dw">
+          <div class="dsc"><div class="dsi">
+            <div class="ph t1 dt">
+              <div class="bar"><i></i><i></i><i></i><span class="url">Clubhouse · Friday Night Crew · New bet</span></div>
+              <div class="app">
+                <div class="nav">
+                  <div class="r brand"><svg class="mk" width="24" height="24"><use href="#m-seat"/></svg><span style="font:400 16px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-home"/></svg><span class="sp">Home</span><span class="cnt">3</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-bet"/></svg><span class="sp">Bets</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-you"/></svg><span class="sp">You</span></div>
+                  <div class="hd">Your clubhouses</div>
+                  <div class="it on"><span class="av a5 sq">FN</span><span class="sp">Friday Night Crew</span></div>
+                  <div class="it"><span class="av a3 sq">TO</span><span class="sp">The Office</span></div>
+                  <div class="sp"></div>
+                  <div class="me-row"><span class="av me">A</span><span class="sp"><span class="bd">Ana</span><div class="sm mu">Your account</div></span><span class="coin">1,250</span></div>
+                </div>
+                <div class="main">
+                  <div class="t"><span class="ttl sp" style="font-size:19px">Friday Night Crew</span></div>
+                  <div class="tabs"><span class="on">Room</span><span>Leagues</span><span>People</span></div>
+                  <div class="b" style="padding:14px 24px">
+                    <div class="nm">Tiago</div>
+                    <div class="m"><span class="av a3">T</span><div class="bb">Porto are not losing at home, relax</div></div>
+                    <div class="nm">Marta</div>
+                    <div class="m"><span class="av a2">M</span><div class="bb">Tiago paying for everyone again</div></div>
+                  </div>
+                </div>
+                <div class="aside"><p class="ttl"><span class="gd"></span>Open bets <span class="cnt" style="background:var(--pi)">3</span></p></div>
+              </div>
+              <div class="scrim" style="top:34px"></div>
+              <div class="dlg">
+                <div class="r"><span class="sp"><span class="ttl" style="font-size:17px">New bet</span><span class="sm mu">Friday Night Crew</span></span><svg class="ic mu" style="transform:rotate(45deg)"><use href="#i-plus"/></svg></div>
+                <div class="dlg2">
+                  <div style="display:grid;gap:12px;align-content:start">
+                    <p class="xl" style="font-size:30px;line-height:1.36">I bet <span class="tok">everyone</span> <span class="tok on">100</span> coins that <span class="tok">Benfica</span> <span class="tok">beat</span> <span class="tok">Porto</span>.</p>
+                    <div class="sm mu">Click an underlined word to change it.</div>
+                    <div class="chs"><span class="ch">50</span><span class="ch on">100</span><span class="ch">200</span><span class="ch">Other</span></div>
+                  </div>
+                  <div style="display:grid;gap:8px;align-content:start">
+                    <p class="q" style="margin:0">Or start from this weekend</p>
+                    <div class="ls" style="background:var(--pb)">
+                      <div class="rw"><span class="sbx" style="color:#1E7A4C;background:var(--pc)"><svg><use href="#s-foot"/></svg></span><span class="sp"><span class="bd">Benfica v Porto</span><div class="sm mu">Sun 18:00</div></span><svg class="ic" style="color:var(--pgt);stroke-width:2.4"><use href="#i-check"/></svg></div>
+                      <div class="rw"><span class="sbx" style="color:#C7402B;background:var(--pc)"><svg><use href="#s-f1"/></svg></span><span class="sp"><span class="bd">São Paulo Grand Prix</span><div class="sm mu">Sun 17:00</div></span></div>
+                      <div class="rw"><span class="sbx" style="color:#7A3FA0;background:var(--pc)"><svg><use href="#s-ten"/></svg></span><span class="sp"><span class="bd">ATP Finals</span><div class="sm mu">All week</div></span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="r" style="border-top:1px solid var(--pr);padding-top:14px;gap:16px"><span class="sm mu sp">100 of your 1,250 coins go on the table.</span><span class="q">Cancel</span><div class="bt" style="padding:0 24px">Send to the room</div></div>
+              </div>
+            </div>
+          </div></div>
+          <figcaption><b>5 · Making a bet</b>A window over the Room. The sentence on the left, this weekend's matches on the right. Click a word to change who, how much, or what.</figcaption>
+        </figure>
+
+        <!-- D6 leagues -->
+        <figure class="dw">
+          <div class="dsc"><div class="dsi">
+            <div class="ph t1 dt">
+              <div class="bar"><i></i><i></i><i></i><span class="url">Clubhouse · Friday Night Crew · Leagues</span></div>
+              <div class="app">
+                <div class="nav">
+                  <div class="r brand"><svg class="mk" width="24" height="24"><use href="#m-seat"/></svg><span style="font:400 16px/1 'Archivo Black',sans-serif">Clubhouse</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-home"/></svg><span class="sp">Home</span><span class="cnt">3</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-bet"/></svg><span class="sp">Bets</span></div>
+                  <div class="it"><svg class="ic"><use href="#i-you"/></svg><span class="sp">You</span></div>
+                  <div class="hd">Your clubhouses</div>
+                  <div class="it on"><span class="av a5 sq">FN</span><span class="sp">Friday Night Crew</span></div>
+                  <div class="it"><span class="av a3 sq">TO</span><span class="sp">The Office</span></div>
+                  <div class="it lk">+ Start or join</div>
+                  <div class="sp"></div>
+                  <div class="me-row"><span class="av me">A</span><span class="sp"><span class="bd">Ana</span><div class="sm mu">Your account</div></span><span class="coin">1,250</span></div>
+                </div>
+                <div class="main">
+                  <div class="t"><span class="ttl sp" style="font-size:19px">Friday Night Crew</span><span class="stack r"><span class="av">R</span><span class="av a2">M</span><span class="av a3">T</span><span class="av a4">I</span></span><svg class="ic mu"><use href="#i-gear"/></svg></div>
+                  <div class="tabs"><span>Room</span><span class="on">Leagues</span><span>People</span></div>
+                  <div class="b" style="padding:16px 24px">
+                    <div class="ls">
+                      <div class="rw lg2"><span class="sbx" style="color:#1E7A4C"><svg><use href="#s-foot"/></svg></span><span class="sp"><span class="bd">Friday Night League</span><div class="sm mu">Football · Matchday 12 · <span style="color:var(--pgt);font-weight:700">lineup due Sat 12:00</span></div></span><span class="sm bd" style="width:70px;text-align:right">2nd of 6</span><div class="bt s">Open</div></div>
+                      <div class="rw lg2"><span class="sbx" style="color:#C7402B"><svg><use href="#s-f1"/></svg></span><span class="sp"><span class="bd">Crew Grand Prix</span><div class="sm mu">Formula 1 · São Paulo this Sunday</div></span><span class="sm bd" style="width:70px;text-align:right">4th of 5</span><div class="bt s g">Open</div></div>
+                      <div class="rw lg2"><span class="sbx" style="color:#7A3FA0"><svg><use href="#s-ten"/></svg></span><span class="sp"><span class="bd">Centre Court</span><div class="sm mu">Tennis · ATP Finals · 4 of 6 playing</div></span><span class="sm mu" style="width:70px;text-align:right">Not in</span><div class="bt s g">Join</div></div>
+                    </div>
+                    <div class="r"><span class="lk sm">+ Start a league</span><span class="sm mu">Football, Formula 1 or tennis today. More sports to come.</span></div>
+                  </div>
+                </div>
+                <div class="aside">
+                  <p class="ttl"><span class="gd"></span>Open bets <span class="cnt" style="background:var(--pi)">3</span></p>
+                  <div class="sm mu" style="margin-top:-6px">Bets belong to the clubhouse, so they stay here on every tab.</div>
+                  <div class="ls">
+                    <div class="rw you"><span class="av">R</span><span class="sp"><span class="bd">Rui v You · 100</span><div class="sm mu">Benfica beat Porto</div></span><span class="sm" style="color:var(--pgt);font-weight:800">Your move</span></div>
+                    <div class="rw"><span class="av a2">M</span><span class="sp"><span class="bd">Marta v Tiago · 200</span><div class="sm mu">Norris beat Verstappen</div></span><span class="live">LIVE</span></div>
+                    <div class="rw"><span class="av a4">I</span><span class="sp"><span class="bd">Inês v everyone · 100</span><div class="sm mu">Sinner wins the ATP Finals</div></span><span class="sm mu">Sun</span></div>
+                  </div>
+                  <div class="bt g" style="height:36px">Go to the Room</div>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <figcaption><b>6 · Inside a clubhouse: Leagues</b>One list for every sport, with your place and what is due. The open bets stay in the right column, because they belong to the clubhouse, not to a league.</figcaption>
+        </figure>
+
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1114,7 +1465,7 @@ footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--rule);font-si
     <li><span><b>Name check: deferred.</b> Logged as BRAND-4, to be done before the app goes to the stores.</span></li>
     <li><span><b>Nothing is being built yet.</b> The changes are in the backlog. When you say go, the suggested order is: the rename and logo files, the identity rules, the first screen and invite page, Home, the Room, the sentence bet, the bet conversation.</span></li>
   </ol>
-  <p class="note" style="margin-top:14px">Nothing on this page has been built. These are drawings to decide from. In the backlog: BRAND-1 to BRAND-4 cover the name, the logo and the identity rules. J-07, J-08, J-10, J-11, J-14, J-18 and J-21, and C-03, C-04, C-07 to C-09, C-19 and C-20 cover the screens.</p>
+  <p class="note" style="margin-top:14px">Nothing on this page has been built. These are drawings to decide from, each screen shown on a phone and on a computer. In the backlog: BRAND-1 to BRAND-4 cover the name, the logo and the identity rules. J-07, J-08, J-10, J-11, J-14, J-18 and J-21, and C-03, C-04, C-07 to C-09, C-19 and C-20 cover the screens.</p>
 </section>
 
 <footer>
@@ -1123,6 +1474,23 @@ footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--rule);font-si
 </footer>
 
 </div>
+
+<script>
+(function(){
+  var W=1120,H=660;
+  function fit(){
+    document.querySelectorAll('.dsc').forEach(function(c){
+      var s=Math.min(1,c.clientWidth/W);
+      c.firstElementChild.style.transform='scale('+s+')';
+      c.style.height=(H*s)+'px';
+    });
+  }
+  fit();
+  addEventListener('resize',fit);
+  if(window.ResizeObserver){var ro=new ResizeObserver(fit);document.querySelectorAll('.dsc').forEach(function(c){ro.observe(c);});}
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fit);}
+})();
+</script>
 
 </body>
 </html>
