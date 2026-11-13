@@ -13,6 +13,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { PLATFORM_NAME } from '../lib/brand';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -33,10 +34,15 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
   if (!circle?.invite_code) return null;
 
   const joinUrl = `${window.location.origin}/join-clubhouse?code=${circle.invite_code}`;
-  const waMessage = encodeURIComponent(
-    `🏠 Join my Clubhouse "${circle.name}" on Forza Fantasy League!\n\nInvite code: ${circle.invite_code}\n\nJoin here: ${joinUrl}`
-  );
-  const waUrl = `https://wa.me/?text=${waMessage}`;
+  const shareText = `🏠 Join my Clubhouse "${circle.name}" on ${PLATFORM_NAME}!\n\nInvite code: ${circle.invite_code}\n\nJoin here: ${joinUrl}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+  const canShare = typeof navigator.share === 'function';
+
+  const shareNative = async () => {
+    try {
+      await navigator.share({ title: circle.name, text: shareText });
+    } catch { /* share sheet dismissed */ }
+  };
 
   const copyCode = async () => {
     await navigator.clipboard.writeText(circle.invite_code).catch(() => {});
@@ -113,6 +119,19 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
             <span style={{ fontSize: 'var(--fs-heading)' }}>💬</span>
             Share on WhatsApp
           </a>
+
+          {canShare && (
+            <button
+              onClick={shareNative}
+              style={{
+                padding: 12, background: 'var(--elev)', border: '1px solid var(--rule)',
+                borderRadius: 10, color: 'var(--paper)',
+                fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, cursor: 'pointer',
+              }}
+            >
+              Share in another app
+            </button>
+          )}
 
           <button
             onClick={copyLink}

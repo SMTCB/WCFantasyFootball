@@ -1,11 +1,12 @@
 /**
- * OnboardingWizard — full-screen 4-step overlay shown to first-time users.
+ * OnboardingWizard — full-screen 5-step overlay shown to first-time users.
  *
  * Steps:
- *   1. Welcome       — what Forza Fantasy League is, competition context
- *   2. Build Squad   — budget, squad size, pick on Market
- *   3. Join League   — H2H mini-leagues with friends
- *   4. Ready         — confetti moment, what to do first
+ *   1. Welcome       — what the platform is, competition context
+ *   2. Clubhouse     — create or join one (the username is asked at sign-up, not here)
+ *   3. Build Squad   — budget, squad size, pick on Market
+ *   4. Join League   — H2H mini-leagues with friends
+ *   5. Ready         — confetti moment, lands on Home
  *
  * Accepts an optional `config` prop:
  *   { competitionName, budgetTotal, squadSize, teamCount }
@@ -18,6 +19,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { PLATFORM_NAME } from '../lib/brand';
 
 function buildSteps({ competitionName, budgetTotal, squadSize }) {
   const comp   = competitionName || 'Fantasy League';
@@ -26,20 +28,10 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
 
   return [
     {
-      id:       'username',
-      emoji:    '👤',
-      kicker:   'First things first',
-      heading:  'Choose your\nManager Name',
-      body:     'This is how other managers will see you in leaderboards, chat, and bets. Pick something you like — you can change it any time in Settings.',
-      cta:      'Continue →',
-      skip:     'Skip for now',
-      isUsernameStep: true,
-    },
-    {
       id:       'welcome',
       emoji:    '🏆',
       kicker:   comp,
-      heading:  'Welcome to\nForza Fantasy League',
+      heading:  `Welcome to\n${PLATFORM_NAME}`,
       body:     `The fantasy football league built for ${comp}. Pick your squad, beat your friends, own every matchday.`,
       cta:      "Let's go",
       skip:     'Skip intro',
@@ -57,9 +49,9 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
     {
       id:       'squad',
       emoji:    '⚽',
-      kicker:   'Step 1 of 4',
+      kicker:   'Your squad',
       heading:  'Build your\nDream Squad',
-      body:     `You have a $${budget}M budget to pick ${size} players — 1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD in your starting XI, plus bench cover. Every transfer costs budget, so choose wisely.`,
+      body:     `You have a €${budget}M budget to pick ${size} players — 1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD in your starting XI, plus bench cover. Every transfer costs budget, so choose wisely.`,
       cta:      'Next →',
       skip:     'Skip for now',
       ctaRoute: '/market',
@@ -67,7 +59,7 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
     {
       id:       'league',
       emoji:    '🥇',
-      kicker:   'Step 2 of 4',
+      kicker:   'Your friends',
       heading:  'Join a\nPrivate League',
       body:     "Create a league or enter a friend's invite code to go head-to-head every matchday. Your points are live — every goal, assist, and clean sheet counts in real time.",
       cta:      'Set up my league →',
@@ -78,13 +70,20 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
       id:       'ready',
       emoji:    '🚀',
       kicker:   "You're all set",
-      heading:  'First stop:\nthe Market',
-      body:     `Pick your ${size} players before the transfer window closes. The deadline countdown is live in your squad header — don't miss it.`,
-      cta:      'Open Market',
+      heading:  'Welcome\nhome',
+      body:     `Your Home screen shows what needs you next: bets to answer, squads to set and your Clubhouse. Playing football? Open the Market any time to pick your ${size} players before the transfer window closes.`,
+      cta:      'Go to Home',
       skip:     null,
-      ctaRoute: '/market',
+      ctaRoute: '/home',
     },
   ];
+}
+
+function clubhouseErrorText(failure, creating) {
+  if (failure === 'INVALID_CODE') return 'Code not found. Check it and try again.';
+  return creating
+    ? 'Could not create your Clubhouse. Try again, or skip for now.'
+    : 'Could not join that Clubhouse. Try again, or skip for now.';
 }
 
 // ── Confetti particle (pure CSS) ─────────────────────────────────────────────
@@ -141,17 +140,13 @@ function ProgressDots({ current, total }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function OnboardingWizard({ onComplete, onSkip, config = {}, user = null }) {
+export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
   const STEPS = buildSteps(config);
   const [step,    setStep]    = useState(0);
   const [exiting, setExiting] = useState(false);
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
-
-  // Username step state
-  const [usernameInput,    setUsernameInput]    = useState('');
-  const [usernameError,    setUsernameError]    = useState('');
-  const [usernameSaving,   setUsernameSaving]   = useState(false);
+  const hasKeyboard = typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
 
   // Clubhouse step state
   const [clubhouseName,  setClubhouseName]  = useState('');
@@ -159,17 +154,6 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
   const [clubhouseMode,  setClubhouseMode]  = useState('create'); // 'create' | 'join'
   const [clubhouseBusy,  setClubhouseBusy]  = useState(false);
   const [clubhouseError, setClubhouseError] = useState('');
-
-  // Pre-fill with current username when the wizard mounts (if user is known)
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase
-      .from('users')
-      .select('username')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => { if (data?.username) setUsernameInput(data.username); });
-  }, [user?.id]);
 
   // Fade in on mount
   useEffect(() => {
@@ -180,6 +164,8 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
   // Keyboard: → / Enter advance, Escape skip
   useEffect(() => {
     function onKey(e) {
+      // Typing in a field must not advance the wizard; the field's own Enter handler does that.
+      if (e.target instanceof HTMLElement && e.target.closest('input, textarea')) return;
       if (e.key === 'ArrowRight' || e.key === 'Enter') advance(current.ctaRoute);
       if (e.key === 'Escape' && current.skip) handleSkip();
     }
@@ -192,48 +178,23 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
   const isLast  = step === STEPS.length - 1;
 
   async function advance(route) {
-    // Save username when leaving the username step
-    if (current.isUsernameStep && user?.id) {
-      const trimmed = usernameInput.trim();
-      if (trimmed && trimmed.length >= 3) {
-        setUsernameSaving(true);
-        setUsernameError('');
-        const { error } = await supabase
-          .from('users')
-          .update({ username: trimmed })
-          .eq('id', user.id);
-        setUsernameSaving(false);
-        if (error) {
-          setUsernameError(error.message || 'Could not save username');
-          return; // stay on this step until fixed
-        }
-      }
-    }
-
-    // Handle Clubhouse step — create or join if inputs are filled, else fall through (skip)
+    // Clubhouse step: create or join if the field is filled, otherwise fall through (skip).
+    // The RPCs report failure in `error` or in `data.error` and never throw, so check both.
     if (current.isClubhouseStep) {
-      if (clubhouseMode === 'create' && clubhouseName.trim().length >= 2) {
+      const wantsCreate = clubhouseMode === 'create' && clubhouseName.trim().length >= 2;
+      const wantsJoin   = clubhouseMode === 'join'   && clubhouseCode.trim().length >= 4;
+      if (wantsCreate || wantsJoin) {
         setClubhouseBusy(true); setClubhouseError('');
-        try {
-          await supabase.rpc('create_circle', { p_name: clubhouseName.trim() });
-        } catch (e) {
-          setClubhouseError(e.message || 'Could not create Clubhouse');
-          setClubhouseBusy(false);
-          return;
-        }
+        const { data, error } = wantsCreate
+          ? await supabase.rpc('create_circle', { p_name: clubhouseName.trim() })
+          : await supabase.rpc('join_circle_by_code', { p_code: clubhouseCode.trim().toUpperCase() });
         setClubhouseBusy(false);
-      } else if (clubhouseMode === 'join' && clubhouseCode.trim().length >= 4) {
-        setClubhouseBusy(true); setClubhouseError('');
-        try {
-          await supabase.rpc('join_circle_by_code', { p_invite_code: clubhouseCode.trim().toUpperCase() });
-        } catch (e) {
-          setClubhouseError(e.message === 'INVALID_CODE' ? 'Code not found — check and try again.' : (e.message || 'Could not join Clubhouse'));
-          setClubhouseBusy(false);
-          return;
+        const failure = error?.message || data?.error;
+        if (failure && failure !== 'ALREADY_MEMBER') {
+          setClubhouseError(clubhouseErrorText(failure, wantsCreate));
+          return; // stay on this step until fixed or skipped
         }
-        setClubhouseBusy(false);
       }
-      // If neither condition met (empty inputs), fall through and advance step (skip behaviour)
     }
 
     if (isLast) {
@@ -336,7 +297,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             color:        'var(--gold-text)',
           }}
         >
-          {current.id === 'welcome' ? 'FFL' : current.id === 'clubhouse' ? 'CLB' : current.id === 'squad' ? 'SQD' : current.id === 'league' ? 'LGE' : 'GO'}
+          {current.id === 'welcome' ? PLATFORM_NAME.slice(0, 3).toUpperCase() : current.id === 'clubhouse' ? 'CLB' : current.id === 'squad' ? 'SQD' : current.id === 'league' ? 'LGE' : 'GO'}
         </div>
 
         {/* Kicker */}
@@ -378,42 +339,6 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         >
           {current.body}
         </p>
-
-        {/* Username input — only on the username step */}
-        {current.isUsernameStep && (
-          <div style={{ width: '100%', maxWidth: 400, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input
-              type="text"
-              value={usernameInput}
-              onChange={e => { setUsernameInput(e.target.value); setUsernameError(''); }}
-              onKeyDown={e => { if (e.key === 'Enter') advance(current.ctaRoute); }}
-              placeholder="e.g. FantasyKing, PilotMgr…"
-              maxLength={30}
-              autoFocus
-              style={{
-                width: '100%',
-                fontFamily: 'Archivo, sans-serif',
-                fontSize: 'var(--fs-body-lg)',
-                color: 'var(--paper)',
-                textAlign: 'center',
-                padding: '12px 16px',
-                background: 'rgba(24,32,46,0.04)',
-                border: `1px solid ${usernameError ? 'var(--danger)' : usernameInput.trim().length >= 3 ? 'var(--gold)' : 'var(--rule)'}`,
-                borderRadius: 8,
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-            {usernameError && (
-              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)', textAlign: 'center' }}>
-                {usernameError}
-              </p>
-            )}
-            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
-              3–30 characters · can be changed later in Settings
-            </p>
-          </div>
-        )}
 
         {/* Clubhouse step UI */}
         {current.isClubhouseStep && (
@@ -480,7 +405,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         {/* CTA */}
         <button
           onClick={() => advance(current.ctaRoute)}
-          disabled={usernameSaving || clubhouseBusy}
+          disabled={clubhouseBusy}
           style={{
             width:         '100%',
             padding:       '14px 24px',
@@ -497,7 +422,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           onMouseEnter={e => { e.target.style.opacity = '0.88'; e.target.style.transform = 'translateY(-1px)'; }}
           onMouseLeave={e => { e.target.style.opacity = '1';    e.target.style.transform = 'translateY(0)'; }}
         >
-          {(usernameSaving || clubhouseBusy) ? 'Please wait…'
+          {clubhouseBusy ? 'Please wait…'
             : current.isClubhouseStep
               ? (clubhouseMode === 'create' ? 'Create Clubhouse →' : 'Join Clubhouse →')
               : current.cta}
@@ -517,17 +442,19 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         </div>
       </div>
 
-      {/* Keyboard hint */}
-      <div
-        style={{
-          marginTop:     '20px',
-          fontSize: 'var(--fs-label)',
-          color:         'var(--mute)',
-          fontFamily:    'Archivo Black, sans-serif',
-        }}
-      >
-        Press <kbd style={{ background: 'var(--rule)', padding: '1px 5px', borderRadius: '3px' }}>→</kbd> to advance
-      </div>
+      {/* Keyboard hint, only where there is a physical keyboard */}
+      {hasKeyboard && (
+        <div
+          style={{
+            marginTop:     '20px',
+            fontSize: 'var(--fs-label)',
+            color:         'var(--mute)',
+            fontFamily:    'Archivo Black, sans-serif',
+          }}
+        >
+          Press <kbd style={{ background: 'var(--rule)', padding: '1px 5px', borderRadius: '3px' }}>→</kbd> to advance
+        </div>
+      )}
     </div>
   );
 }

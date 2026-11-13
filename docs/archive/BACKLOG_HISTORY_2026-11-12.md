@@ -6679,3 +6679,13 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - DOCS-3 (part): 21 docs under `docs/` given a `Last Updated` line.
 
 Last Updated: 2026-11-13
+
+## 2026-11-13 — Session S4 (welcome fixes)
+
+- J-04: the welcome now calls `join_circle_by_code` with the right parameter (`p_code`; it sent `p_invite_code`, so every join failed) and reads the `{data, error}` result the RPC returns instead of expecting a throw. A wrong code or failed create shows a message and keeps the user on the step; `ALREADY_MEMBER` counts as success.
+- J-05: welcome uses the platform name from the new `src/lib/brand.js` (`PLATFORM_NAME`, Frontrow until BRAND-1), one step counter, `€` budget, keyboard hint only on devices with a mouse. Arrow/Enter keys no longer advance the welcome while typing in a field.
+- J-06: duplicate username step removed (asked at sign-up); the welcome now ends on Home (`/home`), not the Market.
+- C-02: Clubhouse and league invites use `PLATFORM_NAME`; Clubhouse invite gains a "Share in another app" button (phone share sheet) where the browser supports it.
+- DD-P1-2 stays open: the cold-start walkthrough with a fresh account on a phone is still the owner's.
+
+Last Updated: 2026-11-13
