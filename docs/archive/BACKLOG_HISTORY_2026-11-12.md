@@ -6764,6 +6764,5 @@ Last Updated: 2026-11-14
 
 - DD-P2-1: `error_logs` insert policy now bounds message, stack, screen, component and user agent length (migration 308, applied after backup and tested).
 - J-10 (part): public bet page `/bet/:id`, `get_bet_invite_preview` and `accept_bet_invite` (migrations 309, 310; anon cannot accept), and a Share link button on open bets.
-- Unit test fix: the daily stake cap test expected a stale error name; all 55 P2P tests pass.
 
 Last Updated: 2026-11-14
