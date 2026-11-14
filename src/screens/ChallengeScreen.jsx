@@ -1225,7 +1225,7 @@ function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipants, fetc
         }}>
           {isArbitrate
             ? 'This pays out immediately and cannot be undone.'
-            : 'Participants have 48 hours to dispute this outcome.'}
+            : 'Participants have 24 hours to object to this outcome.'}
         </div>
 
         {isMC ? (
@@ -2404,7 +2404,7 @@ export default function ChallengeScreen() {
 
   async function handleDeclareBetSubmit(betId, payload) {
     await declareOutcome(betId, payload);
-    showToast('Outcome declared — participants have 48 hours to dispute.');
+    showToast('Result declared — participants have 24 hours to object.');
   }
 
   async function handleDisputeBetConfirmed() {

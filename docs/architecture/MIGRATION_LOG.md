@@ -233,6 +233,7 @@ Always create a new file — never modify existing migrations.
 | 304 | `304_chips_engine.sql` | Chips engine: Triple Captain, Joker (x2, once per tournament), Max Cap, with a per-league admin switch. **Written but NOT applied** (needs explicit approval and a backup). |
 | 305 | `305_product_events.sql` | `product_events` table (id, user_id default auth.uid(), event, props jsonb, created_at) for onboarding and app-open counts. RLS: insert-own only, no read policy. Applied 2026-11-14 after a backup. Written by `src/lib/analytics.js`. |
 | 306 | `306_fix_guard_coin_columns_delete.sql` | BUG-CW1: `guard_coin_columns()` now returns OLD on DELETE, so deleting a `coin_wallets` row is no longer silently cancelled. Applied 2026-11-14 after schema and data backups. |
+| 307 | `307_settlement_and_ledger.sql` | S10 / J-13 + BUG-LEDGER-1: 24h objection window for group bets; `settle_bet_coins` writes win/loss/refund rows that equal the real balance movement; new `settle_freeform_challenge` helper and `settle_due_freeform_challenges` sweep (24h auto payout, 14-day no-result void, 7-day reminders); `finalize_declared_bets` voids undeclared group bets after 7 days and sends a 3-day reminder; `auto_void_stale_disputes` runs the sweep. Applied 2026-11-14 after backup. Next migration: 308. |
 
 **Next migration**: `307_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
 

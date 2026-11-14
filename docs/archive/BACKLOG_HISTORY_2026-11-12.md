@@ -6747,4 +6747,10 @@ Last Updated: 2026-11-13
 - J-02: switched on jobs 70, 71, 72, 17 and 91. All five show succeeded runs in their history (checked 13:00 UTC). Job 91 did not resolve the two closed July bets; logged as BET-STUCK-1.
 - Backups taken first: schema and data dumps in backups/ (gitignored).
 
+## 2026-11-14 — Session S10 (Settlement)
+
+- J-13: one settlement flow for group bets and 1-to-1 challenges: creator declares, 24h to object, automatic payout from the hourly jobs. Objection goes to the clubhouse owner; 7 days without a decision voids and refunds. Nobody declares: group bet voided 7 days after it closed, 1-to-1 challenge voided 14 days after acceptance; one-time reminders at 3 days (group creator) and 7 days (both sides). Migration 307, no new cron job.
+- BUG-LEDGER-1: every coin_transactions row now equals a real balance movement (win = full payout, loss = 0 with stake_lost in meta, refund = stake back). Old rows not rewritten. Verified on the two test accounts: ledger change equals wallet change in all six scenarios.
+- BET-STUCK-1 (code): resolve-bets closes a bet with no winner 7 days after its deadline when its template has no automatic resolver. Function deployed 2026-11-14.
+
 Last Updated: 2026-11-13
