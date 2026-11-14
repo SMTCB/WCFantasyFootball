@@ -423,7 +423,7 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
 - **Transfer Market**: Browse all players, filter by position/price, buy/sell
 - **League Creation**: Multi-step flow with invite codes, H2H mode only
 - **League Standings**: Points table, head-to-head matchup details
-- **League Chat**: Real-time Realtime subscriptions, message persistence
+- **The Room**: one chat-and-activity stream per Clubhouse (S11, 2026-11-14); realtime messages, tap-to-delete, activity entries merged in. Channels and DMs removed from the UI
 - **Live Scores**: Fetch live match data, Joker chip multiplier selection
 - **Scoring Pipeline**: Weekly points calculation from Forza Football API
 - **Player Status**: Injury alerts, suspension tracking, injury history

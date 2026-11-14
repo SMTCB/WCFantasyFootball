@@ -67,4 +67,4 @@ Finished work (shipped PRs, session logs, audits) is in [docs/archive/BACKLOG_HI
 4. Superseded docs move to `docs/archive/`, they are not left in place.
 5. Link with relative paths.
 
-Last Updated: **2026-11-13**
+Last Updated: **2026-11-14**
