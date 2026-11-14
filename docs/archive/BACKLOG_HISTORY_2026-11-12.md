@@ -6678,7 +6678,7 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - INFRA-3: already done; Dockerfile is `node:24-alpine`, matching `engines`.
 - DOCS-3 (part): 21 docs under `docs/` given a `Last Updated` line.
 
-Last Updated: 2026-11-13
+Last Updated: 2026-11-14
 
 ## 2026-11-13 — Session S4 (welcome fixes)
 
@@ -6761,4 +6761,4 @@ Last Updated: 2026-11-13
 - C-11: a Clubhouse with one member shows "Invite with a bet" (main) and "Share a link instead" (quiet), plus a link to say hello in The Room on mobile.
 - CLUB-2: dead total_points code removed from the Clubhouse screen.
 
-Last Updated: 2026-11-13
+Last Updated: 2026-11-14

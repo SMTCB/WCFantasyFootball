@@ -1,3 +1,5 @@
+> **Historical brief (July 2026).** Chat has since become a single stream called "The Room" (S11, 2026-11-14); channels and DMs described below are no longer in the UI.
+
 # Clubhouse Core — Design Handoff Brief
 
 **For: Claude Design · Prepared July 2026 · Kit Light direction**
