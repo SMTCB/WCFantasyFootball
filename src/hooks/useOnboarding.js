@@ -13,11 +13,11 @@
  *   forzakit_tour_commissioner_done — commissioner panel tour completed
  *   forzakit_tour_bets_done        — bets section tour completed
  *
- * Analytics events are stubbed with console.info in demo mode.
- * Swap the `track()` body for your analytics provider when ready.
+ * Events go through src/lib/analytics.js (console only until CODE-5 is decided).
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { track } from '../lib/analytics';
 
 const K = {
   wizard:            'forzakit_onboarding_done',
@@ -31,12 +31,6 @@ const K = {
 
 function get(key)       { return localStorage.getItem(key) === 'true'; }
 function set(key, val)  { localStorage.setItem(key, val ? 'true' : 'false'); }
-
-// ── Analytics stub ────────────────────────────────────────────────────────────
-function track(event, props = {}) {
-  // TODO: swap for Mixpanel / PostHog / Amplitude when analytics is wired
-  console.info('[onboarding]', event, props);
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 export function useOnboarding() {
