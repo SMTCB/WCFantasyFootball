@@ -6729,4 +6729,9 @@ Last Updated: 2026-11-13
 - J-12: welcome is three steps: what Clubhouse is, start or join a Clubhouse, then start a bet or pick a sport. The name is asked at sign-up.
 - J-09 and CODE-5 (part): one event per welcome step and for Clubhouse created/joined, through a single helper (console only until storage is approved).
 
+## 2026-11-14 — Session S9 part 3 (Events table, Start a clubhouse)
+
+- J-09 / CODE-5: migration 305 applied (product_events, insert-own RLS, backup taken first); events now stored.
+- J-21 (part): main "Start a clubhouse" button on the first screen opens create-account.
+
 Last Updated: 2026-11-13
