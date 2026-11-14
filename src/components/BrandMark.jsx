@@ -1,6 +1,6 @@
 /**
- * BrandMark — Frontrow logo lockup ("The Tiers")
- * Source: docs/platform_revision/design_v2/logo/README.md — do not invent new proportions/colors here.
+ * BrandMark — Clubhouse logo lockup ("The Seat": a C-shaped table from above, one gold seat)
+ * Assets: public/brand/clubhouse-*.svg. Keep the proportions in sync with them.
  *
  * Props:
  *   theme    'dark' | 'light'  — color scheme (default: 'dark'). 'dark' = warm-white wordmark for use
@@ -9,13 +9,11 @@
  *   compact  boolean           — smaller icon + single-line wordmark, no tagline (default: false)
  */
 
-function TiersMark({ size = 36 }) {
-  const width = (size * 80) / 45;
+function SeatMark({ size = 36, ink = '#18202E', seat = '#B8720E' }) {
   return (
-    <svg width={width} height={size} viewBox="0 0 80 45" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink: 0 }}>
-      <rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E" />
-      <rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8" />
-      <rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8" />
+    <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path d="M43.57 18.21A18 18 0 1 0 43.57 45.79" fill="none" stroke={ink} strokeWidth="10" strokeLinecap="round" />
+      <circle cx="51" cy="32" r="5.5" fill={seat} />
     </svg>
   );
 }
@@ -34,7 +32,7 @@ export default function BrandMark({ theme = 'dark', scale = 1, compact = false }
         transform:       `scale(${scale})`,
         transformOrigin: 'left center',
       }}>
-        <TiersMark size={16} />
+        <SeatMark size={22} ink={isDark ? '#F7F3ED' : '#18202E'} seat={isDark ? '#E5B45C' : '#B8720E'} />
         <span style={{
           fontFamily: 'Archivo Black, sans-serif',
           fontSize: 'var(--fs-body)',
@@ -56,7 +54,7 @@ export default function BrandMark({ theme = 'dark', scale = 1, compact = false }
       transform:       `scale(${scale})`,
       transformOrigin: 'left center',
     }}>
-      <TiersMark size={36} />
+      <SeatMark size={44} ink={isDark ? '#F7F3ED' : '#18202E'} seat={isDark ? '#E5B45C' : '#B8720E'} />
       <span style={{
         fontFamily: 'Archivo Black, sans-serif',
         fontSize: 'var(--fs-title)',

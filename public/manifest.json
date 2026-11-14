@@ -5,8 +5,8 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0D0D0D",
-  "theme_color": "#00E5FF",
+  "background_color": "#F7F3ED",
+  "theme_color": "#F7F3ED",
   "icons": [
     {
       "src": "/favicon.svg",
@@ -15,9 +15,10 @@
       "purpose": "any"
     },
     {
-      "src": "/favicon.svg",
+      "src": "/brand/clubhouse-icon-light.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }
