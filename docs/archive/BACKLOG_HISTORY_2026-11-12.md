@@ -6677,6 +6677,8 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - DOCS-1: CLAUDE.md platform.spec count corrected to 84 (42 x 2), stale React Compiler known-issue removed; `CHIPS_ENABLED`/`KNOCKOUT_DRAFT_ENABLED` marked historical in MIGRATION_LOG.md. The tree and missing root files were already gone from CLAUDE.md.
 - INFRA-3: already done; Dockerfile is `node:24-alpine`, matching `engines`.
 - DOCS-3 (part): 21 docs under `docs/` given a `Last Updated` line.
+- C-08: the dice in the Room now opens the new-bet sheet in place (no navigating away). A bet card in the Room shows Take it / Pass while the bet still waits for you (bets use join/decline, head-to-head challenges use accept/decline). No database change.
+- C-20: the Room shows an Open bets strip (up to three, with a Take button) for this Clubhouse. League-level bets keep their entry points unchanged.
 
 Last Updated: 2026-11-14
 
