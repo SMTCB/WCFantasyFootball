@@ -6753,4 +6753,12 @@ Last Updated: 2026-11-13
 - BUG-LEDGER-1: every coin_transactions row now equals a real balance movement (win = full payout, loss = 0 with stake_lost in meta, refund = stake back). Old rows not rewritten. Verified on the two test accounts: ledger change equals wallet change in all six scenarios.
 - BET-STUCK-1 (code): resolve-bets closes a bet with no winner 7 days after its deadline when its template has no automatic resolver. Function deployed 2026-11-14; both bets (a211dc0a, cbb6e5ea) resolved with no winner on the 13:45 run.
 
+## 2026-11-14 — Session S11 (The Room: one stream)
+
+- C-07: chat and activity merged into one stream called The Room. Only the default channel is used; the channel list and DMs tab are hidden (tables and hooks untouched). Activity entries (results, auctions, news) appear in the stream and open their league; the separate Activity list on Home is removed. Mobile tab renamed from Chat to The Room.
+- C-01: tap your own message (owner: any message) to get a Delete button; a failed send or delete shows an error; sender names come from the member list so "?" no longer shows (also fixed an operator-precedence bug in the old name expression).
+- C-06: emoji replaced by icons in the Room and Clubhouse screen; avatar colours use tokens; Room height uses dvh so the phone address bar no longer breaks it.
+- C-11: a Clubhouse with one member shows "Invite with a bet" (main) and "Share a link instead" (quiet), plus a link to say hello in The Room on mobile.
+- CLUB-2: dead total_points code removed from the Clubhouse screen.
+
 Last Updated: 2026-11-13
