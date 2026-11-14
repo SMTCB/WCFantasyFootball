@@ -81,7 +81,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', minHeight: '60vh' }}>
       <div style={{ maxWidth: 560, textAlign: 'center' }}>
         <div style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', marginBottom: 14 }}>
-          Welcome to Frontrow
+          Welcome to Clubhouse
         </div>
         <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--paper)', letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 14px' }}>
           Every game you play lives in one room.
@@ -194,7 +194,7 @@ function AllCompetitions({ competitions, onEnter }) {
   if (allComps.length === 0) return null;
   return (
     <div style={{ marginBottom: 24 }}>
-      <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>Competitions</h2>
+      <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>Leagues</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
         {allComps.map(item => {
           const meta = SPORT_META[item.sport] ?? SPORT_META.football;
@@ -638,7 +638,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
       )}
       {linkMsg && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: linkMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 8 }}>{linkMsg}</div>}
 
-      {sectionLabel('Competition Admins')}
+      {sectionLabel('League admins')}
       {competitionAdmins === null ? (
         <button
           onClick={loadCompetitionAdmins}
@@ -651,7 +651,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {[
             { label: 'Leagues',      type: 'league',     list: competitionAdmins.leagues ?? [] },
-            { label: 'F1 Paddocks',  type: 'paddock',     list: competitionAdmins.f1 ?? [] },
+            { label: 'F1 leagues',  type: 'paddock',     list: competitionAdmins.f1 ?? [] },
             { label: 'Tennis Boxes', type: 'player_box',  list: competitionAdmins.tennis ?? [] },
           ].map(group => group.list.length === 0 ? null : (
             <div key={group.type}>
@@ -829,7 +829,7 @@ export default function ClubhouseScreen() {
   // 5 tabs on desktop (chat lives in the persistent rail); 6 on mobile (chat gets its own tab, no rail)
   const MAIN_TABS = [
     { key: 'home',      label: 'Home' },
-    { key: 'frontrow',  label: 'The Frontrow' },
+    { key: 'frontrow',  label: 'The Paper' },
     { key: 'digest',    label: 'Digest' },
     ...(!isDesktop ? [{ key: 'chat', label: 'Chat' }] : []),
     { key: 'members',   label: 'Members' },
@@ -911,7 +911,7 @@ export default function ClubhouseScreen() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{totalComps}</div>
-                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Competitions</div>
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Leagues</div>
                   </div>
                 </div>
               )}
@@ -1039,12 +1039,12 @@ export default function ClubhouseScreen() {
                   }}
                 >
                   <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
-                    The Frontrow{frontpage.edition ? ` · Edition #${frontpage.edition.edition_number}` : ''}
+                    The Paper{frontpage.edition ? ` · Edition #${frontpage.edition.edition_number}` : ''}
                   </div>
                   <div style={{ fontFamily: 'Georgia, serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', fontStyle: frontpage.edition ? 'normal' : 'italic' }}>
                     {frontpage.edition?.headline ?? 'No edition published yet today.'}
                   </div>
-                  <div style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', marginTop: 2 }}>Read the Frontrow →</div>
+                  <div style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', marginTop: 2 }}>Read the Paper →</div>
                 </button>
 
                 {/* Activity feed */}

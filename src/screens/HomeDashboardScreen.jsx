@@ -391,7 +391,7 @@ export default function HomeDashboardScreen() {
               </div>
               <div>
                 <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{totalComps}</div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Competitions</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Leagues</div>
               </div>
             </div>
           )}

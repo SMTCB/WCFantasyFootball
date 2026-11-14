@@ -2703,7 +2703,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
     if (error) {
       setCommMsg({ type: 'err', text: `Failed to post: ${error.message}` });
     } else {
-      setCommMsg({ type: 'ok', text: postType === 'classified' ? 'Classified posted.' : 'News posted to league activity and the Frontrow.' });
+      setCommMsg({ type: 'ok', text: postType === 'classified' ? 'Classified posted.' : 'News posted to league activity and the Paper.' });
       // Fire-and-forget: refresh the Clubhouse Frontrow so the announcement is front-page news.
       if (postType === 'breaking_news') {
         supabase.functions.invoke('generate-frontpage-edition', { body: { announce_league_id: leagueId } }).catch(() => {});

@@ -163,7 +163,7 @@ export default function PaddockLobbyScreen() {
                         {p.role === 'owner' && (
                           <button
                             onClick={() => setSettingsPaddock(p)}
-                            aria-label="Paddock settings"
+                            aria-label="League settings"
                             style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
                           >
                             ⚙

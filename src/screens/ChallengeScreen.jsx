@@ -1918,7 +1918,7 @@ function CreateChallengeModal({
               <>
                 {/* Competition picker */}
                 <div style={{ marginBottom: 14 }}>
-                  <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Competition</span>
+                  <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>League</span>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {footballLeagues.map(l => (
                       <Chip key={l.id} selected={leagueId === l.id} onClick={() => { setLeagueId(l.id); setGw(null); }}>{l.name}</Chip>

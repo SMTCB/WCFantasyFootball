@@ -171,7 +171,7 @@ export default function F1HomeScreen() {
             {paddockId && activePaddock?.role === 'owner' && (
               <button
                 onClick={() => setShowSettings(true)}
-                aria-label="Paddock settings"
+                aria-label="League settings"
                 style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--text)' }}
               >
                 ⚙
