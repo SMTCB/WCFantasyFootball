@@ -253,7 +253,7 @@ export default function AuthScreen() {
 
   // ── Sign In / Sign Up tabs ───────────────────────────────────────────────────
   return (
-    <AuthShell>
+    <AuthShell pitch>
       {/* Tab strip */}
       <div role="tablist" aria-label="Account" style={{ display: 'flex', borderBottom: '1px solid var(--rule)', marginBottom: '28px' }}>
         {[{ id: TAB_SIGNIN, label: 'Sign In' }, { id: TAB_SIGNUP, label: 'Create Account' }].map(t => (
@@ -337,16 +337,27 @@ export default function AuthScreen() {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-function AuthShell({ children }) {
+function AuthShell({ children, pitch = false }) {
   return (
     <div style={{ minHeight: '100svh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       {/* Brandmark */}
-      <div style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ marginBottom: pitch ? '20px' : '40px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
         <BrandMark theme="light" scale={0.9} compact={false} />
       </div>
 
+      {pitch && (
+        <div style={{ marginBottom: '28px', textAlign: 'center', maxWidth: '400px' }}>
+          <h1 style={{ margin: 0, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', lineHeight: 1.15, color: 'var(--paper)' }}>
+            Bets between friends.
+          </h1>
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', lineHeight: 1.5, color: 'var(--text-2)' }}>
+            Every game you play lives in one room. Make an account, start a clubhouse and invite your group.
+          </p>
+        </div>
+      )}
+
       {/* Card */}
-      <div style={{ width: '100%', maxWidth: '400px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: '6px', padding: '32px' }}>
+      <div style={{ width: '100%', maxWidth: '400px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '32px' }}>
         {children}
       </div>
     </div>
