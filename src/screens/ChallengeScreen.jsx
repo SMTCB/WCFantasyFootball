@@ -2112,7 +2112,8 @@ function NoClubhousePrompt({ onClose }) {
   );
 }
 
-function NewBetModal({
+// Exported so the Room can open it in place (lazy-loaded there).
+export function NewBetModal({
   onClose, onCreateChallenge, onCreateBet, wallet, circleId, circleName,
   currentUserId, members, footballLeagues, betsEnabled,
 }) {

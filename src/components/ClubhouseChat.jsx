@@ -1,9 +1,17 @@
 import { LoadingRows } from './Skeleton';
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { supabase } from '../lib/supabase';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
 import { IconCheckCircle, IconDice, IconClose } from './UiIcons';
+import BetThread from './BetThread';
+import { useAuth } from '../hooks/useAuth';
+import { useWallet } from '../hooks/useWallet';
+import { useChallenges } from '../hooks/useChallenges';
+import { useGroupBets } from '../hooks/useGroupBets';
+import { useClubhouseContext } from '../context/ClubhouseContext';
+
+// The create-a-bet sheet lives in ChallengeScreen; load it only when someone taps the dice.
+const NewBetModal = lazy(() => import('../screens/ChallengeScreen').then(m => ({ default: m.NewBetModal })));
 
 const BODY = { fontFamily: 'Archivo, sans-serif' };
 
@@ -16,18 +24,18 @@ function timeAgo(iso) {
 }
 
 // Bet activity card: system message for bet/challenge create + resolve
-function BetActivityCard({ msg }) {
-  const navigate = useNavigate();
+function BetActivityCard({ msg, actionable, onTake, onPass, busy, onOpen }) {
   const ref = msg.betRef ?? {};
   const isResolved = ref.event === 'resolved';
 
   return (
+    <div style={{ margin: '4px 0', borderRadius: 8, background: 'var(--card)', border: '1px solid var(--rule)' }}>
     <button
-      onClick={() => navigate('/challenges?tab=bets')}
+      onClick={() => onOpen?.(ref)}
       style={{
         display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
-        padding: '9px 12px', margin: '4px 0', borderRadius: 8, cursor: 'pointer',
-        background: 'var(--card)', border: '1px solid var(--rule)',
+        padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
+        background: 'transparent', border: 'none',
       }}
     >
       <span style={{ flexShrink: 0, display: 'flex', color: isResolved ? 'var(--positive)' : 'var(--accent)' }}>
@@ -45,6 +53,19 @@ function BetActivityCard({ msg }) {
       </span>
       <span style={{ ...BODY, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>VIEW</span>
     </button>
+    {actionable && (
+      <div style={{ display: 'flex', gap: 8, padding: '0 12px 10px' }}>
+        <button
+          onClick={onTake} disabled={busy}
+          style={{ flex: 1, minHeight: 'var(--tap)', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}
+        >Take it · {ref.stake_coins} coins</button>
+        <button
+          onClick={onPass} disabled={busy}
+          style={{ minHeight: 'var(--tap)', padding: '0 16px', background: 'transparent', color: 'var(--mute)', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+        >Pass</button>
+      </div>
+    )}
+    </div>
   );
 }
 
@@ -80,10 +101,10 @@ function ActivityRow({ entry, onEnter }) {
 
 // Message bubble. Tap a message you can delete to reveal a Delete button
 // (works on touch; the old hover-only delete did not).
-function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, deleting }) {
+function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, deleting, betAction, onOpenBet }) {
   const showMeta = !prevMsg || prevMsg.kind === 'activity' || prevMsg.userId !== msg.userId;
 
-  if (msg.kind === 'bet_activity') return <BetActivityCard msg={msg} />;
+  if (msg.kind === 'bet_activity') return <BetActivityCard msg={msg} onOpen={onOpenBet} {...(betAction ?? {})} />;
 
   return (
     <div style={{ padding: showMeta ? '8px 0 2px' : '1px 0' }}>
@@ -130,7 +151,6 @@ function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, 
 // The Room: one stream of chat, bets and activity.
 // layout 'rail' = desktop side panel on Home; 'full' = the whole Room view.
 export default function ClubhouseChat({ circleId, members, activeCircle, feed = [], onEnterLeague, layout = 'full', onExpand }) {
-  const navigate = useNavigate();
   const [channelId, setChannelId] = useState(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -139,6 +159,38 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
   const [deletingId, setDeletingId] = useState(null);
 
   const isOwner = activeCircle?.role === 'owner';
+
+  // Bets in the Room: create from the message box, take or pass on a card (C-08).
+  const { user } = useAuth();
+  const { wallet } = useWallet(user?.id);
+  const { competitions } = useClubhouseContext();
+  const { incoming, acceptChallenge, declineChallenge, createChallenge } = useChallenges(user?.id, circleId);
+  const { openInvited, joinBet, declineBet, createBet } = useGroupBets(user?.id, circleId);
+  const [showBet, setShowBet] = useState(false);
+  const [threadRef, setThreadRef] = useState(null);
+  const [betBusy, setBetBusy] = useState(false);
+  const betsEnabled = !!activeCircle?.p2p_betting_enabled;
+
+  // A card is actionable only while the bet still waits for this person's answer.
+  function betActionFor(msg) {
+    const ref = msg.betRef;
+    if (msg.kind !== 'bet_activity' || !ref || ref.event !== 'created') return null;
+    const isBet = ref.ref_kind === 'bet';
+    const open = isBet
+      ? openInvited.some(b => b.id === ref.ref_id)
+      : incoming.some(c => c.id === ref.ref_id);
+    if (!open) return null;
+    const run = async (fn) => {
+      setBetBusy(true); setError('');
+      try { await fn(ref.ref_id); } catch (err) { setError(err.message ?? 'That did not work. Try again.'); }
+      finally { setBetBusy(false); }
+    };
+    return {
+      actionable: true, busy: betBusy,
+      onTake: () => run(isBet ? joinBet : acceptChallenge),
+      onPass: () => run(isBet ? declineBet : declineChallenge),
+    };
+  }
 
   // The Room is the default channel; other channels are no longer shown (C-07).
   useEffect(() => {
@@ -241,10 +293,38 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
             onSelect={() => setSelectedId(selectedId === item.id ? null : item.id)}
             onDelete={() => handleDelete(item.id)}
             deleting={deletingId === item.id}
+            betAction={betActionFor(item)}
+            onOpenBet={setThreadRef}
           />
         ))}
         <div ref={scrollEndRef} />
       </div>
+
+      {(openInvited.length > 0 || incoming.length > 0) && (
+        <div style={{ padding: '8px 16px', borderTop: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
+          <div style={{ ...BODY, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--mute)', marginBottom: 6 }}>
+            OPEN BETS · {openInvited.length + incoming.length}
+          </div>
+          {[...openInvited.map(b => ({ id: b.id, kind: 'bet', question: b.question, stake: b.stake_coins })),
+            ...incoming.map(c => ({ id: c.id, kind: 'challenge', question: c.question ?? c.message, stake: c.stake_coins }))]
+            .slice(0, 3).map(b => (
+              <div key={`${b.kind}-${b.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.question}</span>
+                <span style={{ ...BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>{b.stake} coins</span>
+                <button
+                  disabled={betBusy}
+                  onClick={async () => {
+                    setBetBusy(true); setError('');
+                    try { await (b.kind === 'bet' ? joinBet(b.id) : acceptChallenge(b.id)); }
+                    catch (err) { setError(err.message ?? 'That did not work. Try again.'); }
+                    finally { setBetBusy(false); }
+                  }}
+                  style={{ minHeight: 'var(--tap)', padding: '0 12px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer' }}
+                >Take</button>
+              </div>
+            ))}
+        </div>
+      )}
 
       {error && (
         <div role="alert" style={{ padding: '8px 16px', background: 'var(--card)', borderTop: '1px solid var(--rule)', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
@@ -259,7 +339,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
       <form onSubmit={handleSend} style={{ padding: '10px 16px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, flexShrink: 0 }}>
         <button
           type="button"
-          onClick={() => navigate('/challenges?tab=bets&new=1')}
+          onClick={() => setShowBet(true)}
           title="Make a bet"
           aria-label="Make a bet"
           style={{ flexShrink: 0, minWidth: 'var(--tap)', minHeight: 'var(--tap)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, color: 'var(--accent)', cursor: 'pointer' }}
@@ -283,6 +363,25 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
           {sending ? '…' : 'SEND'}
         </button>
       </form>
+      {threadRef && (
+        <BetThread channelId={channelId} userId={user?.id} betRef={threadRef} onClose={() => setThreadRef(null)} />
+      )}
+      {showBet && (
+        <Suspense fallback={null}>
+          <NewBetModal
+            onClose={() => setShowBet(false)}
+            onCreateChallenge={createChallenge}
+            onCreateBet={createBet}
+            wallet={wallet}
+            circleId={circleId}
+            circleName={activeCircle?.name}
+            currentUserId={user?.id}
+            members={members}
+            footballLeagues={competitions?.football}
+            betsEnabled={betsEnabled}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

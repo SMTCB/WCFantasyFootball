@@ -25,6 +25,7 @@ export function useClubhouseChat(channelId) {
         .from('clubhouse_messages')
         .select('id, user_id, content, created_at, kind, bet_ref')
         .eq('channel_id', channelId)
+        .is('thread_id', null)
         .order('created_at', { ascending: true })
         .limit(100);
       if (error) throw error;
@@ -65,6 +66,7 @@ export function useClubhouseChat(channelId) {
         filter: `channel_id=eq.${channelId}`,
       }, async (payload) => {
         const msg = payload.new;
+        if (msg.thread_id) return; // bet-thread messages stay out of the Room stream
         const username = await resolveUsername(msg.user_id);
         setMessages(prev => [...prev, {
           id: msg.id,
