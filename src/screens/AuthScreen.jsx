@@ -253,7 +253,7 @@ export default function AuthScreen() {
 
   // ── Sign In / Sign Up tabs ───────────────────────────────────────────────────
   return (
-    <AuthShell pitch>
+    <AuthShell pitch cta={tab === TAB_SIGNIN ? { label: 'Start a clubhouse', onClick: () => switchTab(TAB_SIGNUP) } : null}>
       {/* Tab strip */}
       <div role="tablist" aria-label="Account" style={{ display: 'flex', borderBottom: '1px solid var(--rule)', marginBottom: '28px' }}>
         {[{ id: TAB_SIGNIN, label: 'Sign In' }, { id: TAB_SIGNUP, label: 'Create Account' }].map(t => (
@@ -337,7 +337,7 @@ export default function AuthScreen() {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-function AuthShell({ children, pitch = false }) {
+function AuthShell({ children, pitch = false, cta = null }) {
   return (
     <div style={{ minHeight: '100svh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       {/* Brandmark */}
@@ -353,6 +353,11 @@ function AuthShell({ children, pitch = false }) {
           <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', lineHeight: 1.5, color: 'var(--text-2)' }}>
             Every game you play lives in one room. Make an account, start a clubhouse and invite your group.
           </p>
+          {cta && (
+            <div style={{ marginTop: '16px' }}>
+              <Button type="button" size="lg" fullWidth onClick={cta.onClick}>{cta.label}</Button>
+            </div>
+          )}
         </div>
       )}
 
