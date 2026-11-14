@@ -31,8 +31,8 @@ function MyBetCard({ bet, onOpen }) {
     <button
       onClick={onOpen}
       style={{
-        display: 'block', width: '100%', textAlign: 'left',
-        margin: 'clamp(4px, 1.5vw, 8px) clamp(12px, 4vw, 24px)',
+        display: 'block', width: 'calc(100% - 2 * clamp(12px, 4vw, 24px))', boxSizing: 'border-box', minWidth: 0, textAlign: 'left',
+        margin: 'clamp(4px, 1.5vw, 8px) clamp(12px, 4vw, 24px)', overflowWrap: 'anywhere',
         background: 'var(--card)', border: '1px solid var(--rule)',
         borderLeft: `4px solid ${meta.tone}`, borderRadius: 'var(--radius)', cursor: 'pointer', minHeight: 'var(--tap)',
         padding: 'clamp(10px, 2vw, 14px) clamp(12px, 3vw, 18px)',
@@ -148,7 +148,7 @@ export default function MyBetsScreen() {
       )}
 
       {/* Content */}
-      <div style={{ flex: 1, minHeight: 60, overflow: 'auto', paddingBottom: 80 }}>
+      <div style={{ flex: 1, minHeight: 60, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 80 }}>
         {loading && (
           <div style={{ padding: '48px 24px', textAlign: 'center', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
         )}
