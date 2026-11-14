@@ -236,7 +236,8 @@ Always create a new file — never modify existing migrations.
 | 307 | `307_settlement_and_ledger.sql` | S10 / J-13 + BUG-LEDGER-1: 24h objection window for group bets; `settle_bet_coins` writes win/loss/refund rows that equal the real balance movement; new `settle_freeform_challenge` helper and `settle_due_freeform_challenges` sweep (24h auto payout, 14-day no-result void, 7-day reminders); `finalize_declared_bets` voids undeclared group bets after 7 days and sends a 3-day reminder; `auto_void_stale_disputes` runs the sweep. Applied 2026-11-14 after backup. |
 | 308 | `308_error_logs_bounded_insert.sql` | DD-P2-1: `error_logs` insert policy bounds field lengths. Applied 2026-11-14 after backup. |
 | 309 | `309_bet_invite_link.sql` | J-10: `get_bet_invite_preview` (public, open bets only) and `accept_bet_invite` (signed-in only, joins the bet's Clubhouse). Applied 2026-11-14. |
-| 310 | `310_bet_invite_revoke_anon_accept.sql` | Revokes the default anon execute right on `accept_bet_invite`. Applied 2026-11-14. Next migration: 311. |
+| 310 | `310_bet_invite_revoke_anon_accept.sql` | Revokes the default anon execute right on `accept_bet_invite`. Applied 2026-11-14. |
+| 311 | `311_bet_thread_messages.sql` | C-19: nullable `thread_kind` ('bet'/'challenge') and `thread_id` on `clubhouse_messages`, a both-or-neither check and a partial index. Room stream filters `thread_id IS NULL`. Applied 2026-11-14 after a schema backup. Next migration: 312. |
 
 **Next migration**: `307_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
 

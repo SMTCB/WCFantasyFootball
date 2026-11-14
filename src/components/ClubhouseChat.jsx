@@ -1,9 +1,9 @@
 import { LoadingRows } from './Skeleton';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
 import { IconCheckCircle, IconDice, IconClose } from './UiIcons';
+import BetThread from './BetThread';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
 import { useChallenges } from '../hooks/useChallenges';
@@ -24,15 +24,14 @@ function timeAgo(iso) {
 }
 
 // Bet activity card: system message for bet/challenge create + resolve
-function BetActivityCard({ msg, actionable, onTake, onPass, busy }) {
-  const navigate = useNavigate();
+function BetActivityCard({ msg, actionable, onTake, onPass, busy, onOpen }) {
   const ref = msg.betRef ?? {};
   const isResolved = ref.event === 'resolved';
 
   return (
     <div style={{ margin: '4px 0', borderRadius: 8, background: 'var(--card)', border: '1px solid var(--rule)' }}>
     <button
-      onClick={() => navigate('/challenges?tab=bets')}
+      onClick={() => onOpen?.(ref)}
       style={{
         display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
         padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
@@ -102,10 +101,10 @@ function ActivityRow({ entry, onEnter }) {
 
 // Message bubble. Tap a message you can delete to reveal a Delete button
 // (works on touch; the old hover-only delete did not).
-function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, deleting, betAction }) {
+function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, deleting, betAction, onOpenBet }) {
   const showMeta = !prevMsg || prevMsg.kind === 'activity' || prevMsg.userId !== msg.userId;
 
-  if (msg.kind === 'bet_activity') return <BetActivityCard msg={msg} {...(betAction ?? {})} />;
+  if (msg.kind === 'bet_activity') return <BetActivityCard msg={msg} onOpen={onOpenBet} {...(betAction ?? {})} />;
 
   return (
     <div style={{ padding: showMeta ? '8px 0 2px' : '1px 0' }}>
@@ -168,6 +167,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
   const { incoming, acceptChallenge, declineChallenge, createChallenge } = useChallenges(user?.id, circleId);
   const { openInvited, joinBet, declineBet, createBet } = useGroupBets(user?.id, circleId);
   const [showBet, setShowBet] = useState(false);
+  const [threadRef, setThreadRef] = useState(null);
   const [betBusy, setBetBusy] = useState(false);
   const betsEnabled = !!activeCircle?.p2p_betting_enabled;
 
@@ -294,6 +294,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
             onDelete={() => handleDelete(item.id)}
             deleting={deletingId === item.id}
             betAction={betActionFor(item)}
+            onOpenBet={setThreadRef}
           />
         ))}
         <div ref={scrollEndRef} />
@@ -362,6 +363,9 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
           {sending ? '…' : 'SEND'}
         </button>
       </form>
+      {threadRef && (
+        <BetThread channelId={channelId} userId={user?.id} betRef={threadRef} onClose={() => setThreadRef(null)} />
+      )}
       {showBet && (
         <Suspense fallback={null}>
           <NewBetModal
