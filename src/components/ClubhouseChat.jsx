@@ -218,7 +218,7 @@ function RailListItem({ label, active, onClick }) {
         background: active ? 'var(--accent-soft)' : 'transparent',
         border: 'none', cursor: 'pointer',
         ...MONO, fontSize: 'var(--fs-label)', fontWeight: active ? 600 : 400,
-        color: active ? 'var(--accent)' : '#4B5568',
+        color: active ? 'var(--accent)' : 'var(--text-2)',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}
     >

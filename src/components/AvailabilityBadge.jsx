@@ -33,7 +33,7 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
   if (isFlagged) {
     return (
       <div
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold ${
+        className={`hit-44 inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold ${
           isOwn
             ? 'bg-cyan-500 text-ink-2 cursor-pointer hover:bg-cyan-600'
             : 'bg-paper border border-rule text-mute'
@@ -58,7 +58,7 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
       <button
         onClick={handleClick}
         disabled={loading}
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
+        className={`hit-44 inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
           loading
             ? 'bg-rule text-mute cursor-not-allowed'
             : 'bg-ink-3 text-paper hover:bg-ink-2 hover:text-paper'
