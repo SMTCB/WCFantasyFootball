@@ -1,80 +1,49 @@
 /**
- * OnboardingWizard — full-screen 5-step overlay shown to first-time users.
+ * OnboardingWizard — full-screen 3-step overlay shown to first-time users.
  *
- * Steps:
- *   1. Welcome       — what the platform is, competition context
- *   2. Clubhouse     — create or join one (the username is asked at sign-up, not here)
- *   3. Build Squad   — budget, squad size, pick on Market
- *   4. Join League   — H2H mini-leagues with friends
- *   5. Ready         — confetti moment, lands on Home
+ *   1. Welcome   — what the platform is (the name is asked at sign-up, not here)
+ *   2. Clubhouse — start one or join with a code
+ *   3. First move — start a bet, or pick a sport
  *
- * Accepts an optional `config` prop:
- *   { competitionName, budgetTotal, squadSize, teamCount }
- * Falls back to generic defaults when not provided.
- *
- * Skippable at any step. On skip/complete the wizard never shows again
- * (localStorage flag set via useOnboarding hook).
+ * Skippable on steps 1 and 2. On skip/complete the wizard never shows again
+ * (localStorage flag set via useOnboarding hook). Each step fires one event via lib/analytics.
  */
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { PLATFORM_NAME } from '../lib/brand';
+import { track } from '../lib/analytics';
 
-function buildSteps({ competitionName, budgetTotal, squadSize }) {
-  const comp   = competitionName || 'Fantasy League';
-  const budget = budgetTotal     || 100;
-  const size   = squadSize       || 15;
-
+function buildSteps() {
   return [
     {
       id:       'welcome',
-      emoji:    '🏆',
-      kicker:   comp,
+      kicker:   'Bets between friends',
       heading:  `Welcome to\n${PLATFORM_NAME}`,
-      body:     `The fantasy football league built for ${comp}. Pick your squad, beat your friends, own every matchday.`,
+      body:     'One room for every game you play with your group: bets, and fantasy leagues for football, F1 and tennis. Your name is already set from sign-up.',
       cta:      "Let's go",
       skip:     'Skip intro',
     },
     {
       id:               'clubhouse',
-      emoji:            '🏠',
-      kicker:           'Your digital home',
-      heading:          'Create your\nClubhouse',
-      body:             "A Clubhouse is where you and your friends play every sport together — Football, F1, and Tennis competitions. Create one now, join with a code, or skip for now.",
-      cta:              'Create Clubhouse →',
+      kicker:           'Your group',
+      heading:          'Start your\nClubhouse',
+      body:             "A Clubhouse is where you and your friends play together. Start one and invite them, or join a friend's with their code.",
+      cta:              'Start Clubhouse →',
       skip:             'Skip for now',
       isClubhouseStep:  true,
     },
     {
-      id:       'squad',
-      emoji:    '⚽',
-      kicker:   'Your squad',
-      heading:  'Build your\nDream Squad',
-      body:     `You have a €${budget}M budget to pick ${size} players — 1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD in your starting XI, plus bench cover. Every transfer costs budget, so choose wisely.`,
-      cta:      'Next →',
-      skip:     'Skip for now',
-      ctaRoute: '/market',
-    },
-    {
-      id:       'league',
-      emoji:    '🥇',
-      kicker:   'Your friends',
-      heading:  'Join a\nPrivate League',
-      body:     "Create a league or enter a friend's invite code to go head-to-head every matchday. Your points are live — every goal, assist, and clean sheet counts in real time.",
-      cta:      'Set up my league →',
-      skip:     'Skip for now',
-      ctaRoute: '/league',
-    },
-    {
-      id:       'ready',
-      emoji:    '🚀',
-      kicker:   "You're all set",
-      heading:  'Welcome\nhome',
-      body:     `Your Home screen shows what needs you next: bets to answer, squads to set and your Clubhouse. Playing football? Open the Market any time to pick your ${size} players before the transfer window closes.`,
-      cta:      'Go to Home',
+      id:       'first',
+      kicker:   "You're in",
+      heading:  'Make your\nfirst move',
+      body:     'The quickest start is a bet: ask your friends a question and put coins on it. Or go straight to a sport and set up a league.',
+      cta:      'Start a bet →',
+      ctaRoute: '/challenges?tab=bets',
+      altCta:   'Pick a sport instead',
+      altRoute: '/home',
       skip:     null,
-      ctaRoute: '/home',
     },
   ];
 }
@@ -140,8 +109,8 @@ function ProgressDots({ current, total }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
-  const STEPS = buildSteps(config);
+export default function OnboardingWizard({ onComplete, onSkip }) {
+  const STEPS = buildSteps();
   const [step,    setStep]    = useState(0);
   const [exiting, setExiting] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -194,9 +163,11 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           setClubhouseError(clubhouseErrorText(failure, wantsCreate));
           return; // stay on this step until fixed or skipped
         }
+        track(wantsCreate ? 'clubhouse_created' : 'clubhouse_joined', { source: 'welcome' });
       }
     }
 
+    track('welcome_step_done', { step: current.id, index: step + 1 });
     if (isLast) {
       handleFinish(route);
     } else {
@@ -297,7 +268,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
             color:        'var(--gold-text)',
           }}
         >
-          {current.id === 'welcome' ? PLATFORM_NAME.slice(0, 3).toUpperCase() : current.id === 'clubhouse' ? 'CLB' : current.id === 'squad' ? 'SQD' : current.id === 'league' ? 'LGE' : 'GO'}
+          {current.id === 'welcome' ? PLATFORM_NAME.slice(0, 3).toUpperCase() : current.id === 'clubhouse' ? 'CLB' : 'GO'}
         </div>
 
         {/* Kicker */}
@@ -427,6 +398,20 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
               ? (clubhouseMode === 'create' ? 'Create Clubhouse →' : 'Join Clubhouse →')
               : current.cta}
         </button>
+
+        {current.altCta && (
+          <button
+            type="button"
+            onClick={() => { track('welcome_step_done', { step: current.id, index: step + 1, choice: 'sport' }); handleFinish(current.altRoute); }}
+            style={{
+              width: '100%', marginTop: 10, minHeight: 'var(--tap)', background: 'transparent',
+              color: 'var(--text-2)', border: '1px solid var(--rule)', borderRadius: '8px',
+              fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer',
+            }}
+          >
+            {current.altCta}
+          </button>
+        )}
 
         {/* Step counter */}
         <div

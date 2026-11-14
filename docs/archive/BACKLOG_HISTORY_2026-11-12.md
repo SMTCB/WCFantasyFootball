@@ -6724,4 +6724,9 @@ Last Updated: 2026-11-13
 - UI-AUDIT-TCH-01 (part): "List for trade" chip tap area extended to 44px.
 - UI-AUDIT-SYS-04 (part): chat text colour moved to the --text-2 token.
 
+## 2026-11-14 — Session S9 (Welcome and events)
+
+- J-12: welcome is three steps: what Clubhouse is, start or join a Clubhouse, then start a bet or pick a sport. The name is asked at sign-up.
+- J-09 and CODE-5 (part): one event per welcome step and for Clubhouse created/joined, through a single helper (console only until storage is approved).
+
 Last Updated: 2026-11-13
