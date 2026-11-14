@@ -6715,4 +6715,8 @@ Last Updated: 2026-11-13
 - UI-AUDIT-LIVE-1 and LIVE-2: checked against the current tokens. Muted text, accent, danger and gold-text all pass 4.5:1 on the page, card and raised surfaces; the old failing values had already been retuned. Remaining failure (raw gold as text, 3.5:1) fixed under A11Y-02.
 - UI-AUDIT-A11Y-02 (part): 81 raw-gold text colours switched to the gold-text token; the navy Trophy header uses the on-dark gold.
 
+## 2026-11-14 — Session S8 part 1 (First screen)
+
+- J-21 (part): sign-in page leads with "Bets between friends." and a one-line explanation before the form.
+
 Last Updated: 2026-11-13
