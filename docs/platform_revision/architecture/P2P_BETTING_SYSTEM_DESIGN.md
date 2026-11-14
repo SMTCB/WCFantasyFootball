@@ -435,4 +435,15 @@ Stored in a `platform_config` table (or per-league `league_config` where league-
 
 ---
 
-Last Updated: **2026-06-20**
+## Settlement rules (migration 307, 2026-11-14)
+
+Applies to group bets (`p2p_bets`) and freeform 1-to-1 challenges (`p2p_challenges`).
+
+- Creator or either side declares the result; everyone else has **24 hours** to object. If nobody objects, the hourly jobs pay out automatically (`finalize_declared_bets`, and `auto_void_stale_disputes` which runs `settle_due_freeform_challenges`).
+- An objection goes to the clubhouse owner. If the owner has not decided within **7 days**, the bet is voided and stakes are refunded.
+- Nobody declares: a group bet is voided and refunded **7 days** after it closed; a 1-to-1 challenge **14 days** after acceptance. One-time reminders: 3 days (group creator), 7 days (both sides of a challenge).
+- All 1-to-1 settlement goes through `settle_freeform_challenge` (not callable by clients).
+- **Ledger convention:** every `coin_transactions` row is a real balance movement: stake -s, refund +s, win +payout, loss 0 (forfeited stake in `meta.stake_lost`). Rows written before 307 are not rewritten, so old loss/win rows can disagree with it.
+- `resolve-bets` (league match bets) closes a bet with no winner 7 days after its deadline when its template has no automatic resolver.
+
+Last Updated: **2026-11-14**
