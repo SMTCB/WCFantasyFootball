@@ -187,3 +187,10 @@ export const NavIconMyBets = ({ size = 24 }) => (
     <circle cx="16.5" cy="13.5" r="1.1" fill={PAPER} />
   </svg>
 );
+
+export const NavIconYou = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="8" r="4" fill={PAPER} stroke={CYAN} strokeWidth="2" />
+    <path d="M4.5 20c0-4 3.4-6 7.5-6s7.5 2 7.5 6" stroke={CYAN} strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);

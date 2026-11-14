@@ -704,6 +704,10 @@ function CreateGroupBetModal({
   });
   const [submitting, setSubmitting]       = useState(false);
   const [error, setError]                 = useState(null);
+  // The quick sentence covers who/how much/what; everything else hides until asked for.
+  const [showMore, setShowMore]           = useState(
+    () => (initialTargetMode && initialTargetMode !== 'whole_clubhouse') || initialAnswerMode === 'multiple_choice',
+  );
 
   const isMC = answerMode === 'multiple_choice';
   const balance = wallet?.balance ?? 0;
@@ -816,19 +820,40 @@ function CreateGroupBetModal({
               </div>
             )}
 
-            {/* Question */}
+            {/* Quick bet: one sentence — who, how much, what */}
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10, fontSize: 'var(--fs-body-lg)', color: 'var(--text)' }}>
+              <span>I bet</span>
+              <button
+                type="button" onClick={() => setShowMore(true)}
+                aria-label="Change who this bet is with"
+                style={{ minHeight: 'var(--tap)', padding: '0 12px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', background: 'var(--abg)', color: 'var(--accent)', fontWeight: 700, fontSize: 'var(--fs-body)', cursor: 'pointer' }}
+              >{targetMode === 'whole_clubhouse' ? 'everyone' : targetMode === 'one_person' ? 'one person' : 'chosen people'}</button>
+              <input
+                type="number" inputMode="numeric" min={10} max={500} value={stakeCoins}
+                aria-label="Stake in coins"
+                onChange={e => setStakeCoins(Math.max(0, parseInt(e.target.value) || 0))}
+                style={{ width: 84, minHeight: 'var(--tap)', boxSizing: 'border-box', padding: '0 10px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--gold)'}`, color: overBudget ? 'var(--neg)' : 'var(--gold)', fontWeight: 700, fontSize: 'var(--fs-body)', textAlign: 'center' }}
+              />
+              <span>coins that</span>
+            </div>
             <label style={{ display: 'block', marginBottom: 14 }}>
               <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
-                What are you betting on? (<span style={{ color: question.length > 140 ? 'var(--neg)' : 'var(--mute)' }}>{140 - question.length}</span> chars)
+                What happens? (<span style={{ color: question.length > 140 ? 'var(--neg)' : 'var(--mute)' }}>{140 - question.length}</span> chars left, balance <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()}</span> coins)
               </span>
               <textarea
                 maxLength={140} value={question} onChange={e => setQuestion(e.target.value)}
-                placeholder="Who finishes top of the mini-league this GW?"
+                placeholder="Benfica beat Porto"
                 rows={2}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)', resize: 'none', fontFamily: 'inherit' }}
               />
             </label>
 
+            <button
+              type="button" onClick={() => setShowMore(v => !v)} aria-expanded={showMore}
+              style={{ minHeight: 'var(--tap)', padding: 0, marginBottom: 12, background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--accent)' }}
+            >{showMore ? 'Fewer options −' : 'More options +'}</button>
+
+            {showMore && (<>
             {/* Answer mode */}
             <div style={{ marginBottom: 14 }}>
               <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Answer type</span>
@@ -986,6 +1011,8 @@ function CreateGroupBetModal({
               <CheckDot selected={noEnd} />
               <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}>No fixed end time</span>
             </label>
+
+            </>)}
 
             {error && <div style={{ fontSize: 'var(--fs-label)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
 
@@ -2224,6 +2251,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNew
 export default function ChallengeScreen() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { wallet, loading: walletLoading } = useWallet(user?.id);
   const { streak } = useP2PStreak(user?.id);
   const { activeCircleId, activeCircle, members, competitions } = useClubhouseContext();
@@ -2512,6 +2540,13 @@ export default function ChallengeScreen() {
               )}
             </button>
           ))}
+          <span style={{ flex: 1 }} />
+          <button
+            onClick={() => navigate('/my-bets')}
+            style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--accent)', minHeight: 'var(--tap)', padding: '9px 0 9px 14px', background: 'transparent', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            All my bets →
+          </button>
         </div>
       </div>
 
