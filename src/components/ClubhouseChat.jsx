@@ -1,23 +1,21 @@
 import { LoadingRows } from './Skeleton';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../hooks/useAuth';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
-import { useDirectMessages } from '../hooks/useDirectMessages';
+import { IconCheckCircle, IconDice, IconClose } from './UiIcons';
 
-const MONO = { fontFamily: 'Archivo, sans-serif' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
 
 function timeAgo(iso) {
   const diff = (Date.now() - new Date(iso)) / 1000;
-  if (diff < 60)    return `${Math.floor(diff)}s`;
+  if (diff < 60)    return `${Math.max(0, Math.floor(diff))}s`;
   if (diff < 3600)  return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   return `${Math.floor(diff / 86400)}d`;
 }
 
-// ── Bet activity card — system message for bet/challenge create + resolve ─────
+// Bet activity card: system message for bet/challenge create + resolve
 function BetActivityCard({ msg }) {
   const navigate = useNavigate();
   const ref = msg.betRef ?? {};
@@ -32,490 +30,259 @@ function BetActivityCard({ msg }) {
         background: 'var(--card)', border: '1px solid var(--rule)',
       }}
     >
-      <span style={{ fontSize: 'var(--fs-body)', flexShrink: 0 }}>{isResolved ? '✅' : '🎲'}</span>
+      <span style={{ flexShrink: 0, display: 'flex', color: isResolved ? 'var(--positive)' : 'var(--accent)' }}>
+        {isResolved ? <IconCheckCircle size={18} /> : <IconDice size={18} />}
+      </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {ref.question ?? msg.content}
         </span>
         {ref.stake_coins != null && (
-          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+          <span style={{ ...BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
             {ref.stake_coins} coins · {isResolved ? 'resolved' : 'new bet'}
           </span>
         )}
       </span>
-      <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>VIEW</span>
+      <span style={{ ...BODY, fontSize: 'var(--fs-micro)', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>VIEW</span>
     </button>
   );
 }
 
-// ── Message bubble ────────────────────────────────────────────────────────────
-function MessageBubble({ msg, prevMsg, onDelete }) {
-  const [hovering, setHovering] = useState(false);
-  const showMeta = !prevMsg || prevMsg.userId !== msg.userId;
+// Activity row (match results, auctions, news) shown inside the stream
+const FEED_LABEL = {
+  activity: 'GW result', breaking_news: 'News', auction_result: 'Auction',
+  trade_result: 'Trade', draft_report: 'Draft', classified: 'Classified',
+};
 
-  if (msg.kind === 'bet_activity') {
-    return <BetActivityCard msg={msg} />;
-  }
-
+function ActivityRow({ entry, onEnter }) {
+  const label = FEED_LABEL[entry.entry_type] ?? (entry.entry_type ?? '').replace(/_/g, ' ');
+  const clickable = !!(onEnter && entry.league_id);
   return (
     <div
-      style={{ padding: showMeta ? '8px 0 2px' : '1px 0', position: 'relative' }}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? () => onEnter({ id: entry.league_id }) : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEnter({ id: entry.league_id }); } : undefined}
+      style={{
+        margin: '6px 0', padding: '8px 12px', borderLeft: '3px solid var(--accent)', background: 'var(--card)',
+        borderRadius: 'var(--radius)', cursor: clickable ? 'pointer' : 'default',
+      }}
     >
+      <div style={{ display: 'flex', gap: 8, ...BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+        <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{label}</span>
+        {entry.league_name && <span>{entry.league_name}</span>}
+        <span style={{ marginLeft: 'auto' }}>{timeAgo(entry.createdAt)}</span>
+      </div>
+      <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4, marginTop: 2 }}>{entry.headline}</div>
+    </div>
+  );
+}
+
+// Message bubble. Tap a message you can delete to reveal a Delete button
+// (works on touch; the old hover-only delete did not).
+function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, deleting }) {
+  const showMeta = !prevMsg || prevMsg.kind === 'activity' || prevMsg.userId !== msg.userId;
+
+  if (msg.kind === 'bet_activity') return <BetActivityCard msg={msg} />;
+
+  return (
+    <div style={{ padding: showMeta ? '8px 0 2px' : '1px 0' }}>
       {showMeta && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
-          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, color: msg.isOwn ? 'var(--accent)' : 'var(--paper)' }}>
-            {msg.username ?? msg.isOwn ? (msg.username || 'You') : '?'}
+          <span style={{ ...BODY, fontSize: 'var(--fs-micro)', fontWeight: 700, color: msg.isOwn ? 'var(--accent)' : 'var(--paper)' }}>
+            {msg.username}
           </span>
-          <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{timeAgo(msg.createdAt)}</span>
+          <span style={{ ...BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{timeAgo(msg.createdAt)}</span>
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-        <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.45, flex: 1, wordBreak: 'break-word' }}>
+      <div
+        role={canDelete ? 'button' : undefined}
+        tabIndex={canDelete ? 0 : undefined}
+        onClick={canDelete ? onSelect : undefined}
+        onKeyDown={canDelete ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } } : undefined}
+        style={{ cursor: canDelete ? 'pointer' : 'default', borderRadius: 6, background: selected ? 'var(--accent-soft)' : 'transparent', padding: selected ? '2px 6px' : 0 }}
+      >
+        <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.45, wordBreak: 'break-word' }}>
           {msg.content}
         </p>
-        {onDelete && hovering && (
-          <button className="hit-44"
+      </div>
+      {selected && canDelete && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <button
             onClick={onDelete}
-            title="Delete message"
-            style={{ flexShrink: 0, background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer', padding: '1px 4px', opacity: 0.6, lineHeight: 1 }}
+            disabled={deleting}
+            style={{ minHeight: 'var(--tap)', padding: '0 14px', background: 'var(--danger)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer' }}
           >
-            ✕
+            {deleting ? 'Deleting…' : 'Delete message'}
           </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── DM bubble (no username header — context is obvious) ───────────────────────
-function DmBubble({ msg }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: msg.isOwn ? 'flex-end' : 'flex-start', padding: '3px 0' }}>
-      <div style={{
-        maxWidth: '72%',
-        padding: '8px 12px',
-        borderRadius: msg.isOwn ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-        background: msg.isOwn ? 'var(--accent)' : 'var(--card)',
-        border: msg.isOwn ? 'none' : '1px solid var(--rule)',
-      }}>
-        <p style={{ margin: 0, ...BODY, fontSize: 'var(--fs-body)', color: msg.isOwn ? 'var(--on-accent)' : 'var(--paper)', lineHeight: 1.4, wordBreak: 'break-word' }}>
-          {msg.content}
-        </p>
-        <div style={{ ...MONO, fontSize: 'var(--fs-micro)', color: msg.isOwn ? 'var(--on-pitch-dim)' : 'var(--mute)', marginTop: 4, textAlign: 'right' }}>
-          {timeAgo(msg.createdAt)}
-          {msg.isOwn && msg.readAt && <span style={{ marginLeft: 4 }}>· read</span>}
+          <button
+            onClick={onSelect}
+            style={{ minHeight: 'var(--tap)', padding: '0 14px', background: 'transparent', color: 'var(--mute)', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-// ── Message thread (channel or DM) ────────────────────────────────────────────
-function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete, scrollEndRef, isOwner, onBack, isDm }) {
+// The Room: one stream of chat, bets and activity.
+// layout 'rail' = desktop side panel on Home; 'full' = the whole Room view.
+export default function ClubhouseChat({ circleId, members, activeCircle, feed = [], onEnterLeague, layout = 'full', onExpand }) {
   const navigate = useNavigate();
+  const [channelId, setChannelId] = useState(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedId, setSelectedId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const isOwner = activeCircle?.role === 'owner';
+
+  // The Room is the default channel; other channels are no longer shown (C-07).
+  useEffect(() => {
+    if (!circleId) return;
+    let cancelled = false;
+    setChannelId(null);
+    supabase
+      .from('clubhouse_channels')
+      .select('id, is_default, created_at')
+      .eq('circle_id', circleId)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (cancelled || !data?.length) return;
+        setChannelId((data.find(c => c.is_default) ?? data[0]).id);
+      });
+    return () => { cancelled = true; };
+  }, [circleId]);
+
+  const { messages, loading, sendMessage, deleteMessage, scrollEndRef } = useClubhouseChat(channelId);
+
+  const nameById = useMemo(() => new Map((members ?? []).map(m => [m.user_id, m.username])), [members]);
+
+  // Chat messages and activity entries in one list, oldest first.
+  const stream = useMemo(() => {
+    const chat = messages.map(m => ({
+      ...m,
+      username: nameById.get(m.userId) ?? (m.username && m.username !== '?' ? m.username : 'Member'),
+    }));
+    const act = (feed ?? []).map(e => ({ ...e, kind: 'activity', createdAt: e.created_at }));
+    return [...chat, ...act].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }, [messages, feed, nameById]);
+
+  // The hook only scrolls on new chat; also scroll when activity items arrive.
+  useEffect(() => { scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [stream.length, scrollEndRef]);
 
   async function handleSend(e) {
     e.preventDefault();
     if (!text.trim() || sending) return;
     setSending(true);
+    setError('');
     try {
-      await onSend(text.trim());
+      await sendMessage(text.trim());
       setText('');
     } catch (err) {
       console.error('send failed', err);
+      setError('Message not sent. Check your connection and tap Send to try again.');
     } finally {
       setSending(false);
     }
   }
 
+  async function handleDelete(id) {
+    setDeletingId(id);
+    setError('');
+    try {
+      await deleteMessage(id);
+      setSelectedId(null);
+    } catch (err) {
+      console.error('delete failed', err);
+      setError('Could not delete that message. Try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const isRail = layout === 'rail';
+  const empty = !loading && stream.length === 0;
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      {/* Thread header */}
-      <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-        {onBack && (
-          <button className="hit-44"
-            onClick={onBack}
-            style={{ background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-label)', cursor: 'pointer', padding: '2px 8px 2px 0', flexShrink: 0 }}
-          >
-            ←
+    <div
+      className={isRail ? undefined : 'room-full'}
+      style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', ...(isRail ? { height: '100%' } : {}) }}
+    >
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>The Room</div>
+        {onExpand && (
+          <button className="hit-44" onClick={onExpand}
+            style={{ background: 'transparent', border: 'none', color: 'var(--accent)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', padding: '2px 4px' }}>
+            Open
           </button>
         )}
-        <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)', letterSpacing: '0.06em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {titlePrefix}{title}
-        </span>
       </div>
 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: isDm ? '12px 16px' : '4px 16px', display: 'flex', flexDirection: 'column' }}>
-        {loading && (
-          <LoadingRows rows={3} />
-        )}
-        {!loading && messages.length === 0 && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.08em', textAlign: 'center', padding: '32px 0' }}>
-            {isDm ? 'Start a conversation' : 'No messages yet — say hello 👋'}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {loading && <LoadingRows rows={3} />}
+        {empty && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)', textAlign: 'center', padding: '32px 0' }}>
+            Nothing here yet. Say hello to start the Room.
           </div>
         )}
-        {!isDm && messages.map((msg, i) => (
+        {stream.map((item, i) => item.kind === 'activity' ? (
+          <ActivityRow key={`a-${item.id}`} entry={item} onEnter={onEnterLeague} />
+        ) : (
           <MessageBubble
-            key={msg.id}
-            msg={msg}
-            prevMsg={messages[i - 1] ?? null}
-            onDelete={onDelete && (isOwner || msg.isOwn) ? () => onDelete(msg.id) : null}
+            key={item.id}
+            msg={item}
+            prevMsg={stream[i - 1] ?? null}
+            canDelete={item.kind !== 'bet_activity' && (isOwner || item.isOwn)}
+            selected={selectedId === item.id}
+            onSelect={() => setSelectedId(selectedId === item.id ? null : item.id)}
+            onDelete={() => handleDelete(item.id)}
+            deleting={deletingId === item.id}
           />
-        ))}
-        {isDm && messages.map(msg => (
-          <DmBubble key={msg.id} msg={msg} />
         ))}
         <div ref={scrollEndRef} />
       </div>
 
-      {/* Input */}
-      <form
-        onSubmit={handleSend}
-        style={{ padding: '10px 16px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, flexShrink: 0 }}
-      >
-        {!isDm && (
-          <button
-            type="button"
-            onClick={() => navigate('/challenges?tab=bets&new=1')}
-            title="Quick bet"
-            style={{ flexShrink: 0, padding: '9px 11px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, fontSize: 'var(--fs-body)', cursor: 'pointer', lineHeight: 1 }}
-          >
-            🎲
+      {error && (
+        <div role="alert" style={{ padding: '8px 16px', background: 'var(--card)', borderTop: '1px solid var(--rule)', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <span>{error}</span>
+          <button className="hit-44" onClick={() => setError('')} aria-label="Dismiss"
+            style={{ background: 'transparent', border: 'none', color: 'var(--mute)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <IconClose size={14} />
           </button>
-        )}
+        </div>
+      )}
+
+      <form onSubmit={handleSend} style={{ padding: '10px 16px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, flexShrink: 0 }}>
+        <button
+          type="button"
+          onClick={() => navigate('/challenges?tab=bets&new=1')}
+          title="Make a bet"
+          aria-label="Make a bet"
+          style={{ flexShrink: 0, minWidth: 'var(--tap)', minHeight: 'var(--tap)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, color: 'var(--accent)', cursor: 'pointer' }}
+        >
+          <IconDice size={20} />
+        </button>
         <input
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e); } }}
-          placeholder={isDm ? `Message ${title}…` : `Message #${title}…`}
+          placeholder="Message the Room…"
+          aria-label="Message the Room"
           maxLength={2000}
           style={{ flex: 1, padding: '9px 12px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, color: 'var(--paper)', ...BODY, fontSize: 'var(--fs-body)', outline: 'none', minWidth: 0 }}
         />
         <button
           type="submit"
-          disabled={!text.trim() || sending}
-          style={{ padding: '9px 14px', background: !text.trim() || sending ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: !text.trim() || sending ? 'default' : 'pointer', flexShrink: 0 }}
+          disabled={!text.trim() || sending || !channelId}
+          style={{ padding: '9px 14px', minHeight: 'var(--tap)', background: !text.trim() || sending ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.1em', cursor: !text.trim() || sending ? 'default' : 'pointer', flexShrink: 0 }}
         >
           {sending ? '…' : 'SEND'}
         </button>
       </form>
-    </div>
-  );
-}
-
-// ── Compact list row (rail layout) ────────────────────────────────────────────
-function RailListItem({ label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: '100%', textAlign: 'left', padding: '7px 8px', borderRadius: 6,
-        background: active ? 'var(--accent-soft)' : 'transparent',
-        border: 'none', cursor: 'pointer',
-        ...MONO, fontSize: 'var(--fs-label)', fontWeight: active ? 600 : 400,
-        color: active ? 'var(--accent)' : 'var(--text-2)',
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
-export default function ClubhouseChat({ circleId, members, activeCircle, layout = 'full', onExpand }) {
-  const { user } = useAuth();
-  const [channels, setChannels] = useState([]);
-  const [chatMode, setChatMode] = useState('channel');
-  const [selectedChannelId, setSelectedChannelId] = useState(null);
-  const [selectedDmUserId, setSelectedDmUserId] = useState(null);
-  const [newChannelName, setNewChannelName] = useState('');
-  const [showNewChannel, setShowNewChannel] = useState(false);
-  const [creatingChannel, setCreatingChannel] = useState(false);
-  const [isWide, setIsWide] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
-
-  const isOwner = activeCircle?.role === 'owner';
-  const hasSelection = chatMode === 'channel' ? !!selectedChannelId : !!selectedDmUserId;
-
-  useEffect(() => {
-    const handler = () => setIsWide(window.innerWidth >= 1024);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-
-  const fetchChannels = useCallback(async () => {
-    if (!circleId) return;
-    const { data, error } = await supabase
-      .from('clubhouse_channels')
-      .select('id, name, is_default, created_at')
-      .eq('circle_id', circleId)
-      .order('created_at', { ascending: true });
-    if (!error) setChannels(data ?? []);
-  }, [circleId]);
-
-  useEffect(() => { fetchChannels(); }, [fetchChannels]);
-
-  // Auto-select General channel once channels load
-  useEffect(() => {
-    if (chatMode !== 'channel' || selectedChannelId || channels.length === 0) return;
-    const general = channels.find(c => c.is_default) ?? channels[0];
-    setSelectedChannelId(general.id);
-  }, [channels, chatMode, selectedChannelId]);
-
-  const createChannel = useCallback(async () => {
-    if (!newChannelName.trim() || !user?.id) return;
-    setCreatingChannel(true);
-    try {
-      const { error } = await supabase
-        .from('clubhouse_channels')
-        .insert({ circle_id: circleId, name: newChannelName.trim(), is_default: false, created_by: user.id });
-      if (error) throw error;
-      setNewChannelName('');
-      setShowNewChannel(false);
-      await fetchChannels();
-    } catch (err) {
-      console.error('createChannel failed', err);
-    } finally {
-      setCreatingChannel(false);
-    }
-  }, [circleId, newChannelName, user?.id, fetchChannels]);
-
-  // Both hooks always mounted; only the active one is passed a real ID
-  const {
-    messages: channelMessages,
-    loading: channelLoading,
-    sendMessage: sendChannelMessage,
-    deleteMessage: deleteChannelMessage,
-    scrollEndRef: channelScrollRef,
-  } = useClubhouseChat(chatMode === 'channel' ? selectedChannelId : null);
-
-  const {
-    messages: dmMessages,
-    loading: dmLoading,
-    sendMessage: sendDmMessage,
-    scrollEndRef: dmScrollRef,
-  } = useDirectMessages(circleId, chatMode === 'dm' ? selectedDmUserId : null);
-
-  const messages     = chatMode === 'channel' ? channelMessages : dmMessages;
-  const loading      = chatMode === 'channel' ? channelLoading  : dmLoading;
-  const sendMessage  = chatMode === 'channel' ? sendChannelMessage : sendDmMessage;
-  const scrollEndRef = chatMode === 'channel' ? channelScrollRef  : dmScrollRef;
-  const onDelete     = chatMode === 'channel' ? deleteChannelMessage : null;
-
-  const selectedChannel   = channels.find(c => c.id === selectedChannelId);
-  const selectedDmMember  = members.find(m => m.user_id === selectedDmUserId);
-  const threadTitle       = chatMode === 'channel' ? (selectedChannel?.name ?? '') : (selectedDmMember?.username ?? '');
-  const threadTitlePrefix = chatMode === 'channel' ? '# ' : '';
-
-  const showList   = isWide || !hasSelection;
-  const showThread = isWide || hasSelection;
-
-  function switchMode(mode) {
-    setChatMode(mode);
-    if (mode === 'channel') setSelectedDmUserId(null);
-    else setSelectedChannelId(null);
-  }
-
-  function goBack() {
-    if (chatMode === 'channel') setSelectedChannelId(null);
-    else setSelectedDmUserId(null);
-  }
-
-  const otherMembers = members.filter(m => m.user_id !== user?.id);
-
-  if (layout === 'rail') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-        {/* Header + mode toggle */}
-        <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Chat</div>
-            {onExpand && (
-              <button className="hit-44"
-                onClick={onExpand}
-                title="Expand chat"
-                style={{ background: 'transparent', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
-              >
-                ⤢
-              </button>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {['channel', 'dm'].map(mode => (
-              <button className="hit-44"
-                key={mode}
-                onClick={() => switchMode(mode)}
-                style={{
-                  padding: '4px 10px', borderRadius: 100,
-                  background: chatMode === mode ? 'var(--accent-soft)' : 'transparent',
-                  border: 'none', cursor: 'pointer',
-                  ...MONO, fontSize: 'var(--fs-micro)', fontWeight: chatMode === mode ? 700 : 400,
-                  letterSpacing: '0.06em',
-                  color: chatMode === mode ? 'var(--accent)' : 'var(--mute)',
-                }}
-              >
-                {mode === 'channel' ? 'Channels' : 'DMs'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Compact always-visible list */}
-        <div style={{ padding: '8px 8px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 150, overflowY: 'auto', flexShrink: 0 }}>
-          {chatMode === 'channel' && channels.map(ch => (
-            <RailListItem key={ch.id} label={`# ${ch.name}`} active={selectedChannelId === ch.id} onClick={() => setSelectedChannelId(ch.id)} />
-          ))}
-          {chatMode === 'dm' && otherMembers.length === 0 && (
-            <div style={{ padding: '6px 8px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No other members yet.</div>
-          )}
-          {chatMode === 'dm' && otherMembers.map(m => (
-            <RailListItem key={m.user_id} label={m.username} active={selectedDmUserId === m.user_id} onClick={() => setSelectedDmUserId(m.user_id)} />
-          ))}
-        </div>
-
-        {/* Thread */}
-        {!hasSelection ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
-            <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
-              {chatMode === 'channel' ? 'SELECT A CHANNEL' : 'SELECT A MEMBER'}
-            </span>
-          </div>
-        ) : (
-          <MessageThread
-            title={threadTitle}
-            titlePrefix={threadTitlePrefix}
-            messages={messages}
-            loading={loading}
-            onSend={sendMessage}
-            onDelete={onDelete}
-            scrollEndRef={scrollEndRef}
-            isOwner={isOwner}
-            isDm={chatMode === 'dm'}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // layout === 'full' — the S-06 full-width screen: the S-01 rail's markup, expanded
-  return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 220px)', minHeight: 400, overflow: 'hidden' }}>
-
-      {/* ── Left column: channel/DM list ─────────────────────────── */}
-      {showList && (
-        <div style={{ width: 290, flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)', background: 'var(--card)', overflow: 'hidden' }}>
-
-          {/* Header + mode toggle */}
-          <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 10 }}>Chat</div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {['channel', 'dm'].map(mode => (
-                <button className="hit-44"
-                  key={mode}
-                  onClick={() => switchMode(mode)}
-                  style={{
-                    padding: '4px 10px', borderRadius: 100,
-                    background: chatMode === mode ? 'var(--accent-soft)' : 'transparent',
-                    border: 'none', cursor: 'pointer',
-                    ...MONO, fontSize: 'var(--fs-micro)', fontWeight: chatMode === mode ? 700 : 400,
-                    letterSpacing: '0.06em',
-                    color: chatMode === mode ? 'var(--accent)' : 'var(--mute)',
-                  }}
-                >
-                  {mode === 'channel' ? 'Channels' : 'DMs'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* List items */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px', display: 'flex', flexDirection: 'column', gap: 1 }}>
-
-            {chatMode === 'channel' && (
-              <>
-                {channels.map(ch => (
-                  <RailListItem key={ch.id} label={`# ${ch.name}`} active={selectedChannelId === ch.id} onClick={() => setSelectedChannelId(ch.id)} />
-                ))}
-
-                {isOwner && !showNewChannel && (
-                  <RailListItem label="+ NEW CHANNEL" onClick={() => setShowNewChannel(true)} />
-                )}
-
-                {showNewChannel && (
-                  <div style={{ padding: '8px 8px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    <input
-                      autoFocus
-                      value={newChannelName}
-                      onChange={e => setNewChannelName(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') createChannel();
-                        if (e.key === 'Escape') { setShowNewChannel(false); setNewChannelName(''); }
-                      }}
-                      placeholder="channel-name"
-                      maxLength={30}
-                      style={{ width: '100%', padding: '5px 8px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 4, color: 'var(--paper)', ...MONO, fontSize: 'var(--fs-micro)', outline: 'none', boxSizing: 'border-box' }}
-                    />
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button className="hit-44"
-                        onClick={createChannel}
-                        disabled={creatingChannel || !newChannelName.trim()}
-                        style={{ flex: 1, padding: '5px 0', background: creatingChannel || !newChannelName.trim() ? 'var(--mute)' : 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}
-                      >
-                        {creatingChannel ? '…' : 'CREATE'}
-                      </button>
-                      <button className="hit-44"
-                        onClick={() => { setShowNewChannel(false); setNewChannelName(''); }}
-                        style={{ padding: '5px 8px', background: 'transparent', color: 'var(--mute)', border: '1px solid var(--rule)', borderRadius: 4, ...MONO, fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {chatMode === 'dm' && otherMembers.length === 0 && (
-              <div style={{ padding: '6px 8px', ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>No other members yet.</div>
-            )}
-
-            {chatMode === 'dm' && otherMembers.map(m => (
-              <RailListItem key={m.user_id} label={m.username} active={selectedDmUserId === m.user_id} onClick={() => setSelectedDmUserId(m.user_id)} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Right pane: message thread ─────────────────────────── */}
-      {showThread && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-          {!hasSelection ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '0.1em' }}>
-                {chatMode === 'channel' ? 'SELECT A CHANNEL' : 'SELECT A MEMBER TO MESSAGE'}
-              </span>
-            </div>
-          ) : (
-            <MessageThread
-              title={threadTitle}
-              titlePrefix={threadTitlePrefix}
-              messages={messages}
-              loading={loading}
-              onSend={sendMessage}
-              onDelete={onDelete}
-              scrollEndRef={scrollEndRef}
-              isOwner={isOwner}
-              onBack={!isWide ? goBack : null}
-              isDm={chatMode === 'dm'}
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 }

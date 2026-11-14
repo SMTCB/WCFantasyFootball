@@ -19,6 +19,12 @@ export const IconTrophy = ({ size = 24 }) => (
 export const IconHourglass = ({ size = 24 }) => (
   <svg {...base(size)}><path d="M7 4h10M7 20h10" /><path d="M8 4c0 5 8 5 8 8s-8 3-8 8M16 4c0 5-8 5-8 8" /></svg>
 );
+export const IconDice = ({ size = 24 }) => (
+  <svg {...base(size)}><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M8.5 8.5v.1M15.5 8.5v.1M12 12v.1M8.5 15.5v.1M15.5 15.5v.1" /></svg>
+);
+export const IconClose = ({ size = 24 }) => (
+  <svg {...base(size)}><path d="m6 6 12 12M18 6 6 18" /></svg>
+);
 export const IconCheckCircle = ({ size = 24 }) => (
   <svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="m8 12.5 2.8 2.8L16 9.5" /></svg>
 );

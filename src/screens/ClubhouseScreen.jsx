@@ -17,36 +17,12 @@ import useConfirmDialog from '../hooks/useConfirmDialog';
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
-const AVATAR_COLORS = ['var(--accent)', 'var(--f1)', 'var(--ten)', 'var(--gold)', '#7C3AED', '#4B5568'];
+const AVATAR_COLORS = ['var(--accent)', 'var(--f1)', 'var(--ten)', 'var(--gold)', 'var(--positive)', 'var(--mute)'];
 const SPORT_META = {
-  football: { label: 'Football', emoji: '⚽', color: 'var(--accent)' },
-  f1:       { label: 'F1',       emoji: '🏁', color: 'var(--f1)'    },
-  tennis:   { label: 'Tennis',   emoji: '🎾', color: 'var(--ten)'   },
+  football: { label: 'Football', color: 'var(--accent)' },
+  f1:       { label: 'F1',       color: 'var(--f1)'    },
+  tennis:   { label: 'Tennis',   color: 'var(--ten)'   },
 };
-
-function timeAgo(isoString) {
-  const diff = (Date.now() - new Date(isoString)) / 1000;
-  if (diff < 60)    return `${Math.floor(diff)}s ago`;
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
-
-// bullets can be: string | {text} | other object — same shapes as LeagueDetailView's feed
-function bulletText(b) {
-  if (typeof b === 'string') return b;
-  if (b && typeof b === 'object' && b.text) return b.text;
-  return null;
-}
-
-function parseBullets(raw) {
-  if (!raw) return [];
-  let arr = raw;
-  if (typeof arr === 'string') {
-    try { arr = JSON.parse(arr); } catch { return []; }
-  }
-  return Array.isArray(arr) ? arr : [];
-}
 
 // ── Empty / no-circles state ──────────────────────────────────────────────────
 function ClubhouseLobby({ createCircle, joinCircleByCode }) {
@@ -220,7 +196,7 @@ function AllCompetitions({ competitions, onEnter }) {
                     background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
                     padding: '2px 8px', borderRadius: 100,
                   }}>
-                    {meta.emoji} {meta.label}
+                    {meta.label}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
@@ -236,85 +212,6 @@ function AllCompetitions({ competitions, onEnter }) {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-// ── Activity feed ─────────────────────────────────────────────────────────────
-function FeedEntry({ entry, onEnter }) {
-  const typeLabel = {
-    activity:      'GW result',
-    breaking_news: 'News',
-    auction_result:'Auction',
-    trade_result:  'Trade',
-    draft_report:  'Draft',
-    classified:    'Classified',
-  }[entry.entry_type] ?? entry.entry_type.replace(/_/g, ' ');
-
-  const typeColor = {
-    activity:      'var(--accent)',
-    breaking_news: 'var(--accent)',
-    auction_result:'var(--positive)',
-    trade_result:  'var(--positive)',
-    draft_report:  'var(--mute)',
-    classified:    'var(--gold)',
-  }[entry.entry_type] ?? 'var(--mute)';
-
-  const ago = timeAgo(entry.created_at);
-  const clickable = onEnter && entry.league_id;
-  const enter = () => onEnter({ id: entry.league_id });
-  const bullets = parseBullets(entry.bullets);
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div style={{ padding: '12px 0', borderBottom: '1px solid var(--rule)' }}>
-      <div
-        role={clickable ? 'button' : undefined}
-        tabIndex={clickable ? 0 : undefined}
-        onClick={clickable ? enter : undefined}
-        onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') enter(); } : undefined}
-        style={{ cursor: clickable ? 'pointer' : 'default' }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: typeColor }}>{typeLabel}</span>
-            {entry.league_name && (
-              <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{entry.league_name}</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>{ago}</span>
-            {clickable && <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>→</span>}
-          </div>
-        </div>
-        <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4 }}>{entry.headline}</div>
-      </div>
-      {bullets.length > 0 && (
-        <button
-          onClick={() => setExpanded(v => !v)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, padding: 0,
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', 
-          }}
-        >
-          <span>{expanded ? '−' : '+'}</span>
-          <span>{expanded ? 'Hide details' : 'Show details'}</span>
-        </button>
-      )}
-      {expanded && bullets.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 6 }}>
-          {bullets.map((b, i) => {
-            const text = bulletText(b);
-            if (!text) return null;
-            return (
-              <div key={i} style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.4 }}>
-                {text}
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -428,7 +325,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
     setSavingName(true); setNameMsg('');
     try {
       await onUpdateSettings({ name: name.trim() });
-      setNameMsg('Saved ✓');
+      setNameMsg('Saved');
       setTimeout(() => setNameMsg(''), 2000);
     } catch (err) {
       setNameMsg(err.message);
@@ -484,7 +381,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
     try {
       await onLinkLeague(leagueId);
       setLinkableLeagues(prev => prev.filter(l => l.id !== leagueId));
-      setLinkMsg('League linked ✓');
+      setLinkMsg('League linked');
       setTimeout(() => setLinkMsg(''), 2000);
     } catch (err) {
       setLinkMsg(err.message === 'NOT_COMMISSIONER' ? 'You must be commissioner of that league.' : err.message);
@@ -823,15 +720,13 @@ export default function ClubhouseScreen() {
   const myStandingIndex = metaStandings.findIndex(e => e.user_id === user?.id);
   const myStanding  = myStandingIndex >= 0 ? metaStandings[myStandingIndex] : null;
   const myRank      = myStanding ? (myStanding.rank ?? myStandingIndex + 1) : null;
-  const leadPoints  = metaStandings[0]?.total_points;
-  const pointsBehind = myStanding && leadPoints !== undefined ? leadPoints - (myStanding.total_points ?? 0) : null;
 
-  // 5 tabs on desktop (chat lives in the persistent rail); 6 on mobile (chat gets its own tab, no rail)
+  // 5 tabs on desktop (the Room lives in the persistent rail); 6 on mobile (the Room gets its own tab, no rail)
   const MAIN_TABS = [
     { key: 'home',      label: 'Home' },
     { key: 'frontrow',  label: 'The Paper' },
     { key: 'digest',    label: 'Digest' },
-    ...(!isDesktop ? [{ key: 'chat', label: 'Chat' }] : []),
+    ...(!isDesktop ? [{ key: 'chat', label: 'The Room' }] : []),
     { key: 'members',   label: 'Members' },
     ...(isOwner ? [{ key: 'settings', label: 'Settings' }] : []),
   ];
@@ -965,6 +860,8 @@ export default function ClubhouseScreen() {
               circleId={activeCircleId}
               members={members}
               activeCircle={activeCircle}
+              feed={feed}
+              onEnterLeague={enterLeague}
               layout="full"
             />
           )}
@@ -973,6 +870,40 @@ export default function ClubhouseScreen() {
           {tab === 'home' && (
             <div style={{ display: 'flex', alignItems: 'stretch' }}>
               <div style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                {/* Empty Clubhouse: one main action, one quiet one (C-11). Saying hello is the Room's message box. */}
+                {(members?.length ?? 0) <= 1 && (
+                  <div style={{ border: '1px solid var(--rule)', borderRadius: 'var(--radius)', background: 'var(--card)', padding: '18px 16px', textAlign: 'center' }}>
+                    <p style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', margin: '0 0 6px' }}>
+                      It is just you in here
+                    </p>
+                    <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 14px' }}>
+                      A Clubhouse comes alive with friends. Bring someone in with a bet.
+                    </p>
+                    <button
+                      onClick={() => navigate('/challenges?tab=bets&new=1')}
+                      style={{ minHeight: 'var(--tap)', padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Invite with a bet
+                    </button>
+                    <div>
+                      <button
+                        onClick={() => setShowInvite(true)}
+                        style={{ minHeight: 'var(--tap)', marginTop: 4, padding: '8px 12px', background: 'transparent', color: 'var(--mute)', border: 'none', ...BODY, fontSize: 'var(--fs-label)', textDecoration: 'underline', cursor: 'pointer' }}
+                      >
+                        Share a link instead
+                      </button>
+                    </div>
+                    {!isDesktop && (
+                      <button
+                        onClick={() => setTab('chat')}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--accent)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', padding: 4 }}
+                      >
+                        Say hello in The Room
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Quick-access shortcuts */}
                 <div style={{ display: 'flex', gap: 10, overflowX: isDesktop ? 'visible' : 'auto', flexWrap: isDesktop ? 'wrap' : 'nowrap' }}>
@@ -995,7 +926,6 @@ export default function ClubhouseScreen() {
                   <ShortcutCard
                     eyebrow="Meta Rank"
                     value={myRank ? `#${myRank} of ${metaStandings.length}` : '—'}
-                    sublabel={pointsBehind !== null ? (pointsBehind > 0 ? `${pointsBehind} pts behind` : 'In the lead') : undefined}
                     onClick={() => navigate('/trophy')}
                   />
                 </div>
@@ -1013,7 +943,6 @@ export default function ClubhouseScreen() {
                 {/* Empty state — no competitions yet */}
                 {competitions.football.length === 0 && competitions.f1.length === 0 && competitions.tennis.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '32px 0 24px' }}>
-                    <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🏟️</div>
                     <p style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', margin: '0 0 8px' }}>
                       No competitions yet
                     </p>
@@ -1046,22 +975,6 @@ export default function ClubhouseScreen() {
                   </div>
                   <div style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', marginTop: 2 }}>Read the Paper →</div>
                 </button>
-
-                {/* Activity feed */}
-                {feed.length > 0 && (
-                  <div>
-                    <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>Activity</h2>
-                    {feed.map(entry => (
-                      <FeedEntry key={entry.id} entry={entry} onEnter={enterLeague} />
-                    ))}
-                  </div>
-                )}
-
-                {feed.length === 0 && totalComps > 0 && (
-                  <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
-                    Activity will appear here once competitions start.
-                  </div>
-                )}
               </div>
 
               {/* Persistent chat rail — desktop only; mobile uses the Chat tab */}
@@ -1071,6 +984,8 @@ export default function ClubhouseScreen() {
                     circleId={activeCircleId}
                     members={members}
                     activeCircle={activeCircle}
+                    feed={feed}
+                    onEnterLeague={enterLeague}
                     layout="rail"
                     onExpand={() => setTab('chat')}
                   />
