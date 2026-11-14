@@ -2304,7 +2304,11 @@ export default function ChallengeScreen() {
   const [cancellingBet, setCancellingBet]         = useState(null);
   const [disputingBet, setDisputingBet]           = useState(null);
 
-  const [rematchChallengeSeed, setRematchChallengeSeed] = useState(null);
+  // ?opponent=<id> (People tab "Challenge"): open a head-to-head challenge pre-aimed at that member.
+  const [rematchChallengeSeed, setRematchChallengeSeed] = useState(() => {
+    const opp = searchParams.get('opponent');
+    return opp ? { opponentId: opp, betType: 'freeform' } : null;
+  });
   const [rematchBetSeed, setRematchBetSeed]             = useState(null);
   const [rematchBusy, setRematchBusy]                   = useState(false);
 

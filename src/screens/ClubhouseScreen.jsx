@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
 import { useChallenges } from '../hooks/useChallenges';
@@ -222,7 +223,7 @@ function formatJoinDate(isoString) {
   return new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) {
+function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings, records, onChallenge }) {
   const [kicking, setKicking] = useState(null);
 
   async function handleKick(userId) {
@@ -246,6 +247,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
       {[...owners, ...regular].map(m => {
         const meta = metaByUser.get(m.user_id);
         const joinDate = formatJoinDate(m.joined_at);
+        const rec = records?.get(m.user_id);
         return (
           <div
             key={m.user_id}
@@ -277,6 +279,10 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
               )}
             </div>
             <div style={{ display: 'flex', gap: 14, flexShrink: 0 }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)' }}>{rec ? `${rec.won}/${rec.played}` : '0/0'}</div>
+                <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>BETS WON</div>
+              </div>
               {meta && (
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)' }}>{meta.trophy_count}</div>
@@ -284,6 +290,12 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
                 </div>
               )}
             </div>
+            {m.user_id !== currentUserId && onChallenge && (
+              <button className="hit-44"
+                onClick={() => onChallenge(m.user_id)}
+                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--gold)', borderRadius: 4, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold-text)', cursor: 'pointer', flexShrink: 0 }}
+              >Challenge</button>
+            )}
             {isOwner && m.role !== 'owner' && m.user_id !== currentUserId && (
               <button className="hit-44"
                 onClick={() => handleKick(m.user_id)}
@@ -651,7 +663,39 @@ export default function ClubhouseScreen() {
   const { active: activeChallenges, incoming: incomingChallenges, outgoing: outgoingChallenges } = useChallenges(user?.id, activeCircleId);
   const frontpage = useClubhouseFrontpage(activeCircleId);
 
-  const [tab, setTab] = useState(() => searchParams.get('tab') ?? 'home');
+  // Three tabs: room, leagues, people. Old links (home, chat, members) still land on the right tab;
+  // 'frontrow' (The Paper) and 'settings' are reachable from Leagues and the gear, not the strip.
+  const LEGACY_TABS = { home: 'leagues', chat: 'room', members: 'people' };
+  const [tab, setTab] = useState(() => {
+    const t = searchParams.get('tab');
+    return LEGACY_TABS[t] ?? t ?? 'leagues';
+  });
+  const [betRecords, setBetRecords] = useState(new Map());
+  // Bet record per member in this Clubhouse: resolved bets they joined, and how many they won.
+  // Reads through existing RLS (members can see participants of non-open bets in their Clubhouse).
+  useEffect(() => {
+    if (!activeCircleId) return;
+    let alive = true;
+    supabase
+      .from('p2p_bet_participants')
+      .select('user_id, is_winner, p2p_bets!inner(circle_id, status)')
+      .eq('p2p_bets.circle_id', activeCircleId)
+      .eq('p2p_bets.status', 'resolved')
+      .eq('status', 'joined')
+      .then(({ data }) => {
+        if (!alive || !data) return;
+        const m = new Map();
+        for (const r of data) {
+          const cur = m.get(r.user_id) ?? { played: 0, won: 0 };
+          cur.played += 1;
+          if (r.is_winner) cur.won += 1;
+          m.set(r.user_id, cur);
+        }
+        setBetRecords(m);
+      });
+    return () => { alive = false; };
+  }, [activeCircleId]);
+
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
   const [showInvite, setShowInvite] = useState(false);
   const [joinCodeStatus, setJoinCodeStatus] = useState(null); // 'joining' | { error } | null
@@ -721,14 +765,10 @@ export default function ClubhouseScreen() {
   const myStanding  = myStandingIndex >= 0 ? metaStandings[myStandingIndex] : null;
   const myRank      = myStanding ? (myStanding.rank ?? myStandingIndex + 1) : null;
 
-  // 5 tabs on desktop (the Room lives in the persistent rail); 6 on mobile (the Room gets its own tab, no rail)
   const MAIN_TABS = [
-    { key: 'home',      label: 'Home' },
-    { key: 'frontrow',  label: 'The Paper' },
-    { key: 'digest',    label: 'Digest' },
-    ...(!isDesktop ? [{ key: 'chat', label: 'The Room' }] : []),
-    { key: 'members',   label: 'Members' },
-    ...(isOwner ? [{ key: 'settings', label: 'Settings' }] : []),
+    { key: 'room',    label: 'The Room' },
+    { key: 'leagues', label: 'Leagues' },
+    { key: 'people',  label: 'People' },
   ];
 
   return (
@@ -811,6 +851,16 @@ export default function ClubhouseScreen() {
                 </div>
               )}
             </div>
+            {isOwner && (
+              <button
+                onClick={() => setTab('settings')}
+                aria-label="Clubhouse settings"
+                className="hit-44"
+                style={{ minWidth: 'var(--tap)', minHeight: 'var(--tap)', background: 'transparent', border: 'none', color: tab === 'settings' ? 'var(--accent)' : 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              </button>
+            )}
             <NotificationBell
               notifications={notifications}
               unreadCount={unreadCount}
@@ -843,9 +893,14 @@ export default function ClubhouseScreen() {
         <ClubhouseLobby createCircle={createCircle} joinCircleByCode={joinCircleByCode} />
       ) : (
         <>
-          <TabStrip variant="underline" tabs={MAIN_TABS} active={tab} onTab={(k) => (k === 'digest' ? navigate('/recap') : setTab(k))} />
+          <TabStrip variant="underline" tabs={MAIN_TABS} active={tab} onTab={setTab} />
 
           {/* Full-width tabs — rendered outside the max-width container */}
+          {(tab === 'frontrow' || (tab === 'settings' && isOwner)) && (
+            <div style={{ padding: '10px 16px 0' }}>
+              <button onClick={() => setTab('leagues')} style={{ minHeight: 'var(--tap)', background: 'transparent', border: 'none', color: 'var(--accent)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer' }}>← Back to Leagues</button>
+            </div>
+          )}
           {tab === 'frontrow' && (
             <ClubhouseFrontpage
               circleId={activeCircleId}
@@ -855,7 +910,7 @@ export default function ClubhouseScreen() {
           )}
 
           {/* Chat tab — mobile's only view of chat; desktop reaches it via the rail's expand button (S-06) */}
-          {tab === 'chat' && (
+          {tab === 'room' && (
             <ClubhouseChat
               circleId={activeCircleId}
               members={members}
@@ -867,7 +922,7 @@ export default function ClubhouseScreen() {
           )}
 
           {/* HOME tab — main column + persistent chat rail (desktop) */}
-          {tab === 'home' && (
+          {tab === 'leagues' && (
             <div style={{ display: 'flex', alignItems: 'stretch' }}>
               <div style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -896,7 +951,7 @@ export default function ClubhouseScreen() {
                     </div>
                     {!isDesktop && (
                       <button
-                        onClick={() => setTab('chat')}
+                        onClick={() => setTab('room')}
                         style={{ background: 'transparent', border: 'none', color: 'var(--accent)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', padding: 4 }}
                       >
                         Say hello in The Room
@@ -975,6 +1030,10 @@ export default function ClubhouseScreen() {
                   </div>
                   <div style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', marginTop: 2 }}>Read the Paper →</div>
                 </button>
+                <button
+                  onClick={() => navigate('/recap')}
+                  style={{ minHeight: 'var(--tap)', background: 'transparent', border: 'none', color: 'var(--accent)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}
+                >Weekly digest →</button>
               </div>
 
               {/* Persistent chat rail — desktop only; mobile uses the Chat tab */}
@@ -987,7 +1046,7 @@ export default function ClubhouseScreen() {
                     feed={feed}
                     onEnterLeague={enterLeague}
                     layout="rail"
-                    onExpand={() => setTab('chat')}
+                    onExpand={() => setTab('room')}
                   />
                 </div>
               )}
@@ -995,10 +1054,12 @@ export default function ClubhouseScreen() {
           )}
 
           {/* Remaining tabs share the max-width reading container */}
-          {(tab === 'members' || (tab === 'settings' && isOwner)) && (
+          {(tab === 'people' || (tab === 'settings' && isOwner)) && (
             <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto' }}>
-              {tab === 'members' && (
+              {tab === 'people' && (
                 <MembersTab
+                  records={betRecords}
+                  onChallenge={(userId) => navigate(`/challenges?tab=bets&opponent=${userId}`)}
                   members={members}
                   isOwner={isOwner}
                   currentUserId={user?.id}

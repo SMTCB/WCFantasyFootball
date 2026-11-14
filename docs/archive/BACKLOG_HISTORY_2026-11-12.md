@@ -6764,5 +6764,9 @@ Last Updated: 2026-11-14
 
 - DD-P2-1: `error_logs` insert policy now bounds message, stack, screen, component and user agent length (migration 308, applied after backup and tested).
 - J-10 (part): public bet page `/bet/:id`, `get_bet_invite_preview` and `accept_bet_invite` (migrations 309, 310; anon cannot accept), and a Share link button on open bets.
+## S12 (2026-11-14)
+
+- C-03: Clubhouse tabs are now The Room, Leagues, People. Settings sit behind a gear (owner only). The Paper and the weekly digest are linked from Leagues. Old `?tab=home|chat|members` links still work.
+- C-05: People tab shows each member's bets won out of bets played in this Clubhouse (resolved group bets), trophies, and a Challenge button that opens a head-to-head challenge aimed at that member (`/challenges?opponent=<id>`). No database change.
 
 Last Updated: 2026-11-14
