@@ -6734,4 +6734,9 @@ Last Updated: 2026-11-13
 - J-09 / CODE-5: migration 305 applied (product_events, insert-own RLS, backup taken first); events now stored.
 - J-21 (part): main "Start a clubhouse" button on the first screen opens create-account.
 
+## 2026-11-14 — Session S2 part 1 (Bet cycle proof)
+
+- J-01: ran both bet types end to end in test circle TEST_Smoke_P3B with accounts e2e_a and e2e_b. Group bet: 50-coin stake each, 5-coin rake, winner +45 net. 1-to-1 freeform challenge: 20 coins each, 2-coin rake, winner +18 net. Wallets and escrow added up exactly (rake only), escrow back to 0. All test rows removed and both wallets reset to 500.
+- Found: the coin ledger rows for the 1-to-1 challenge do not sum to the wallet change (a +20 "loss" and a +20 "refund" entry appear). Wallets are right; the history list is not. Needs its own backlog item.
+
 Last Updated: 2026-11-13
