@@ -6739,4 +6739,12 @@ Last Updated: 2026-11-13
 - J-01: ran both bet types end to end in test circle TEST_Smoke_P3B with accounts e2e_a and e2e_b. Group bet: 50-coin stake each, 5-coin rake, winner +45 net. 1-to-1 freeform challenge: 20 coins each, 2-coin rake, winner +18 net. Wallets and escrow added up exactly (rake only), escrow back to 0. All test rows removed and both wallets reset to 500.
 - Found: the coin ledger rows for the 1-to-1 challenge do not sum to the wallet change (a +20 "loss" and a +20 "refund" entry appear). Wallets are right; the history list is not. Needs its own backlog item.
 
+## 2026-11-14 — Session S2 part 2 (Database fixes)
+
+- BUG-CW1: migration 306 makes `guard_coin_columns()` return OLD on DELETE, so deleting a wallet row now works (checked in a rolled-back transaction). Note for later: the function is SECURITY DEFINER, so its `current_user IN (authenticated, anon)` check never fires; direct-write protection relies on row security instead.
+- J-03: released all held coins. The 100-coin challenge from 30 Aug expired and refunded; the 250-coin group bet in DRAFT_WISHLIST was cancelled and both players refunded. No wallet has anything in escrow now.
+- DD-P1-1: deleted the "Smoke Test League". The stuck Wimbledon tournament and the empty circles were already gone. "test 1" (a different account's league) was left alone.
+- J-02: switched on jobs 70, 71, 72, 17 and 91. All five show succeeded runs in their history (checked 13:00 UTC). Job 91 did not resolve the two closed July bets; logged as BET-STUCK-1.
+- Backups taken first: schema and data dumps in backups/ (gitignored).
+
 Last Updated: 2026-11-13

@@ -230,8 +230,11 @@ Always create a new file — never modify existing migrations.
 | 301 | `301_transfers_league_member_read.sql` | SELECT policy on legacy `transfers` for league members. Applied 2026-10-18 via SQL editor; superseded in practice — `transfers` is no longer written (see 302). Harmless. |
 | 302 | `302_league_market_events_rpc.sql` | `get_league_market_events(p_league_id)` — SECURITY DEFINER, member-only, returns `transfer_buy`/`transfer_sell` rows from `squad_events` for the Market report. Applied 2026-10-18 via SQL editor. |
 | 303 | `303_market_events_after_round_start.sql` | Replaces 302's function: a round's transfers are returned only after that round's `matchday_deadlines.deadline_at` (fallback `transfer_windows.closes_at`); hidden if neither. Applied 2026-10-18 via SQL editor. |
+| 304 | `304_chips_engine.sql` | Chips engine: Triple Captain, Joker (x2, once per tournament), Max Cap, with a per-league admin switch. **Written but NOT applied** (needs explicit approval and a backup). |
+| 305 | `305_product_events.sql` | `product_events` table (id, user_id default auth.uid(), event, props jsonb, created_at) for onboarding and app-open counts. RLS: insert-own only, no read policy. Applied 2026-11-14 after a backup. Written by `src/lib/analytics.js`. |
+| 306 | `306_fix_guard_coin_columns_delete.sql` | BUG-CW1: `guard_coin_columns()` now returns OLD on DELETE, so deleting a `coin_wallets` row is no longer silently cancelled. Applied 2026-11-14 after schema and data backups. |
 
-**Next migration**: `301_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
+**Next migration**: `307_` (single canonical numbering on `main`; rows 216–294 completed 2026-10-03 — older gaps such as 182, 186–189, 193–196, 202–214 predate this update)
 
 **Key pipeline facts (2026-06-29 — Redesign Phase C, PR #676, v2 branch):**
 - **`useActiveCompetition()` hook** (`src/hooks/useActiveCompetition.js`): derives `{sport, competitionId}` from `useLocation().pathname` only — no context, no global state. Football matched by `/league/`, `/live`, `/squad`, `/market`, `/recap`; F1 by `/f1/`; tennis by `/tennis/tournament/`. `SportContext.activeSport`/`setActiveSport` **removed entirely**. `AppLayout`, `ClubhouseScreen`, `F1HomeScreen`, `PaddockLobbyScreen`, `PlayerBoxScreen` all cleaned of `setActiveSport()` calls. `SportContext` retains `activePaddockId`/`activePlayerBoxId` (used by `usePaddock`/`usePlayerBox` for localStorage).
@@ -474,4 +477,4 @@ Always create a new file — never modify existing migrations.
 
 ---
 
-Last Updated: 2026-10-18
+Last Updated: 2026-11-14
