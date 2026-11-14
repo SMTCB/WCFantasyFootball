@@ -6700,4 +6700,9 @@ Last Updated: 2026-11-13
 - J-11: the create-bet form opens as one sentence ("I bet [everyone] [100] coins that ..."); answer type, options, who can join, presets and timing are under "More options".
 - J-07: remaining Clubhouse labels renamed; league-screen labels left for C-20.
 
+## 2026-11-14 — Session S6 part 1 (Name and wording)
+
+- BRAND-1 (part): platform name is Clubhouse in the page title, description, installed-app name, welcome screen, logo text and recap card. The newspaper is now "The Paper".
+- J-18 (part): Competition and Paddock wording replaced by League on the Clubhouse, Home, F1 and create-bet screens.
+
 Last Updated: 2026-11-13

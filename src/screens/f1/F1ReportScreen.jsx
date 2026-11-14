@@ -178,7 +178,7 @@ export default function F1ReportScreen() {
                       </div>
 
                       {/* Every paddock member's picks */}
-                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>Paddock picks</div>
+                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>League picks</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {sortedMembers.map(member => {
                           const bet = betMap[`${member.user_id}_${race.round_number}`];

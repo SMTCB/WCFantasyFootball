@@ -42,7 +42,7 @@ export default function BrandMark({ theme = 'dark', scale = 1, compact = false }
           color:      wordmarkColor,
           lineHeight: 1,
         }}>
-          Frontrow
+          Clubhouse
         </span>
       </div>
     );
@@ -64,7 +64,7 @@ export default function BrandMark({ theme = 'dark', scale = 1, compact = false }
         color:      wordmarkColor,
         lineHeight: 1,
       }}>
-        Frontrow
+        Clubhouse
       </span>
     </div>
   );

@@ -33,7 +33,7 @@ const SPORT_INFO = {
     extra: null,
   },
   f1: {
-    overview: 'Pick drivers and constructors for a season of race weekends (a "Paddock"). You score points on real qualifying and race results.',
+    overview: 'Pick drivers and constructors for a season of race weekends (an F1 league). You score points on real qualifying and race results.',
     modes: [],
     extra: null,
   },
@@ -273,7 +273,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
       </div>
 
       <div style={{ marginBottom: 14 }}>
-        <label style={LABEL_STYLE}>Competition name</label>
+        <label style={LABEL_STYLE}>League name</label>
         <input
           autoFocus
           style={INPUT_STYLE}
