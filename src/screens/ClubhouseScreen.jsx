@@ -366,7 +366,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
                 </span>
                 {m.role === 'owner' && (
                   <span style={{
-                    ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold)',
+                    ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold-text)',
                     border: '1px solid var(--gold)', borderRadius: 4, padding: '1px 5px', flexShrink: 0,
                   }}>
                     OWNER

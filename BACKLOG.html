@@ -157,7 +157,7 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>104</strong><span>open</span></div>
+      <div class="total-pill"><strong>102</strong><span>open</span></div>
       <div class="total-pill"><strong>5</strong><span>closed</span></div>
     </div>
   </div>
@@ -170,8 +170,8 @@
   </div>
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
-    <span class="chip" data-filter-priority="p1">P1 — HIGH (17)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (52)</span>
+    <span class="chip" data-filter-priority="p1">P1 — HIGH (16)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (51)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (35)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
@@ -185,13 +185,13 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">104</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">102</span></button>
       <button class="status-btn" data-status="closed">Closed <span class="status-count">5</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
-      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">17</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">52</span></div>
+      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">16</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">51</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">35</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
@@ -211,7 +211,7 @@
 <li>When a session finishes: delete its rows here, log them in the history file, regenerate <code>BACKLOG.html</code>, and tick the session off in the "Done sessions" line below.</li>
 <li>League-level bets (the commissioner-created ones) stay until the end of this season; no session removes them (owner decision, 2026-11-13). Dark mode is on hold.</li>
 </ul>
-<p><strong>Done sessions:</strong> S1 (2026-11-13), S6 (2026-11-14; BRAND-1, BRAND-2, BRAND-3, J-18 part done), S5 (2026-11-13; J-07 league-screen labels left for C-20), S4 (2026-11-13, except DD-P1-2: you walk it on a phone with a fresh account), except two leftovers: SEC-4 (you revoke the old token at github.com/settings/tokens) and the open part of DOCS-3 (rewrite the testing and API docs).</p>
+<p><strong>Done sessions:</strong> S1 (2026-11-13), S7 part 1 (2026-11-14; LIVE-1, LIVE-2 closed, A11Y-02 part done), S6 (2026-11-14; BRAND-1, BRAND-2, BRAND-3, J-18 part done), S5 (2026-11-13; J-07 league-screen labels left for C-20), S4 (2026-11-13, except DD-P1-2: you walk it on a phone with a fresh account), except two leftovers: SEC-4 (you revoke the old token at github.com/settings/tokens) and the open part of DOCS-3 (rewrite the testing and API docs).</p>
 <p><strong>Wave 1 — Now: get ready, prove the bet, fix the welcome</strong></p>
 <p>Start here. Nothing in the Clubhouse redesign is worth building until one bet has paid out (S2) and a newcomer can get through the welcome (S4).</p>
 <div class="md-table-wrap"><table class="md-table"><thead><tr><th>Session</th><th>Theme and why these belong together</th><th>Rows</th><th>Needs your yes</th><th>Test afterwards</th></tr></thead><tbody><tr><td><strong>S1: Clean start</strong></td><td>Repo, docs and CI hygiene only. No app behaviour changes, so it is safe first and leaves CI green for every later session.</td><td>CI-T3, TEST-SEED-1, DD-P3-1, REPO-1, DOCS-1, DOCS-3, INFRA-3, SEC-4</td><td>No. SEC-4 has one manual step that is yours: revoke the old token at github.com/settings/tokens.</td><td>A PR shows every CI job green, including Tier 3. <code>npm run lint</code> shows no warnings. <code>git worktree list</code> is clean.</td></tr><tr><td><strong>S2: Prove the bet</strong></td><td>Everything that touches the money engine in the live database: bet functions, wallet trigger, paused jobs, test rows. One session means one backup and one pair of test accounts cover all of it.</td><td>J-01, J-02, J-03, BUG-CW1, DD-P1-1, TEST-P2P-1, DD-P2-3</td><td>Yes, each item separately (test accounts, jobs one at a time, releasing stakes, deleting test rows, the trigger fix). Backup first. Order inside: DD-P1-1, BUG-CW1, J-01, then check what is left before J-03 (the expiry job in J-02 may release the 30 Aug stake by itself), then J-02.</td><td>Two accounts: create, accept, settle, pay out; wallet totals add up; <code>tests/unit/p2p-challenges.test.js</code> passes; no <code>TEST_</code> rows left; every re-enabled job has a run in its history.</td></tr><tr><td><strong>S3: Watch and protect</strong></td><td>Error reporting and abuse limits all sit on the same secrets and Edge Functions setup.</td><td>OPS-SENTRY, DD-P2-1, LOW-3</td><td>Yes: set a secret, schedule a job, change a table policy, deploy functions.</td><td>A deliberate test error appears in Sentry; anonymous writes to the error log are limited; <code>npm run check:drift</code> passes.</td></tr><tr><td><strong>S4: Welcome fixes</strong></td><td>Same files: the welcome steps, the invite pieces and the sign-in copy. Use one platform-name constant so the rename in S6 changes it in one place.</td><td>J-04, J-05, J-06, C-02, DD-P1-2</td><td>No.</td><td>Walk the whole welcome with a fresh account on a phone (this is DD-P1-2): wrong invite code shows an error, one step count, no duplicate username, ends on Home; invite uses the phone share sheet. <code>platform.spec.js</code> green.</td></tr><tr><td><strong>S5: Create a bet and the Bets tab</strong></td><td>The create-bet window, the Bets and Coins tabs and the wallet are the same screens and hooks.</td><td>J-20, J-11, COIN-2, J-07, J-08</td><td>No (interface only).</td><td>Create a bet with and without a Clubhouse; the wallet shows no prices; the bottom bar works on phone and desktop (<code>platform.spec.js</code> navigation tests change with J-08). Existing league-level bets still open from their league screens (owner decision, 2026-11-13).</td></tr></tbody></table></div>
@@ -237,7 +237,7 @@
 <hr></section>
       
     <section class="item-group" id="group-p1" data-group="p1">
-      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">17</span></h2>
+      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">16</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="club-bet-1 move betting to clubhouse level — design decision, then build **update 2026-11-13: the owner confirmed betting moves to the clubhouse (c-20) but league-level bets (a below) stay as they are for now, at least until the end of this season, because users are used to them. option (i) below fits this: (a) is left alone.** raised by the user 2026-08-22: *&quot;my idea is to have the betting at clubhouse level (and not on a specific league level)&quot;*. **half of this already exists.** there are two unrelated betting systems and they sit at different levels: **(a) league bets** — `bet_instances` + 26 `bet_templates`, commissioner-created, **`league_id`-scoped**, every template football-specific (goals/corners/cards/clean sheet/motm), reward is **fantasy points or budget, never coins**; 39 instances exist in prod. **(b) p2p coin challenges** — `p2p_challenges`, real coin stakes with escrow and 5% rake, **already `circle_id`-scoped** since migration 237, two bet types: `gw_total` (auto-resolved from squad points, **football-only** — requires `league_id` + `matchday_id`) and `freeform` (≤140-char question, any sport, human-settled). 0 exist in prod. **so system (b) already is the clubhouse-level betting the user is describing** — the gap is that its only *auto-resolving* type is football. **the decision to make**: (i) leave (a) league-scoped as a football league-flavour feature and put all cross-sport betting in (b); (ii) re-scope (a) to `circle_id` and write f1/tennis templates; or (iii) both. **recommendation: (i)** — (a) pays in fantasy points, which are per-competition and per-sport and therefore cannot settle a clubhouse-wide bet without inventing a cross-sport point scale (see `club-score-1`), whereas coins are already the one currency that is cross-sport, circle-scoped and escrowed. the concrete work under (i) is adding auto-resolving `p2p_challenges` bet types for f1 (settle on `f1_scores`) and tennis (settle on `tennis_tournament_scores`), so f1/tennis bets stop de" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -509,28 +509,11 @@
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
-      </article>
-
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="ui-audit-live-1 four critical contrast and legibility failures found on live screens: bottom-bar active label, &quot;beta&quot; badge, red live badge and market position chips, live empty-state caption design audit. triaged 2026-11-13 from the live verification pass (findings 15, 16, 17, 18, see the audit section below). (1) bottom-bar active label, info blue on the page background, 3.02:1, on every screen. (2) header &quot;beta&quot; badge, raw gold used as text, 3.49 to 4.24:1, drawn at 6.5px. (3) red on dark surfaces: the live badge 2.53:1 and the market gk/def/mid/fwd count chips 2.33:1. (4) live screen empty-state caption (&quot;points log will appear here when a match is live&quot;), off-white on off-white, 1.22:1, the worst ratio found. target: 4.5:1 for normal text, 3:1 for large text. do after brand-3 so the final colours are used. evidence and exact colours: docs/design/design_audit_2026-08.html ledger rows 15 to 18. open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
-        <h3 class="card-title">Four critical contrast and legibility failures found on live screens: bottom-bar active label, "Beta" badge, red LIVE badge and Market position chips, Live empty-state caption</h3>
-        <p class="card-summary">Design audit. Triaged 2026-11-13 from the live verification pass (findings 15, 16, 17, 18, see the audit section below). (1) Bottom-bar active label, info blue on the page background, 3.02:1, on every screen. (2) Header "Beta" badge, raw gold used as text, 3.49 to 4.24:1, drawn at 6.5px. (3) Red on dark surfaces: the LIVE badge 2.53:1 and the Market GK/DEF/MID/FWD count chips 2.33:1. (4) Live screen empty-state caption ("Points Log will appear here when a match is live"), off-white on off-white, 1.22:1, the worst ratio found. Target: 4.5:1 for normal text, 3:1 for large text. Do after BRAND-3 so the final colours are used. Evidence and exact colours: docs/design/DESIGN_AUDIT_2026-08.html ledger rows 15 to 18.</p>
-        <div class="card-foot"><span class="foot-id">UI-AUDIT-LIVE-1</span><span class="foot-effort">S</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-bug">BUG</span></div>
-      <h2 class="drawer-title">Four critical contrast and legibility failures found on live screens: bottom-bar active label, "Beta" badge, red LIVE badge and Market position chips, Live empty-state caption</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Four critical contrast and legibility failures found on live screens: bottom-bar active label, "Beta" badge, red LIVE badge and Market position chips, Live empty-state caption</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Design audit. Triaged 2026-11-13 from the live verification pass (findings 15, 16, 17, 18, see the audit section below). (1) Bottom-bar active label, info blue on the page background, 3.02:1, on every screen. (2) Header "Beta" badge, raw gold used as text, 3.49 to 4.24:1, drawn at 6.5px. (3) Red on dark surfaces: the LIVE badge 2.53:1 and the Market GK/DEF/MID/FWD count chips 2.33:1. (4) Live screen empty-state caption ("Points Log will appear here when a match is live"), off-white on off-white, 1.22:1, the worst ratio found. Target: 4.5:1 for normal text, 3:1 for large text. Do after BRAND-3 so the final colours are used. Evidence and exact colours: docs/design/DESIGN_AUDIT_2026-08.html ledger rows 15 to 18.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
       </article></div>
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">52</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">51</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="dd-p3-2 1 eslint `react-hooks/exhaustive-deps` warning in `slidetoconfirm.jsx` found 2026-11-13 during s1. `src/components/motion/slidetoconfirm.jsx:51` usecallback is missing the dependency `clamp`. slide-to-confirm gates money actions, so check the callback is not capturing a stale value before silencing it. fits session s16 (shared building blocks). open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
@@ -1275,17 +1258,17 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="ui-audit-a11y-02 gold text contrast on mixed light/dark surfaces ui audit (2026-10-16). ~25 mixed files need per-surface review (`--on-shell-gold` on navy). open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="ui-audit-a11y-02 gold text contrast on mixed light/dark surfaces ui audit (2026-10-16). ~25 mixed files need per-surface review (`--on-shell-gold` on navy). **part done 2026-11-14 (s7): 81 uses of raw gold as text colour now use the darker gold-text token (5.1:1 on the page background). still to do: gold on the navy surfaces and the share card, checked per screen.** open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
         <h3 class="card-title">Gold text contrast on mixed light/dark surfaces</h3>
-        <p class="card-summary">UI audit (2026-10-16). ~25 mixed files need per-surface review (<code>--on-shell-gold</code> on navy).</p>
+        <p class="card-summary">UI audit (2026-10-16). ~25 mixed files need per-surface review (<code>--on-shell-gold</code> on navy). <strong>Part done 2026-11-14 (S7): 81 uses of raw gold as text colour now use the darker gold-text token (5.1:1 on the page background). Still to do: gold on the navy surfaces and the share card, checked per screen.</strong></p>
         <div class="card-foot"><span class="foot-id">UI-AUDIT-A11Y-02</span><span class="foot-effort">M</span></div>
         <template>
       <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
       <h2 class="drawer-title">Gold text contrast on mixed light/dark surfaces</h2>
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Gold text contrast on mixed light/dark surfaces</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>UI audit (2026-10-16). ~25 mixed files need per-surface review (<code>--on-shell-gold</code> on navy).</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>UI audit (2026-10-16). ~25 mixed files need per-surface review (<code>--on-shell-gold</code> on navy). <strong>Part done 2026-11-14 (S7): 81 uses of raw gold as text colour now use the darker gold-text token (5.1:1 on the page background). Still to do: gold on the navy surfaces and the share card, checked per screen.</strong></p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -1405,23 +1388,6 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Dark mode</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>Blocked on SYS-04. <strong>On hold:</strong> decided 2026-11-13 that the Clubhouse look is light mode only (BRAND-3). Left here until the owner confirms it can be removed.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
-      </article>
-
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="ui-audit-live-2 three high contrast failures found on live screens: muted text on raised surfaces, muted text on market captions, old gold button with white text design audit. triaged 2026-11-13 from the live verification pass (findings 19, 20, 21). (1) the muted text colour on the raised surface colour is 4.26:1 (needs 4.5:1); it carries almost every field label, helper caption and the save button text on settings. (2) the muted text colour directly on the page background is 3.19:1 on the market budget and price captions (missed by the earlier 18-site sweep). (3) old gold used as a solid button fill with white text, 3.85:1 (league &quot;join →&quot;); same root cause as ui-audit-a11y-02. fix by adjusting the tokens once rather than site by site. evidence: docs/design/design_audit_2026-08.html ledger rows 19 to 21. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
-        <h3 class="card-title">Three high contrast failures found on live screens: muted text on raised surfaces, muted text on Market captions, old gold button with white text</h3>
-        <p class="card-summary">Design audit. Triaged 2026-11-13 from the live verification pass (findings 19, 20, 21). (1) The muted text colour on the raised surface colour is 4.26:1 (needs 4.5:1); it carries almost every field label, helper caption and the Save button text on Settings. (2) The muted text colour directly on the page background is 3.19:1 on the Market Budget and Price captions (missed by the earlier 18-site sweep). (3) Old gold used as a solid button fill with white text, 3.85:1 (League "Join →"); same root cause as UI-AUDIT-A11Y-02. Fix by adjusting the tokens once rather than site by site. Evidence: docs/design/DESIGN_AUDIT_2026-08.html ledger rows 19 to 21.</p>
-        <div class="card-foot"><span class="foot-id">UI-AUDIT-LIVE-2</span><span class="foot-effort">M</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
-      <h2 class="drawer-title">Three high contrast failures found on live screens: muted text on raised surfaces, muted text on Market captions, old gold button with white text</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Three high contrast failures found on live screens: muted text on raised surfaces, muted text on Market captions, old gold button with white text</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Design audit. Triaged 2026-11-13 from the live verification pass (findings 19, 20, 21). (1) The muted text colour on the raised surface colour is 4.26:1 (needs 4.5:1); it carries almost every field label, helper caption and the Save button text on Settings. (2) The muted text colour directly on the page background is 3.19:1 on the Market Budget and Price captions (missed by the earlier 18-site sweep). (3) Old gold used as a solid button fill with white text, 3.85:1 (League "Join →"); same root cause as UI-AUDIT-A11Y-02. Fix by adjusting the tokens once rather than site by site. Evidence: docs/design/DESIGN_AUDIT_2026-08.html ledger rows 19 to 21.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>

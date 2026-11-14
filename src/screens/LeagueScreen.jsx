@@ -1050,7 +1050,7 @@ export default function LeagueScreen() {
                 <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {[
                     {
-                      label: 'Draft + H2H', color: 'var(--gold)',
+                      label: 'Draft + H2H', color: 'var(--gold-text)',
                       summary: 'Draft league with a parallel head-to-head competition. Every matchday you face one opponent — winner takes 5 H2H pts, draw 2, loss 0.',
                       rows: [
                         ['Draft', 'All draft rules apply — blind lottery, unique player ownership, first-come-first-served after allocation.'],
@@ -1174,13 +1174,13 @@ export default function LeagueScreen() {
               >
                 <div className="flex items-center gap-2 w-full">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Draft + H2H</span>
-                  <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>⚔️ H2H</span>
+                  <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>⚔️ H2H</span>
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Draft league with a parallel head-to-head competition each matchday.</span>
                 <ul className="flex flex-col gap-[3px]">
                   <li className="text-[11px]" style={{ color: 'var(--mute)' }}>• All draft rules apply</li>
                   <li className="text-[11px]" style={{ color: 'var(--mute)' }}>• Win 5 pts · Draw 2 pts · Loss 0 pts</li>
-                  <li className="text-[11px]" style={{ color: 'var(--gold)' }}>• Two parallel tables: pts + H2H</li>
+                  <li className="text-[11px]" style={{ color: 'var(--gold-text)' }}>• Two parallel tables: pts + H2H</li>
                 </ul>
               </button>
             </div>
@@ -1477,7 +1477,7 @@ export default function LeagueScreen() {
                  borderBottom: '1px solid rgba(224,168,0,0.25)',
                  flexShrink: 0,
                }}>
-                 <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
+                 <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>
                    ⇄ Trade proposals
                  </span>
                  {incomingTrades.length > 0 && (
@@ -1612,7 +1612,7 @@ export default function LeagueScreen() {
                     {/* Incoming trade proposals */}
                     {incomingTrades.length > 0 && (
                       <div>
-                        <h3 style={{ color: 'var(--gold)', fontSize: 'var(--fs-label)', fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
+                        <h3 style={{ color: 'var(--gold-text)', fontSize: 'var(--fs-label)', fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
                           INCOMING OFFERS ({incomingTrades.length})
                         </h3>
                         {incomingTrades.map(p => (
@@ -1636,7 +1636,7 @@ export default function LeagueScreen() {
                                   </span>
                                 )}
                                 {p.points_sweetener > 0 && (
-                                  <span style={{ color: 'var(--gold)', fontSize: 'var(--fs-micro)', fontWeight: 700 }}>
+                                  <span style={{ color: 'var(--gold-text)', fontSize: 'var(--fs-micro)', fontWeight: 700 }}>
                                     +{p.points_sweetener} pts sweetener
                                   </span>
                                 )}
@@ -1950,7 +1950,7 @@ export default function LeagueScreen() {
 
   const emptyState = (
     <div className="p-8 text-center">
-      <div className="fk-display" style={{ fontSize: 'var(--fs-title)', color: 'var(--gold)', marginBottom: '12px' }}>FFL</div>
+      <div className="fk-display" style={{ fontSize: 'var(--fs-title)', color: 'var(--gold-text)', marginBottom: '12px' }}>FFL</div>
       <div className="text-[13px] font-bold uppercase tracking-wide text-[var(--paper)] mb-2">No leagues yet</div>
       <div className="text-[11px] text-text-secondary mb-6">Create a league or enter a friend's invite code below.</div>
       <button onClick={() => setView('create')} className="px-6 py-3 bg-cyan text-white text-[11px] font-bold uppercase tracking-wider">

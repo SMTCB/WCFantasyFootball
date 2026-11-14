@@ -164,8 +164,8 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
                 )}
                 {mult > 1 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0 0', marginTop: 2, borderTop: '1px solid var(--rule)' }}>
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', }}>{p.triple ? 'TRIPLE CAPTAIN ×3' : 'CAPTAIN ×2'}</span>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>{displayPts[i]}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', }}>{p.triple ? 'TRIPLE CAPTAIN ×3' : 'CAPTAIN ×2'}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>{displayPts[i]}</span>
                   </div>
                 )}
               </div>
@@ -194,13 +194,13 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           padding: '7px 24px', borderTop: '1px solid rgba(240,180,0,0.25)',
           background: 'rgba(240,180,0,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Bet won</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Bet won</span>
             <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</span>
           </div>
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>—</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--gold)' }}>+{b.amount}</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: 'var(--gold-text)' }}>+{b.amount}</span>
         </div>
       ))}
       {tradeNet !== 0 && (
@@ -771,7 +771,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
               {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
             </span>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginTop: 1, visibility: betPts > 0 ? 'visible' : 'hidden' }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', marginTop: 1, visibility: betPts > 0 ? 'visible' : 'hidden' }}>
               +{betPts} bet
             </div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', marginTop: 1, visibility: tradeNet !== 0 ? 'visible' : 'hidden' }}>
@@ -785,7 +785,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               {totalPts != null ? Math.round(totalPts) : '—'}
             </div>
             {h2hEnabled && (
-              <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
+              <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>
                 {h2hMap[s.user_id] ?? '—'}
               </div>
             )}
@@ -806,7 +806,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </div>
               {betPts > 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>+{betPts} bet</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>+{betPts} bet</div>
               )}
               {tradeNet !== 0 && (
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>

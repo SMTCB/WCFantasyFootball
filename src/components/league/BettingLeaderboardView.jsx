@@ -4,7 +4,7 @@ import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 
 const CAT_META = {
   match:   { label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
-  stats:   { label: 'STATS',   color: 'var(--gold)',  icon: '📊' },
+  stats:   { label: 'STATS',   color: 'var(--gold-text)',  icon: '📊' },
   players: { label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
   custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏'  },
 };
@@ -199,7 +199,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                         </div>
                         <div>
                           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Rewards</div>
-                          <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--gold)' }}>+{entry.total_rewards}</div>
+                          <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--gold-text)' }}>+{entry.total_rewards}</div>
                         </div>
                       </div>
                     </div>

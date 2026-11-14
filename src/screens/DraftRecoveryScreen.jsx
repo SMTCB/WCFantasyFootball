@@ -8,7 +8,7 @@ import { useRelaxationState } from '../hooks/useRelaxationState';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 
 const POS_CONFIG = {
-  GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(240,180,0,0.14)'  },
+  GK:  { label: 'GK',  color: 'var(--gold-text)', bg: 'rgba(240,180,0,0.14)'  },
   DEF: { label: 'DEF', color: 'var(--accent)', bg: 'var(--accent-soft)'  },
   MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(157,95,245,0.14)' },
   FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(240,58,58,0.14)'  },

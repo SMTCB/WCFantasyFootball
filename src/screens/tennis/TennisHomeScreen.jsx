@@ -16,7 +16,7 @@ const STATUS_LABEL = {
 };
 
 const TYPE_BADGE = {
-  grand_slam:  { label: 'Grand Slam', color: 'var(--gold)', bg: 'rgba(184,114,14,0.1)' },
+  grand_slam:  { label: 'Grand Slam', color: 'var(--gold-text)', bg: 'rgba(184,114,14,0.1)' },
   masters_1000: { label: 'Masters 1000', color: 'var(--mute)', bg: 'var(--elev)' },
   atp_finals:  { label: 'Season Finale', color: 'var(--ten)', bg: 'var(--tenbg)' },
 };

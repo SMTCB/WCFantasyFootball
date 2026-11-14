@@ -497,7 +497,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
         right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Auto-resolve is off</span>}
       />
       <div style={{ padding: '14px 22px 6px', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
-        Pick a bet, enter the result, hit <b style={{ color: 'var(--gold)' }}>RESOLVE</b>. Points are awarded immediately.
+        Pick a bet, enter the result, hit <b style={{ color: 'var(--gold-text)' }}>RESOLVE</b>. Points are awarded immediately.
         Auto-resolved bets appear below and can be overridden if the result was set incorrectly.
       </div>
 
@@ -543,7 +543,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                 </div>
                 {isResolved
                   ? <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', padding: '2px 7px' }}>✓ RESOLVED</span>
-                  : <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>● PENDING</span>}
+                  : <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>● PENDING</span>}
                 <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 'var(--fs-label)' }}>{isOpen ? '−' : '+'}</span>
               </button>
 
@@ -2491,7 +2491,7 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
     </div>
   ) : (
     <div style={{ padding: '8px 10px', background: 'var(--bg)', border: '1px solid rgba(240,180,0,0.2)', fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>
-      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>Setup required · </span>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>Setup required · </span>
       Pick the first matchday for H2H play and click Generate. All managers currently in the league will be included. If a new manager joins later, regenerate from the next unplayed matchday.
     </div>
   );

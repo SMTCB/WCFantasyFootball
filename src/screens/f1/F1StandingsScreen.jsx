@@ -46,7 +46,7 @@ export default function F1StandingsScreen() {
       )}
 
       {!yearResults?.is_final && (
-        <div style={{ padding: '8px 16px', background: 'rgba(217,119,6,0.1)', borderBottom: '1px solid rgba(217,119,6,0.25)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>
+        <div style={{ padding: '8px 16px', background: 'rgba(217,119,6,0.1)', borderBottom: '1px solid rgba(217,119,6,0.25)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
           ⚠ SEASON PTS ARE PRELIMINARY — not final until season results are confirmed
         </div>
       )}

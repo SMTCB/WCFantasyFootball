@@ -217,12 +217,12 @@ export default function F1ReportScreen() {
                                   ))}
                                   {breakdown.wrongSpot > 0 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)' }}>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)', flex: 1 }}>🎯 Podium (right driver, wrong spot)</span>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold)' }}>+{breakdown.wrongSpot}</span>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)', flex: 1 }}>🎯 Podium (right driver, wrong spot)</span>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold-text)' }}>+{breakdown.wrongSpot}</span>
                                     </div>
                                   )}
                                   {breakdown.bonus > 0 && (
-                                    <div style={{ padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>
+                                    <div style={{ padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
                                       ⭐ All Correct Bonus +{breakdown.bonus}
                                     </div>
                                   )}
