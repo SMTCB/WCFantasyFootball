@@ -16,6 +16,7 @@ import AppLayout from './components/AppLayout';
 import OnboardingWizard from './components/OnboardingWizard';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { useOnboarding } from './hooks/useOnboarding';
+import { trackAppOpenOncePerDay } from './lib/analytics';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
 import { ClubhouseNotifProvider } from './context/ClubhouseNotifProvider';
@@ -104,6 +105,7 @@ function AppRoutes() {
   const { showWizard, completeWizard, skipWizard } = useOnboarding();
   const [showHelpModal, setShowHelpModal] = useState(false);
   useKeyboardShortcuts(() => setShowHelpModal(true));
+  useEffect(() => { if (user) trackAppOpenOncePerDay(); }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
