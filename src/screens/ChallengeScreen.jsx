@@ -1282,6 +1282,22 @@ function ArbitrateOutcomeModal(props) {
   return <BetOutcomeModal {...props} mode="arbitrate" />;
 }
 
+function CopyBetLink({ betId }) {
+  const [done, setDone] = useState(false);
+  const copy = async () => {
+    const url = `${window.location.origin}/bet/${betId}`;
+    try {
+      if (navigator.share) await navigator.share({ title: 'Take my bet', url });
+      else { await navigator.clipboard.writeText(url); setDone(true); setTimeout(() => setDone(false), 2000); }
+    } catch { /* share sheet dismissed */ }
+  };
+  return (
+    <button onClick={copy} style={{ marginLeft: 'auto', minHeight: 'var(--tap)', padding: '0 10px', background: 'transparent', border: 'none', color: 'var(--accent)', fontSize: 'var(--fs-label)', fontWeight: 600, cursor: 'pointer' }}>
+      {done ? 'Link copied' : 'Share link'}
+    </button>
+  );
+}
+
 // ── Group Bet dashboard card ───────────────────────────────────────────────────
 function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, onClose, onCancel, onDeclare, onDispute, onArbitrate, onRematch, loading }) {
   const isCreator = bet.creator_id === userId;
@@ -1309,6 +1325,7 @@ function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, o
           </span>
         )}
         {isCreator && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>You created this</span>}
+        {isCreator && bet.status === 'open' && <CopyBetLink betId={bet.id} />}
       </div>
 
       {section === 'invited' && (

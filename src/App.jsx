@@ -27,6 +27,7 @@ import { ClubhouseProvider } from './context/ClubhouseProvider';
 // initial JS bundle and eliminates the shared-module surface that causes
 // Rolldown TDZ crashes in production (CODE-1).
 const DesignKitScreen       = import.meta.env.DEV ? lazy(() => import('./screens/DesignKitScreen')) : null;
+const BetInviteScreen       = lazy(() => import('./screens/BetInviteScreen'));
 const TrophyCabinetScreen   = lazy(() => import('./screens/TrophyCabinetScreen'));
 const HomeScreen            = lazy(() => import('./screens/HomeScreen'));
 const SquadScreen           = lazy(() => import('./screens/SquadScreen'));
@@ -128,6 +129,7 @@ function AppRoutes() {
       <Routes>
         {/* Public route — only reachable when auth is enabled */}
         <Route path="/auth" element={<AuthScreen />} />
+        <Route path="/bet/:betId" element={<BetInviteScreen />} />
         {import.meta.env.DEV && <Route path="/dev/kit" element={<DesignKitScreen />} />}
 
         {/* All other routes are protected.
