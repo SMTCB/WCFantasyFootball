@@ -112,7 +112,7 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL('/trophy');
     await waitForContent(page);
 
-    await topBar.getByText(/^coins$/i).click();
+    await topBar.getByText(/^bets$/i).click();
     await expect(page).toHaveURL('/challenges');
   });
 
@@ -122,11 +122,11 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForContent(page);
 
-    // Bottom nav is clubhouse-level (Home/Club/Trophy/Coins) — sport screens
+    // Bottom nav is clubhouse-level (Home/Bets/You) — sport screens
     // (Live/Squad/Market/etc.) live in CompetitionScreenNav at the top instead.
     const bottomNav = page.locator('[data-testid="mobile-nav"]');
-    await bottomNav.getByText(/trophy/i).click();
-    await expect(page).toHaveURL('/trophy');
+    await bottomNav.getByText(/^bets$/i).click();
+    await expect(page).toHaveURL('/challenges');
     await waitForContent(page);
 
     await bottomNav.getByText(/^home$/i).click();

@@ -6694,4 +6694,10 @@ Last Updated: 2026-11-13
 - J-20: the create-bet window with no Clubhouse now offers "Create or join a Clubhouse" instead of a dead end.
 - J-07 (part): bet screens, toasts, My Bets copy and P2P badges say "Bets". Nav label and Settings/commissioner labels remain.
 
+## 2026-11-14 — Session S5 part B (Bets tab, quick bet)
+
+- J-08: bottom bar is now Home, Bets, You. Bets opens the bets screen, which already holds the wallet; "All my bets" link goes to the cross-Clubhouse list. Desktop top bar loses the separate Coins link. Trophies and Clubhouses are reached from Home and the Clubhouse screen. League-level bets untouched.
+- J-11: the create-bet form opens as one sentence ("I bet [everyone] [100] coins that ..."); answer type, options, who can join, presets and timing are under "More options".
+- J-07: remaining Clubhouse labels renamed; league-screen labels left for C-20.
+
 Last Updated: 2026-11-13

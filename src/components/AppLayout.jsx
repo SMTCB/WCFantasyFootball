@@ -12,10 +12,9 @@ import NewCompetitionFlow from './NewCompetitionFlow';
 import ClubhouseInviteModal from './ClubhouseInviteModal';
 import {
   NavIconHome,
-  NavIconClubhouse,
   NavIconTrophy,
-  NavIconChallenges,
   NavIconMyBets,
+  NavIconYou,
 } from './NavIcons';
 
 // ── Mobile bottom-bar nav — clubhouse-level, mirrors the desktop sidebar's
@@ -24,10 +23,8 @@ import {
 // desktop, so the bottom bar no longer duplicates them per-sport.
 const CLUBHOUSE_NAV = [
   { key: 'home',       label: 'Home',   path: '/home',       Icon: NavIconHome },
-  { key: 'clubhouse',  label: 'Club',   path: '/clubhouse',  Icon: NavIconClubhouse },
-  { key: 'trophy',     label: 'Trophy', path: '/trophy',     Icon: NavIconTrophy },
-  { key: 'bets',       label: 'Bets',   path: '/my-bets',    Icon: NavIconMyBets },
-  { key: 'challenges', label: 'Coins',  path: '/challenges', Icon: NavIconChallenges },
+  { key: 'bets',       label: 'Bets',   path: '/challenges', also: ['/my-bets', '/wallet'], Icon: NavIconMyBets },
+  { key: 'you',        label: 'You',    path: '/settings',   Icon: NavIconYou },
 ];
 
 // ── Desktop top bar ───────────────────────────────────────────────────────────
@@ -174,8 +171,7 @@ export default function AppLayout({ children }) {
           />
         )}
         <TopBarLink label="Trophies" path="/trophy" Icon={NavIconTrophy} active={location.pathname === '/trophy'} />
-        <TopBarLink label="Bets" path="/my-bets" Icon={NavIconMyBets} active={location.pathname === '/my-bets'} />
-        <TopBarLink label="Coins" path="/challenges" Icon={NavIconChallenges} active={location.pathname === '/challenges'} />
+        <TopBarLink label="Bets" path="/challenges" Icon={NavIconMyBets} active={['/challenges', '/my-bets', '/wallet'].includes(location.pathname)} />
         <span style={{ flex: 1 }} />
         <Link to="/settings" aria-label={username ?? 'Account'} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-accent)', marginLeft: 8, textDecoration: 'none' }}>
           {username ? username[0].toUpperCase() : 'M'}
@@ -309,8 +305,8 @@ export default function AppLayout({ children }) {
         }}
       >
         <div className="flex items-stretch" style={{ minHeight: 64 }}>
-          {CLUBHOUSE_NAV.map(({ key, label, path, Icon }) => {
-            const isActive = location.pathname === path || location.pathname.startsWith(path + '/');
+          {CLUBHOUSE_NAV.map(({ key, label, path, also = [], Icon }) => {
+            const isActive = [path, ...also].some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
             const activeColor = 'var(--accent)';
 
             return (
