@@ -6705,4 +6705,9 @@ Last Updated: 2026-11-13
 - BRAND-1 (part): platform name is Clubhouse in the page title, description, installed-app name, welcome screen, logo text and recap card. The newspaper is now "The Paper".
 - J-18 (part): Competition and Paddock wording replaced by League on the Clubhouse, Home, F1 and create-bet screens.
 
+## 2026-11-14 — Session S6 part 2 (Logo and installed-app look)
+
+- BRAND-2 (part): "The Seat" logo as SVG set and used by BrandMark, favicon, tab and touch icon; old logo files deleted.
+- BRAND-3 (part): installed-app background and theme colour now cream; status bar style matches.
+
 Last Updated: 2026-11-13
