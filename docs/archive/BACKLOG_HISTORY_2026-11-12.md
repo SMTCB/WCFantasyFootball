@@ -6719,4 +6719,9 @@ Last Updated: 2026-11-13
 
 - J-21 (part): sign-in page leads with "Bets between friends." and a one-line explanation before the form.
 
+## 2026-11-14 — Session S7 part 2 (Tap sizes, tokens)
+
+- UI-AUDIT-TCH-01 (part): "List for trade" chip tap area extended to 44px.
+- UI-AUDIT-SYS-04 (part): chat text colour moved to the --text-2 token.
+
 Last Updated: 2026-11-13
