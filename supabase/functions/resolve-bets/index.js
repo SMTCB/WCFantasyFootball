@@ -12,6 +12,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
 
 const FN      = 'resolve-bets';
+const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -31,7 +32,7 @@ Deno.serve(async (req) => {
     // Find closed bets where resolves_at has passed (or is null — those get checked anyway)
     const { data: instances, error: fetchErr } = await supabase
       .from('bet_instances')
-      .select('id, scope_type, scope_ref, options, template_id, bet_templates(slug)')
+      .select('id, scope_type, scope_ref, options, template_id, deadline_at, bet_templates(slug)')
       .eq('status', 'closed')
       .or('resolves_at.is.null,resolves_at.lt.now()');
 
@@ -83,8 +84,23 @@ Deno.serve(async (req) => {
         }
 
       } else {
-        // top_scorer and player_block require commissioner resolution for now
-        skipped++;
+        // No automatic resolver for this template (red card, comeback, top scorer, ...).
+        // The commissioner resolves it; if nobody has within 7 days of the deadline,
+        // close it with no winner so it stops sitting open (BET-STUCK-1).
+        const deadline = inst.deadline_at ? new Date(inst.deadline_at).getTime() : null;
+        if (deadline !== null && Date.now() - deadline > STALE_AFTER_MS) {
+          const { data: result, error: rpcErr } = await supabase
+            .rpc('resolve_bet', { p_instance_id: inst.id, p_answers: [] });
+          if (rpcErr || result?.ok === false) {
+            const msg = rpcErr?.message ?? result?.error ?? 'unknown';
+            errors.push(`${inst.id}: ${msg}`);
+            await logError(FN, 'warning', `no-winner resolve failed for instance ${inst.id}`, { error: msg });
+          } else {
+            resolved++;
+          }
+        } else {
+          skipped++;
+        }
       }
     }
 
