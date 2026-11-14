@@ -10,7 +10,7 @@ const DISPLAY = "'Archivo Black', sans-serif";
 
 const CATEGORIES = [
   { key: 'match',   label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
-  { key: 'stats',   label: 'STATS',   color: 'var(--gold)',  icon: '📊' },
+  { key: 'stats',   label: 'STATS',   color: 'var(--gold-text)',  icon: '📊' },
   { key: 'players', label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
   { key: 'custom',  label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏' },
 ];

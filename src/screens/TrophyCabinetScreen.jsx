@@ -205,7 +205,7 @@ export default function TrophyCabinetScreen() {
             {[
               { value: myTrophies,            label: 'Trophies', color: 'var(--on-accent)' },
               { value: activeSports.length || '—', label: 'Sports',   color: 'var(--on-accent)' },
-              { value: myGold,                label: 'Gold',     color: 'var(--gold)' },
+              { value: myGold,                label: 'Gold',     color: 'var(--on-pitch-gold)' },
               { value: mySilver,              label: 'Silver',   color: 'rgba(255,255,255,.88)' },
             ].map(({ value, label, color }) => (
               <div key={label}>
@@ -223,7 +223,7 @@ export default function TrophyCabinetScreen() {
             flexShrink: 0,
             ...(isMobile ? { width: '100%', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', gap: 12 } : {}),
           }}>
-            <div className="num" style={{ ...HEAD, fontSize: isMobile ? 'var(--fs-title)' : 'var(--fs-display)', color: 'var(--gold)', lineHeight: 1 }}>
+            <div className="num" style={{ ...HEAD, fontSize: isMobile ? 'var(--fs-title)' : 'var(--fs-display)', color: 'var(--on-pitch-gold)', lineHeight: 1 }}>
               #{myRank}
             </div>
             <div>

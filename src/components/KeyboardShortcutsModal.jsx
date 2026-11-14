@@ -107,7 +107,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
             lineHeight: 1.5,
           }}
         >
-          Press <kbd style={{ background: 'rgba(224,168,0,0.12)', color: 'var(--gold)', padding: '1px 3px', borderRadius: 1 }}>Esc</kbd> or click outside to close
+          Press <kbd style={{ background: 'rgba(224,168,0,0.12)', color: 'var(--gold-text)', padding: '1px 3px', borderRadius: 1 }}>Esc</kbd> or click outside to close
         </div>
       </div>
     </div>

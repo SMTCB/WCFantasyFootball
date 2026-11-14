@@ -6,7 +6,7 @@ const DISPLAY = 'Archivo Black, sans-serif';
 
 const POSITIONS = [
   {
-    pos: 'GK', color: 'var(--gold)',
+    pos: 'GK', color: 'var(--gold-text)',
     rules: [
       { label: 'Goal',               val: '+8' },
       { label: 'Assist',              val: '+3' },
@@ -291,7 +291,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                   {' — '}Between matchdays. <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>Draft leagues: ∞ unlimited</span> buys/sells, no penalty. <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>Classic leagues:</span> up to 3 buys; sells always free; extra buys cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each.
                 </div>
                 <div style={{ marginBottom: 8 }}>
-                  <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>CLOSED</span>
+                  <span style={{ color: 'var(--gold-text)', fontFamily: DISPLAY }}>CLOSED</span>
                   {' — '}From the matchday deadline until ~8 hours after the last kick-off of the round. No buys or sells.
                 </div>
                 <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
@@ -310,7 +310,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                   <span style={{ color: 'var(--accent)', fontFamily: DISPLAY }}>SUB IN</span>
                   {' — '}Tap any bench player and choose SUB IN to bring them into the starting XI.
                 </div>
-                <div style={{ marginBottom: 6, color: 'var(--gold)' }}>
+                <div style={{ marginBottom: 6, color: 'var(--gold-text)' }}>
                   Once a fixture kicks off, any of your players who started that match are <span style={{ fontFamily: DISPLAY }}>LOCKED</span> — they cannot be swapped or benched until the next matchday.
                 </div>
                 <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
@@ -322,7 +322,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             <Section title="CAPTAIN">
               <InfoBox>
                 <div style={{ marginBottom: 6 }}>
-                  Your captain scores <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>×2 points</span>. Set by tapping any player and choosing MAKE CAPTAIN.
+                  Your captain scores <span style={{ color: 'var(--gold-text)', fontFamily: DISPLAY }}>×2 points</span>. Set by tapping any player and choosing MAKE CAPTAIN.
                 </div>
                 <div style={{ marginBottom: 6 }}>
                   You can change your captain anytime the transfer window is <span style={{ color: 'var(--positive)' }}>open</span>.
@@ -345,7 +345,7 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
                 <div style={{ marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block', marginTop: 4, flexShrink: 0 }} />
                   <div>
-                    <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>DOUBTFUL</span>
+                    <span style={{ color: 'var(--gold-text)', fontFamily: DISPLAY }}>DOUBTFUL</span>
                     {' — '}Knock or illness with an uncertain return — could play, could be rested.
                   </div>
                 </div>

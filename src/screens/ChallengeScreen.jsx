@@ -100,7 +100,7 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
           {challenge.challenger_username ?? 'Challenger'}
         </span>
         <TypeBadge betType={challenge.bet_type} />
-        <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>
+        <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
           ⏱ {timeUntil(challenge.expires_at)}
         </span>
       </div>
@@ -139,7 +139,7 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
             flex: 1, minHeight: 'var(--tap)', padding: '8px 0', borderRadius: 'var(--radius)', cursor: loading ? 'not-allowed' : 'pointer',
             background: 'transparent', border: '1.5px solid var(--gold)',
             fontSize: 'var(--fs-label)',
-            fontWeight: 600, color: 'var(--gold)', opacity: loading ? 0.6 : 1,
+            fontWeight: 600, color: 'var(--gold-text)', opacity: loading ? 0.6 : 1,
           }}
         >Accept</button>
         <button
@@ -172,12 +172,12 @@ function OpenChallengeCard({ challenge, onClaim, loading }) {
       gap: 9,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>🎲 Open</span>
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>🎲 Open</span>
         <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
           {challenge.challenger_username ?? 'Someone'}&rsquo;s challenge
         </span>
         <TypeBadge betType={challenge.bet_type} />
-        <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>
+        <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
           ⏱ {timeUntil(challenge.expires_at)}
         </span>
       </div>
@@ -212,7 +212,7 @@ function OpenChallengeCard({ challenge, onClaim, loading }) {
           minHeight: 'var(--tap)', padding: '8px 0', borderRadius: 'var(--radius)', cursor: loading ? 'not-allowed' : 'pointer',
           background: 'transparent', border: '1.5px solid var(--gold)',
           fontSize: 'var(--fs-label)',
-          fontWeight: 600, color: 'var(--gold)', opacity: loading ? 0.6 : 1,
+          fontWeight: 600, color: 'var(--gold-text)', opacity: loading ? 0.6 : 1,
         }}
       >Claim</button>
     </div>
@@ -483,7 +483,7 @@ function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
           </PickerRow>
         </div>
 
-        <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 'var(--radius)', padding: '10px 12px', fontSize: 'var(--fs-label)', color: 'var(--gold)', lineHeight: 1.5, marginBottom: 14 }}>
+        <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 'var(--radius)', padding: '10px 12px', fontSize: 'var(--fs-label)', color: 'var(--gold-text)', lineHeight: 1.5, marginBottom: 14 }}>
           ⚠ Real coins move once {oppName} confirms — choose carefully. If they disagree, the Clubhouse owner will settle it.
         </div>
 
@@ -838,7 +838,7 @@ function CreateGroupBetModal({
             </div>
             <label style={{ display: 'block', marginBottom: 14 }}>
               <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
-                What happens? (<span style={{ color: question.length > 140 ? 'var(--neg)' : 'var(--mute)' }}>{140 - question.length}</span> chars left, balance <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()}</span> coins)
+                What happens? (<span style={{ color: question.length > 140 ? 'var(--neg)' : 'var(--mute)' }}>{140 - question.length}</span> chars left, balance <span style={{ color: 'var(--gold-text)' }}>{balance.toLocaleString()}</span> coins)
               </span>
               <textarea
                 maxLength={140} value={question} onChange={e => setQuestion(e.target.value)}
@@ -966,7 +966,7 @@ function CreateGroupBetModal({
             {/* Stake */}
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
-                Stake per person (balance: <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()} coins</span>)
+                Stake per person (balance: <span style={{ color: 'var(--gold-text)' }}>{balance.toLocaleString()} coins</span>)
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                 {[50, 100, 250, 500].map(v => (
@@ -1122,7 +1122,7 @@ function SubmitAnswerModal({ bet, onClose, onSubmit, fetchAnswers, userId }) {
           onClick={handleSubmit} disabled={submitting}
           style={{
             width: '100%', padding: '12px', borderRadius: 'var(--radius)', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
-            background: 'var(--gold)', color: 'var(--on-accent)',
+            background: 'var(--gold-text)', color: 'var(--on-accent)',
             fontSize: 'var(--fs-label)', fontWeight: 600,
             opacity: submitting ? 0.7 : 1,
           }}
@@ -1308,14 +1308,14 @@ function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAnswer, o
             {section === 'invited' || section === 'joined' ? timeUntil(bet.ends_at) : timeAgo(bet.ends_at)}
           </span>
         )}
-        {isCreator && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--gold)' }}>You created this</span>}
+        {isCreator && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>You created this</span>}
       </div>
 
       {section === 'invited' && (
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => onJoin(bet.id)} disabled={loading}
-            style={{ flex: 1, minHeight: 'var(--tap)', padding: '8px 0', borderRadius: 'var(--radius)', cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent', border: '1.5px solid var(--gold)', fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--gold)', opacity: loading ? 0.6 : 1 }}
+            style={{ flex: 1, minHeight: 'var(--tap)', padding: '8px 0', borderRadius: 'var(--radius)', cursor: loading ? 'not-allowed' : 'pointer', background: 'transparent', border: '1.5px solid var(--gold)', fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--gold-text)', opacity: loading ? 0.6 : 1 }}
           >Join</button>
           <button
             onClick={() => onDecline(bet.id)} disabled={loading}
@@ -1420,7 +1420,7 @@ function BetSection({ title, bets, emptyLabel, ...cardProps }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
         <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{title}</div>
-        <span style={{ background: 'var(--gbg)', color: 'var(--gold)', fontSize: 'var(--fs-label)', padding: '1px 8px', borderRadius: 100, fontWeight: 600 }}>{bets.length}</span>
+        <span style={{ background: 'var(--gbg)', color: 'var(--gold-text)', fontSize: 'var(--fs-label)', padding: '1px 8px', borderRadius: 100, fontWeight: 600 }}>{bets.length}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {bets.map(bet => <BetCard key={bet.id} bet={bet} {...cardProps} />)}
@@ -1524,7 +1524,7 @@ function WalletTabContent({ wallet, walletLoading }) {
                 <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>Available balance</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
                   <Ci size="xl" />
-                  <span style={{ ...HEAD, fontSize: 'var(--fs-display)', letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
+                  <span style={{ ...HEAD, fontSize: 'var(--fs-display)', letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold-text)' }}>{balance.toLocaleString()}</span>
                 </div>
                 {escrow > 0 && (
                   <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 16 }}>
@@ -1948,7 +1948,7 @@ function CreateChallengeModal({
             {/* Stake */}
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
-                Stake (balance: <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()} coins</span>)
+                Stake (balance: <span style={{ color: 'var(--gold-text)' }}>{balance.toLocaleString()} coins</span>)
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                 {[50, 100, 250, 500].map(v => (
@@ -2150,7 +2150,7 @@ function StreakPill({ streak }) {
   return (
     <span
       style={{
-        fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--gold)', background: 'rgba(184,114,14,.14)',
+        fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--gold-text)', background: 'rgba(184,114,14,.14)',
         border: '1px solid rgba(184,114,14,.4)', borderRadius: 4, padding: '3px 7px',
       }}
     >🔥 {streak.count}-win streak</span>
@@ -2172,7 +2172,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNew
           onClick={onNewChallenge}
           style={{
             width: '100%', padding: '12px 24px', borderRadius: 'var(--radius)', border: 'none',
-            background: 'var(--gold)', color: 'var(--on-accent)', cursor: 'pointer',
+            background: 'var(--gold-text)', color: 'var(--on-accent)', cursor: 'pointer',
             fontSize: 'var(--fs-label)',
             fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
@@ -2189,7 +2189,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNew
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>Available balance</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <Ci size="xl" />
-            <span style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
+            <span style={{ ...HEAD, fontSize: 'var(--fs-title)', letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold-text)' }}>{balance.toLocaleString()}</span>
           </div>
           {escrow > 0 && (
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 13 }}>
@@ -2501,7 +2501,7 @@ export default function ChallengeScreen() {
               <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 3 }}>Balance</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginTop: 2 }}>
                 <Ci size="lg" />
-                <span className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.02em', color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
+                <span className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.02em', color: 'var(--gold-text)' }}>{balance.toLocaleString()}</span>
               </div>
             </div>
             {!isMobile && (
@@ -2583,7 +2583,7 @@ export default function ChallengeScreen() {
                 <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Incoming</div>
                 {allBets.incoming.length > 0 && (
                   <span style={{
-                    background: 'var(--gbg)', color: 'var(--gold)',
+                    background: 'var(--gbg)', color: 'var(--gold-text)',
                     fontSize: 'var(--fs-label)', padding: '1px 8px',
                     borderRadius: 100, fontWeight: 600,
                   }}>{allBets.incoming.length}</span>

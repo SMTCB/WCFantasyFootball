@@ -10,12 +10,12 @@ const BODY    = "'Archivo', sans-serif";
 // Badge metadata — exact mirror of ENTRY_META in LeagueDetailView.jsx
 const ENTRY_META = {
   activity:       { badge: 'SCORES',    color: 'var(--positive)' },
-  draft_report:   { badge: 'DRAFT',     color: 'var(--gold)'     },
+  draft_report:   { badge: 'DRAFT',     color: 'var(--gold-text)'     },
   breaking_news:  { badge: 'NEWS',      color: 'var(--danger)'   },
   auction_result: { badge: 'AUCTION',   color: 'var(--positive)' },
   trade_result:   { badge: 'TRADE',     color: 'var(--accent)'     },
-  p2p_challenge:  { badge: 'CHALLENGE', color: 'var(--gold)'     },
-  p2p_result:     { badge: 'BET',       color: 'var(--gold)'     },
+  p2p_challenge:  { badge: 'CHALLENGE', color: 'var(--gold-text)'     },
+  p2p_result:     { badge: 'BET',       color: 'var(--gold-text)'     },
 };
 const TRANSFER_META = { badge: 'TRANSFER', color: 'var(--accent)' };
 

@@ -87,12 +87,12 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
         </div>
 
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-heading)', color: 'var(--gold)', lineHeight: 1 }}>
+          <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-heading)', color: 'var(--gold-text)', lineHeight: 1 }}>
             €{Number(listing.current_bid).toFixed(1)}M
           </div>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>winning bid</div>
           {listing.bidder_name && (
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginTop: 4, }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', marginTop: 4, }}>
               {listing.bidder_name}
             </div>
           )}
@@ -202,7 +202,7 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
             {(proposal.cash_sweetener !== 0 || proposal.points_sweetener > 0) && ' · '}
             {proposal.cash_sweetener > 0 && <span style={{ color: 'var(--positive)' }}>+€{proposal.cash_sweetener}M </span>}
             {proposal.cash_sweetener < 0 && <span style={{ color: 'var(--danger)' }}>-€{Math.abs(proposal.cash_sweetener)}M </span>}
-            {proposal.points_sweetener > 0 && <span style={{ color: 'var(--gold)' }}>+{proposal.points_sweetener}pts</span>}
+            {proposal.points_sweetener > 0 && <span style={{ color: 'var(--gold-text)' }}>+{proposal.points_sweetener}pts</span>}
           </div>
         </div>
 
@@ -292,7 +292,7 @@ export default function TradingView({
           <div role="presentation" style={{ background: 'var(--card)', border: '1px solid var(--rule)', maxWidth: 480, width: '100%', padding: 28, position: 'relative' }}
                onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-heading)', cursor: 'pointer' }}>✕</button>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold)', marginBottom: 16 }}>Trading floor · how it works</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', marginBottom: 16 }}>Trading floor · how it works</div>
 
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', marginBottom: 8 }}>🔨 AUCTIONS</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
@@ -320,7 +320,7 @@ export default function TradingView({
       {/* ── Hero strip ─────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px,2vw,20px) clamp(14px,3vw,28px)', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--gold)', }}>
+          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--gold-text)', }}>
             TRADING FLOOR · {name.toUpperCase()}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>

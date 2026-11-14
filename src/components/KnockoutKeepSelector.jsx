@@ -180,7 +180,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
                     </span>
 
                     {/* Price */}
-                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold)', flexShrink: 0 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)', flexShrink: 0 }}>
                       €{Number(p.price ?? 0).toFixed(1)}m
                     </span>
                   </button>

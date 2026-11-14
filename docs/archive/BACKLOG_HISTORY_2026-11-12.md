@@ -6710,4 +6710,9 @@ Last Updated: 2026-11-13
 - BRAND-2 (part): "The Seat" logo as SVG set and used by BrandMark, favicon, tab and touch icon; old logo files deleted.
 - BRAND-3 (part): installed-app background and theme colour now cream; status bar style matches.
 
+## 2026-11-14 — Session S7 part 1 (Legibility)
+
+- UI-AUDIT-LIVE-1 and LIVE-2: checked against the current tokens. Muted text, accent, danger and gold-text all pass 4.5:1 on the page, card and raised surfaces; the old failing values had already been retuned. Remaining failure (raw gold as text, 3.5:1) fixed under A11Y-02.
+- UI-AUDIT-A11Y-02 (part): 81 raw-gold text colours switched to the gold-text token; the navy Trophy header uses the on-dark gold.
+
 Last Updated: 2026-11-13

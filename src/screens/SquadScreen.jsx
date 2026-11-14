@@ -1051,7 +1051,7 @@ export default function SquadScreen() {
             </span>
           )}
           {doubtCount > 0 && (
-            <span className="text-[11px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'rgba(240,180,0,0.15)', color: 'var(--gold)' }}>
+            <span className="text-[11px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'rgba(240,180,0,0.15)', color: 'var(--gold-text)' }}>
               {doubtCount} DOUBTFUL
             </span>
           )}
@@ -1173,7 +1173,7 @@ export default function SquadScreen() {
                           fontSize: 'var(--fs-micro)', fontWeight: 800,
                           padding: '2px 6px',
                           border: '1px solid rgba(240,180,0,0.4)',
-                          color: 'var(--gold)',
+                          color: 'var(--gold-text)',
                           background: 'rgba(240,180,0,0.06)',
                           flexShrink: 0,
                           cursor: 'pointer',
@@ -1439,14 +1439,14 @@ export default function SquadScreen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'rgba(240,180,0,0.10)', borderBottom: '1px solid rgba(240,180,0,0.25)' }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold-text)' }}>
                 Squad incomplete — {allSquadPlayers.length}/15 players
               </div>
               <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.7)', marginTop: 3 }}>
                 {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players
               </div>
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
               Sign →
             </button>
           </div>
@@ -1701,7 +1701,7 @@ export default function SquadScreen() {
                                     fontSize: 'var(--fs-micro)', fontWeight: 800,
                                     padding: '3px 6px',
                                     border: '1px solid rgba(240,180,0,0.4)',
-                                    color: 'var(--gold)',
+                                    color: 'var(--gold-text)',
                                     background: 'rgba(240,180,0,0.06)',
                                     cursor: 'pointer',
                                     whiteSpace: 'nowrap',
@@ -1822,13 +1822,13 @@ export default function SquadScreen() {
         ) : allSquadPlayers.length < 15 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold)' }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 900, color: 'var(--gold-text)' }}>
               Squad incomplete — {allSquadPlayers.length}/15 players
             </div>
             <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)' }}>
               {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players to complete your squad
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
               Sign players →
             </button>
           </div>
@@ -1937,7 +1937,7 @@ export default function SquadScreen() {
                   if (!cap) return null;
                   return (
                     <div className="px-4 py-3 flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center text-[11px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold)' }}>C</div>
+                      <div className="w-8 h-8 flex items-center justify-center text-[11px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold-text)' }}>C</div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-[var(--paper)] truncate">{cap.name}</div>
                         <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · €{cap.price}M</div>

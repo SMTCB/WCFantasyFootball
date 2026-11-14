@@ -843,7 +843,7 @@ export default function MarketScreen() {
                     </span>
                   </div>
                   {totalPenCost > 0 && (
-                    <div className="text-[11px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                    <div className="text-[11px] font-black mt-0.5" style={{ color: 'var(--gold-text)', fontFamily: 'Archivo Black, sans-serif' }}>
                       -{totalPenCost}pt cost
                     </div>
                   )}
@@ -864,7 +864,7 @@ export default function MarketScreen() {
                 <span className="text-[11px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
-                <div className="text-[11px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                <div className="text-[11px] font-black mt-0.5" style={{ color: 'var(--gold-text)', fontFamily: 'Archivo Black, sans-serif' }}>
                   {emptySlots} empty
                 </div>
               )}
@@ -1319,7 +1319,7 @@ export default function MarketScreen() {
                         </span>
                       )}
                       {isDraftLeague && (isOwned || canShareBuy) && otherOwners.map(o => (
-                        <span key={o.userId} className="fk-mono shrink-0" style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--gold)', border: '1px solid var(--gold)', padding: '2px 6px' }}>
+                        <span key={o.userId} className="fk-mono shrink-0" style={{ fontSize: 'var(--fs-micro)', fontWeight: 800, color: 'var(--gold-text)', border: '1px solid var(--gold)', padding: '2px 6px' }}>
                           {`OWNED · ${o.managerName}`}
                         </span>
                       ))}
@@ -1389,7 +1389,7 @@ export default function MarketScreen() {
                       style={{
                         minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--gold)',
-                        color: 'var(--gold)',
+                        color: 'var(--gold-text)',
                         background: 'rgba(240,180,0,0.08)',
                         fontSize: 'var(--fs-micro)', fontWeight: 800,
                       }}
@@ -1405,7 +1405,7 @@ export default function MarketScreen() {
                       style={{
                         minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--gold)',
-                        color: 'var(--gold)',
+                        color: 'var(--gold-text)',
                         background: 'rgba(240,180,0,0.08)',
                         fontSize: 'var(--fs-micro)', fontWeight: 800,
                       }}
@@ -1542,7 +1542,7 @@ export default function MarketScreen() {
             <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 16px 0' }}>
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--gold)' }}>
+                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>
                   Transfer Basket · {numTransfers} transfer{numTransfers !== 1 ? 's' : ''}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
