@@ -170,8 +170,8 @@
   </div>
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
-    <span class="chip" data-filter-priority="p1">P1 — HIGH (13)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (50)</span>
+    <span class="chip" data-filter-priority="p1">P1 — HIGH (12)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (51)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (35)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
@@ -190,8 +190,8 @@
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
-      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">13</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">50</span></div>
+      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">12</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">51</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">35</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
@@ -211,7 +211,7 @@
 <li>When a session finishes: delete its rows here, log them in the history file, regenerate <code>BACKLOG.html</code>, and tick the session off in the "Done sessions" line below.</li>
 <li>League-level bets (the commissioner-created ones) stay until the end of this season; no session removes them (owner decision, 2026-11-13). Dark mode is on hold.</li>
 </ul>
-<p><strong>Done sessions:</strong> S2 (2026-11-14; J-01, DD-P1-1, BUG-CW1, J-03 done, J-02 part done), S1 (2026-11-13), S9 (2026-11-14; J-12 done, J-09 and CODE-5 part done, storage waits for your approval), S7 part 2 (2026-11-14; TCH-01 and SYS-04 part done), S8 (2026-11-14; J-21 part done, J-15 and J-10 wait for your approval), S7 part 1 (2026-11-14; LIVE-1, LIVE-2 closed, A11Y-02 part done), S6 (2026-11-14; BRAND-1, BRAND-2, BRAND-3, J-18 part done), S5 (2026-11-13; J-07 league-screen labels left for C-20), S4 (2026-11-13, except DD-P1-2: you walk it on a phone with a fresh account), except two leftovers: SEC-4 (you revoke the old token at github.com/settings/tokens) and the open part of DOCS-3 (rewrite the testing and API docs).</p>
+<p><strong>Done sessions:</strong> S2 (2026-11-14; J-01, J-02, J-03, DD-P1-1, BUG-CW1 done), S1 (2026-11-13), S9 (2026-11-14; J-12 done, J-09 and CODE-5 part done, storage waits for your approval), S7 part 2 (2026-11-14; TCH-01 and SYS-04 part done), S8 (2026-11-14; J-21 part done, J-15 and J-10 wait for your approval), S7 part 1 (2026-11-14; LIVE-1, LIVE-2 closed, A11Y-02 part done), S6 (2026-11-14; BRAND-1, BRAND-2, BRAND-3, J-18 part done), S5 (2026-11-13; J-07 league-screen labels left for C-20), S4 (2026-11-13, except DD-P1-2: you walk it on a phone with a fresh account), except two leftovers: SEC-4 (you revoke the old token at github.com/settings/tokens) and the open part of DOCS-3 (rewrite the testing and API docs).</p>
 <p><strong>Wave 1 — Now: get ready, prove the bet, fix the welcome</strong></p>
 <p>Start here. Nothing in the Clubhouse redesign is worth building until one bet has paid out (S2) and a newcomer can get through the welcome (S4).</p>
 <div class="md-table-wrap"><table class="md-table"><thead><tr><th>Session</th><th>Theme and why these belong together</th><th>Rows</th><th>Needs your yes</th><th>Test afterwards</th></tr></thead><tbody><tr><td><strong>S1: Clean start</strong></td><td>Repo, docs and CI hygiene only. No app behaviour changes, so it is safe first and leaves CI green for every later session.</td><td>CI-T3, TEST-SEED-1, DD-P3-1, REPO-1, DOCS-1, DOCS-3, INFRA-3, SEC-4</td><td>No. SEC-4 has one manual step that is yours: revoke the old token at github.com/settings/tokens.</td><td>A PR shows every CI job green, including Tier 3. <code>npm run lint</code> shows no warnings. <code>git worktree list</code> is clean.</td></tr><tr><td><strong>S2: Prove the bet</strong></td><td>Everything that touches the money engine in the live database: bet functions, wallet trigger, paused jobs, test rows. One session means one backup and one pair of test accounts cover all of it.</td><td>J-01, J-02, J-03, BUG-CW1, DD-P1-1, TEST-P2P-1, DD-P2-3</td><td>Yes, each item separately (test accounts, jobs one at a time, releasing stakes, deleting test rows, the trigger fix). Backup first. Order inside: DD-P1-1, BUG-CW1, J-01, then check what is left before J-03 (the expiry job in J-02 may release the 30 Aug stake by itself), then J-02.</td><td>Two accounts: create, accept, settle, pay out; wallet totals add up; <code>tests/unit/p2p-challenges.test.js</code> passes; no <code>TEST_</code> rows left; every re-enabled job has a run in its history.</td></tr><tr><td><strong>S3: Watch and protect</strong></td><td>Error reporting and abuse limits all sit on the same secrets and Edge Functions setup.</td><td>OPS-SENTRY, DD-P2-1, LOW-3</td><td>Yes: set a secret, schedule a job, change a table policy, deploy functions.</td><td>A deliberate test error appears in Sentry; anonymous writes to the error log are limited; <code>npm run check:drift</code> passes.</td></tr><tr><td><strong>S4: Welcome fixes</strong></td><td>Same files: the welcome steps, the invite pieces and the sign-in copy. Use one platform-name constant so the rename in S6 changes it in one place.</td><td>J-04, J-05, J-06, C-02, DD-P1-2</td><td>No.</td><td>Walk the whole welcome with a fresh account on a phone (this is DD-P1-2): wrong invite code shows an error, one step count, no duplicate username, ends on Home; invite uses the phone share sheet. <code>platform.spec.js</code> green.</td></tr><tr><td><strong>S5: Create a bet and the Bets tab</strong></td><td>The create-bet window, the Bets and Coins tabs and the wallet are the same screens and hooks.</td><td>J-20, J-11, COIN-2, J-07, J-08</td><td>No (interface only).</td><td>Create a bet with and without a Clubhouse; the wallet shows no prices; the bottom bar works on phone and desktop (<code>platform.spec.js</code> navigation tests change with J-08). Existing league-level bets still open from their league screens (owner decision, 2026-11-13).</td></tr></tbody></table></div>
@@ -237,7 +237,7 @@
 <hr></section>
       
     <section class="item-group" id="group-p1" data-group="p1">
-      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">13</span></h2>
+      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">12</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="club-bet-1 move betting to clubhouse level — design decision, then build **update 2026-11-13: the owner confirmed betting moves to the clubhouse (c-20) but league-level bets (a below) stay as they are for now, at least until the end of this season, because users are used to them. option (i) below fits this: (a) is left alone.** raised by the user 2026-08-22: *&quot;my idea is to have the betting at clubhouse level (and not on a specific league level)&quot;*. **half of this already exists.** there are two unrelated betting systems and they sit at different levels: **(a) league bets** — `bet_instances` + 26 `bet_templates`, commissioner-created, **`league_id`-scoped**, every template football-specific (goals/corners/cards/clean sheet/motm), reward is **fantasy points or budget, never coins**; 39 instances exist in prod. **(b) p2p coin challenges** — `p2p_challenges`, real coin stakes with escrow and 5% rake, **already `circle_id`-scoped** since migration 237, two bet types: `gw_total` (auto-resolved from squad points, **football-only** — requires `league_id` + `matchday_id`) and `freeform` (≤140-char question, any sport, human-settled). 0 exist in prod. **so system (b) already is the clubhouse-level betting the user is describing** — the gap is that its only *auto-resolving* type is football. **the decision to make**: (i) leave (a) league-scoped as a football league-flavour feature and put all cross-sport betting in (b); (ii) re-scope (a) to `circle_id` and write f1/tennis templates; or (iii) both. **recommendation: (i)** — (a) pays in fantasy points, which are per-competition and per-sport and therefore cannot settle a clubhouse-wide bet without inventing a cross-sport point scale (see `club-score-1`), whereas coins are already the one currency that is cross-sport, circle-scoped and escrowed. the concrete work under (i) is adding auto-resolving `p2p_challenges` bet types for f1 (settle on `f1_scores`) and tennis (settle on `tennis_tournament_scores`), so f1/tennis bets stop de" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -375,23 +375,6 @@
       </dl></template>
       </article>
 
-      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-02 switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished journey. why: a 30 aug challenge is still pending and should have expired on 1 sept. **approval needed:** one job at a time. evidence: the 1-to-1 expiry and auto-settle jobs are off with no run history; the league prediction bet close/settle jobs are also paused (frozen after the world cup). assessment: docs/product/frontrow_assessment_2026-11-12.html. **part done 2026-11-14 (s2): 4 of 5 jobs switched on (1-to-1 expiry 70, 1-to-1 auto-resolve 71, stale freeform disputes 72, old auto-close 17); nothing was waiting for any of them. still off: job 91 (resolve finished league bets) because it would resolve 2 closed july bets with 5 predictions each and award points, so it needs your ok. confirm each switched-on job shows a run in its history.** open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
-        <h3 class="card-title">Switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished</h3>
-        <p class="card-summary">Journey. Why: a 30 Aug challenge is still pending and should have expired on 1 Sept. <strong>Approval needed:</strong> one job at a time. Evidence: the 1-to-1 expiry and auto-settle jobs are off with no run history; the league prediction bet close/settle jobs are also paused (frozen after the World Cup). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. <strong>Part done 2026-11-14 (S2): 4 of 5 jobs switched on (1-to-1 expiry 70, 1-to-1 auto-resolve 71, stale freeform disputes 72, old auto-close 17); nothing was waiting for any of them. Still off: job 91 (resolve finished league bets) because it would resolve 2 closed July bets with 5 predictions each and award points, so it needs your OK. Confirm each switched-on job shows a run in its history.</strong></p>
-        <div class="card-foot"><span class="foot-id">J-02</span><span class="foot-effort">S</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
-      <h2 class="drawer-title">Switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Switch the paused bet jobs back on: expire, resolve, void stale disputes, auto-close, resolve finished</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Journey. Why: a 30 Aug challenge is still pending and should have expired on 1 Sept. <strong>Approval needed:</strong> one job at a time. Evidence: the 1-to-1 expiry and auto-settle jobs are off with no run history; the league prediction bet close/settle jobs are also paused (frozen after the World Cup). Assessment: docs/product/FRONTROW_ASSESSMENT_2026-11-12.html. <strong>Part done 2026-11-14 (S2): 4 of 5 jobs switched on (1-to-1 expiry 70, 1-to-1 auto-resolve 71, stale freeform disputes 72, old auto-close 17); nothing was waiting for any of them. Still off: job 91 (resolve finished league bets) because it would resolve 2 closed July bets with 5 predictions each and award points, so it needs your OK. Confirm each switched-on job shows a run in its history.</strong></p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P1 — HIGH</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
-      </article>
-
       <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="j-07 call it bets everywhere; retire challenges, p2p, group bets, wagers as labels journey. evidence: the same thing is called bets, coins, coin challenges, p2p betting, challenge, group bet and freeform. decided 2026-11-13: a bet belongs to the clubhouse, not to a league (c-20), but league-level bets stay for now (see c-20), so the renaming covers both places. assessment: docs/product/frontrow_assessment_2026-11-12.html. **mostly done 2026-11-13 (s5): clubhouse bet screens, my bets, nav, toggles and badges say bets. still to do: the labels on the league screens (commissioner panel, league bet cards), which wait for c-20 because league-level bets stay until the end of the season.** open backlog — prioritised p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
         <h3 class="card-title">Call it Bets everywhere; retire Challenges, P2P, Group Bets, Wagers as labels</h3>
@@ -462,7 +445,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">50</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">51</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="dd-p3-2 1 eslint `react-hooks/exhaustive-deps` warning in `slidetoconfirm.jsx` found 2026-11-13 during s1. `src/components/motion/slidetoconfirm.jsx:51` usecallback is missing the dependency `clamp`. slide-to-confirm gates money actions, so check the callback is not capturing a stale value before silencing it. fits session s16 (shared building blocks). open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
@@ -861,6 +844,23 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Coin history for a settled 1-to-1 challenge does not add up to the wallet change</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-11-14 in S2. Wallet balances are correct, but the history rows for one freeform challenge (20 coins each) show a +20 "refund" and a +20 "loss", so they sum to +18 while the wallets moved by -2 overall. Anyone reading the history list would see wrong numbers. Look at <code>resolve_p2p_challenge</code> / the freeform confirm path and how they write <code>coin_transactions</code>.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="bet-stuck-1 two closed july league bets are never resolved by the resolve-bets job found 2026-11-14 in s2. bets a211dc0a-6f24-4216-8c05-788f92d15af8 and cbb6e5ea-44aa-4e8f-be63-35cf9f051513 (league da4ef2e2-f099-4120-abe0-2087369a4163, 5 predictions each, closed since 4 july). job 91 now runs every 15 minutes and succeeds, but these two stay `closed`. find out why `resolve-bets` skips them (missing match result, wrong bet type, or already handled) and either resolve or cancel them by hand. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
+        <h3 class="card-title">Two closed July league bets are never resolved by the resolve-bets job</h3>
+        <p class="card-summary">Found 2026-11-14 in S2. Bets a211dc0a-6f24-4216-8c05-788f92d15af8 and cbb6e5ea-44aa-4e8f-be63-35cf9f051513 (league da4ef2e2-f099-4120-abe0-2087369a4163, 5 predictions each, closed since 4 July). Job 91 now runs every 15 minutes and succeeds, but these two stay <code>closed</code>. Find out why <code>resolve-bets</code> skips them (missing match result, wrong bet type, or already handled) and either resolve or cancel them by hand.</p>
+        <div class="card-foot"><span class="foot-id">BET-STUCK-1</span><span class="foot-effort">S</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
+      <h2 class="drawer-title">Two closed July league bets are never resolved by the resolve-bets job</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Two closed July league bets are never resolved by the resolve-bets job</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-11-14 in S2. Bets a211dc0a-6f24-4216-8c05-788f92d15af8 and cbb6e5ea-44aa-4e8f-be63-35cf9f051513 (league da4ef2e2-f099-4120-abe0-2087369a4163, 5 predictions each, closed since 4 July). Job 91 now runs every 15 minutes and succeeds, but these two stay <code>closed</code>. Find out why <code>resolve-bets</code> skips them (missing match result, wrong bet type, or already handled) and either resolve or cancel them by hand.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>

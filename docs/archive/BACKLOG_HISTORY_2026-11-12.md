@@ -6744,7 +6744,7 @@ Last Updated: 2026-11-13
 - BUG-CW1: migration 306 makes `guard_coin_columns()` return OLD on DELETE, so deleting a wallet row now works (checked in a rolled-back transaction). Note for later: the function is SECURITY DEFINER, so its `current_user IN (authenticated, anon)` check never fires; direct-write protection relies on row security instead.
 - J-03: released all held coins. The 100-coin challenge from 30 Aug expired and refunded; the 250-coin group bet in DRAFT_WISHLIST was cancelled and both players refunded. No wallet has anything in escrow now.
 - DD-P1-1: deleted the "Smoke Test League". The stuck Wimbledon tournament and the empty circles were already gone. "test 1" (a different account's league) was left alone.
-- J-02 (part): switched on jobs 70, 71, 72 and 17.
+- J-02: switched on jobs 70, 71, 72, 17 and 91. All five show succeeded runs in their history (checked 13:00 UTC). Job 91 did not resolve the two closed July bets; logged as BET-STUCK-1.
 - Backups taken first: schema and data dumps in backups/ (gitignored).
 
 Last Updated: 2026-11-13
