@@ -5,7 +5,8 @@ import { useSport } from '../context/SportContext';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
-import { useChallenges } from '../hooks/useChallenges';
+import { useYourMove } from '../hooks/useYourMove';
+import { YourMoveLine } from '../components/YourMove';
 import { useClubhouseFrontpage } from '../hooks/useClubhouseFrontpage';
 import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
@@ -138,29 +139,6 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
 }
 
 // ── Quick-access shortcut card ────────────────────────────────────────────────
-function ShortcutCard({ eyebrow, value, sublabel, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: '1 1 160px', minWidth: 150, textAlign: 'left', cursor: 'pointer',
-        background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)',
-        minHeight: 'var(--tap)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4,
-      }}
-    >
-      <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-        {eyebrow}
-      </div>
-      <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.1 }}>
-        {value}
-      </div>
-      {sublabel && (
-        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{sublabel}</div>
-      )}
-    </button>
-  );
-}
-
 // ── Unified competition cards (all sports, one grid) ─────────────────────────
 function AllCompetitions({ competitions, onEnter }) {
   const allComps = [
@@ -660,7 +638,7 @@ export default function ClubhouseScreen() {
   } = useClubhouseContext();
 
   const { wallet } = useWallet(user?.id);
-  const { active: activeChallenges, incoming: incomingChallenges, outgoing: outgoingChallenges } = useChallenges(user?.id, activeCircleId);
+  const move = useYourMove(activeCircleId);
   const frontpage = useClubhouseFrontpage(activeCircleId);
 
   // Three tabs: room, leagues, people. Old links (home, chat, members) still land on the right tab;
@@ -760,10 +738,6 @@ export default function ClubhouseScreen() {
   const isOwner = activeCircle?.role === 'owner';
   const totalComps  = (competitions.football?.length ?? 0) + (competitions.f1?.length ?? 0) + (competitions.tennis?.length ?? 0);
   const activeSports = [(competitions.football?.length ?? 0) > 0, (competitions.f1?.length ?? 0) > 0, (competitions.tennis?.length ?? 0) > 0].filter(Boolean).length;
-
-  const myStandingIndex = metaStandings.findIndex(e => e.user_id === user?.id);
-  const myStanding  = myStandingIndex >= 0 ? metaStandings[myStandingIndex] : null;
-  const myRank      = myStanding ? (myStanding.rank ?? myStandingIndex + 1) : null;
 
   const MAIN_TABS = [
     { key: 'room',    label: 'The Room' },
@@ -910,7 +884,8 @@ export default function ClubhouseScreen() {
           )}
 
           {/* Chat tab — mobile's only view of chat; desktop reaches it via the rail's expand button (S-06) */}
-          {tab === 'room' && (
+          {tab === 'room' && (<>
+            <YourMoveLine move={move} coinsOnTable={wallet?.escrow ?? 0} onWallet={() => navigate('/wallet')} />
             <ClubhouseChat
               circleId={activeCircleId}
               members={members}
@@ -919,7 +894,7 @@ export default function ClubhouseScreen() {
               onEnterLeague={enterLeague}
               layout="full"
             />
-          )}
+          </>)}
 
           {/* HOME tab — main column + persistent chat rail (desktop) */}
           {tab === 'leagues' && (
@@ -960,30 +935,7 @@ export default function ClubhouseScreen() {
                   </div>
                 )}
 
-                {/* Quick-access shortcuts */}
-                <div style={{ display: 'flex', gap: 10, overflowX: isDesktop ? 'visible' : 'auto', flexWrap: isDesktop ? 'wrap' : 'nowrap' }}>
-                  <ShortcutCard
-                    eyebrow="Coin Wallet"
-                    value={`${(wallet?.balance ?? 0).toLocaleString()} coins`}
-                    sublabel={(wallet?.escrow ?? 0) > 0 ? `${wallet.escrow.toLocaleString()} in escrow` : undefined}
-                    onClick={() => navigate('/wallet')}
-                  />
-                  <ShortcutCard
-                    eyebrow="P2P Challenges"
-                    value={`${activeChallenges.length + incomingChallenges.length + outgoingChallenges.length} open`}
-                    sublabel={
-                      incomingChallenges.length > 0 ? `${incomingChallenges.length} awaiting your move`
-                        : outgoingChallenges.length > 0 ? `${outgoingChallenges.length} awaiting response`
-                        : 'No pending requests'
-                    }
-                    onClick={() => navigate('/challenges')}
-                  />
-                  <ShortcutCard
-                    eyebrow="Meta Rank"
-                    value={myRank ? `#${myRank} of ${metaStandings.length}` : '—'}
-                    onClick={() => navigate('/trophy')}
-                  />
-                </div>
+                <YourMoveLine move={move} coinsOnTable={wallet?.escrow ?? 0} onWallet={() => navigate('/wallet')} />
 
                 {/* All competition cards — unified grid */}
                 <AllCompetitions

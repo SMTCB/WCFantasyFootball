@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 import { ArchivedBadge, FinishedBadge } from '../components/league/LeagueBadges';
 import { useShowArchived } from '../hooks/useShowArchived';
 import usePullToRefresh from '../hooks/usePullToRefresh';
+import { useYourMove } from '../hooks/useYourMove';
+import { YourMoveList } from '../components/YourMove';
 import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
@@ -288,6 +290,7 @@ export default function HomeDashboardScreen() {
   const { myCircles, setActiveCircleId, searchClubhouses, joinCircleByCode, createCircle, loading, refresh } = useClubhouseContext();
   const { setActivePaddockId, setActivePlayerBoxId } = useSport();
   const navigate = useNavigate();
+  const move = useYourMove();
 
   const [compsByCircle, setCompsByCircle] = useState({});
   const [creatingClubhouse, setCreatingClubhouse] = useState(false);
@@ -405,6 +408,8 @@ export default function HomeDashboardScreen() {
           </div>
         ) : (
           <>
+            <YourMoveList move={move} />
+
             {myCircles.length > 0 && (
               <div style={{ marginBottom: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>

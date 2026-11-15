@@ -6680,6 +6680,8 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - C-08: the dice in the Room now opens the new-bet sheet in place (no navigating away). A bet card in the Room shows Take it / Pass while the bet still waits for you (bets use join/decline, head-to-head challenges use accept/decline). No database change.
 - C-20: the Room shows an Open bets strip (up to three, with a Take button) for this Clubhouse. League-level bets keep their entry points unchanged.
 - C-19: tapping a bet card in the Room opens that bet as its own conversation (bet, coins on the table, who is in, chat about that bet only). Migration 311 adds `thread_kind`/`thread_id` to `clubhouse_messages`; those messages are kept out of the main Room stream. Live score is not shown yet.
+- J-14: Home opens with a "Your move" list (bets to take or pass, results to declare or confirm, unfinished squads), one button per row, from one shared query (`useYourMove`).
+- C-04: the three shortcut cards in the Clubhouse are replaced by one line at the top of the Room ("N waiting for you · N open bets · N coins on the table") from the same query, with a Wallet link. No database change.
 
 Last Updated: 2026-11-14
 
