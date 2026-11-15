@@ -34,9 +34,10 @@ export function useChallenges(userId, circleId = null) {
   // unclaimed challenge in this circle) changes
   useEffect(() => {
     if (!userId) return;
+    const suffix = Math.random().toString(36).slice(2); // unique per mount: two components may use this hook at once
     const refetchAll = () => { fetchChallenges(); fetchOpenChallenges(); };
     const channel = supabase
-      .channel(`p2p_challenges:${userId}`)
+      .channel(`p2p_challenges:${userId}:${suffix}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',

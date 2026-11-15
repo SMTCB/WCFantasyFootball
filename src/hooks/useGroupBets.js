@@ -22,8 +22,9 @@ export function useGroupBets(userId, circleId = null) {
   // Realtime: re-fetch when any bet or participant row changes
   useEffect(() => {
     if (!userId) return;
+    const suffix = Math.random().toString(36).slice(2); // unique per mount: two components may use this hook at once
     const channel = supabase
-      .channel(`p2p_bets:${userId}`)
+      .channel(`p2p_bets:${userId}:${suffix}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
