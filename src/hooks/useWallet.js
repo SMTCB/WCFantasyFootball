@@ -23,8 +23,9 @@ export function useWallet(userId) {
   // Realtime: re-fetch on any wallet change for this user
   useEffect(() => {
     if (!userId) return;
+    const suffix = Math.random().toString(36).slice(2); // unique per mount: two components may use this hook at once
     const channel = supabase
-      .channel(`wallet:${userId}`)
+      .channel(`wallet:${userId}:${suffix}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
