@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
@@ -649,6 +649,17 @@ export default function ClubhouseScreen() {
     return LEGACY_TABS[t] ?? t ?? 'leagues';
   });
   const [betRecords, setBetRecords] = useState(new Map());
+  // A notice about a friend opens the Room on that exact message.
+  const [focusMsg, setFocusMsg] = useState(() => searchParams.get('msg'));
+  const clearFocus = useCallback(() => setFocusMsg(null), []);
+  const describeNotice = (n) => {
+    if (n.source_type !== 'clubhouse') return null;
+    const who = (members ?? []).find(m => m.user_id === n.payload?.actor_id)?.username ?? 'A member';
+    if (n.type === 'friend_joined') return `${who} joined the Clubhouse`;
+    if (n.type === 'friend_took_bet') return `${who} took your bet: ${n.payload?.question ?? ''}`;
+    if (n.type === 'friend_reacted') return `${who} reacted ${n.payload?.emoji ?? ''} to your message`;
+    return null;
+  };
   // Bet record per member in this Clubhouse: resolved bets they joined, and how many they won.
   // Reads through existing RLS (members can see participants of non-open bets in their Clubhouse).
   useEffect(() => {
@@ -841,7 +852,8 @@ export default function ClubhouseScreen() {
               onMarkRead={markRead}
               onMarkAll={() => markAllRead(activeCircleId)}
               isDesktop={isDesktop}
-              onNavigate={(n) => navigate((n.source_type === 'p2p_bet' || n.source_type === 'p2p_challenge') ? '/challenges' : `/league/${n.source_id}`)}
+              describe={describeNotice}
+              onNavigate={(n) => n.source_type === 'clubhouse' && n.payload?.message_id ? (setFocusMsg(n.payload.message_id), setTab('room')) : navigate((n.source_type === 'p2p_bet' || n.source_type === 'p2p_challenge') ? '/challenges' : `/league/${n.source_id}`)}
             />
           </div>
         </div>
@@ -893,6 +905,8 @@ export default function ClubhouseScreen() {
               feed={feed}
               onEnterLeague={enterLeague}
               layout="full"
+              focusMessageId={focusMsg}
+              onFocusDone={clearFocus}
             />
           </>)}
 

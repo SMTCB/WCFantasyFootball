@@ -45,7 +45,7 @@ export default function BetThread({ channelId, userId, betRef, onClose }) {
         if (alive) setPlayers((data ?? []).map(p => known.current[p.user_id] ?? '?'));
       });
     }
-    const ch = supabase.channel(`bet-thread-${kind}-${id}`)
+    const ch = supabase.channel(`bet-thread-${kind}-${id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'clubhouse_messages',
         filter: `thread_id=eq.${id}`,

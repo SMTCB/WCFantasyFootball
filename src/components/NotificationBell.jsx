@@ -17,16 +17,20 @@ const NOTIF_TYPE_META = {
   breaking_news:      { badge: 'NEWS',      color: 'var(--danger)' },
   direct_message:     { badge: 'DM',        color: 'var(--accent)'   },
   arbitration_needed: { badge: 'ARBITRATE', color: 'var(--purple)' },
+  friend_joined:      { badge: 'JOINED',    color: 'var(--accent)' },
+  friend_took_bet:    { badge: 'BET',       color: 'var(--accent)' },
+  friend_reacted:     { badge: 'REACTION',  color: 'var(--accent)' },
 };
 
 // Default row renderer — matches the `clubhouse_notifications` shape
 // ({ id, type, read_at, source_type, source_id, payload: { headline|preview } }).
 // Callers with a different data shape (e.g. league-level notifications) should
 // pass their own `renderRow` instead.
-function defaultRenderRow(n, { onMarkRead, onNavigate, onNavigated }) {
+function defaultRenderRow(n, { onMarkRead, onNavigate, onNavigated, describe }) {
   const meta   = NOTIF_TYPE_META[n.type] ?? { badge: n.type.toUpperCase(), color: 'var(--mute)' };
   const isNew  = !n.read_at;
-  const canNav = (n.source_type === 'league' || n.source_type === 'p2p_challenge') && n.source_id;
+  const canNav = ((n.source_type === 'league' || n.source_type === 'p2p_challenge') && n.source_id)
+    || (n.source_type === 'clubhouse' && !!n.payload?.message_id);
   return (
     <div
       key={n.id}
@@ -52,7 +56,7 @@ function defaultRenderRow(n, { onMarkRead, onNavigate, onNavigated }) {
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{timeAgo(n.created_at)}</span>
         </div>
         <div style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>
-          {n.payload?.headline ?? n.payload?.preview ?? n.type}
+          {describe?.(n) ?? n.payload?.headline ?? n.payload?.preview ?? n.type}
         </div>
       </div>
     </div>
@@ -61,11 +65,11 @@ function defaultRenderRow(n, { onMarkRead, onNavigate, onNavigated }) {
 
 export default function NotificationBell({
   notifications = [], unreadCount = 0, onMarkAll, isDesktop,
-  onMarkRead, onNavigate, renderRow,
+  onMarkRead, onNavigate, renderRow, describe,
 }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
-  const row = renderRow ?? ((n, ctx) => defaultRenderRow(n, { onMarkRead, onNavigate, ...ctx }));
+  const row = renderRow ?? ((n, ctx) => defaultRenderRow(n, { onMarkRead, onNavigate, describe, ...ctx }));
 
   const list = notifications.length === 0 ? (
     <div style={{ textAlign: 'center', padding: '32px 0', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>

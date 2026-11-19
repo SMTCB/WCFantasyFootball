@@ -2,6 +2,7 @@ import { LoadingRows } from './Skeleton';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { supabase } from '../lib/supabase';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
+import { useRoomReactions, REACTION_EMOJI } from '../hooks/useRoomReactions';
 import { IconCheckCircle, IconDice, IconClose } from './UiIcons';
 import BetThread from './BetThread';
 import { useAuth } from '../hooks/useAuth';
@@ -47,7 +48,7 @@ function BetActivityCard({ msg, actionable, onTake, onPass, busy, onOpen }) {
         </span>
         {ref.stake_coins != null && (
           <span style={{ ...BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
-            {ref.stake_coins} coins · {isResolved ? 'resolved' : 'new bet'}
+            {ref.stake_coins} coins · {isResolved ? 'resolved' : ref.event === 'taken' ? `${msg.username} took it` : 'new bet'}
           </span>
         )}
       </span>
@@ -65,6 +66,50 @@ function BetActivityCard({ msg, actionable, onTake, onPass, busy, onOpen }) {
         >Pass</button>
       </div>
     )}
+    </div>
+  );
+}
+
+// Reactions under a message: chips for what is there, one button to add more.
+function ReactionBar({ reactions = [], open, onToggleOpen, onReact }) {
+  const chip = (active) => ({
+    display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 32, padding: '0 10px',
+    borderRadius: 16, cursor: 'pointer', ...BODY, fontSize: 'var(--fs-label)',
+    background: active ? 'var(--accent-soft)' : 'transparent',
+    color: active ? 'var(--accent)' : 'var(--mute)',
+    border: `1px solid ${active ? 'var(--accent)' : 'var(--rule)'}`,
+  });
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 }}>
+      {reactions.map(r => (
+        <button key={r.emoji} onClick={() => onReact(r.emoji)} aria-pressed={r.mine}
+          aria-label={`${r.emoji} ${r.count}${r.mine ? ', yours' : ''}`} style={chip(r.mine)}>
+          <span aria-hidden="true">{r.emoji}</span><span>{r.count}</span>
+        </button>
+      ))}
+      {open && REACTION_EMOJI.filter(e => !reactions.some(r => r.emoji === e)).map(e => (
+        <button key={e} onClick={() => onReact(e)} aria-label={`React ${e}`} style={chip(false)}>
+          <span aria-hidden="true">{e}</span>
+        </button>
+      ))}
+      <button onClick={onToggleOpen} aria-label={open ? 'Close reactions' : 'Add a reaction'} aria-expanded={open}
+        style={{ ...chip(false), color: 'var(--mute)' }}>{open ? 'Close' : 'React'}</button>
+    </div>
+  );
+}
+
+// A person-event in the Room: someone joined, a new edition is out.
+function MemberActivityRow({ msg }) {
+  const edition = msg.betRef?.event === 'edition';
+  return (
+    <div style={{ margin: '6px 0', padding: '8px 12px', borderLeft: '3px solid var(--rule)', background: 'var(--card)', borderRadius: 'var(--radius)' }}>
+      <div style={{ display: 'flex', gap: 8, ...BODY, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+        <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{edition ? 'The paper' : 'New face'}</span>
+        <span style={{ marginLeft: 'auto' }}>{timeAgo(msg.createdAt)}</span>
+      </div>
+      <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.4, marginTop: 2 }}>
+        {edition ? msg.content : `${msg.username} ${msg.content}`}
+      </div>
     </div>
   );
 }
@@ -101,10 +146,12 @@ function ActivityRow({ entry, onEnter }) {
 
 // Message bubble. Tap a message you can delete to reveal a Delete button
 // (works on touch; the old hover-only delete did not).
-function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, deleting, betAction, onOpenBet }) {
+function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, deleting, betAction, onOpenBet, reactions, pickerOpen, onTogglePicker, onReact }) {
   const showMeta = !prevMsg || prevMsg.kind === 'activity' || prevMsg.userId !== msg.userId;
 
-  if (msg.kind === 'bet_activity') return <BetActivityCard msg={msg} onOpen={onOpenBet} {...(betAction ?? {})} />;
+  const bar = <ReactionBar reactions={reactions} open={pickerOpen} onToggleOpen={onTogglePicker} onReact={onReact} />;
+  if (msg.kind === 'bet_activity') return <><BetActivityCard msg={msg} onOpen={onOpenBet} {...(betAction ?? {})} />{bar}</>;
+  if (msg.kind === 'member_activity') return <><MemberActivityRow msg={msg} />{bar}</>;
 
   return (
     <div style={{ padding: showMeta ? '8px 0 2px' : '1px 0' }}>
@@ -127,6 +174,7 @@ function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, 
           {msg.content}
         </p>
       </div>
+      {bar}
       {selected && canDelete && (
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
           <button
@@ -150,13 +198,15 @@ function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, 
 
 // The Room: one stream of chat, bets and activity.
 // layout 'rail' = desktop side panel on Home; 'full' = the whole Room view.
-export default function ClubhouseChat({ circleId, members, activeCircle, feed = [], onEnterLeague, layout = 'full', onExpand }) {
+export default function ClubhouseChat({ circleId, members, activeCircle, feed = [], onEnterLeague, layout = 'full', onExpand, focusMessageId = null, onFocusDone }) {
   const [channelId, setChannelId] = useState(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [pickerId, setPickerId] = useState(null);
+  const [flashId, setFlashId] = useState(null);
 
   const isOwner = activeCircle?.role === 'owner';
 
@@ -210,6 +260,13 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
   }, [circleId]);
 
   const { messages, loading, sendMessage, deleteMessage, scrollEndRef } = useClubhouseChat(channelId);
+  const { byMessage: reactionsByMessage, toggle: toggleReaction } = useRoomReactions(channelId, user?.id);
+
+  async function react(messageId, emoji) {
+    setError('');
+    try { await toggleReaction(messageId, emoji); setPickerId(null); }
+    catch { setError('Could not add that reaction. Try again.'); }
+  }
 
   const nameById = useMemo(() => new Map((members ?? []).map(m => [m.user_id, m.username])), [members]);
 
@@ -224,7 +281,27 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
   }, [messages, feed, nameById]);
 
   // The hook only scrolls on new chat; also scroll when activity items arrive.
-  useEffect(() => { scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [stream.length, scrollEndRef]);
+  useEffect(() => {
+    if (focusMessageId) return;
+    scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [stream.length, scrollEndRef, focusMessageId]);
+
+  // A notice opens the Room on the exact item: scroll to it and light it up briefly.
+  useEffect(() => {
+    if (!focusMessageId || loading || !channelId) return;
+    const found = stream.some(i => i.id === focusMessageId);
+    if (found) {
+      document.getElementById(`msg-${focusMessageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setFlashId(focusMessageId);
+    }
+    onFocusDone?.();
+  }, [focusMessageId, loading, channelId, stream, onFocusDone]);
+
+  useEffect(() => {
+    if (!flashId) return;
+    const t = setTimeout(() => setFlashId(null), 2500);
+    return () => clearTimeout(t);
+  }, [flashId]);
 
   async function handleSend(e) {
     e.preventDefault();
@@ -284,8 +361,8 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
         {stream.map((item, i) => item.kind === 'activity' ? (
           <ActivityRow key={`a-${item.id}`} entry={item} onEnter={onEnterLeague} />
         ) : (
+          <div key={item.id} id={`msg-${item.id}`} style={{ borderRadius: 8, background: flashId === item.id ? 'var(--accent-soft)' : 'transparent', transition: 'background 0.6s' }}>
           <MessageBubble
-            key={item.id}
             msg={item}
             prevMsg={stream[i - 1] ?? null}
             canDelete={item.kind !== 'bet_activity' && (isOwner || item.isOwn)}
@@ -295,7 +372,12 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
             deleting={deletingId === item.id}
             betAction={betActionFor(item)}
             onOpenBet={setThreadRef}
+            reactions={reactionsByMessage.get(item.id)}
+            pickerOpen={pickerId === item.id}
+            onTogglePicker={() => setPickerId(pickerId === item.id ? null : item.id)}
+            onReact={(emoji) => react(item.id, emoji)}
           />
+          </div>
         ))}
         <div ref={scrollEndRef} />
       </div>

@@ -13,13 +13,56 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 
-CREATE SCHEMA IF NOT EXISTS "public";
+CREATE EXTENSION IF NOT EXISTS "pg_cron" WITH SCHEMA "pg_catalog";
 
 
-ALTER SCHEMA "public" OWNER TO "pg_database_owner";
+
+
 
 
 COMMENT ON SCHEMA "public" IS 'standard public schema';
+
+
+
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "public";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "http" WITH SCHEMA "public";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+
+
+
 
 
 
@@ -155,16 +198,41 @@ CREATE TYPE "public"."transfer_window_type" AS ENUM (
 ALTER TYPE "public"."transfer_window_type" OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."_chip_enabled"("p_league_id" "uuid", "p_chip" "text") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT NOT COALESCE((
+    SELECT jsonb_typeof(config_value) = 'array' AND config_value @> to_jsonb(p_chip)
+      FROM league_config
+     WHERE league_id = p_league_id AND config_key = 'chips_disabled'
+  ), false);
+$$;
+
+
+ALTER FUNCTION "public"."_chip_enabled"("p_league_id" "uuid", "p_chip" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_chips_open_round"("p_league_id" "uuid") RETURNS TABLE("matchday_id" "text", "deadline_at" timestamp with time zone)
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT d.matchday_id, d.deadline_at
+    FROM matchday_deadlines d
+    JOIN leagues l ON l.tournament_id = d.tournament_id
+   WHERE l.id = p_league_id AND d.deadline_at >= now()
+   ORDER BY d.deadline_at
+   LIMIT 1;
+$$;
+
+
+ALTER FUNCTION "public"."_chips_open_round"("p_league_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."_create_user_wallet"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  PERFORM credit_coins(NEW.id, 500, 'admin', NULL,
-    '{"reason":"welcome_bonus"}'::jsonb);
-  RETURN NEW;
-END;
-$$;
+    AS $$ BEGIN INSERT INTO coin_wallets (user_id) VALUES (NEW.id) ON CONFLICT (user_id) DO NOTHING; PERFORM credit_coins(NEW.id, 500, 'admin', NULL, '{"reason":"welcome_bonus"}'::jsonb); RETURN NEW; END; $$;
 
 
 ALTER FUNCTION "public"."_create_user_wallet"() OWNER TO "postgres";
@@ -239,6 +307,274 @@ $$;
 
 
 ALTER FUNCTION "public"."_trigger_seed_cup_clubs"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_carry_over"("p_league_id" "uuid", "p_round" integer) RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_count int;
+BEGIN
+  WITH prev AS (
+    SELECT DISTINCT ON (s.user_id) s.user_id, s.round_number, s.target_ids
+      FROM wishlist_draft_submissions s
+      JOIN league_members m ON m.league_id = s.league_id AND m.user_id = s.user_id
+     WHERE s.league_id = p_league_id
+       AND s.round_number < p_round
+     ORDER BY s.user_id, s.round_number DESC
+  ),
+  own AS (
+    SELECT DISTINCT ON (q.user_id) q.user_id, COALESCE(q.players, ARRAY[]::text[]) AS players
+      FROM squads q
+     WHERE q.league_id = p_league_id
+     ORDER BY q.user_id, q.created_at DESC
+  ),
+  carried AS (
+    SELECT p.user_id, p.round_number,
+           ARRAY(
+             SELECT t FROM unnest(p.target_ids) WITH ORDINALITY AS u(t, ord)
+              WHERE NOT (t = ANY (COALESCE(o.players, ARRAY[]::text[])))
+              ORDER BY ord
+           ) AS targets
+      FROM prev p
+      LEFT JOIN own o ON o.user_id = p.user_id
+  ),
+  ins AS (
+    INSERT INTO wishlist_draft_submissions
+      (league_id, user_id, round_number, target_ids, drop_ids, submitted_at, status, carried_over_from)
+    SELECT p_league_id, c.user_id, p_round, c.targets, ARRAY[]::text[], NOW(), 'pending', c.round_number
+      FROM carried c
+     WHERE COALESCE(array_length(c.targets, 1), 0) > 0
+    ON CONFLICT (league_id, user_id, round_number) DO NOTHING
+    RETURNING 1
+  )
+  SELECT COUNT(*) INTO v_count FROM ins;
+  RETURN v_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_carry_over"("p_league_id" "uuid", "p_round" integer) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_default_mode"("p_league_id" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    AS $$
+DECLARE
+  v_mode    text;
+  v_enabled text;
+BEGIN
+  SELECT config_value #>> '{}' INTO v_mode
+    FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_mode';
+  IF v_mode IN ('manual', 'auto', 'disabled') THEN RETURN v_mode; END IF;
+
+  SELECT config_value #>> '{}' INTO v_enabled
+    FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_enabled';
+  IF v_enabled = 'false' THEN RETURN 'disabled'; END IF;
+
+  RETURN 'auto';
+END;
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_default_mode"("p_league_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_is_draft_league"("p_league_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    AS $$
+  SELECT COALESCE(
+    (SELECT format = 'noduplicate' OR league_mode = 'draft' FROM leagues WHERE id = p_league_id),
+    false
+  );
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_is_draft_league"("p_league_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_next_round"("p_league_id" "uuid") RETURNS integer
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    AS $$
+DECLARE
+  v_tournament_id text;
+  v_last_finished int;
+  v_max_row_round int;
+BEGIN
+  SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id;
+  SELECT MAX(round_number) INTO v_last_finished
+    FROM fixtures WHERE tournament_id = v_tournament_id AND status = 'finished';
+  SELECT MAX(round_number) INTO v_max_row_round
+    FROM wishlist_draft_windows WHERE league_id = p_league_id;
+  IF v_last_finished IS NULL AND v_max_row_round IS NULL THEN RETURN NULL; END IF;
+  RETURN GREATEST(COALESCE(v_last_finished, 0) + 1, COALESCE(v_max_row_round, 0) + 1);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_next_round"("p_league_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_notify_members"("p_league_id" "uuid", "p_type" "text", "p_title" "text", "p_description" "text", "p_by" "uuid", "p_only_commissioners" boolean DEFAULT false) RETURNS "void"
+    LANGUAGE "sql" SECURITY DEFINER
+    AS $$
+  INSERT INTO league_notifications
+    (league_id, user_id, notification_type, triggered_by_user_id, title, description, related_entity_type)
+  SELECT p_league_id, m.user_id, p_type, p_by, p_title, p_description, 'wishlist_draft'
+    FROM league_members m
+   WHERE m.league_id = p_league_id
+     AND (NOT p_only_commissioners OR m.role = 'commissioner');
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_notify_members"("p_league_id" "uuid", "p_type" "text", "p_title" "text", "p_description" "text", "p_by" "uuid", "p_only_commissioners" boolean) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_open_market"("p_league_id" "uuid", "p_round" integer) RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_tournament_id text;
+  v_kickoff       timestamptz;
+  v_closes        timestamptz;
+BEGIN
+  SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id;
+  SELECT MIN(kickoff_at) INTO v_kickoff
+    FROM fixtures WHERE tournament_id = v_tournament_id AND round_number = p_round;
+
+  v_closes := COALESCE(v_kickoff - interval '1 hour', NOW() + interval '48 hours');
+  IF v_closes <= NOW() THEN RETURN; END IF;
+
+  INSERT INTO transfer_windows (league_id, round_number, opens_at, closes_at, window_type, transfers_remaining)
+  VALUES (p_league_id, p_round, NOW(), v_closes, 'standard', NULL)
+  ON CONFLICT (league_id, round_number) DO UPDATE
+    SET opens_at  = LEAST(transfer_windows.opens_at, NOW()),
+        closes_at = GREATEST(transfer_windows.closes_at, EXCLUDED.closes_at);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_open_market"("p_league_id" "uuid", "p_round" integer) OWNER TO "postgres";
+
+SET default_tablespace = '';
+
+SET default_table_access_method = "heap";
+
+
+CREATE TABLE IF NOT EXISTS "public"."wishlist_draft_windows" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "league_id" "uuid" NOT NULL,
+    "round_number" integer NOT NULL,
+    "snake_order_seed" integer NOT NULL,
+    "processed_at" timestamp with time zone,
+    "participant_count" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "mode" "text" DEFAULT 'auto'::"text" NOT NULL,
+    "status" "text" DEFAULT 'scheduled'::"text" NOT NULL,
+    "scheduled_at" timestamp with time zone,
+    "hard_deadline_at" timestamp with time zone,
+    "first_kickoff_at" timestamp with time zone,
+    "round_ended_at" timestamp with time zone,
+    "run_requested_at" timestamp with time zone,
+    "run_requested_by" "uuid",
+    "run_trigger" "text",
+    "run_token" "uuid",
+    "started_at" timestamp with time zone,
+    "reminder_sent_at" timestamp with time zone,
+    "kickoff_alert_sent_at" timestamp with time zone,
+    CONSTRAINT "wishlist_draft_windows_mode_check" CHECK (("mode" = ANY (ARRAY['manual'::"text", 'auto'::"text", 'disabled'::"text"]))),
+    CONSTRAINT "wishlist_draft_windows_status_check" CHECK (("status" = ANY (ARRAY['scheduled'::"text", 'running'::"text", 'done'::"text", 'expired'::"text"])))
+);
+
+
+ALTER TABLE "public"."wishlist_draft_windows" OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_pending_window"("p_league_id" "uuid") RETURNS "public"."wishlist_draft_windows"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    AS $$
+  SELECT *
+    FROM wishlist_draft_windows
+   WHERE league_id = p_league_id
+     AND status IN ('scheduled', 'running')
+     AND processed_at IS NULL
+     AND (first_kickoff_at IS NULL OR NOW() < first_kickoff_at)
+   ORDER BY round_number DESC
+   LIMIT 1;
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_pending_window"("p_league_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_suggested_draft_at"("p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) RETURNS timestamp with time zone
+    LANGUAGE "plpgsql" IMMUTABLE
+    AS $$
+DECLARE
+  v_end      timestamptz := COALESCE(p_round_ended_at, NOW());
+  v_earliest timestamptz;
+  v_latest   timestamptz;
+BEGIN
+  IF p_first_kickoff IS NULL THEN
+    RETURN v_end + interval '24 hours';
+  END IF;
+
+  v_earliest := v_end + interval '12 hours';
+  v_latest   := p_first_kickoff - interval '12 hours';
+
+  IF v_latest - v_earliest < interval '0' THEN
+    RETURN LEAST(v_end + (p_first_kickoff - v_end) / 2, p_first_kickoff - interval '8 hours');
+  END IF;
+
+  RETURN GREATEST(v_earliest, LEAST(v_latest, p_first_kickoff - interval '48 hours'));
+END;
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_suggested_draft_at"("p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."_wishlist_transfers_in_window"("p_league_id" "uuid", "p_since" timestamp with time zone) RETURNS integer
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    AS $$
+  SELECT COUNT(*)::int
+    FROM squad_events
+   WHERE league_id  = p_league_id
+     AND event_type = 'transfer_buy'
+     AND event_at >= p_since;
+$$;
+
+
+ALTER FUNCTION "public"."_wishlist_transfers_in_window"("p_league_id" "uuid", "p_since" timestamp with time zone) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."accept_bet_invite"("p_bet_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user   uuid := auth.uid();
+  v_circle uuid;
+BEGIN
+  IF v_user IS NULL THEN
+    RETURN json_build_object('error', 'UNAUTHENTICATED');
+  END IF;
+
+  SELECT circle_id INTO v_circle FROM p2p_bets WHERE id = p_bet_id AND status = 'open';
+  IF v_circle IS NULL THEN
+    RETURN json_build_object('error', 'BET_NOT_OPEN');
+  END IF;
+
+  INSERT INTO circle_members (circle_id, user_id, role)
+  VALUES (v_circle, v_user, 'member')
+  ON CONFLICT DO NOTHING;
+
+  RETURN json_build_object('circle_id', v_circle, 'bet_id', p_bet_id);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."accept_bet_invite"("p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."accept_p2p_challenge"("p_challenge_id" "uuid") RETURNS "jsonb"
@@ -316,7 +652,10 @@ BEGIN
   END IF;
 
   SELECT get_transfer_window_status(v_proposal.league_id) INTO v_window_status;
-  IF (v_window_status->>'status') <> 'open' THEN
+  IF (v_window_status->>'window_type') = 'wishlist_running' THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'DRAFT_RUNNING');
+  END IF;
+  IF (v_window_status->>'status') <> 'open' AND (v_window_status->>'window_type') IS DISTINCT FROM 'wishlist' THEN
     RETURN jsonb_build_object('ok', false, 'error', 'WINDOW_CLOSED');
   END IF;
 
@@ -408,7 +747,6 @@ BEGIN
     NOW()
   );
 
-  -- Log for proposer squad (gives proposer_player, receives target_player)
   PERFORM _log_squad_event('trade_accept', v_proposal.league_id, v_proposer_user_id,
     v_proposal.proposer_squad_id, NULL,
     v_proposal.target_player_id, v_proposal.proposer_player_id,
@@ -417,7 +755,6 @@ BEGIN
                        'points_sweetener', v_proposal.points_sweetener,
                        'counterparty_user_id', v_target_user_id));
 
-  -- Log for target squad (gives target_player, receives proposer_player)
   PERFORM _log_squad_event('trade_accept', v_proposal.league_id, v_target_user_id,
     v_proposal.target_squad_id, NULL,
     v_proposal.proposer_player_id, v_proposal.target_player_id,
@@ -436,55 +773,73 @@ ALTER FUNCTION "public"."accept_trade_proposal"("p_proposal_id" "uuid") OWNER TO
 
 CREATE OR REPLACE FUNCTION "public"."activate_chip"("p_user_id" "uuid", "p_league_id" "uuid", "p_chip_type" "text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_squad      record;
-  v_cur_val    boolean;
+  v_round     record;
+  v_existing  record;
+  v_squad_id  uuid;
 BEGIN
   IF auth.uid() IS NOT NULL AND p_user_id IS DISTINCT FROM auth.uid() THEN
-    RETURN jsonb_build_object('ok', false, 'code', 'UNAUTHORIZED',
-      'error', 'You can only activate your own chips');
+    RETURN jsonb_build_object('ok', false, 'code', 'UNAUTHORIZED', 'error', 'You can only activate your own chips');
   END IF;
-
   IF p_chip_type = 'wildcard' THEN
-    RETURN jsonb_build_object('ok', false, 'code', 'CHIP_RETIRED',
-      'error', 'The wildcard chip is no longer available');
+    RETURN jsonb_build_object('ok', false, 'code', 'CHIP_RETIRED', 'error', 'The wildcard chip is no longer available');
   END IF;
-  IF p_chip_type <> 'triple_captain' THEN
-    RETURN jsonb_build_object('ok', false, 'error', 'Unknown chip type: ' || p_chip_type);
+  IF p_chip_type NOT IN ('triple_captain', 'max_cap') THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'UNKNOWN_CHIP', 'error', 'Unknown chip type: ' || p_chip_type);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = p_user_id) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'UNAUTHORIZED', 'error', 'Not a member of this league');
   END IF;
 
-  SELECT * INTO v_squad FROM squads
-   WHERE user_id = p_user_id AND league_id = p_league_id
-   ORDER BY created_at DESC LIMIT 1;
+  SELECT * INTO v_round FROM _chips_open_round(p_league_id);
   IF NOT FOUND THEN
-    RETURN jsonb_build_object('ok', false, 'error', 'Squad not found');
+    RETURN jsonb_build_object('ok', false, 'code', 'DEADLINE_PASSED',
+      'error', 'No open round — chips cannot be changed right now.');
   END IF;
 
-  IF v_squad.matchday_id IS NOT NULL AND v_squad.matchday_id <> 'active' THEN
-    IF EXISTS (SELECT 1 FROM matchday_deadlines
-                WHERE matchday_id = v_squad.matchday_id AND deadline_at < NOW()) THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'DEADLINE_PASSED',
-        'error', 'Matchday deadline has passed — chips cannot be changed.');
+  SELECT * INTO v_existing FROM chips_used
+   WHERE user_id = p_user_id AND league_id = p_league_id AND chip_type = p_chip_type;
+
+  -- Already active this round → deactivate (frees the chip for a later round).
+  IF FOUND AND v_existing.matchday_id = v_round.matchday_id THEN
+    DELETE FROM chips_used WHERE id = v_existing.id;
+    IF p_chip_type = 'triple_captain' THEN
+      UPDATE squads SET is_triple_captain = false WHERE user_id = p_user_id AND league_id = p_league_id;
     END IF;
+    RETURN jsonb_build_object('ok', true, 'active', false);
   END IF;
 
-  v_cur_val := v_squad.is_triple_captain;
-  IF NOT v_cur_val THEN
-    IF EXISTS (SELECT 1 FROM chips_used
-                WHERE user_id = p_user_id AND league_id = p_league_id
-                  AND chip_type = p_chip_type AND matchday_id <> v_squad.matchday_id) THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'CHIP_ALREADY_USED',
-        'error', 'This chip has already been used this season');
-    END IF;
-    INSERT INTO chips_used (user_id, league_id, chip_type, matchday_id)
-    VALUES (p_user_id, p_league_id, p_chip_type, v_squad.matchday_id)
-    ON CONFLICT (user_id, league_id, chip_type) DO UPDATE
-      SET matchday_id = excluded.matchday_id, used_at = now();
+  IF FOUND THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'CHIP_ALREADY_USED',
+      'error', 'This chip has already been used this tournament');
   END IF;
 
-  UPDATE squads SET is_triple_captain = NOT v_cur_val WHERE id = v_squad.id;
-  RETURN jsonb_build_object('ok', true, 'active', NOT v_cur_val);
+  IF NOT _chip_enabled(p_league_id, p_chip_type) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'CHIP_DISABLED',
+      'error', 'Your league admin has turned this chip off');
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM chips_used
+              WHERE user_id = p_user_id AND league_id = p_league_id
+                AND chip_type IN ('triple_captain', 'max_cap')
+                AND matchday_id = v_round.matchday_id) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'CAPTAIN_CHIP_ACTIVE',
+      'error', 'Another captain chip is already active this round');
+  END IF;
+
+  INSERT INTO chips_used (user_id, league_id, chip_type, matchday_id)
+  VALUES (p_user_id, p_league_id, p_chip_type, v_round.matchday_id);
+
+  IF p_chip_type = 'triple_captain' THEN
+    SELECT id INTO v_squad_id FROM squads
+     WHERE user_id = p_user_id AND league_id = p_league_id
+     ORDER BY created_at DESC LIMIT 1;
+    UPDATE squads SET is_triple_captain = true WHERE id = v_squad_id;
+  END IF;
+
+  RETURN jsonb_build_object('ok', true, 'active', true);
 END;
 $$;
 
@@ -884,13 +1239,26 @@ CREATE OR REPLACE FUNCTION "public"."apply_relaxation_state"("p_league_id" "uuid
     LANGUAGE "plpgsql"
     AS $$
 DECLARE
-  new_state   JSON;
-  prev_tier   INT;
-  new_tier    INT;
+  new_state    JSON;
+  prev_tier    INT;
+  new_tier     INT;
   tier_changed BOOLEAN;
+  formula_on   BOOLEAN;
 BEGIN
-  new_state := calculate_relaxation_state(p_league_id);
-  new_tier  := (new_state->>'tier')::int;
+  SELECT (config_value::text)::boolean INTO formula_on
+  FROM   league_config
+  WHERE  league_id  = p_league_id
+  AND    config_key = 'relaxation_formula_enabled';
+
+  formula_on := COALESCE(formula_on, false);
+
+  IF NOT formula_on THEN
+    new_state := json_build_object('repeats_allowed', 0, 'tier', 0);
+  ELSE
+    new_state := calculate_relaxation_state(p_league_id);
+  END IF;
+
+  new_tier := (new_state->>'tier')::int;
 
   -- Read previous tier from config
   SELECT (config_value::text)::int INTO prev_tier
@@ -976,6 +1344,12 @@ BEGIN
   PERFORM settle_bet_coins(p_bet_id);
 
   UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = p_bet_id;
+
+  PERFORM post_bet_activity_message(
+    v_bet.circle_id, auth.uid(),
+    '✅ Bet resolved: ' || v_bet.question,
+    jsonb_build_object('ref_kind', 'bet', 'ref_id', p_bet_id, 'event', 'resolved', 'question', v_bet.question, 'stake_coins', v_bet.stake_coins)
+  );
 END;
 $$;
 
@@ -988,13 +1362,8 @@ CREATE OR REPLACE FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id"
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_uid           uuid := auth.uid();
-  v_ch            p2p_challenges;
-  v_loser_id      uuid;
-  v_total_pot     int;
-  v_rake          int;
-  v_prize         int;
-  v_loser_escrow  int;
+  v_uid uuid := auth.uid();
+  v_ch  p2p_challenges;
 BEGIN
   IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
 
@@ -1012,44 +1381,8 @@ BEGIN
     RAISE EXCEPTION 'INVALID_WINNER';
   END IF;
 
-  v_total_pot := v_ch.stake_coins * 2;
-
-  IF p_winner_id IS NULL THEN
-    -- Void: each party's own stake goes back to their own balance.
-    PERFORM release_escrow(v_ch.challenger_id, v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_voided'));
-    PERFORM release_escrow(v_ch.opponent_id, v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_voided'));
-  ELSE
-    v_loser_id := CASE WHEN p_winner_id = v_ch.challenger_id THEN v_ch.opponent_id ELSE v_ch.challenger_id END;
-    v_rake     := FLOOR(v_total_pot * 0.05);
-    v_prize    := v_total_pot - v_rake;
-
-    PERFORM release_escrow(p_winner_id, v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_arbitrated'));
-    PERFORM credit_coins(p_winner_id, v_prize - v_ch.stake_coins, 'win', p_challenge_id,
-      jsonb_build_object('reason', 'freeform_arbitrated_win', 'stake', v_ch.stake_coins, 'prize', v_prize, 'rake', v_rake));
-
-    SELECT escrow INTO v_loser_escrow FROM coin_wallets WHERE user_id = v_loser_id FOR UPDATE;
-    IF NOT FOUND THEN RAISE EXCEPTION 'WALLET_NOT_FOUND'; END IF;
-    IF v_loser_escrow < v_ch.stake_coins THEN RAISE EXCEPTION 'INSUFFICIENT_ESCROW'; END IF;
-
-    UPDATE coin_wallets
-    SET escrow = escrow - v_ch.stake_coins, updated_at = now()
-    WHERE user_id = v_loser_id;
-
-    INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
-    VALUES (v_loser_id, 'loss', v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_arbitrated_loss', 'stake_lost', v_ch.stake_coins));
-  END IF;
-
-  UPDATE p2p_challenges
-  SET status      = 'resolved',
-      winner_id   = p_winner_id,
-      resolved_at = now(),
-      updated_at  = now()
-  WHERE id = p_challenge_id;
-
+  PERFORM settle_freeform_challenge(p_challenge_id, p_winner_id,
+    CASE WHEN p_winner_id IS NULL THEN 'freeform_voided' ELSE 'freeform_arbitrated' END, v_uid);
   RETURN jsonb_build_object('status', 'resolved', 'winner_id', p_winner_id);
 END;
 $$;
@@ -1121,19 +1454,25 @@ CREATE OR REPLACE FUNCTION "public"."auto_void_stale_bet_disputes"() RETURNS "vo
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_bet_id uuid;
+  v_bet RECORD;
 BEGIN
   IF auth.uid() IS NOT NULL THEN
     RAISE EXCEPTION 'ADMIN_ONLY';
   END IF;
 
-  FOR v_bet_id IN
-    SELECT id FROM p2p_bets WHERE status = 'disputed' AND dispute_deadline <= now()
+  FOR v_bet IN
+    SELECT id, circle_id, creator_id, question, stake_coins FROM p2p_bets
+    WHERE status = 'disputed' AND dispute_deadline <= now()
     FOR UPDATE SKIP LOCKED
   LOOP
-    UPDATE p2p_bet_participants SET is_winner = false, declared_correct = false WHERE bet_id = v_bet_id;
-    PERFORM settle_bet_coins(v_bet_id);
-    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
+    UPDATE p2p_bet_participants SET is_winner = false, declared_correct = false WHERE bet_id = v_bet.id;
+    PERFORM settle_bet_coins(v_bet.id);
+    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet.id;
+    PERFORM post_bet_activity_message(
+      v_bet.circle_id, v_bet.creator_id,
+      '⚖️ Bet voided (dispute unresolved): ' || v_bet.question,
+      jsonb_build_object('ref_kind', 'bet', 'ref_id', v_bet.id, 'event', 'resolved', 'question', v_bet.question, 'stake_coins', v_bet.stake_coins)
+    );
   END LOOP;
 END;
 $$;
@@ -1156,30 +1495,19 @@ BEGIN
 
   FOR v_ch IN
     SELECT * FROM p2p_challenges
-    WHERE status = 'disputed'
-      AND dispute_deadline < now()
+    WHERE status = 'disputed' AND dispute_deadline < now()
     ORDER BY created_at
     FOR UPDATE SKIP LOCKED
   LOOP
     BEGIN
-      PERFORM release_escrow(v_ch.challenger_id, v_ch.stake_coins, v_ch.id,
-        jsonb_build_object('reason', 'freeform_dispute_timeout'));
-      PERFORM release_escrow(v_ch.opponent_id, v_ch.stake_coins, v_ch.id,
-        jsonb_build_object('reason', 'freeform_dispute_timeout'));
-
-      UPDATE p2p_challenges
-      SET status      = 'resolved',
-          winner_id   = NULL,
-          resolved_at = now(),
-          updated_at  = now()
-      WHERE id = v_ch.id;
-
+      PERFORM settle_freeform_challenge(v_ch.id, NULL, 'freeform_dispute_timeout');
       v_count := v_count + 1;
     EXCEPTION WHEN OTHERS THEN
       RAISE WARNING 'auto_void_stale_disputes: failed for challenge %: %', v_ch.id, SQLERRM;
     END;
   END LOOP;
 
+  v_count := v_count + settle_due_freeform_challenges();
   RETURN v_count;
 END;
 $$;
@@ -1628,6 +1956,33 @@ $$;
 ALTER FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."clear_joker"("p_league_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_uid   uuid := auth.uid();
+  v_round record;
+BEGIN
+  IF v_uid IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'UNAUTHORIZED', 'error', 'Not signed in');
+  END IF;
+  SELECT * INTO v_round FROM _chips_open_round(p_league_id);
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'DEADLINE_PASSED', 'error', 'Deadline has passed — the Joker is locked.');
+  END IF;
+  -- Only this round's pick can be withdrawn; a past round's joker stays spent.
+  DELETE FROM daily_jokers
+   WHERE user_id = v_uid AND league_id = p_league_id AND matchday_id = v_round.matchday_id;
+  UPDATE squads SET joker_player_id = NULL WHERE user_id = v_uid AND league_id = p_league_id;
+  RETURN jsonb_build_object('ok', true, 'active', false);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."clear_joker"("p_league_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1646,6 +2001,98 @@ $$;
 
 
 ALTER FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."commit_wishlist_draft"("p_league_id" "uuid", "p_round" integer, "p_run_token" "uuid", "p_allocations" "jsonb", "p_participant_count" integer) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_row        wishlist_draft_windows;
+  v_alloc      jsonb;
+  v_squad_id   uuid;
+  v_latest_id  uuid;
+  v_current    text[];
+  v_expected   text[];
+  v_dupe       text;
+  v_carried    int;
+BEGIN
+  SELECT * INTO v_row FROM wishlist_draft_windows
+   WHERE league_id = p_league_id AND round_number = p_round FOR UPDATE;
+  IF v_row.id IS NULL OR v_row.status <> 'running' OR v_row.run_token IS DISTINCT FROM p_run_token THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NOT_RUNNING');
+  END IF;
+
+  PERFORM 1 FROM squads WHERE league_id = p_league_id ORDER BY id FOR UPDATE;
+
+  FOR v_alloc IN SELECT * FROM jsonb_array_elements(COALESCE(p_allocations, '[]'::jsonb)) LOOP
+    v_squad_id := (v_alloc->>'squad_id')::uuid;
+
+    SELECT id INTO v_latest_id FROM squads
+     WHERE league_id = p_league_id AND user_id = (v_alloc->>'user_id')::uuid
+     ORDER BY created_at DESC LIMIT 1;
+    IF v_latest_id IS DISTINCT FROM v_squad_id THEN
+      RETURN jsonb_build_object('ok', false, 'code', 'STALE', 'reason', 'squad row changed', 'squad_id', v_squad_id);
+    END IF;
+
+    SELECT ARRAY(SELECT x FROM unnest(COALESCE(players, ARRAY[]::text[])) x ORDER BY x) INTO v_current
+      FROM squads WHERE id = v_squad_id;
+    SELECT ARRAY(SELECT x FROM jsonb_array_elements_text(COALESCE(v_alloc->'expected_players', '[]'::jsonb)) x ORDER BY x)
+      INTO v_expected;
+    IF v_current IS DISTINCT FROM v_expected THEN
+      RETURN jsonb_build_object('ok', false, 'code', 'STALE', 'reason', 'squad changed since snapshot', 'squad_id', v_squad_id);
+    END IF;
+  END LOOP;
+
+  -- Exclusivity across the final state of every latest squad.
+  WITH latest AS (
+    SELECT DISTINCT ON (user_id) id, players
+      FROM squads WHERE league_id = p_league_id
+     ORDER BY user_id, created_at DESC
+  ),
+  final_rosters AS (
+    SELECT l.id,
+           CASE WHEN a.value IS NOT NULL
+                THEN ARRAY(SELECT jsonb_array_elements_text(a.value->'players'))
+                ELSE COALESCE(l.players, ARRAY[]::text[]) END AS players
+      FROM latest l
+      LEFT JOIN jsonb_array_elements(COALESCE(p_allocations, '[]'::jsonb)) a
+        ON (a.value->>'squad_id')::uuid = l.id
+  )
+  SELECT pid INTO v_dupe
+    FROM final_rosters, unnest(players) pid
+   GROUP BY pid HAVING COUNT(*) > 1
+   LIMIT 1;
+  IF v_dupe IS NOT NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'STALE', 'reason', 'player owned twice', 'player_id', v_dupe);
+  END IF;
+
+  FOR v_alloc IN SELECT * FROM jsonb_array_elements(COALESCE(p_allocations, '[]'::jsonb)) LOOP
+    UPDATE squads
+       SET players          = ARRAY(SELECT jsonb_array_elements_text(v_alloc->'players')),
+           budget_remaining = (v_alloc->>'budget_remaining')::numeric
+     WHERE id = (v_alloc->>'squad_id')::uuid;
+  END LOOP;
+
+  UPDATE wishlist_draft_submissions
+     SET status = 'processed'
+   WHERE league_id = p_league_id AND round_number = p_round AND status = 'pending';
+
+  UPDATE wishlist_draft_windows
+     SET status = 'done', processed_at = NOW(), participant_count = COALESCE(p_participant_count, 0),
+         run_token = NULL
+   WHERE id = v_row.id;
+
+  PERFORM _wishlist_open_market(p_league_id, p_round);
+
+  -- Unfilled targets roll straight into the next round's wishlist.
+  v_carried := _wishlist_carry_over(p_league_id, p_round + 1);
+
+  RETURN jsonb_build_object('ok', true, 'carried_over', v_carried);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."commit_wishlist_draft"("p_league_id" "uuid", "p_round" integer, "p_run_token" "uuid", "p_allocations" "jsonb", "p_participant_count" integer) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") RETURNS "jsonb"
@@ -1796,14 +2243,8 @@ CREATE OR REPLACE FUNCTION "public"."confirm_freeform_result"("p_challenge_id" "
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_uid           uuid := auth.uid();
-  v_ch            p2p_challenges;
-  v_winner_id     uuid;
-  v_loser_id      uuid;
-  v_total_pot     int;
-  v_rake          int;
-  v_prize         int;
-  v_loser_escrow  int;
+  v_uid uuid := auth.uid();
+  v_ch  p2p_challenges;
 BEGIN
   IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
 
@@ -1817,46 +2258,8 @@ BEGIN
     RAISE EXCEPTION 'NOT_PARTICIPANT';
   END IF;
 
-  v_winner_id := v_ch.proposed_winner_id;
-  v_total_pot := v_ch.stake_coins * 2;
-
-  IF v_winner_id IS NULL THEN
-    -- Push: each party's own stake goes back to their own balance.
-    PERFORM release_escrow(v_ch.challenger_id, v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_push'));
-    PERFORM release_escrow(v_ch.opponent_id, v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_push'));
-  ELSE
-    v_loser_id := CASE WHEN v_winner_id = v_ch.challenger_id THEN v_ch.opponent_id ELSE v_ch.challenger_id END;
-    v_rake     := FLOOR(v_total_pot * 0.05);
-    v_prize    := v_total_pot - v_rake;
-
-    PERFORM release_escrow(v_winner_id, v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_resolved'));
-    PERFORM credit_coins(v_winner_id, v_prize - v_ch.stake_coins, 'win', p_challenge_id,
-      jsonb_build_object('reason', 'freeform_won', 'stake', v_ch.stake_coins, 'prize', v_prize, 'rake', v_rake));
-
-    SELECT escrow INTO v_loser_escrow FROM coin_wallets WHERE user_id = v_loser_id FOR UPDATE;
-    IF NOT FOUND THEN RAISE EXCEPTION 'WALLET_NOT_FOUND'; END IF;
-    IF v_loser_escrow < v_ch.stake_coins THEN RAISE EXCEPTION 'INSUFFICIENT_ESCROW'; END IF;
-
-    UPDATE coin_wallets
-    SET escrow = escrow - v_ch.stake_coins, updated_at = now()
-    WHERE user_id = v_loser_id;
-
-    INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
-    VALUES (v_loser_id, 'loss', v_ch.stake_coins, p_challenge_id,
-      jsonb_build_object('reason', 'freeform_lost', 'stake_lost', v_ch.stake_coins));
-  END IF;
-
-  UPDATE p2p_challenges
-  SET status      = 'resolved',
-      winner_id   = v_winner_id,
-      resolved_at = now(),
-      updated_at  = now()
-  WHERE id = p_challenge_id;
-
-  RETURN jsonb_build_object('status', 'resolved', 'winner_id', v_winner_id);
+  PERFORM settle_freeform_challenge(p_challenge_id, v_ch.proposed_winner_id, 'freeform_resolved', v_uid);
+  RETURN jsonb_build_object('status', 'resolved', 'winner_id', v_ch.proposed_winner_id);
 END;
 $$;
 
@@ -2104,6 +2507,12 @@ BEGIN
   INSERT INTO p2p_bet_participants (bet_id, user_id, status, stake_coins, joined_at)
   VALUES (v_bet_id, auth.uid(), 'joined', p_stake_coins, now());
 
+  PERFORM post_bet_activity_message(
+    p_circle_id, auth.uid(),
+    '🎲 New bet: ' || p_question || ' · ' || p_stake_coins || ' coins',
+    jsonb_build_object('ref_kind', 'bet', 'ref_id', v_bet_id, 'event', 'created', 'question', p_question, 'stake_coins', p_stake_coins)
+  );
+
   RETURN v_bet_id;
 END;
 $$;
@@ -2289,6 +2698,12 @@ BEGIN
     AND challenge_id IS NULL
     AND created_at > now() - interval '5 seconds';
 
+  PERFORM post_bet_activity_message(
+    p_circle_id, v_challenger_id,
+    '⚔ New challenge: ' || COALESCE(p_question, 'GW ' || p_matchday_id) || ' · ' || p_stake_coins || ' coins',
+    jsonb_build_object('ref_kind', 'challenge', 'ref_id', v_challenge_id, 'event', 'created', 'question', COALESCE(p_question, 'GW ' || p_matchday_id), 'stake_coins', p_stake_coins)
+  );
+
   RETURN jsonb_build_object('challenge_id', v_challenge_id);
 END;
 $$;
@@ -2375,6 +2790,116 @@ $$;
 ALTER FUNCTION "public"."create_player_box"("p_name" "text", "p_season_year" integer, "p_circle_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."create_wishlist_draft_round"("p_league_id" "uuid", "p_round" integer, "p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_row      wishlist_draft_windows;
+  v_mode     text;
+  v_seed     int;
+  v_deadline timestamptz;
+  v_carried  int := 0;
+  v_preset   jsonb;
+  v_preset_at timestamptz;
+  v_time     timestamptz;
+  v_cap      timestamptz;
+BEGIN
+  SELECT * INTO v_row FROM wishlist_draft_windows WHERE league_id = p_league_id AND round_number = p_round;
+  IF v_row.id IS NOT NULL THEN
+    RETURN jsonb_build_object('ok', true, 'created', false, 'mode', v_row.mode, 'status', v_row.status);
+  END IF;
+
+  IF NOT _wishlist_is_draft_league(p_league_id) THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'not a draft-mode league');
+  END IF;
+
+  v_mode := _wishlist_default_mode(p_league_id);
+
+  -- Commissioner pre-set this round's auto time before the window existed
+  -- (set_wishlist_next_draft). It wins over the league default.
+  SELECT config_value INTO v_preset
+    FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_next_preset';
+  IF v_preset IS NOT NULL AND (v_preset->>'round')::int = p_round THEN
+    v_mode      := 'auto';
+    v_preset_at := (v_preset->>'at')::timestamptz;
+  END IF;
+
+  -- Per-league constant seed, carried forward (see migration 253).
+  SELECT snake_order_seed INTO v_seed
+    FROM wishlist_draft_windows WHERE league_id = p_league_id
+   ORDER BY round_number DESC LIMIT 1;
+  v_seed := COALESCE(v_seed, floor(random() * 1000000)::int);
+
+  v_deadline := p_first_kickoff - interval '8 hours';
+
+  IF v_mode = 'auto' THEN
+    v_cap := p_first_kickoff - interval '15 minutes';
+    IF v_preset_at IS NOT NULL
+       AND v_preset_at >= NOW() + interval '6 hours' - interval '1 minute'
+       AND (v_cap IS NULL OR v_preset_at <= v_cap) THEN
+      v_time := v_preset_at;
+    ELSE
+      v_time := _wishlist_suggested_draft_at(p_round_ended_at, p_first_kickoff);
+      IF v_preset_at IS NOT NULL THEN
+        v_time := GREATEST(v_time, NOW() + interval '6 hours');
+        IF v_cap IS NOT NULL THEN v_time := LEAST(v_time, v_cap); END IF;
+      END IF;
+    END IF;
+  END IF;
+
+  INSERT INTO wishlist_draft_windows
+    (league_id, round_number, snake_order_seed, mode, status, scheduled_at,
+     hard_deadline_at, first_kickoff_at, round_ended_at)
+  VALUES
+    (p_league_id, p_round, v_seed, v_mode, 'scheduled', v_time,
+     v_deadline, p_first_kickoff, p_round_ended_at)
+  ON CONFLICT (league_id, round_number) DO NOTHING
+  RETURNING * INTO v_row;
+
+  IF v_row.id IS NULL THEN
+    -- Lost a race with a concurrent caller — their row stands.
+    RETURN jsonb_build_object('ok', true, 'created', false);
+  END IF;
+
+  v_carried := _wishlist_carry_over(p_league_id, p_round);
+
+  IF v_preset IS NOT NULL THEN
+    DELETE FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_next_preset';
+    IF v_preset_at IS NOT NULL THEN
+      INSERT INTO wishlist_draft_mode_changes
+        (league_id, round_number, scope, from_mode, to_mode, to_scheduled_at)
+      VALUES (p_league_id, p_round, 'round', NULL, 'auto', v_time);
+      PERFORM _wishlist_notify_members(
+        p_league_id, 'wishlist_draft_mode', 'Wishlist draft scheduled',
+        'Round ' || p_round || ' draft runs at ' || to_char(v_time AT TIME ZONE 'UTC', 'Dy DD Mon HH24:MI')
+          || ' UTC. Market closed until then (trades still allowed).',
+        NULL);
+      IF v_time IS DISTINCT FROM v_preset_at THEN
+        PERFORM _wishlist_notify_members(
+          p_league_id, 'wishlist_draft_mode', 'Wishlist draft time adjusted',
+          'The time you pre-set for round ' || p_round || ' no longer fit before kickoff, so the draft was moved to '
+            || to_char(v_time AT TIME ZONE 'UTC', 'Dy DD Mon HH24:MI') || ' UTC.',
+          NULL, true);
+      END IF;
+    END IF;
+  END IF;
+
+  IF v_mode = 'disabled' THEN
+    PERFORM _wishlist_open_market(p_league_id, p_round);
+  END IF;
+
+  RETURN jsonb_build_object(
+    'ok', true, 'created', true, 'mode', v_mode,
+    'scheduled_at', v_row.scheduled_at, 'hard_deadline_at', v_row.hard_deadline_at,
+    'carried_over', v_carried
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."create_wishlist_draft_round"("p_league_id" "uuid", "p_round" integer, "p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text" DEFAULT 'admin'::"text", "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_currency" character DEFAULT 'FRC'::"bpchar", "p_reference_id" "text" DEFAULT NULL::"text", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -2399,6 +2924,29 @@ $$;
 
 
 ALTER FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."cron_sync_active_tournaments"("p_function_name" "text") RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+  t RECORD;
+BEGIN
+  FOR t IN SELECT forza_id FROM tournaments WHERE sync_enabled = true LOOP
+    PERFORM net.http_post(
+      url     := 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1/' || p_function_name,
+      headers := jsonb_build_object(
+        'Content-Type',  'application/json',
+        'Authorization', 'Bearer 2c14ee53da250cd66c4f55413c766482b8a95f41e62548f9b9262165c13b0c60'
+      ),
+      body    := jsonb_build_object('forza_id', t.forza_id)
+    );
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."cron_sync_active_tournaments"("p_function_name" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid" DEFAULT NULL::"uuid", "p_meta" "jsonb" DEFAULT '{}'::"jsonb", "p_bet_id" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
@@ -2480,7 +3028,7 @@ BEGIN
   END IF;
 
   UPDATE p2p_bets
-  SET declared_by = auth.uid(), declared_at = now(), objection_deadline = now() + interval '48 hours', updated_at = now()
+  SET declared_by = auth.uid(), declared_at = now(), objection_deadline = now() + interval '24 hours', updated_at = now()
   WHERE id = p_bet_id;
 END;
 $$;
@@ -2514,12 +3062,12 @@ BEGIN
   UPDATE p2p_challenges
   SET proposed_winner_id = p_winner_id,
       proposed_by        = v_uid,
-      proposed_at         = now(),
-      dispute_deadline    = now() + interval '7 days',
-      updated_at          = now()
+      proposed_at        = now(),
+      dispute_deadline   = now() + interval '24 hours',
+      updated_at         = now()
   WHERE id = p_challenge_id;
 
-  RETURN jsonb_build_object('ok', true);
+  RETURN jsonb_build_object('ok', true, 'objection_deadline', now() + interval '24 hours');
 END;
 $$;
 
@@ -2898,21 +3446,17 @@ BEGIN
   IF v_uid NOT IN (v_ch.challenger_id, v_ch.opponent_id) THEN
     RAISE EXCEPTION 'NOT_PARTICIPANT';
   END IF;
+  IF v_ch.dispute_deadline IS NOT NULL AND v_ch.dispute_deadline <= now() THEN
+    RAISE EXCEPTION 'OBJECTION_WINDOW_CLOSED';
+  END IF;
 
   UPDATE p2p_challenges
-  SET status           = 'disputed',
-      dispute_deadline = now() + interval '7 days',
-      updated_at       = now()
+  SET status = 'disputed', dispute_deadline = now() + interval '7 days', updated_at = now()
   WHERE id = p_challenge_id;
 
   INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
-  SELECT
-    v_ch.circle_id,
-    cm.user_id,
-    'p2p_challenge',
-    p_challenge_id,
-    'arbitration_needed',
-    jsonb_build_object('question', v_ch.question, 'stake_coins', v_ch.stake_coins)
+  SELECT v_ch.circle_id, cm.user_id, 'p2p_challenge', p_challenge_id, 'arbitration_needed',
+         jsonb_build_object('question', v_ch.question, 'stake_coins', v_ch.stake_coins)
   FROM circle_members cm
   WHERE cm.circle_id = v_ch.circle_id AND cm.role = 'owner';
 
@@ -3690,21 +4234,52 @@ CREATE OR REPLACE FUNCTION "public"."finalize_declared_bets"() RETURNS "void"
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_bet_id uuid;
+  v_bet RECORD;
 BEGIN
   IF auth.uid() IS NOT NULL THEN
     RAISE EXCEPTION 'ADMIN_ONLY';
   END IF;
 
-  FOR v_bet_id IN
-    SELECT id FROM p2p_bets
+  -- Declared, objection window passed -> pay out
+  FOR v_bet IN
+    SELECT id, circle_id, creator_id, question, stake_coins FROM p2p_bets
     WHERE status = 'closed' AND declared_at IS NOT NULL AND objection_deadline <= now()
     FOR UPDATE SKIP LOCKED
   LOOP
-    UPDATE p2p_bet_participants SET is_winner = declared_correct WHERE bet_id = v_bet_id;
-    PERFORM settle_bet_coins(v_bet_id);
-    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet_id;
+    UPDATE p2p_bet_participants SET is_winner = declared_correct WHERE bet_id = v_bet.id;
+    PERFORM settle_bet_coins(v_bet.id);
+    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet.id;
+    PERFORM post_bet_activity_message(
+      v_bet.circle_id, v_bet.creator_id,
+      '✅ Bet resolved: ' || v_bet.question,
+      jsonb_build_object('ref_kind', 'bet', 'ref_id', v_bet.id, 'event', 'resolved', 'question', v_bet.question, 'stake_coins', v_bet.stake_coins)
+    );
   END LOOP;
+
+  -- Nobody declared within 7 days of closing -> void, everyone gets their stake back
+  FOR v_bet IN
+    SELECT id, circle_id, creator_id, question, stake_coins FROM p2p_bets
+    WHERE status = 'closed' AND declared_at IS NULL AND updated_at <= now() - interval '7 days'
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    UPDATE p2p_bet_participants SET is_winner = false, declared_correct = false WHERE bet_id = v_bet.id;
+    PERFORM settle_bet_coins(v_bet.id);
+    UPDATE p2p_bets SET status = 'resolved', resolved_at = now(), updated_at = now() WHERE id = v_bet.id;
+    PERFORM post_bet_activity_message(
+      v_bet.circle_id, v_bet.creator_id,
+      '⚖️ Bet voided (no result declared, stakes returned): ' || v_bet.question,
+      jsonb_build_object('ref_kind', 'bet', 'ref_id', v_bet.id, 'event', 'resolved', 'question', v_bet.question, 'stake_coins', v_bet.stake_coins)
+    );
+  END LOOP;
+
+  -- Reminder to the creator after 3 days, once
+  INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
+  SELECT b.circle_id, b.creator_id, 'p2p_bet', b.id, 'result_needed',
+         jsonb_build_object('bet_id', b.id, 'question', b.question)
+  FROM p2p_bets b
+  WHERE b.status = 'closed' AND b.declared_at IS NULL AND b.updated_at <= now() - interval '3 days'
+    AND NOT EXISTS (SELECT 1 FROM clubhouse_notifications n
+                    WHERE n.source_id = b.id AND n.type = 'result_needed');
 END;
 $$;
 
@@ -3864,10 +4439,6 @@ $$;
 
 ALTER FUNCTION "public"."get_active_matchday_id"("p_tournament_id" "text") OWNER TO "postgres";
 
-SET default_tablespace = '';
-
-SET default_table_access_method = "heap";
-
 
 CREATE TABLE IF NOT EXISTS "public"."transfer_windows" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3898,6 +4469,28 @@ $$;
 
 
 ALTER FUNCTION "public"."get_active_transfer_window"("p_league_id" "uuid", "p_at" timestamp with time zone) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_bet_invite_preview"("p_bet_id" "uuid") RETURNS json
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT json_build_object(
+    'bet_id',       b.id,
+    'question',     b.question,
+    'stake_coins',  b.stake_coins,
+    'ends_at',      b.ends_at,
+    'sender',       u.username,
+    'clubhouse',    c.name
+  )
+  FROM p2p_bets b
+  JOIN circles c ON c.id = b.circle_id
+  LEFT JOIN users u ON u.id = b.creator_id
+  WHERE b.id = p_bet_id AND b.status = 'open';
+$$;
+
+
+ALTER FUNCTION "public"."get_bet_invite_preview"("p_bet_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") RETURNS json
@@ -4168,13 +4761,16 @@ BEGIN
   RETURN json_build_object(
     'football', (
       SELECT COALESCE(json_agg(json_build_object(
-        'id',     l.id,
-        'name',   l.name,
-        'format', l.format,
-        'sport',  'football'
+        'id',       l.id,
+        'name',     l.name,
+        'format',   l.format,
+        'sport',    'football',
+        'archived', l.archived,
+        'finished', COALESCE(t.status = 'completed', false)
       ) ORDER BY l.name), '[]'::json)
       FROM circle_leagues cl
       JOIN leagues l ON l.id = cl.league_id
+      LEFT JOIN tournaments t ON t.forza_id = l.tournament_id
       WHERE cl.circle_id = p_circle_id
     ),
     'f1', (
@@ -4274,6 +4870,10 @@ CREATE OR REPLACE FUNCTION "public"."get_cron_failure_streaks"("p_threshold" int
       d.return_message,
       ROW_NUMBER() OVER (PARTITION BY d.jobid ORDER BY d.start_time DESC) AS rn
     FROM cron.job_run_details d
+    -- Bounded scan via the primary key (runid grows with time): ~2,100 runs/day, so
+    -- 20,000 runs is ~9 days — plenty for >= p_threshold runs of even a daily job.
+    -- The unbounded version sorted the whole table and hit the 8s API statement timeout.
+    WHERE d.runid > (SELECT COALESCE(MAX(runid), 0) - 20000 FROM cron.job_run_details)
   ),
   first_success AS (
     SELECT jobid, MIN(rn) AS first_ok_rn
@@ -4471,6 +5071,45 @@ $$;
 ALTER FUNCTION "public"."get_h2h_standings"("p_league_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_league_market_events"("p_league_id" "uuid") RETURNS TABLE("id" "uuid", "user_id" "uuid", "event_type" "text", "matchday_id" "text", "player_in" "text", "player_out" "text", "price" numeric, "event_at" timestamp with time zone)
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $_$
+BEGIN
+  IF NOT public.is_league_member(p_league_id) THEN
+    RAISE EXCEPTION 'not a member of this league';
+  END IF;
+
+  RETURN QUERY
+  SELECT e.id, e.user_id, e.event_type, e.matchday_id, e.player_in, e.player_out,
+         NULLIF(e.meta ->> 'price', '')::numeric, e.event_at
+    FROM public.squad_events e
+    LEFT JOIN LATERAL (
+      SELECT d.deadline_at
+        FROM public.matchday_deadlines d
+       WHERE d.matchday_id = e.matchday_id
+       ORDER BY d.deadline_at
+       LIMIT 1
+    ) md ON true
+    LEFT JOIN LATERAL (
+      SELECT w.closes_at
+        FROM public.transfer_windows w
+       WHERE w.league_id = e.league_id
+         AND w.round_number = NULLIF(substring(e.matchday_id from '-r(\d+)$'), '')::int
+       ORDER BY w.closes_at
+       LIMIT 1
+    ) tw ON true
+   WHERE e.league_id = p_league_id
+     AND e.event_type IN ('transfer_buy', 'transfer_sell')
+     AND COALESCE(md.deadline_at, tw.closes_at) <= now()
+   ORDER BY e.event_at DESC;
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."get_league_market_events"("p_league_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_league_stats"("p_league_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -4570,6 +5209,98 @@ $$;
 ALTER FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_my_chips"("p_league_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_uid       uuid := auth.uid();
+  v_round     record;
+  v_has_round boolean;
+  v_disabled  jsonb;
+  v_chips     jsonb := '{}'::jsonb;
+  v_type      text;
+  v_row       record;
+  v_status    text;
+  v_cap_active boolean;
+  v_joker     record;
+  v_jname     text;
+BEGIN
+  IF v_uid IS NULL OR NOT EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_uid
+  ) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'UNAUTHORIZED', 'error', 'Not a member of this league');
+  END IF;
+
+  SELECT * INTO v_round FROM _chips_open_round(p_league_id);
+  v_has_round := FOUND;
+
+  SELECT CASE WHEN jsonb_typeof(config_value) = 'array' THEN config_value ELSE '[]'::jsonb END
+    INTO v_disabled FROM league_config
+   WHERE league_id = p_league_id AND config_key = 'chips_disabled';
+  v_disabled := COALESCE(v_disabled, '[]'::jsonb);
+
+  -- A captain chip already active this round blocks the other one.
+  SELECT EXISTS (
+    SELECT 1 FROM chips_used
+     WHERE user_id = v_uid AND league_id = p_league_id
+       AND chip_type IN ('triple_captain', 'max_cap')
+       AND v_has_round AND matchday_id = v_round.matchday_id
+  ) INTO v_cap_active;
+
+  FOREACH v_type IN ARRAY ARRAY['triple_captain', 'max_cap'] LOOP
+    SELECT * INTO v_row FROM chips_used
+     WHERE user_id = v_uid AND league_id = p_league_id AND chip_type = v_type;
+    IF FOUND AND v_has_round AND v_row.matchday_id = v_round.matchday_id THEN
+      v_status := 'active';
+    ELSIF FOUND THEN
+      v_status := 'used';
+    ELSIF v_disabled @> to_jsonb(v_type) THEN
+      v_status := 'disabled';
+    ELSIF NOT v_has_round THEN
+      v_status := 'locked';
+    ELSIF v_cap_active THEN
+      v_status := 'blocked';
+    ELSE
+      v_status := 'available';
+    END IF;
+    v_chips := v_chips || jsonb_build_object(v_type, jsonb_build_object(
+      'status', v_status, 'matchday_id', CASE WHEN FOUND THEN v_row.matchday_id END));
+  END LOOP;
+
+  -- Joker: once per tournament — any row for this league means it has been spent.
+  SELECT * INTO v_joker FROM daily_jokers
+   WHERE user_id = v_uid AND league_id = p_league_id
+   ORDER BY created_at DESC LIMIT 1;
+  IF FOUND THEN
+    SELECT name INTO v_jname FROM players WHERE id = v_joker.player_id;
+    v_status := CASE WHEN v_has_round AND v_joker.matchday_id = v_round.matchday_id THEN 'active' ELSE 'used' END;
+  ELSIF v_disabled @> '"joker"'::jsonb THEN
+    v_status := 'disabled';
+  ELSIF NOT v_has_round THEN
+    v_status := 'locked';
+  ELSE
+    v_status := 'available';
+  END IF;
+  v_chips := v_chips || jsonb_build_object('joker', jsonb_build_object(
+    'status', v_status,
+    'matchday_id', v_joker.matchday_id,
+    'player_id', v_joker.player_id,
+    'player_name', v_jname));
+
+  RETURN jsonb_build_object(
+    'ok', true,
+    'round', CASE WHEN v_has_round THEN jsonb_build_object(
+               'matchday_id', v_round.matchday_id, 'deadline_at', v_round.deadline_at) END,
+    'disabled', v_disabled,
+    'chips', v_chips);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_my_chips"("p_league_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_my_circles"() RETURNS TABLE("id" "uuid", "name" "text")
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -4577,7 +5308,7 @@ CREATE OR REPLACE FUNCTION "public"."get_my_circles"() RETURNS TABLE("id" "uuid"
   SELECT c.id, c.name
   FROM circles c
   JOIN circle_members cm ON cm.circle_id = c.id
-  WHERE cm.user_id = auth.uid()
+  WHERE cm.user_id = auth.uid() AND c.archived = false
   ORDER BY c.name;
 $$;
 
@@ -4998,6 +5729,91 @@ $$;
 ALTER FUNCTION "public"."get_player_box_leaderboard"("p_player_box_id" "uuid", "p_season_year" integer) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_score_discrepancies"("p_matchday_id" "text" DEFAULT NULL::"text") RETURNS TABLE("squad_id" "uuid", "league_id" "uuid", "matchday_id" "text", "stored_total" numeric, "recomputed_total" numeric, "diff" numeric)
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  WITH frozen AS (
+    SELECT
+      fp.squad_id,
+      s.league_id,
+      fp.matchday_id,
+      fp.total AS stored_total,
+      fp.points_breakdown->>'effective_captain_id' AS captain_id,
+      COALESCE((fp.points_breakdown->>'is_triple_captain')::boolean, false) AS is_tc,
+      fp.points_breakdown->>'joker_player_id' AS joker_id,
+      COALESCE((fp.points_breakdown->>'transfer_penalty_deduction')::numeric, 0) AS penalty_ded,
+      fp.points_breakdown->'effective_xi' AS xi_json
+    FROM fantasy_points fp
+    JOIN squads s ON s.id = fp.squad_id
+    WHERE fp.points_breakdown->'effective_xi' IS NOT NULL
+      AND (p_matchday_id IS NULL OR fp.matchday_id = p_matchday_id)
+  ),
+  round_fixtures AS (
+    SELECT DISTINCT matchday_id, id AS fixture_id
+    FROM fixtures
+    WHERE p_matchday_id IS NULL OR matchday_id = p_matchday_id
+  ),
+  xi_expanded AS (
+    SELECT squad_id, matchday_id, jsonb_array_elements_text(xi_json) AS player_id
+    FROM frozen
+  ),
+  xi_scored AS (
+    SELECT
+      x.squad_id,
+      x.matchday_id,
+      x.player_id,
+      COALESCE(pms.fantasy_points, 0) AS raw_pts
+    FROM xi_expanded x
+    LEFT JOIN round_fixtures rf ON rf.matchday_id = x.matchday_id
+    LEFT JOIN player_match_stats pms
+      ON pms.player_id = x.player_id AND pms.fixture_id = rf.fixture_id
+  ),
+  xi_totals AS (
+    SELECT
+      xs.squad_id,
+      xs.matchday_id,
+      SUM(
+        ROUND(xs.raw_pts) *
+        CASE
+          WHEN xs.player_id = f.captain_id THEN (CASE WHEN f.is_tc THEN 3 ELSE 2 END)
+          ELSE 1
+        END
+      ) AS xi_total
+    FROM xi_scored xs
+    JOIN frozen f ON f.squad_id = xs.squad_id AND f.matchday_id = xs.matchday_id
+    GROUP BY xs.squad_id, xs.matchday_id
+  ),
+  joker_pts AS (
+    SELECT
+      f.squad_id,
+      f.matchday_id,
+      COALESCE(ROUND(SUM(pms.fantasy_points)), 0) AS joker_total
+    FROM frozen f
+    LEFT JOIN round_fixtures rf ON rf.matchday_id = f.matchday_id
+    LEFT JOIN player_match_stats pms
+      ON pms.player_id = f.joker_id AND pms.fixture_id = rf.fixture_id
+    WHERE f.joker_id IS NOT NULL
+    GROUP BY f.squad_id, f.matchday_id
+  )
+  SELECT
+    f.squad_id,
+    f.league_id,
+    f.matchday_id,
+    f.stored_total,
+    (xt.xi_total + COALESCE(jp.joker_total, 0) - f.penalty_ded) AS recomputed_total,
+    (f.stored_total - (xt.xi_total + COALESCE(jp.joker_total, 0) - f.penalty_ded)) AS diff
+  FROM frozen f
+  JOIN xi_totals xt ON xt.squad_id = f.squad_id AND xt.matchday_id = f.matchday_id
+  LEFT JOIN joker_pts jp ON jp.squad_id = f.squad_id AND jp.matchday_id = f.matchday_id
+  WHERE f.stored_total <> (xt.xi_total + COALESCE(jp.joker_total, 0) - f.penalty_ded)
+  ORDER BY f.matchday_id, ABS(f.stored_total - (xt.xi_total + COALESCE(jp.joker_total, 0) - f.penalty_ded)) DESC;
+$$;
+
+
+ALTER FUNCTION "public"."get_score_discrepancies"("p_matchday_id" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_server_time"() RETURNS timestamp with time zone
     LANGUAGE "sql" STABLE
     AS $$
@@ -5182,8 +5998,11 @@ CREATE OR REPLACE FUNCTION "public"."get_transfer_window_status"("p_league_id" "
     AS $$
 DECLARE
   win                   transfer_windows;
+  v_wl                  wishlist_draft_windows;
   v_tournament_id       text;
   v_league_mode         text;
+  v_is_dry_run          boolean;
+  v_wishlist_gated      boolean := false;
   v_prev_deadline       timestamptz;
   v_prev_matchday_id    text;
   v_next_deadline       timestamptz;
@@ -5195,6 +6014,25 @@ DECLARE
   v_active_round_suffix text;
   v_knockout_unlimited  boolean := false;
 BEGIN
+  IF _wishlist_is_draft_league(p_league_id) THEN
+    v_wl := _wishlist_pending_window(p_league_id);
+    IF v_wl.id IS NOT NULL AND v_wl.mode IN ('manual', 'auto') THEN
+      RETURN json_build_object(
+        'status',         'upcoming',
+        'window_type',    CASE WHEN v_wl.status = 'running' THEN 'wishlist_running' ELSE 'wishlist' END,
+        'opens_at',       CASE WHEN v_wl.mode = 'auto' THEN COALESCE(v_wl.scheduled_at, v_wl.hard_deadline_at)
+                               ELSE v_wl.hard_deadline_at END,
+        'draft_mode',     v_wl.mode,
+        'round_number',   v_wl.round_number,
+        'trades_allowed', v_wl.status = 'scheduled'
+      );
+    END IF;
+
+    SELECT is_dry_run INTO v_is_dry_run FROM leagues WHERE id = p_league_id;
+    v_wishlist_gated := NOT COALESCE(v_is_dry_run, false)
+                        AND _wishlist_default_mode(p_league_id) <> 'disabled';
+  END IF;
+
   SELECT (config_value #>> '{}')::int INTO v_reopen_hours
     FROM league_config
    WHERE league_id = p_league_id AND config_key = 'transfer_reopen_hours';
@@ -5231,8 +6069,6 @@ BEGIN
    WHERE tournament_id = v_tournament_id AND deadline_at > NOW()
    ORDER BY deadline_at ASC LIMIT 1;
 
-  -- Active round for the unlimited-transfers check: the round about to be played
-  -- (next deadline's matchday_id) if known, else the round that just closed.
   v_active_round_suffix := split_part(COALESCE(v_next_matchday_id, v_prev_matchday_id, ''), '-', 2);
   IF v_league_mode = 'classic' AND v_active_round_suffix <> '' THEN
     SELECT unlimited_transfers INTO v_knockout_unlimited
@@ -5279,6 +6115,12 @@ BEGIN
   END IF;
 
   IF NOW() >= v_reopen_at THEN
+    IF v_wishlist_gated THEN
+      -- Round finished but its wishlist window hasn't been created yet (the
+      -- runner ticks every 15–30 min) or the market for this round already
+      -- closed at kickoff − 1h. Stay closed; the runner opens it.
+      RETURN json_build_object('status', 'upcoming', 'opens_at', NULL, 'window_type', 'wishlist_pending');
+    END IF;
     IF v_next_deadline IS NOT NULL THEN
       RETURN json_build_object(
         'status', 'open', 'closes_at', v_next_deadline,
@@ -5381,57 +6223,81 @@ CREATE OR REPLACE FUNCTION "public"."get_wishlist_draft_status"("p_league_id" "u
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 DECLARE
-  v_tournament_id uuid;
-  v_format        text;
-  v_league_mode   text;
-  v_round         int;
-  v_processed_at  timestamptz;
-  v_max_targets   int := 10;
-  v_max_drops     int := 5;
-  v_enabled       text;
+  v_tournament_id  text;
+  v_round          int;
+  v_last_finished  int;
+  v_max_row_round  int;
+  v_row            wishlist_draft_windows;
+  v_max_targets    int;
+  v_max_drops      int;
+  v_default_mode   text;
+  v_phase          text;
+  v_carried_from   int;
+  v_is_comm        boolean;
 BEGIN
-  SELECT tournament_id, format, league_mode INTO v_tournament_id, v_format, v_league_mode
-    FROM leagues WHERE id = p_league_id;
-
+  SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id;
   IF v_tournament_id IS NULL THEN
     RETURN jsonb_build_object('available', false, 'reason', 'league not found');
   END IF;
 
-  IF v_format IS DISTINCT FROM 'noduplicate' AND v_league_mode IS DISTINCT FROM 'draft' THEN
+  IF NOT _wishlist_is_draft_league(p_league_id) THEN
     RETURN jsonb_build_object('available', false, 'reason', 'not a draft-mode league');
   END IF;
 
-  SELECT (config_value #>> '{}') INTO v_enabled
-    FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_enabled';
-  IF v_enabled = 'false' THEN
-    RETURN jsonb_build_object('available', false, 'reason', 'disabled for this league');
+  v_default_mode := _wishlist_default_mode(p_league_id);
+  v_row          := _wishlist_pending_window(p_league_id);
+
+  IF v_row.id IS NOT NULL THEN
+    v_round := v_row.round_number;
+    v_phase := CASE
+      WHEN v_row.status = 'running' THEN 'running'
+      WHEN v_row.mode   = 'disabled' THEN 'free_market'
+      ELSE 'pre_draft' END;
+  ELSE
+    SELECT MAX(round_number) INTO v_last_finished
+      FROM fixtures WHERE tournament_id = v_tournament_id AND status = 'finished';
+    SELECT MAX(round_number) INTO v_max_row_round
+      FROM wishlist_draft_windows WHERE league_id = p_league_id;
+
+    IF v_last_finished IS NULL AND v_max_row_round IS NULL THEN
+      RETURN jsonb_build_object('available', false, 'reason', 'no completed round yet');
+    END IF;
+    v_round := GREATEST(COALESCE(v_last_finished, 0) + 1, COALESCE(v_max_row_round, 0) + 1);
+    -- Next round's window doesn't exist yet: the market (if open) belongs to
+    -- the current round, and the next round will use the league default.
+    v_phase := 'awaiting_round';
   END IF;
-
-  SELECT MAX(round_number) INTO v_round
-    FROM fixtures WHERE tournament_id = v_tournament_id AND status = 'finished';
-
-  IF v_round IS NULL THEN
-    RETURN jsonb_build_object('available', false, 'reason', 'no completed round yet');
-  END IF;
-  v_round := v_round + 1;
-
-  SELECT processed_at INTO v_processed_at
-    FROM wishlist_draft_windows
-   WHERE league_id = p_league_id AND round_number = v_round;
 
   SELECT (config_value #>> '{}')::int INTO v_max_targets
     FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_max_targets';
-  IF v_max_targets IS NULL THEN v_max_targets := 10; END IF;
-
   SELECT (config_value #>> '{}')::int INTO v_max_drops
     FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_max_drops';
-  IF v_max_drops IS NULL THEN v_max_drops := 5; END IF;
+
+  SELECT carried_over_from INTO v_carried_from
+    FROM wishlist_draft_submissions
+   WHERE league_id = p_league_id AND user_id = auth.uid() AND round_number = v_round;
+
+  v_is_comm := EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = auth.uid() AND role = 'commissioner'
+  );
 
   RETURN jsonb_build_object(
-    'available',    v_processed_at IS NULL,
-    'round_number', v_round,
-    'max_targets',  v_max_targets,
-    'max_drops',    v_max_drops
+    'available',           true,
+    'round_number',        v_round,
+    'max_targets',         COALESCE(v_max_targets, 10),
+    'max_drops',           COALESCE(v_max_drops, 5),
+    'phase',               v_phase,
+    'mode',                COALESCE(v_row.mode, v_default_mode),
+    'default_mode',        v_default_mode,
+    'scheduled_at',        v_row.scheduled_at,
+    'hard_deadline_at',    v_row.hard_deadline_at,
+    'first_kickoff_at',    v_row.first_kickoff_at,
+    'round_ended_at',      v_row.round_ended_at,
+    'run_requested_at',    v_row.run_requested_at,
+    'carried_over_from',   v_carried_from,
+    'is_commissioner',     v_is_comm,
+    'transfers_in_window', CASE WHEN v_row.id IS NOT NULL
+                                THEN _wishlist_transfers_in_window(p_league_id, v_row.created_at) ELSE 0 END
   );
 END;
 $$;
@@ -5440,12 +6306,55 @@ $$;
 ALTER FUNCTION "public"."get_wishlist_draft_status"("p_league_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_wishlist_next_draft"("p_league_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    AS $$
+DECLARE
+  v_round    int;
+  v_kickoff  timestamptz;
+  v_preset   jsonb;
+BEGIN
+  IF auth.uid() IS NULL OR NOT EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = auth.uid() AND role = 'commissioner'
+  ) THEN
+    RETURN jsonb_build_object('available', false, 'reason', 'commissioner only');
+  END IF;
+  IF NOT _wishlist_is_draft_league(p_league_id) OR (_wishlist_pending_window(p_league_id)).id IS NOT NULL THEN
+    RETURN jsonb_build_object('available', false, 'reason', 'not applicable');
+  END IF;
+  v_round := _wishlist_next_round(p_league_id);
+  IF v_round IS NULL THEN RETURN jsonb_build_object('available', false, 'reason', 'no round yet'); END IF;
+
+  SELECT MIN(f.kickoff_at) INTO v_kickoff
+    FROM fixtures f JOIN leagues l ON l.tournament_id = f.tournament_id
+   WHERE l.id = p_league_id AND f.round_number = v_round;
+
+  SELECT config_value INTO v_preset
+    FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_next_preset';
+  IF v_preset IS NOT NULL AND (v_preset->>'round')::int <> v_round THEN v_preset := NULL; END IF;
+
+  RETURN jsonb_build_object(
+    'available', true, 'round_number', v_round,
+    'first_kickoff_at', v_kickoff,
+    'latest_at', v_kickoff - interval '15 minutes',
+    'preset_at', v_preset->>'at'
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_wishlist_next_draft"("p_league_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."guard_coin_columns"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 BEGIN
   IF current_user IN ('authenticated', 'anon') THEN
     RAISE EXCEPTION 'DIRECT_WRITE_BLOCKED: coin balance can only change via credit_coins() / debit_coins_to_escrow() RPCs';
+  END IF;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
   END IF;
   RETURN NEW;
 END;
@@ -5744,7 +6653,7 @@ BEGIN
 
   SELECT id INTO v_circle_id
   FROM circles
-  WHERE invite_code = trim(p_code);
+  WHERE lower(invite_code) = lower(trim(p_code));
 
   IF v_circle_id IS NULL THEN
     RETURN json_build_object('error', 'INVALID_CODE');
@@ -5948,7 +6857,7 @@ CREATE OR REPLACE FUNCTION "public"."join_paddock_by_code"("p_code" "text") RETU
 DECLARE
   v_paddock_id uuid;
 BEGIN
-  SELECT id INTO v_paddock_id FROM paddocks WHERE invite_code = upper(p_code);
+  SELECT id INTO v_paddock_id FROM paddocks WHERE lower(invite_code) = lower(p_code);
   IF v_paddock_id IS NULL THEN RAISE EXCEPTION 'PADDOCK_NOT_FOUND'; END IF;
 
   INSERT INTO paddock_members (paddock_id, user_id, role)
@@ -6305,7 +7214,7 @@ ALTER FUNCTION "public"."notify_league_on_bet_creation"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."notify_on_direct_message"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 BEGIN
@@ -6331,7 +7240,7 @@ ALTER FUNCTION "public"."notify_on_direct_message"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."notify_on_frontpage_edition"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 BEGIN
@@ -6357,7 +7266,7 @@ ALTER FUNCTION "public"."notify_on_frontpage_edition"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."notify_on_gazette_breaking_news"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 BEGIN
@@ -6450,6 +7359,28 @@ $$;
 ALTER FUNCTION "public"."place_bid"("p_listing_id" "uuid", "p_bid_amount" numeric) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_channel_id uuid;
+BEGIN
+  SELECT id INTO v_channel_id FROM clubhouse_channels
+  WHERE circle_id = p_circle_id AND is_default = true LIMIT 1;
+  IF v_channel_id IS NULL THEN RETURN; END IF;
+
+  INSERT INTO clubhouse_messages (channel_id, user_id, content, kind, bet_ref)
+  VALUES (v_channel_id, p_user_id, p_content, 'bet_activity', p_bet_ref);
+EXCEPTION WHEN OTHERS THEN
+  NULL; -- messaging must never block a bet/challenge/coin operation
+END;
+$$;
+
+
+ALTER FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."preserve_manual_matchday_id"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
@@ -6465,6 +7396,32 @@ $$;
 
 
 ALTER FUNCTION "public"."preserve_manual_matchday_id"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."prevent_relaxation_disable_after_shared_ownership"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+  current_tier INT;
+BEGIN
+  IF NEW.config_key = 'relaxation_formula_enabled'
+     AND (NEW.config_value::text)::boolean IS DISTINCT FROM true THEN
+    SELECT (config_value::text)::int INTO current_tier
+    FROM   league_config
+    WHERE  league_id  = NEW.league_id
+    AND    config_key = 'current_relaxation_tier';
+
+    IF COALESCE(current_tier, 0) > 0 THEN
+      RAISE EXCEPTION 'Cannot disable relaxation formula: league % already has shared ownership (tier %)', NEW.league_id, current_tier;
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."prevent_relaxation_disable_after_shared_ownership"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."process_auction_deadlines"() RETURNS "text"
@@ -6618,6 +7575,118 @@ $$;
 ALTER FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."reopen_wishlist_draft"("p_league_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_user          uuid := auth.uid();
+  v_row           wishlist_draft_windows;
+  v_tournament_id text;
+  v_kickoff       timestamptz;
+  v_deadline      timestamptz;
+  v_reset         int := 0;
+BEGIN
+  IF v_user IS NULL OR NOT EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_user AND role = 'commissioner'
+  ) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'FORBIDDEN', 'error', 'Commissioner only');
+  END IF;
+
+  IF NOT _wishlist_is_draft_league(p_league_id) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NOT_DRAFT', 'error', 'Wishlist draft only exists in draft-mode leagues');
+  END IF;
+
+  IF (_wishlist_pending_window(p_league_id)).id IS NOT NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'ALREADY_PENDING', 'error', 'A wishlist draft is already waiting to run');
+  END IF;
+
+  -- The most recent round's window, locked.
+  SELECT * INTO v_row FROM wishlist_draft_windows
+   WHERE league_id = p_league_id
+   ORDER BY round_number DESC LIMIT 1
+   FOR UPDATE;
+
+  IF v_row.id IS NULL OR v_row.status <> 'done' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NOTHING_TO_REOPEN',
+      'error', 'There is no finished draft to reopen — the next round''s draft opens when the current round finishes');
+  END IF;
+
+  SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id;
+  SELECT MIN(kickoff_at) INTO v_kickoff
+    FROM fixtures WHERE tournament_id = v_tournament_id AND round_number = v_row.round_number;
+
+  IF v_kickoff IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NO_KICKOFF',
+      'error', 'Round ' || v_row.round_number || ' has no kickoff date, so the draft cannot be given a safety-net deadline');
+  END IF;
+
+  v_deadline := v_kickoff - interval '8 hours';
+  IF v_deadline < NOW() + interval '6 hours' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'TOO_LATE',
+      'error', 'Kickoff is too close to hold another draft for this round (needs 6h+ before the kickoff − 8h deadline)',
+      'first_kickoff_at', v_kickoff);
+  END IF;
+
+  UPDATE wishlist_draft_windows
+     SET status                = 'scheduled',
+         mode                  = 'manual',
+         processed_at          = NULL,
+         run_token             = NULL,
+         run_trigger           = NULL,
+         run_requested_at      = NULL,
+         run_requested_by      = NULL,
+         started_at            = NULL,
+         participant_count     = 0,
+         scheduled_at          = NULL,
+         first_kickoff_at      = v_kickoff,
+         hard_deadline_at      = v_deadline,
+         reminder_sent_at      = NULL,
+         kickoff_alert_sent_at = NULL,
+         created_at            = NOW()
+   WHERE id = v_row.id;
+
+  -- Close the round's open market. commit_wishlist_draft → _wishlist_open_market
+  -- extends closes_at back out to kickoff − 1h when the draft completes.
+  UPDATE transfer_windows
+     SET closes_at = NOW()
+   WHERE league_id = p_league_id AND round_number = v_row.round_number AND closes_at > NOW();
+
+  -- Re-arm submissions: keep only targets the manager does not already own;
+  -- the drops they asked for were executed by the previous run.
+  UPDATE wishlist_draft_submissions s
+     SET target_ids = ARRAY(
+           SELECT t FROM unnest(s.target_ids) WITH ORDINALITY AS u(t, ord)
+            WHERE NOT (t = ANY (COALESCE(
+                    (SELECT q.players FROM squads q
+                      WHERE q.league_id = s.league_id AND q.user_id = s.user_id
+                      ORDER BY q.created_at DESC LIMIT 1), ARRAY[]::text[])))
+            ORDER BY ord),
+         drop_ids   = ARRAY[]::text[],
+         status     = 'pending'
+   WHERE s.league_id = p_league_id AND s.round_number = v_row.round_number;
+  GET DIAGNOSTICS v_reset = ROW_COUNT;
+
+  INSERT INTO wishlist_draft_mode_changes
+    (league_id, round_number, scope, from_mode, to_mode, changed_by)
+  VALUES (p_league_id, v_row.round_number, 'round', v_row.mode, 'manual', v_user);
+
+  PERFORM _wishlist_notify_members(
+    p_league_id, 'wishlist_draft_mode', 'Wishlist draft reopened',
+    'Round ' || v_row.round_number || ' has another wishlist draft. Update your wishlist now — the market is closed until the commissioner runs it (latest '
+      || to_char(v_deadline AT TIME ZONE 'UTC', 'Dy DD Mon HH24:MI') || ' UTC). Trades are still allowed.',
+    v_user);
+
+  RETURN jsonb_build_object(
+    'ok', true, 'round_number', v_row.round_number, 'mode', 'manual',
+    'first_kickoff_at', v_kickoff, 'hard_deadline_at', v_deadline, 'submissions_reset', v_reset
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."reopen_wishlist_draft"("p_league_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."report_client_error"("p_message" "text", "p_stack" "text" DEFAULT NULL::"text", "p_url" "text" DEFAULT NULL::"text", "p_user_agent" "text" DEFAULT NULL::"text", "p_context" "jsonb" DEFAULT '{}'::"jsonb") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -6636,6 +7705,42 @@ $$;
 
 
 ALTER FUNCTION "public"."report_client_error"("p_message" "text", "p_stack" "text", "p_url" "text", "p_user_agent" "text", "p_context" "jsonb") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."request_wishlist_draft_run"("p_league_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_user uuid := auth.uid();
+  v_row  wishlist_draft_windows;
+BEGIN
+  IF v_user IS NULL OR NOT EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_user AND role = 'commissioner'
+  ) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'FORBIDDEN', 'error', 'Commissioner only');
+  END IF;
+
+  v_row := _wishlist_pending_window(p_league_id);
+  IF v_row.id IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NO_PENDING_ROUND', 'error', 'No wishlist draft is waiting to run');
+  END IF;
+  IF v_row.status = 'running' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'DRAFT_RUNNING', 'error', 'The draft is already running');
+  END IF;
+  IF v_row.mode = 'disabled' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'DISABLED', 'error', 'The draft is disabled for this round');
+  END IF;
+
+  UPDATE wishlist_draft_windows
+     SET run_requested_at = NOW(), run_requested_by = v_user
+   WHERE id = v_row.id;
+
+  RETURN jsonb_build_object('ok', true, 'round_number', v_row.round_number, 'window_id', v_row.id);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."request_wishlist_draft_run"("p_league_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."resolve_auction_listing"("p_listing_id" "uuid") RETURNS "jsonb"
@@ -6978,7 +8083,7 @@ BEGIN
     WHERE user_id = v_loser_id;
 
     INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
-    VALUES (v_loser_id, 'loss', v_ch.stake_coins, p_challenge_id,
+    VALUES (v_loser_id, 'loss', 0, p_challenge_id,
       jsonb_build_object('reason', 'challenge_lost', 'stake_lost', v_ch.stake_coins));
   END IF;
 
@@ -7024,6 +8129,16 @@ BEGIN
       'rake',            v_rake
     ),
     now()
+  );
+
+  PERFORM post_bet_activity_message(
+    v_ch.circle_id,
+    COALESCE(v_winner_id, v_ch.challenger_id),
+    CASE
+      WHEN v_is_tie THEN v_challenger_name || ' vs ' || v_opponent_name || ' — draw, coins returned'
+      ELSE (CASE WHEN v_winner_id = v_ch.challenger_id THEN v_challenger_name ELSE v_opponent_name END) || ' won ' || v_prize || ' coins'
+    END,
+    jsonb_build_object('ref_kind', 'challenge', 'ref_id', p_challenge_id, 'event', 'resolved', 'question', COALESCE(v_ch.question, 'GW ' || v_ch.matchday_id), 'stake_coins', v_ch.stake_coins)
   );
 
   RETURN jsonb_build_object(
@@ -7376,6 +8491,70 @@ $$;
 ALTER FUNCTION "public"."set_competition_archived"("p_competition_type" "text", "p_competition_id" "uuid", "p_archived" boolean) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."set_joker"("p_league_id" "uuid", "p_player_id" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_uid      uuid := auth.uid();
+  v_round    record;
+  v_existing record;
+  v_tid      text;
+  v_squad_id uuid;
+BEGIN
+  IF v_uid IS NULL OR NOT EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_uid
+  ) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'UNAUTHORIZED', 'error', 'Not a member of this league');
+  END IF;
+
+  SELECT * INTO v_round FROM _chips_open_round(p_league_id);
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'DEADLINE_PASSED',
+      'error', 'No open round — the Joker cannot be changed right now.');
+  END IF;
+
+  SELECT * INTO v_existing FROM daily_jokers
+   WHERE user_id = v_uid AND league_id = p_league_id
+   ORDER BY created_at DESC LIMIT 1;
+  IF FOUND AND v_existing.matchday_id IS DISTINCT FROM v_round.matchday_id THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'CHIP_ALREADY_USED',
+      'error', 'The Joker has already been used this tournament');
+  END IF;
+  IF NOT FOUND AND NOT _chip_enabled(p_league_id, 'joker') THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'CHIP_DISABLED',
+      'error', 'Your league admin has turned this chip off');
+  END IF;
+
+  SELECT tournament_id INTO v_tid FROM leagues WHERE id = p_league_id;
+  IF NOT EXISTS (SELECT 1 FROM players WHERE id = p_player_id AND tournament_id = v_tid) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'PLAYER_NOT_FOUND', 'error', 'Player not found in this tournament');
+  END IF;
+  IF EXISTS (SELECT 1 FROM squads
+              WHERE user_id = v_uid AND league_id = p_league_id AND players @> ARRAY[p_player_id]) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'JOKER_OWN_SQUAD',
+      'error', 'The Joker must be a player outside your squad');
+  END IF;
+
+  IF v_existing.id IS NOT NULL THEN
+    UPDATE daily_jokers SET player_id = p_player_id WHERE id = v_existing.id;
+  ELSE
+    INSERT INTO daily_jokers (user_id, league_id, player_id, matchday_id)
+    VALUES (v_uid, p_league_id, p_player_id, v_round.matchday_id);
+  END IF;
+
+  SELECT id INTO v_squad_id FROM squads
+   WHERE user_id = v_uid AND league_id = p_league_id ORDER BY created_at DESC LIMIT 1;
+  UPDATE squads SET joker_player_id = p_player_id WHERE id = v_squad_id;
+
+  RETURN jsonb_build_object('ok', true, 'active', true, 'player_id', p_player_id);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."set_joker"("p_league_id" "uuid", "p_player_id" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $_$
@@ -7662,6 +8841,211 @@ $$;
 ALTER FUNCTION "public"."set_tennis_qf_captain"("p_tournament_id" "uuid", "p_captain_player_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."set_wishlist_draft_mode"("p_league_id" "uuid", "p_scope" "text", "p_mode" "text", "p_scheduled_at" timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_user       uuid := auth.uid();
+  v_row        wishlist_draft_windows;
+  v_from_mode  text;
+  v_time       timestamptz;
+  v_min        timestamptz := NOW() + interval '6 hours' - interval '1 minute';
+  v_transfers  int := 0;
+  v_title      text;
+  v_desc       text;
+BEGIN
+  IF v_user IS NULL OR NOT EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_user AND role = 'commissioner'
+  ) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'FORBIDDEN', 'error', 'Commissioner only');
+  END IF;
+
+  IF NOT _wishlist_is_draft_league(p_league_id) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NOT_DRAFT', 'error', 'Wishlist draft only exists in draft-mode leagues');
+  END IF;
+
+  IF p_mode NOT IN ('manual', 'auto', 'disabled') THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'BAD_MODE', 'error', 'Mode must be manual, auto or disabled');
+  END IF;
+
+  -- League default ----------------------------------------------------------
+  IF p_scope = 'default' THEN
+    v_from_mode := _wishlist_default_mode(p_league_id);
+    IF v_from_mode = p_mode THEN
+      RETURN jsonb_build_object('ok', true, 'changed', false);
+    END IF;
+
+    INSERT INTO league_config (league_id, config_key, config_value, updated_at)
+    VALUES (p_league_id, 'wishlist_draft_mode', to_jsonb(p_mode), NOW())
+    ON CONFLICT (league_id, config_key) DO UPDATE
+      SET config_value = EXCLUDED.config_value, updated_at = NOW();
+
+    INSERT INTO wishlist_draft_mode_changes (league_id, round_number, scope, from_mode, to_mode, changed_by)
+    VALUES (p_league_id, NULL, 'default', v_from_mode, p_mode, v_user);
+
+    PERFORM _wishlist_notify_members(
+      p_league_id, 'wishlist_draft_mode', 'Wishlist draft setting changed',
+      'From the next round: ' || CASE p_mode
+        WHEN 'manual'   THEN 'the commissioner runs the draft (latest 8h before kickoff).'
+        WHEN 'auto'     THEN 'the draft runs automatically before each round.'
+        ELSE 'no draft — free market, first come, first served.' END,
+      v_user);
+
+    RETURN jsonb_build_object('ok', true, 'changed', true, 'scope', 'default');
+  END IF;
+
+  IF p_scope <> 'round' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'BAD_SCOPE', 'error', 'Scope must be round or default');
+  END IF;
+
+  -- This round only --------------------------------------------------------
+  SELECT * INTO v_row FROM wishlist_draft_windows w
+   WHERE w.id = (_wishlist_pending_window(p_league_id)).id
+   FOR UPDATE;
+
+  IF v_row.id IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NO_PENDING_ROUND',
+      'error', 'This round''s draft has already run — change the league default to affect the next round');
+  END IF;
+
+  IF v_row.status = 'running' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'DRAFT_RUNNING', 'error', 'The draft is running right now — try again in a minute');
+  END IF;
+
+  v_from_mode := v_row.mode;
+  v_transfers := _wishlist_transfers_in_window(p_league_id, v_row.created_at);
+
+  IF p_mode = 'auto' THEN
+    v_time := COALESCE(
+      p_scheduled_at,
+      GREATEST(_wishlist_suggested_draft_at(v_row.round_ended_at, v_row.first_kickoff_at), v_min + interval '1 minute')
+    );
+    IF v_time < v_min THEN
+      RETURN jsonb_build_object('ok', false, 'code', 'TOO_SOON',
+        'error', 'The draft time must be at least 6 hours from now so managers can prepare');
+    END IF;
+    IF v_row.first_kickoff_at IS NOT NULL AND v_time > v_row.first_kickoff_at - interval '15 minutes' THEN
+      RETURN jsonb_build_object('ok', false, 'code', 'AFTER_DEADLINE',
+        'error', 'The draft must run before the first kickoff',
+        'latest_at', v_row.first_kickoff_at - interval '15 minutes');
+    END IF;
+  END IF;
+
+  -- Re-enabling a draft from the free market needs the same 6h notice. With
+  -- manual mode the effective time is the kickoff − 8h fallback.
+  IF v_from_mode = 'disabled' AND p_mode = 'manual'
+     AND v_row.hard_deadline_at IS NOT NULL AND v_row.hard_deadline_at < v_min THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'TOO_LATE',
+      'error', 'Kickoff is too close to bring the draft back for this round — it stays a free market');
+  END IF;
+
+  IF v_from_mode = p_mode AND (p_mode <> 'auto' OR v_row.scheduled_at IS NOT DISTINCT FROM v_time) THEN
+    RETURN jsonb_build_object('ok', true, 'changed', false);
+  END IF;
+
+  UPDATE wishlist_draft_windows
+     SET mode             = p_mode,
+         scheduled_at     = CASE WHEN p_mode = 'auto' THEN v_time END,
+         reminder_sent_at = CASE WHEN p_mode = 'manual' THEN reminder_sent_at END
+   WHERE id = v_row.id;
+
+  IF p_mode = 'disabled' THEN
+    PERFORM _wishlist_open_market(p_league_id, v_row.round_number);
+  END IF;
+
+  INSERT INTO wishlist_draft_mode_changes
+    (league_id, round_number, scope, from_mode, to_mode, from_scheduled_at, to_scheduled_at,
+     transfers_in_window, changed_by)
+  VALUES
+    (p_league_id, v_row.round_number, 'round', v_from_mode, p_mode, v_row.scheduled_at,
+     CASE WHEN p_mode = 'auto' THEN v_time END, v_transfers, v_user);
+
+  v_title := CASE p_mode
+    WHEN 'disabled' THEN 'Market open — no wishlist draft this round'
+    WHEN 'auto'     THEN 'Wishlist draft scheduled'
+    ELSE                 'Wishlist draft: commissioner will run it' END;
+  v_desc := CASE p_mode
+    WHEN 'disabled' THEN 'Free market, first come, first served. Your wishlist is saved for later.'
+    WHEN 'auto'     THEN 'Round ' || v_row.round_number || ' draft runs at '
+                         || to_char(v_time AT TIME ZONE 'UTC', 'Dy DD Mon HH24:MI') || ' UTC. Market closed until then (trades still allowed).'
+    ELSE                 'Round ' || v_row.round_number || ' draft will be run by the commissioner'
+                         || COALESCE(' — latest ' || to_char(v_row.hard_deadline_at AT TIME ZONE 'UTC', 'Dy DD Mon HH24:MI') || ' UTC', '')
+                         || '. Market closed until then (trades still allowed).' END;
+  IF v_from_mode = 'disabled' AND p_mode <> 'disabled' AND v_transfers > 0 THEN
+    v_desc := v_desc || ' ' || v_transfers || ' transfer(s) already made in the free market stand.';
+  END IF;
+
+  PERFORM _wishlist_notify_members(p_league_id, 'wishlist_draft_mode', v_title, v_desc, v_user);
+
+  RETURN jsonb_build_object(
+    'ok', true, 'changed', true, 'scope', 'round', 'round_number', v_row.round_number,
+    'mode', p_mode, 'scheduled_at', CASE WHEN p_mode = 'auto' THEN v_time END,
+    'transfers_in_window', v_transfers
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."set_wishlist_draft_mode"("p_league_id" "uuid", "p_scope" "text", "p_mode" "text", "p_scheduled_at" timestamp with time zone) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_wishlist_next_draft"("p_league_id" "uuid", "p_at" timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_user     uuid := auth.uid();
+  v_round    int;
+  v_kickoff  timestamptz;
+BEGIN
+  IF v_user IS NULL OR NOT EXISTS (
+    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_user AND role = 'commissioner'
+  ) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'FORBIDDEN', 'error', 'Commissioner only');
+  END IF;
+  IF NOT _wishlist_is_draft_league(p_league_id) THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NOT_DRAFT', 'error', 'Wishlist draft only exists in draft-mode leagues');
+  END IF;
+  IF (_wishlist_pending_window(p_league_id)).id IS NOT NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'ALREADY_PENDING',
+      'error', 'This round''s draft is already set up — change it with the round controls');
+  END IF;
+
+  v_round := _wishlist_next_round(p_league_id);
+  IF v_round IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'NO_PENDING_ROUND', 'error', 'No round to schedule yet');
+  END IF;
+
+  IF p_at IS NULL THEN
+    DELETE FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_next_preset';
+    RETURN jsonb_build_object('ok', true, 'cleared', true, 'round_number', v_round);
+  END IF;
+
+  SELECT MIN(f.kickoff_at) INTO v_kickoff
+    FROM fixtures f JOIN leagues l ON l.tournament_id = f.tournament_id
+   WHERE l.id = p_league_id AND f.round_number = v_round;
+
+  IF p_at < NOW() + interval '6 hours' - interval '1 minute' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'TOO_SOON',
+      'error', 'The draft time must be at least 6 hours from now so managers can prepare');
+  END IF;
+  IF v_kickoff IS NOT NULL AND p_at > v_kickoff - interval '15 minutes' THEN
+    RETURN jsonb_build_object('ok', false, 'code', 'AFTER_DEADLINE',
+      'error', 'The draft must run before the first kickoff', 'latest_at', v_kickoff - interval '15 minutes');
+  END IF;
+
+  INSERT INTO league_config (league_id, config_key, config_value, updated_at)
+  VALUES (p_league_id, 'wishlist_draft_next_preset', jsonb_build_object('round', v_round, 'at', p_at), NOW())
+  ON CONFLICT (league_id, config_key) DO UPDATE
+    SET config_value = EXCLUDED.config_value, updated_at = NOW();
+
+  RETURN jsonb_build_object('ok', true, 'round_number', v_round, 'scheduled_at', p_at);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."set_wishlist_next_draft"("p_league_id" "uuid", "p_at" timestamp with time zone) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -7681,7 +9065,6 @@ BEGIN
   FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' AND is_winner = true;
 
   IF v_winner_count = 0 THEN
-    -- Push / void: refund everyone their own stake, no rake taken.
     FOR v_p IN SELECT user_id, stake_coins FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
       PERFORM release_escrow(v_p.user_id, v_p.stake_coins, NULL,
         jsonb_build_object('bet_id', p_bet_id, 'reason', 'push'), p_bet_id);
@@ -7695,23 +9078,22 @@ BEGIN
 
   FOR v_p IN SELECT user_id, stake_coins, is_winner FROM p2p_bet_participants WHERE bet_id = p_bet_id AND status = 'joined' LOOP
     IF v_p.is_winner THEN
-      -- Settle directly to v_share rather than refund-then-top-up: when every
-      -- participant wins (no losers to fund the payout), v_share can land
-      -- BELOW the winner's own stake once the 5% rake is taken out. A plain
-      -- release_escrow(stake) would refund the full stake and let the rake
-      -- go uncollected in that case, so move escrow->balance for the net
-      -- share directly instead.
+      -- Move escrow -> balance at the net share (rake may leave it below the stake
+      -- when everyone wins). One 'win' row for the full payout: the stake already
+      -- left the balance as a 'stake' row, so the payout is what comes back.
       UPDATE coin_wallets SET balance = balance + v_share, escrow = escrow - v_p.stake_coins
       WHERE user_id = v_p.user_id AND escrow >= v_p.stake_coins;
       IF NOT FOUND THEN
         RAISE EXCEPTION 'INSUFFICIENT_ESCROW';
       END IF;
       INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
-      VALUES (v_p.user_id, 'win', v_share - v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
+      VALUES (v_p.user_id, 'win', v_share, p_bet_id,
+        jsonb_build_object('bet_id', p_bet_id, 'stake', v_p.stake_coins, 'payout', v_share));
     ELSE
       UPDATE coin_wallets SET escrow = escrow - v_p.stake_coins WHERE user_id = v_p.user_id;
       INSERT INTO coin_transactions (user_id, type, amount, bet_id, meta)
-      VALUES (v_p.user_id, 'loss', -v_p.stake_coins, p_bet_id, jsonb_build_object('bet_id', p_bet_id));
+      VALUES (v_p.user_id, 'loss', 0, p_bet_id,
+        jsonb_build_object('bet_id', p_bet_id, 'stake_lost', v_p.stake_coins));
     END IF;
   END LOOP;
 END;
@@ -7719,6 +9101,124 @@ $$;
 
 
 ALTER FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."settle_due_freeform_challenges"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_ch    p2p_challenges;
+  v_count int := 0;
+BEGIN
+  IF auth.uid() IS NOT NULL THEN RAISE EXCEPTION 'ADMIN_ONLY'; END IF;
+
+  -- Declared, nobody objected within 24h -> pay out
+  FOR v_ch IN
+    SELECT * FROM p2p_challenges
+    WHERE bet_type = 'freeform' AND status = 'accepted'
+      AND proposed_by IS NOT NULL AND dispute_deadline <= now()
+    ORDER BY created_at FOR UPDATE SKIP LOCKED
+  LOOP
+    BEGIN
+      PERFORM settle_freeform_challenge(v_ch.id, v_ch.proposed_winner_id, 'freeform_auto');
+      v_count := v_count + 1;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING 'settle_due_freeform_challenges: payout failed for %: %', v_ch.id, SQLERRM;
+    END;
+  END LOOP;
+
+  -- Never declared, 14 days after acceptance -> void, both stakes back
+  FOR v_ch IN
+    SELECT * FROM p2p_challenges
+    WHERE bet_type = 'freeform' AND status = 'accepted'
+      AND proposed_by IS NULL AND updated_at <= now() - interval '14 days'
+    ORDER BY created_at FOR UPDATE SKIP LOCKED
+  LOOP
+    BEGIN
+      PERFORM settle_freeform_challenge(v_ch.id, NULL, 'freeform_no_result');
+      v_count := v_count + 1;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING 'settle_due_freeform_challenges: void failed for %: %', v_ch.id, SQLERRM;
+    END;
+  END LOOP;
+
+  -- Reminder to both sides after 7 days without a result, once
+  INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
+  SELECT c.circle_id, u.uid, 'p2p_challenge', c.id, 'result_needed',
+         jsonb_build_object('question', c.question, 'stake_coins', c.stake_coins)
+  FROM p2p_challenges c
+  CROSS JOIN LATERAL (VALUES (c.challenger_id), (c.opponent_id)) AS u(uid)
+  WHERE c.bet_type = 'freeform' AND c.status = 'accepted' AND c.proposed_by IS NULL
+    AND c.updated_at <= now() - interval '7 days'
+    AND NOT EXISTS (SELECT 1 FROM clubhouse_notifications n
+                    WHERE n.source_id = c.id AND n.type = 'result_needed' AND n.user_id = u.uid);
+
+  RETURN v_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."settle_due_freeform_challenges"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."settle_freeform_challenge"("p_challenge_id" "uuid", "p_winner_id" "uuid", "p_reason" "text", "p_actor" "uuid" DEFAULT NULL::"uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_ch           p2p_challenges;
+  v_loser_id     uuid;
+  v_total_pot    int;
+  v_rake         int;
+  v_prize        int;
+  v_loser_escrow int;
+BEGIN
+  SELECT * INTO v_ch FROM p2p_challenges WHERE id = p_challenge_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'CHALLENGE_NOT_FOUND'; END IF;
+
+  IF p_winner_id IS NULL THEN
+    PERFORM release_escrow(v_ch.challenger_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', p_reason || '_push'));
+    PERFORM release_escrow(v_ch.opponent_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', p_reason || '_push'));
+  ELSE
+    v_loser_id  := CASE WHEN p_winner_id = v_ch.challenger_id THEN v_ch.opponent_id ELSE v_ch.challenger_id END;
+    v_total_pot := v_ch.stake_coins * 2;
+    v_rake      := FLOOR(v_total_pot * 0.05);
+    v_prize     := v_total_pot - v_rake;
+
+    PERFORM release_escrow(p_winner_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', p_reason));
+    PERFORM credit_coins(p_winner_id, v_prize - v_ch.stake_coins, 'win', p_challenge_id,
+      jsonb_build_object('reason', p_reason || '_win', 'stake', v_ch.stake_coins, 'prize', v_prize, 'rake', v_rake));
+
+    SELECT escrow INTO v_loser_escrow FROM coin_wallets WHERE user_id = v_loser_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'WALLET_NOT_FOUND'; END IF;
+    IF v_loser_escrow < v_ch.stake_coins THEN RAISE EXCEPTION 'INSUFFICIENT_ESCROW'; END IF;
+
+    UPDATE coin_wallets SET escrow = escrow - v_ch.stake_coins, updated_at = now()
+    WHERE user_id = v_loser_id;
+
+    INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
+    VALUES (v_loser_id, 'loss', 0, p_challenge_id,
+      jsonb_build_object('reason', p_reason || '_loss', 'stake_lost', v_ch.stake_coins));
+  END IF;
+
+  UPDATE p2p_challenges
+  SET status = 'resolved', winner_id = p_winner_id, resolved_at = now(), updated_at = now()
+  WHERE id = p_challenge_id;
+
+  PERFORM post_bet_activity_message(
+    v_ch.circle_id, COALESCE(p_actor, v_ch.challenger_id),
+    CASE WHEN p_winner_id IS NULL THEN '⚖️ Challenge voided (stakes returned): ' ELSE '✅ Challenge resolved: ' END || v_ch.question,
+    jsonb_build_object('ref_kind', 'challenge', 'ref_id', p_challenge_id, 'event', 'resolved', 'question', v_ch.question, 'stake_coins', v_ch.stake_coins)
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."settle_freeform_challenge"("p_challenge_id" "uuid", "p_winner_id" "uuid", "p_reason" "text", "p_actor" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."snapshot_squads_for_matchday"("p_matchday_id" "text", "p_reason" "text" DEFAULT 'fixture_live'::"text") RETURNS integer
@@ -8246,13 +9746,10 @@ CREATE OR REPLACE FUNCTION "public"."submit_wishlist_draft"("p_league_id" "uuid"
     AS $$
 DECLARE
   v_user           uuid := auth.uid();
-  v_format         text;
-  v_league_mode    text;
-  v_enabled        text;
-  v_max_targets    int := 10;
-  v_max_drops      int := 5;
+  v_max_targets    int;
+  v_max_drops      int;
   v_squad_players  text[];
-  v_processed_at   timestamptz;
+  v_window         wishlist_draft_windows;
   pid              text;
 BEGIN
   IF v_user IS NULL THEN
@@ -8265,35 +9762,29 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'error', 'Not a league member');
   END IF;
 
-  SELECT format, league_mode INTO v_format, v_league_mode
-    FROM leagues WHERE id = p_league_id;
-
-  -- Feature only applies to draft-mode leagues (player exclusivity). This is
-  -- the same combined check the allocator code trusts elsewhere in the repo.
-  IF v_format IS DISTINCT FROM 'noduplicate' AND v_league_mode IS DISTINCT FROM 'draft' THEN
+  IF NOT _wishlist_is_draft_league(p_league_id) THEN
     RETURN jsonb_build_object('ok', false, 'error', 'Wishlist draft only available in draft-mode leagues');
   END IF;
 
-  -- Per-league config (falls back to defaults, same convention as knockout_keep_slots)
   SELECT (config_value #>> '{}')::int INTO v_max_targets
     FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_max_targets';
-  IF v_max_targets IS NULL THEN v_max_targets := 10; END IF;
+  v_max_targets := COALESCE(v_max_targets, 10);
 
   SELECT (config_value #>> '{}')::int INTO v_max_drops
     FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_max_drops';
-  IF v_max_drops IS NULL THEN v_max_drops := 5; END IF;
+  v_max_drops := COALESCE(v_max_drops, 5);
 
-  SELECT (config_value #>> '{}') INTO v_enabled
-    FROM league_config WHERE league_id = p_league_id AND config_key = 'wishlist_draft_enabled';
-  IF v_enabled = 'false' THEN
-    RETURN jsonb_build_object('ok', false, 'error', 'Wishlist draft is disabled for this league');
-  END IF;
-
-  -- Guard: round must not already have been processed.
-  SELECT processed_at INTO v_processed_at
+  SELECT * INTO v_window
     FROM wishlist_draft_windows
    WHERE league_id = p_league_id AND round_number = p_round_number;
-  IF v_processed_at IS NOT NULL THEN
+  IF v_window.status = 'running' THEN
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'code',  'DRAFT_RUNNING',
+      'error', 'The draft is running right now — wishlists are locked for a minute'
+    );
+  END IF;
+  IF v_window.processed_at IS NOT NULL OR v_window.status IN ('done', 'expired') THEN
     RETURN jsonb_build_object(
       'ok',    false,
       'code',  'WINDOW_CLOSED',
@@ -8301,7 +9792,6 @@ BEGIN
     );
   END IF;
 
-  -- Count checks
   IF array_length(p_target_ids, 1) > v_max_targets THEN
     RETURN jsonb_build_object(
       'ok',    false,
@@ -8317,7 +9807,6 @@ BEGIN
     );
   END IF;
 
-  -- drop_ids must be a subset of the manager's current squad
   SELECT players INTO v_squad_players
     FROM squads
    WHERE league_id = p_league_id AND user_id = v_user
@@ -8338,18 +9827,18 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- Upsert — managers can revise their submission until the round is processed
   INSERT INTO wishlist_draft_submissions
-    (league_id, user_id, round_number, target_ids, drop_ids, submitted_at, status)
+    (league_id, user_id, round_number, target_ids, drop_ids, submitted_at, status, carried_over_from)
   VALUES
     (p_league_id, v_user, p_round_number,
      COALESCE(p_target_ids, ARRAY[]::text[]), COALESCE(p_drop_ids, ARRAY[]::text[]),
-     NOW(), 'pending')
+     NOW(), 'pending', NULL)
   ON CONFLICT (league_id, user_id, round_number) DO UPDATE
-    SET target_ids   = EXCLUDED.target_ids,
-        drop_ids     = EXCLUDED.drop_ids,
-        submitted_at = EXCLUDED.submitted_at,
-        status       = 'pending';
+    SET target_ids        = EXCLUDED.target_ids,
+        drop_ids          = EXCLUDED.drop_ids,
+        submitted_at      = EXCLUDED.submitted_at,
+        status            = 'pending',
+        carried_over_from = NULL;
 
   RETURN jsonb_build_object(
     'ok',           true,
@@ -8580,6 +10069,90 @@ $$;
 ALTER FUNCTION "public"."sync_wc_players"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."sync_wishlist_draft_kickoffs"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_row      wishlist_draft_windows;
+  v_kickoff  timestamptz;
+  v_deadline timestamptz;
+  v_time     timestamptz;
+  v_admin    boolean;
+  v_count    int := 0;
+BEGIN
+  FOR v_row IN
+    SELECT * FROM wishlist_draft_windows
+     WHERE status = 'scheduled' AND processed_at IS NULL AND first_kickoff_at IS NULL
+     FOR UPDATE SKIP LOCKED
+  LOOP
+    SELECT MIN(f.kickoff_at) INTO v_kickoff
+      FROM fixtures f JOIN leagues l ON l.tournament_id = f.tournament_id
+     WHERE l.id = v_row.league_id AND f.round_number = v_row.round_number;
+    CONTINUE WHEN v_kickoff IS NULL;
+
+    v_deadline := v_kickoff - interval '8 hours';
+    v_time     := v_row.scheduled_at;
+
+    IF v_row.mode = 'auto' THEN
+      v_admin := EXISTS (
+        SELECT 1 FROM wishlist_draft_mode_changes
+         WHERE league_id = v_row.league_id AND round_number = v_row.round_number AND scope = 'round'
+      );
+      IF NOT v_admin THEN
+        v_time := GREATEST(_wishlist_suggested_draft_at(v_row.round_ended_at, v_kickoff),
+                           NOW() + interval '6 hours');
+      END IF;
+      v_time := LEAST(v_time, v_kickoff - interval '15 minutes');
+    END IF;
+
+    UPDATE wishlist_draft_windows
+       SET first_kickoff_at = v_kickoff,
+           hard_deadline_at = v_deadline,
+           scheduled_at     = v_time
+     WHERE id = v_row.id;
+    v_count := v_count + 1;
+  END LOOP;
+
+  RETURN v_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."sync_wishlist_draft_kickoffs"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."tennis_stale_tournament_sweep"() RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+  t RECORD;
+BEGIN
+  FOR t IN
+    SELECT id FROM tennis_tournaments
+    WHERE status IN ('in_progress', 'qf_captain_open')
+      AND end_date < CURRENT_DATE - INTERVAL '3 days'
+  LOOP
+    PERFORM net.http_post(
+      url     := 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1/score-tennis-tournament',
+      headers := jsonb_build_object(
+        'Content-Type',  'application/json',
+        'Authorization', 'Bearer ' || '2c14ee53da250cd66c4f55413c766482b8a95f41e62548f9b9262165c13b0c60'
+      ),
+      body    := jsonb_build_object('tournament_id', t.id)
+    );
+  END LOOP;
+
+  UPDATE tennis_tournaments
+  SET status = 'completed'
+  WHERE status IN ('upcoming', 'roster_open')
+    AND end_date < CURRENT_DATE - INTERVAL '3 days';
+END;
+$$;
+
+
+ALTER FUNCTION "public"."tennis_stale_tournament_sweep"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."tg_recompute_ranks"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -8669,7 +10242,7 @@ $$;
 ALTER FUNCTION "public"."trigger_wc2026_sync"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text" DEFAULT NULL::"text", "p_is_public" boolean DEFAULT NULL::boolean, "p_p2p_enabled" boolean DEFAULT NULL::boolean) RETURNS json
+CREATE OR REPLACE FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text" DEFAULT NULL::"text", "p_is_public" boolean DEFAULT NULL::boolean, "p_p2p_enabled" boolean DEFAULT NULL::boolean, "p_archived" boolean DEFAULT NULL::boolean) RETURNS json
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
@@ -8679,30 +10252,30 @@ BEGIN
   IF v_user_id IS NULL THEN
     RETURN json_build_object('error', 'UNAUTHENTICATED');
   END IF;
-
   IF NOT EXISTS (
     SELECT 1 FROM circle_members
-    WHERE circle_id = p_circle_id
-      AND user_id   = v_user_id
-      AND role      = 'owner'
+    WHERE circle_id = p_circle_id AND user_id = v_user_id AND role = 'owner'
   ) THEN
     RETURN json_build_object('error', 'NOT_OWNER');
   END IF;
-
-  -- Only update columns whose parameter was supplied (non-NULL).
   UPDATE circles
   SET
-    name               = COALESCE(NULLIF(trim(p_name), ''),   name),
-    is_public          = COALESCE(p_is_public,                is_public),
-    p2p_betting_enabled= COALESCE(p_p2p_enabled,             p2p_betting_enabled)
+    name                = COALESCE(NULLIF(trim(p_name), ''), name),
+    is_public            = COALESCE(p_is_public,             is_public),
+    p2p_betting_enabled  = COALESCE(p_p2p_enabled,           p2p_betting_enabled),
+    archived             = COALESCE(p_archived,              archived),
+    archived_at          = CASE
+                              WHEN p_archived IS TRUE  THEN now()
+                              WHEN p_archived IS FALSE THEN NULL
+                              ELSE archived_at
+                            END
   WHERE id = p_circle_id;
-
   RETURN json_build_object('ok', true);
 END;
 $$;
 
 
-ALTER FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) OWNER TO "postgres";
+ALTER FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean, "p_archived" boolean) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer DEFAULT NULL::integer, "p_max_stake" integer DEFAULT NULL::integer, "p_daily_challenge_limit" integer DEFAULT NULL::integer, "p_challenges_enabled" boolean DEFAULT NULL::boolean) RETURNS "jsonb"
@@ -8981,7 +10554,9 @@ CREATE TABLE IF NOT EXISTS "public"."circles" (
     "created_by" "uuid" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "p2p_betting_enabled" boolean DEFAULT true NOT NULL,
-    "is_public" boolean DEFAULT false NOT NULL
+    "is_public" boolean DEFAULT false NOT NULL,
+    "archived" boolean DEFAULT false NOT NULL,
+    "archived_at" timestamp with time zone
 );
 
 
@@ -9032,6 +10607,30 @@ ALTER SEQUENCE "public"."club_cap_rules_id_seq" OWNED BY "public"."club_cap_rule
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."club_logos" (
+    "id" bigint NOT NULL,
+    "name" "text" NOT NULL,
+    "type" "text" NOT NULL,
+    "logo_url" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "club_logos_type_check" CHECK (("type" = ANY (ARRAY['club'::"text", 'country'::"text"])))
+);
+
+
+ALTER TABLE "public"."club_logos" OWNER TO "postgres";
+
+
+ALTER TABLE "public"."club_logos" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."club_logos_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."clubhouse_channels" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "circle_id" "uuid" NOT NULL,
@@ -9052,7 +10651,13 @@ CREATE TABLE IF NOT EXISTS "public"."clubhouse_messages" (
     "user_id" "uuid" NOT NULL,
     "content" "text" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "clubhouse_messages_content_check" CHECK ((("length"(TRIM(BOTH FROM "content")) > 0) AND ("length"("content") <= 2000)))
+    "kind" "text" DEFAULT 'text'::"text" NOT NULL,
+    "bet_ref" "jsonb",
+    "thread_kind" "text",
+    "thread_id" "uuid",
+    CONSTRAINT "clubhouse_messages_content_check" CHECK ((("length"(TRIM(BOTH FROM "content")) > 0) AND ("length"("content") <= 2000))),
+    CONSTRAINT "clubhouse_messages_kind_check" CHECK (("kind" = ANY (ARRAY['text'::"text", 'bet_activity'::"text"]))),
+    CONSTRAINT "clubhouse_messages_thread_check" CHECK (((("thread_kind" IS NULL) AND ("thread_id" IS NULL)) OR (("thread_kind" = ANY (ARRAY['bet'::"text", 'challenge'::"text"])) AND ("thread_id" IS NOT NULL))))
 );
 
 
@@ -10011,6 +11616,31 @@ CREATE TABLE IF NOT EXISTS "public"."player_status" (
 ALTER TABLE "public"."player_status" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."product_events" (
+    "id" bigint NOT NULL,
+    "user_id" "uuid" DEFAULT "auth"."uid"() NOT NULL,
+    "event" "text" NOT NULL,
+    "props" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "product_events_event_check" CHECK (("event" ~ '^[a-z0-9_]{2,40}$'::"text")),
+    CONSTRAINT "product_events_props_check" CHECK (("pg_column_size"("props") <= 1024))
+);
+
+
+ALTER TABLE "public"."product_events" OWNER TO "postgres";
+
+
+ALTER TABLE "public"."product_events" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."product_events_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."projection_snapshots" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid",
@@ -10035,6 +11665,16 @@ CREATE TABLE IF NOT EXISTS "public"."round_backups" (
 
 
 ALTER TABLE "public"."round_backups" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."round_freeze_locks" (
+    "matchday_id" "text" NOT NULL,
+    "locked_by_fixture_id" "text",
+    "locked_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."round_freeze_locks" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."scoring_rules" (
@@ -10427,6 +12067,25 @@ CREATE OR REPLACE VIEW "public"."user_profiles" AS
 ALTER VIEW "public"."user_profiles" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."wishlist_draft_mode_changes" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "league_id" "uuid" NOT NULL,
+    "round_number" integer,
+    "scope" "text" NOT NULL,
+    "from_mode" "text",
+    "to_mode" "text" NOT NULL,
+    "from_scheduled_at" timestamp with time zone,
+    "to_scheduled_at" timestamp with time zone,
+    "transfers_in_window" integer DEFAULT 0 NOT NULL,
+    "changed_by" "uuid",
+    "changed_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "wishlist_draft_mode_changes_scope_check" CHECK (("scope" = ANY (ARRAY['round'::"text", 'default'::"text"])))
+);
+
+
+ALTER TABLE "public"."wishlist_draft_mode_changes" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."wishlist_draft_submissions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "league_id" "uuid" NOT NULL,
@@ -10435,25 +12094,12 @@ CREATE TABLE IF NOT EXISTS "public"."wishlist_draft_submissions" (
     "target_ids" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
     "drop_ids" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
     "submitted_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "status" "public"."draft_status" DEFAULT 'pending'::"public"."draft_status" NOT NULL
+    "status" "public"."draft_status" DEFAULT 'pending'::"public"."draft_status" NOT NULL,
+    "carried_over_from" integer
 );
 
 
 ALTER TABLE "public"."wishlist_draft_submissions" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."wishlist_draft_windows" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "league_id" "uuid" NOT NULL,
-    "round_number" integer NOT NULL,
-    "snake_order_seed" integer NOT NULL,
-    "processed_at" timestamp with time zone,
-    "participant_count" integer DEFAULT 0 NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."wishlist_draft_windows" OWNER TO "postgres";
 
 
 ALTER TABLE ONLY "public"."club_cap_rules" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."club_cap_rules_id_seq"'::"regclass");
@@ -10556,6 +12202,16 @@ ALTER TABLE ONLY "public"."club_cap_rules"
 
 ALTER TABLE ONLY "public"."club_cap_rules"
     ADD CONSTRAINT "club_cap_rules_tournament_id_round_suffix_key" UNIQUE ("tournament_id", "round_suffix");
+
+
+
+ALTER TABLE ONLY "public"."club_logos"
+    ADD CONSTRAINT "club_logos_name_key" UNIQUE ("name");
+
+
+
+ALTER TABLE ONLY "public"."club_logos"
+    ADD CONSTRAINT "club_logos_pkey" PRIMARY KEY ("id");
 
 
 
@@ -10984,6 +12640,11 @@ ALTER TABLE ONLY "public"."players"
 
 
 
+ALTER TABLE ONLY "public"."product_events"
+    ADD CONSTRAINT "product_events_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."projection_snapshots"
     ADD CONSTRAINT "projection_snapshots_pkey" PRIMARY KEY ("id");
 
@@ -10996,6 +12657,11 @@ ALTER TABLE ONLY "public"."round_backups"
 
 ALTER TABLE ONLY "public"."round_backups"
     ADD CONSTRAINT "round_backups_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."round_freeze_locks"
+    ADD CONSTRAINT "round_freeze_locks_pkey" PRIMARY KEY ("matchday_id");
 
 
 
@@ -11179,6 +12845,11 @@ ALTER TABLE ONLY "public"."users"
 
 
 
+ALTER TABLE ONLY "public"."wishlist_draft_mode_changes"
+    ADD CONSTRAINT "wishlist_draft_mode_changes_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."wishlist_draft_submissions"
     ADD CONSTRAINT "wishlist_draft_submissions_league_id_user_id_round_number_key" UNIQUE ("league_id", "user_id", "round_number");
 
@@ -11224,6 +12895,10 @@ CREATE INDEX "ch_messages_channel_idx" ON "public"."clubhouse_messages" USING "b
 
 
 CREATE INDEX "ch_notif_user_unread_idx" ON "public"."clubhouse_notifications" USING "btree" ("user_id", "read_at", "created_at" DESC) WHERE ("read_at" IS NULL);
+
+
+
+CREATE INDEX "clubhouse_messages_thread_idx" ON "public"."clubhouse_messages" USING "btree" ("thread_kind", "thread_id", "created_at") WHERE ("thread_id" IS NOT NULL);
 
 
 
@@ -11439,6 +13114,14 @@ CREATE INDEX "idx_players_tournament" ON "public"."players" USING "btree" ("tour
 
 
 
+CREATE INDEX "idx_product_events_event_time" ON "public"."product_events" USING "btree" ("event", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_product_events_user_time" ON "public"."product_events" USING "btree" ("user_id", "created_at" DESC);
+
+
+
 CREATE INDEX "idx_teams_tournament" ON "public"."teams" USING "btree" ("tournament_id");
 
 
@@ -11476,6 +13159,14 @@ CREATE UNIQUE INDEX "idx_trophy_ledger_season_win_unique" ON "public"."trophy_le
 
 
 CREATE INDEX "idx_wishlist_draft_submissions_league_round" ON "public"."wishlist_draft_submissions" USING "btree" ("league_id", "round_number") WHERE ("status" = 'pending'::"public"."draft_status");
+
+
+
+CREATE INDEX "idx_wishlist_draft_windows_pending" ON "public"."wishlist_draft_windows" USING "btree" ("status") WHERE ("status" = ANY (ARRAY['scheduled'::"text", 'running'::"text"]));
+
+
+
+CREATE INDEX "idx_wishlist_mode_changes_league" ON "public"."wishlist_draft_mode_changes" USING "btree" ("league_id", "changed_at" DESC);
 
 
 
@@ -11588,6 +13279,10 @@ CREATE OR REPLACE TRIGGER "trg_notify_gazette_breaking_news" AFTER INSERT ON "pu
 
 
 CREATE OR REPLACE TRIGGER "trg_preserve_manual_matchday_id" BEFORE UPDATE ON "public"."fixtures" FOR EACH ROW EXECUTE FUNCTION "public"."preserve_manual_matchday_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_prevent_relaxation_disable" BEFORE INSERT OR UPDATE ON "public"."league_config" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_relaxation_disable_after_shared_ownership"();
 
 
 
@@ -12272,6 +13967,11 @@ ALTER TABLE ONLY "public"."players"
 
 
 
+ALTER TABLE ONLY "public"."product_events"
+    ADD CONSTRAINT "product_events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."projection_snapshots"
     ADD CONSTRAINT "projection_snapshots_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
 
@@ -12559,6 +14259,11 @@ ALTER TABLE ONLY "public"."trophy_ledger"
 
 ALTER TABLE ONLY "public"."trophy_ledger"
     ADD CONSTRAINT "trophy_ledger_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."wishlist_draft_mode_changes"
+    ADD CONSTRAINT "wishlist_draft_mode_changes_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
 
 
 
@@ -12865,6 +14570,13 @@ CREATE POLICY "club_cap_rules_read_all" ON "public"."club_cap_rules" FOR SELECT 
 
 
 
+ALTER TABLE "public"."club_logos" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "club_logos_public_read" ON "public"."club_logos" FOR SELECT USING (true);
+
+
+
 ALTER TABLE "public"."clubhouse_channels" ENABLE ROW LEVEL SECURITY;
 
 
@@ -12971,11 +14683,7 @@ ALTER TABLE "public"."edge_function_errors" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."error_logs" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "error_logs: anyone can insert" ON "public"."error_logs" FOR INSERT WITH CHECK (true);
-
-
-
-COMMENT ON POLICY "error_logs: anyone can insert" ON "public"."error_logs" IS 'Intentionally permissive: app error handlers and middleware log errors from any context. No PII stored.';
+CREATE POLICY "error_logs: bounded insert" ON "public"."error_logs" FOR INSERT WITH CHECK ((("message" IS NOT NULL) AND (("char_length"("message") >= 1) AND ("char_length"("message") <= 2000)) AND (("stack" IS NULL) OR ("char_length"("stack") <= 8000)) AND (("screen" IS NULL) OR ("char_length"("screen") <= 200)) AND (("component" IS NULL) OR ("char_length"("component") <= 200)) AND (("user_agent" IS NULL) OR ("char_length"("user_agent") <= 500))));
 
 
 
@@ -13231,6 +14939,10 @@ CREATE POLICY "league members read gazette_entries" ON "public"."gazette_entries
 
 
 
+CREATE POLICY "league members read league transfers" ON "public"."transfers" FOR SELECT TO "authenticated" USING ("public"."is_league_member"("league_id"));
+
+
+
 CREATE POLICY "league members read transfer_windows" ON "public"."transfer_windows" FOR SELECT TO "authenticated" USING ("public"."is_league_member"("league_id"));
 
 
@@ -13479,6 +15191,13 @@ CREATE POLICY "players: public read" ON "public"."players" FOR SELECT USING (tru
 
 
 
+ALTER TABLE "public"."product_events" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "product_events_insert_own" ON "public"."product_events" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
 ALTER TABLE "public"."projection_snapshots" ENABLE ROW LEVEL SECURITY;
 
 
@@ -13491,6 +15210,9 @@ CREATE POLICY "remove_own_flags" ON "public"."player_availability_flags" FOR DEL
 
 
 ALTER TABLE "public"."round_backups" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."round_freeze_locks" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."scoring_rules" ENABLE ROW LEVEL SECURITY;
@@ -13724,6 +15446,15 @@ CREATE POLICY "view_league_flags" ON "public"."player_availability_flags" FOR SE
 
 
 
+ALTER TABLE "public"."wishlist_draft_mode_changes" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "wishlist_draft_mode_changes_select" ON "public"."wishlist_draft_mode_changes" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."league_members"
+  WHERE (("league_members"."league_id" = "wishlist_draft_mode_changes"."league_id") AND ("league_members"."user_id" = "auth"."uid"())))));
+
+
+
 ALTER TABLE "public"."wishlist_draft_submissions" ENABLE ROW LEVEL SECURITY;
 
 
@@ -13750,10 +15481,211 @@ CREATE POLICY "wishlist_draft_windows_select" ON "public"."wishlist_draft_window
 
 
 
+
+
+ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+
+
+
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."chat_messages";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."clubhouse_messages";
+
+
+
+
+
+
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+REVOKE ALL ON FUNCTION "public"."_chip_enabled"("p_league_id" "uuid", "p_chip" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."_chip_enabled"("p_league_id" "uuid", "p_chip" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."_chips_open_round"("p_league_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."_chips_open_round"("p_league_id" "uuid") TO "service_role";
 
 
 
@@ -13777,6 +15709,56 @@ GRANT ALL ON FUNCTION "public"."_log_squad_event"("p_event_type" "text", "p_leag
 GRANT ALL ON FUNCTION "public"."_trigger_seed_cup_clubs"() TO "anon";
 GRANT ALL ON FUNCTION "public"."_trigger_seed_cup_clubs"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."_trigger_seed_cup_clubs"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_carry_over"("p_league_id" "uuid", "p_round" integer) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_default_mode"("p_league_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_is_draft_league"("p_league_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_next_round"("p_league_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_notify_members"("p_league_id" "uuid", "p_type" "text", "p_title" "text", "p_description" "text", "p_by" "uuid", "p_only_commissioners" boolean) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_open_market"("p_league_id" "uuid", "p_round" integer) TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."wishlist_draft_windows" TO "anon";
+GRANT ALL ON TABLE "public"."wishlist_draft_windows" TO "authenticated";
+GRANT ALL ON TABLE "public"."wishlist_draft_windows" TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_pending_window"("p_league_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_suggested_draft_at"("p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) TO "anon";
+GRANT ALL ON FUNCTION "public"."_wishlist_suggested_draft_at"("p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."_wishlist_suggested_draft_at"("p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."_wishlist_transfers_in_window"("p_league_id" "uuid", "p_since" timestamp with time zone) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."accept_bet_invite"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."accept_bet_invite"("p_bet_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."accept_bet_invite"("p_bet_id" "uuid") TO "service_role";
 
 
 
@@ -13908,6 +15890,13 @@ GRANT ALL ON FUNCTION "public"."award_trophy"("p_circle_id" "uuid", "p_league_id
 
 
 
+GRANT ALL ON FUNCTION "public"."bytea_to_text"("data" "bytea") TO "postgres";
+GRANT ALL ON FUNCTION "public"."bytea_to_text"("data" "bytea") TO "anon";
+GRANT ALL ON FUNCTION "public"."bytea_to_text"("data" "bytea") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."bytea_to_text"("data" "bytea") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") TO "service_role";
@@ -13956,9 +15945,19 @@ GRANT ALL ON FUNCTION "public"."claim_p2p_challenge"("p_challenge_id" "uuid") TO
 
 
 
+GRANT ALL ON FUNCTION "public"."clear_joker"("p_league_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."clear_joker"("p_league_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."clear_joker"("p_league_id" "uuid") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."close_p2p_bet"("p_bet_id" "uuid") TO "authenticated";
+
+
+
+GRANT ALL ON FUNCTION "public"."commit_wishlist_draft"("p_league_id" "uuid", "p_round" integer, "p_run_token" "uuid", "p_allocations" "jsonb", "p_participant_count" integer) TO "service_role";
 
 
 
@@ -14022,9 +16021,19 @@ GRANT ALL ON FUNCTION "public"."create_player_box"("p_name" "text", "p_season_ye
 
 
 
+GRANT ALL ON FUNCTION "public"."create_wishlist_draft_round"("p_league_id" "uuid", "p_round" integer, "p_round_ended_at" timestamp with time zone, "p_first_kickoff" timestamp with time zone) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text", "p_bet_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."cron_sync_active_tournaments"("p_function_name" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."cron_sync_active_tournaments"("p_function_name" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."cron_sync_active_tournaments"("p_function_name" "text") TO "service_role";
 
 
 
@@ -14169,6 +16178,13 @@ GRANT ALL ON FUNCTION "public"."get_active_transfer_window"("p_league_id" "uuid"
 
 
 
+REVOKE ALL ON FUNCTION "public"."get_bet_invite_preview"("p_bet_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_bet_invite_preview"("p_bet_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_bet_invite_preview"("p_bet_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_bet_invite_preview"("p_bet_id" "uuid") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") TO "service_role";
@@ -14253,6 +16269,12 @@ GRANT ALL ON FUNCTION "public"."get_h2h_standings"("p_league_id" "uuid") TO "ser
 
 
 
+REVOKE ALL ON FUNCTION "public"."get_league_market_events"("p_league_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_league_market_events"("p_league_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_league_market_events"("p_league_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "service_role";
@@ -14262,6 +16284,12 @@ GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "serv
 REVOKE ALL ON FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") TO "authenticated";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_my_chips"("p_league_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_my_chips"("p_league_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_my_chips"("p_league_id" "uuid") TO "service_role";
 
 
 
@@ -14333,6 +16361,12 @@ GRANT ALL ON FUNCTION "public"."get_player_box_leaderboard"("p_player_box_id" "u
 
 
 
+GRANT ALL ON FUNCTION "public"."get_score_discrepancies"("p_matchday_id" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_score_discrepancies"("p_matchday_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_score_discrepancies"("p_matchday_id" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_server_time"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_server_time"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_server_time"() TO "service_role";
@@ -14392,6 +16426,11 @@ GRANT ALL ON FUNCTION "public"."get_wishlist_draft_status"("p_league_id" "uuid")
 
 
 
+GRANT ALL ON FUNCTION "public"."get_wishlist_next_draft"("p_league_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_wishlist_next_draft"("p_league_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."guard_coin_columns"() TO "anon";
 GRANT ALL ON FUNCTION "public"."guard_coin_columns"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."guard_coin_columns"() TO "service_role";
@@ -14425,6 +16464,104 @@ GRANT ALL ON FUNCTION "public"."guard_users_privilege_columns"() TO "service_rol
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http"("request" "public"."http_request") TO "postgres";
+GRANT ALL ON FUNCTION "public"."http"("request" "public"."http_request") TO "anon";
+GRANT ALL ON FUNCTION "public"."http"("request" "public"."http_request") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http"("request" "public"."http_request") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying, "content" character varying, "content_type" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying, "content" character varying, "content_type" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying, "content" character varying, "content_type" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_delete"("uri" character varying, "content" character varying, "content_type" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying, "data" "jsonb") TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying, "data" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying, "data" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_get"("uri" character varying, "data" "jsonb") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_head"("uri" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_head"("uri" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_head"("uri" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_head"("uri" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_header"("field" character varying, "value" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_header"("field" character varying, "value" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_header"("field" character varying, "value" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_header"("field" character varying, "value" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_list_curlopt"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_list_curlopt"() TO "anon";
+GRANT ALL ON FUNCTION "public"."http_list_curlopt"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_list_curlopt"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_patch"("uri" character varying, "content" character varying, "content_type" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_patch"("uri" character varying, "content" character varying, "content_type" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_patch"("uri" character varying, "content" character varying, "content_type" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_patch"("uri" character varying, "content" character varying, "content_type" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "data" "jsonb") TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "data" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "data" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "data" "jsonb") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "content" character varying, "content_type" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "content" character varying, "content_type" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "content" character varying, "content_type" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_post"("uri" character varying, "content" character varying, "content_type" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_put"("uri" character varying, "content" character varying, "content_type" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_put"("uri" character varying, "content" character varying, "content_type" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_put"("uri" character varying, "content" character varying, "content_type" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_put"("uri" character varying, "content" character varying, "content_type" character varying) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_reset_curlopt"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_reset_curlopt"() TO "anon";
+GRANT ALL ON FUNCTION "public"."http_reset_curlopt"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_reset_curlopt"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."http_set_curlopt"("curlopt" character varying, "value" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."http_set_curlopt"("curlopt" character varying, "value" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."http_set_curlopt"("curlopt" character varying, "value" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."http_set_curlopt"("curlopt" character varying, "value" character varying) TO "service_role";
 
 
 
@@ -14571,9 +16708,20 @@ GRANT ALL ON FUNCTION "public"."place_bid"("p_listing_id" "uuid", "p_bid_amount"
 
 
 
+REVOKE ALL ON FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."post_bet_activity_message"("p_circle_id" "uuid", "p_user_id" "uuid", "p_content" "text", "p_bet_ref" "jsonb") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."preserve_manual_matchday_id"() TO "anon";
 GRANT ALL ON FUNCTION "public"."preserve_manual_matchday_id"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."preserve_manual_matchday_id"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."prevent_relaxation_disable_after_shared_ownership"() TO "anon";
+GRANT ALL ON FUNCTION "public"."prevent_relaxation_disable_after_shared_ownership"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."prevent_relaxation_disable_after_shared_ownership"() TO "service_role";
 
 
 
@@ -14607,9 +16755,19 @@ GRANT ALL ON FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", 
 
 
 
+GRANT ALL ON FUNCTION "public"."reopen_wishlist_draft"("p_league_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."reopen_wishlist_draft"("p_league_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."report_client_error"("p_message" "text", "p_stack" "text", "p_url" "text", "p_user_agent" "text", "p_context" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."report_client_error"("p_message" "text", "p_stack" "text", "p_url" "text", "p_user_agent" "text", "p_context" "jsonb") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."report_client_error"("p_message" "text", "p_stack" "text", "p_url" "text", "p_user_agent" "text", "p_context" "jsonb") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."request_wishlist_draft_run"("p_league_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."request_wishlist_draft_run"("p_league_id" "uuid") TO "service_role";
 
 
 
@@ -14684,6 +16842,12 @@ GRANT ALL ON FUNCTION "public"."set_competition_archived"("p_competition_type" "
 
 
 
+GRANT ALL ON FUNCTION "public"."set_joker"("p_league_id" "uuid", "p_player_id" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."set_joker"("p_league_id" "uuid", "p_player_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_joker"("p_league_id" "uuid", "p_player_id" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") TO "service_role";
@@ -14696,8 +16860,28 @@ GRANT ALL ON FUNCTION "public"."set_tennis_qf_captain"("p_tournament_id" "uuid",
 
 
 
+GRANT ALL ON FUNCTION "public"."set_wishlist_draft_mode"("p_league_id" "uuid", "p_scope" "text", "p_mode" "text", "p_scheduled_at" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_wishlist_draft_mode"("p_league_id" "uuid", "p_scope" "text", "p_mode" "text", "p_scheduled_at" timestamp with time zone) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."set_wishlist_next_draft"("p_league_id" "uuid", "p_at" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_wishlist_next_draft"("p_league_id" "uuid", "p_at" timestamp with time zone) TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."settle_bet_coins"("p_bet_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."settle_due_freeform_challenges"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."settle_due_freeform_challenges"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."settle_freeform_challenge"("p_challenge_id" "uuid", "p_winner_id" "uuid", "p_reason" "text", "p_actor" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."settle_freeform_challenge"("p_challenge_id" "uuid", "p_winner_id" "uuid", "p_reason" "text", "p_actor" "uuid") TO "service_role";
 
 
 
@@ -14783,6 +16967,23 @@ GRANT ALL ON FUNCTION "public"."sync_wc_players"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."sync_wishlist_draft_kickoffs"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."tennis_stale_tournament_sweep"() TO "anon";
+GRANT ALL ON FUNCTION "public"."tennis_stale_tournament_sweep"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."tennis_stale_tournament_sweep"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."text_to_bytea"("data" "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."text_to_bytea"("data" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."text_to_bytea"("data" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."text_to_bytea"("data" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."tg_recompute_ranks"() TO "anon";
 GRANT ALL ON FUNCTION "public"."tg_recompute_ranks"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."tg_recompute_ranks"() TO "service_role";
@@ -14807,9 +17008,9 @@ GRANT ALL ON FUNCTION "public"."trigger_wc2026_sync"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) TO "anon";
-GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) TO "service_role";
+GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean, "p_archived" boolean) TO "anon";
+GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean, "p_archived" boolean) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean, "p_archived" boolean) TO "service_role";
 
 
 
@@ -14825,9 +17026,51 @@ GRANT ALL ON FUNCTION "public"."update_scoring_rules_updated_at"() TO "service_r
 
 
 
+GRANT ALL ON FUNCTION "public"."urlencode"("string" "bytea") TO "postgres";
+GRANT ALL ON FUNCTION "public"."urlencode"("string" "bytea") TO "anon";
+GRANT ALL ON FUNCTION "public"."urlencode"("string" "bytea") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."urlencode"("string" "bytea") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."urlencode"("data" "jsonb") TO "postgres";
+GRANT ALL ON FUNCTION "public"."urlencode"("data" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."urlencode"("data" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."urlencode"("data" "jsonb") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."urlencode"("string" character varying) TO "postgres";
+GRANT ALL ON FUNCTION "public"."urlencode"("string" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."urlencode"("string" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."urlencode"("string" character varying) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."void_bet"("p_instance_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."void_bet"("p_instance_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."void_bet"("p_instance_id" "uuid") TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14918,6 +17161,18 @@ GRANT ALL ON TABLE "public"."club_cap_rules" TO "service_role";
 GRANT ALL ON SEQUENCE "public"."club_cap_rules_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."club_cap_rules_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."club_cap_rules_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."club_logos" TO "anon";
+GRANT ALL ON TABLE "public"."club_logos" TO "authenticated";
+GRANT ALL ON TABLE "public"."club_logos" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."club_logos_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."club_logos_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."club_logos_id_seq" TO "service_role";
 
 
 
@@ -15245,6 +17500,18 @@ GRANT ALL ON TABLE "public"."player_status" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."product_events" TO "anon";
+GRANT ALL ON TABLE "public"."product_events" TO "authenticated";
+GRANT ALL ON TABLE "public"."product_events" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."product_events_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."product_events_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."product_events_id_seq" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."projection_snapshots" TO "anon";
 GRANT ALL ON TABLE "public"."projection_snapshots" TO "authenticated";
 GRANT ALL ON TABLE "public"."projection_snapshots" TO "service_role";
@@ -15254,6 +17521,12 @@ GRANT ALL ON TABLE "public"."projection_snapshots" TO "service_role";
 GRANT ALL ON TABLE "public"."round_backups" TO "anon";
 GRANT ALL ON TABLE "public"."round_backups" TO "authenticated";
 GRANT ALL ON TABLE "public"."round_backups" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."round_freeze_locks" TO "anon";
+GRANT ALL ON TABLE "public"."round_freeze_locks" TO "authenticated";
+GRANT ALL ON TABLE "public"."round_freeze_locks" TO "service_role";
 
 
 
@@ -15399,15 +17672,21 @@ GRANT ALL ON TABLE "public"."user_profiles" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."wishlist_draft_mode_changes" TO "anon";
+GRANT ALL ON TABLE "public"."wishlist_draft_mode_changes" TO "authenticated";
+GRANT ALL ON TABLE "public"."wishlist_draft_mode_changes" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."wishlist_draft_submissions" TO "anon";
 GRANT ALL ON TABLE "public"."wishlist_draft_submissions" TO "authenticated";
 GRANT ALL ON TABLE "public"."wishlist_draft_submissions" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."wishlist_draft_windows" TO "anon";
-GRANT ALL ON TABLE "public"."wishlist_draft_windows" TO "authenticated";
-GRANT ALL ON TABLE "public"."wishlist_draft_windows" TO "service_role";
+
+
+
 
 
 
@@ -15435,6 +17714,30 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
