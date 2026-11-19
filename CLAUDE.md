@@ -523,6 +523,10 @@ grep -n "^import" src/screens/LeagueScreen.jsx
 
 ---
 
+### Realtime channel names must be unique per hook instance
+
+`supabase.channel(name)` returns the already-subscribed channel when the name is reused, and adding `.on()` to it throws. A hook that opens a channel must put a per-mount random suffix in the name (`${name}:${Math.random().toString(36).slice(2)}`), because two components often call the same hook at once. A fixed name crashed every Clubhouse on 2026-11-14 (PR #1169).
+
 - **E2E**: `platform.spec.js` must stay green — CI runs it automatically on every PR (42 tests × 2 browsers = 84, ~3 min). Integration specs (draft/scoring/bets) run manually: `npx playwright test e2e/<spec>.spec.js`
 - **Mobile-first**: All UI tested at 375px viewport minimum (use DevTools device emulation)
 - **RLS**: Never bypass Supabase Row Level Security — always filter by `auth.uid()`

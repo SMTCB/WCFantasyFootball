@@ -6682,8 +6682,9 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - C-19: tapping a bet card in the Room opens that bet as its own conversation (bet, coins on the table, who is in, chat about that bet only). Migration 311 adds `thread_kind`/`thread_id` to `clubhouse_messages`; those messages are kept out of the main Room stream. Live score is not shown yet.
 - J-14: Home opens with a "Your move" list (bets to take or pass, results to declare or confirm, unfinished squads), one button per row, from one shared query (`useYourMove`).
 - C-04: the three shortcut cards in the Clubhouse are replaced by one line at the top of the Room ("N waiting for you · N open bets · N coins on the table") from the same query, with a Wallet link. No database change.
+- CLUBHOUSE-CRASH-1 (PR #1169, 2026-11-14): opening any Clubhouse showed "Something went wrong" after S13. `useWallet`, `useChallenges` and `useGroupBets` each opened a live-update channel with a fixed name, and the Room now mounts them next to the same hooks in the Clubhouse screen; the second `.on()` on an already-subscribed channel throws. Each hook now adds a per-mount random suffix to its channel name. Not yet confirmed on a signed-in screen.
 
-Last Updated: 2026-11-14
+Last Updated: 2026-11-19
 
 ## 2026-11-13 — Session S4 (welcome fixes)
 
