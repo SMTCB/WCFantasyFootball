@@ -10,7 +10,7 @@ export default function DesignKitScreen() {
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--paper)', minHeight: '100vh' }}>
       <PageHeader
-        title="Frontrow design kit"
+        title="Clubhouse design kit"
         meta={<><StatPill>Wave 0</StatPill><StatPill tone="accent">Dev only</StatPill></>}
         stats={<div><b style={{ fontSize: 24 }}>12</b><div style={{ fontSize: 12, color: 'var(--mute)' }}>tokens</div></div>}
       >

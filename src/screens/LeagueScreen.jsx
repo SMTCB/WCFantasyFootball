@@ -995,7 +995,7 @@ export default function LeagueScreen() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Competition</label>
+            <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">League</label>
             {tournaments.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {tournaments.map(t => (

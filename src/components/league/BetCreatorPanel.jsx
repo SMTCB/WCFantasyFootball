@@ -749,7 +749,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                           padding: '5px 9px', fontFamily: MONO, fontSize: 'var(--fs-label)', cursor: 'pointer', borderRadius: 2,
                           background: ouLine === v ? 'rgba(201,168,76,0.18)' : 'var(--elev)',
                           border: `1px solid ${ouLine === v ? 'rgba(201,168,76,0.5)' : 'var(--rule)'}`,
-                          color: ouLine === v ? 'var(--gold)' : 'var(--mute)',
+                          color: ouLine === v ? 'var(--gold-text)' : 'var(--mute)',
                         }}
                       >{v}</button>
                     ))}

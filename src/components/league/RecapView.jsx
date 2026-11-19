@@ -154,7 +154,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
                 {items.map((item, ii) => (
                   <div key={ii} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0' }}>
                     <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{item.label}</span>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: item.kind === 'pos' ? 'var(--positive)' : item.kind === 'bonus' ? 'var(--gold)' : 'var(--danger)' }}>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: item.kind === 'pos' ? 'var(--positive)' : item.kind === 'bonus' ? 'var(--gold-text)' : 'var(--danger)' }}>
                       {fmtPts(item.pts)}
                     </span>
                   </div>
@@ -210,14 +210,14 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
           borderTop: tradeNet > 0 ? '1px solid rgba(240,180,0,0.25)' : '1px solid rgba(240,58,58,0.25)',
           background: tradeNet > 0 ? 'rgba(240,180,0,0.06)' : 'rgba(240,58,58,0.06)',
         }}>
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', }}>—</span>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold-text)' : 'var(--danger)', }}>—</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold-text)' : 'var(--danger)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {tradeNet > 0 ? 'Trade received' : 'Trade given'}
             </span>
           </div>
           <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', textAlign: 'right' }}>—</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
+          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', textAlign: 'right', color: tradeNet > 0 ? 'var(--gold-text)' : 'var(--danger)' }}>
             {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`}
           </span>
         </div>
@@ -761,20 +761,20 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       <div key={s.user_id}>
         {desktop ? (
           <div role="button" tabIndex={0} onClick={() => toggleBreakdown(s.user_id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBreakdown(s.user_id); } }} style={rowStyle}>
-            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold-text)' : 'var(--mute)' }}>{idx + 1}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <MgrTag mono={mgrMono(name)} hue={hue} />
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
               {isTop && <span style={{ fontSize: 'var(--fs-micro)', background: 'var(--gold-soft)', color: 'var(--gold-text)', padding: '1px 8px', borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>Top</span>}
             </div>
 <div style={{ textAlign: 'right' }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold-text)' : 'var(--paper)' }}>
               {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
             </span>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', marginTop: 1, visibility: betPts > 0 ? 'visible' : 'hidden' }}>
               +{betPts} bet
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', marginTop: 1, visibility: tradeNet !== 0 ? 'visible' : 'hidden' }}>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold-text)' : 'var(--danger)', marginTop: 1, visibility: tradeNet !== 0 ? 'visible' : 'hidden' }}>
               {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
             </div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', marginTop: 1, visibility: s.penalty > 0 || (isLiveRound && s.pts !== null) ? 'visible' : 'hidden' }}>
@@ -793,7 +793,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           </div>
         ) : (
           <div role="button" tabIndex={0} onClick={() => toggleBreakdown(s.user_id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBreakdown(s.user_id); } }} style={rowStyle}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold)' : 'var(--mute)' }}>{idx + 1}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold-text)' : 'var(--mute)' }}>{idx + 1}</span>
             <MgrTag mono={mgrMono(name)} hue={hue} size={20} />
             <div style={{ minWidth: 0 }}>
               <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{name}</span>
@@ -802,14 +802,14 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               </span>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: isTop ? 'var(--gold-text)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </div>
               {betPts > 0 && (
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>+{betPts} bet</div>
               )}
               {tradeNet !== 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold-text)' : 'var(--danger)' }}>
                   {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
                 </div>
               )}

@@ -617,7 +617,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                             padding: '7px 11px', cursor: 'pointer',
                             background: customAnswerOpen ? 'rgba(224,168,0,.08)' : 'var(--bg)',
                             border: customAnswerOpen ? '1px solid var(--gold)' : '1px dashed var(--rule)',
-                            color: customAnswerOpen ? 'var(--gold)' : 'var(--mute)',
+                            color: customAnswerOpen ? 'var(--gold-text)' : 'var(--mute)',
                             fontFamily: DISPLAY, fontSize: 'var(--fs-label)', letterSpacing: '-0.01em',
                           }}
                         >{customAnswerOpen ? '✕ CANCEL' : '+ OTHER / WRITE-IN'}</button>
@@ -1475,14 +1475,14 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
           opacity: saving ? 0.7 : 1,
         }}
       >
-        {saved ? 'Saved ✓' : saving ? 'SAVING…' : 'Save P2P config'}
+        {saved ? 'Saved ✓' : saving ? 'SAVING…' : 'Save bet settings'}
       </button>
     </div>
   );
 
   if (isMobile) {
     return (
-      <MobLifecycleCard title="P2P challenges" status={enabled ? 'ON' : 'OFF'} tone={enabled ? 'var(--positive)' : 'var(--mute)'} when="Set entry fee for new joiners and stake limits for challenges.">
+      <MobLifecycleCard title="Bets" status={enabled ? 'ON' : 'OFF'} tone={enabled ? 'var(--positive)' : 'var(--mute)'} when="Set entry fee for new joiners and stake limits for challenges.">
         {content}
       </MobLifecycleCard>
     );
@@ -1490,7 +1490,7 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
 
   return (
     <div style={{ padding: '18px 24px', borderTop: '1px solid var(--rule)' }}>
-      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 14 }}>P2P challenges config</div>
+      <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 14 }}>Bets config</div>
       {content}
     </div>
   );
@@ -2519,7 +2519,7 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
           style={{
             background: 'transparent',
             border: `1px solid ${genDisabled ? 'var(--rule)' : 'var(--gold)'}`,
-            color: genDisabled ? 'var(--mute)' : 'var(--gold)',
+            color: genDisabled ? 'var(--mute)' : 'var(--gold-text)',
             fontFamily: MONO, fontSize: 'var(--fs-label)',
             padding: '0 14px', cursor: genDisabled ? 'not-allowed' : 'pointer',
             flexShrink: 0, whiteSpace: 'nowrap',
@@ -3337,7 +3337,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       />
 
       {/* P2P Challenges config */}
-      <HubSectionLabel label="P2P challenges" sub="Coin entry fee & stake limits" tone="var(--gold)" />
+      <HubSectionLabel label="Bets" sub="Coin entry fee & stake limits" tone="var(--gold)" />
       <P2PChallengesConfig leagueId={leagueId} commLoading={commLoading} />
 
       {/* League News — breaking news form */}

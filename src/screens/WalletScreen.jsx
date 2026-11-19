@@ -80,7 +80,7 @@ export default function WalletScreen() {
             {escrow > 0 && (
               <div style={{ marginTop: 16, padding: '8px 14px', background: 'var(--elev)', borderRadius: 'var(--radius)', display: 'inline-block' }}>
                 <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-                  {escrow.toLocaleString()} in escrow (active challenges)
+                  {escrow.toLocaleString()} on the table (open bets)
                 </span>
               </div>
             )}
@@ -146,7 +146,7 @@ export default function WalletScreen() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
             {[
               { label: 'Circulating', value: Number(econStats.circulating).toLocaleString() },
-              { label: 'In escrow',   value: Number(econStats.in_escrow).toLocaleString() },
+              { label: 'On the table',   value: Number(econStats.in_escrow).toLocaleString() },
               { label: 'Challenges',  value: econStats.challenges_total },
               { label: 'Rake burned', value: Number(econStats.rake_burned).toLocaleString() },
             ].map(({ label, value }) => (

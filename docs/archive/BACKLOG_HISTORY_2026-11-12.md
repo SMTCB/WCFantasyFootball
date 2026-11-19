@@ -6774,5 +6774,6 @@ Last Updated: 2026-11-19
 
 - C-03: Clubhouse tabs are now The Room, Leagues, People. Settings sit behind a gear (owner only). The Paper and the weekly digest are linked from Leagues. Old `?tab=home|chat|members` links still work.
 - C-05: People tab shows each member's bets won out of bets played in this Clubhouse (resolved group bets), trophies, and a Challenge button that opens a head-to-head challenge aimed at that member (`/challenges?opponent=<id>`). No database change.
+- DD-P3-2 (2026-11-19): `SlideToConfirm` drag handler now lists `clamp` as a dependency (clamp wrapped in `useCallback`), so the lint warning is gone and the drag cannot use a stale limit.
 
-Last Updated: 2026-11-14
+Last Updated: 2026-11-19
