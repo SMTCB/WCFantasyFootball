@@ -6776,4 +6776,12 @@ Last Updated: 2026-11-19
 - C-05: People tab shows each member's bets won out of bets played in this Clubhouse (resolved group bets), trophies, and a Challenge button that opens a head-to-head challenge aimed at that member (`/challenges?opponent=<id>`). No database change.
 - DD-P3-2 (2026-11-19): `SlideToConfirm` drag handler now lists `clamp` as a dependency (clamp wrapped in `useCallback`), so the lint warning is gone and the drag cannot use a stale limit.
 
+## S15 in-app part (2026-11-19)
+
+- C-09: the Room now shows people. A new message kind `member_activity` is posted by database triggers when someone joins a Clubhouse and when a new newspaper edition lands. Taking a bet posts a `bet_activity` card with event `taken`. Every trigger swallows its own errors, so a join, bet or edition is never blocked.
+- C-10: reactions on Room messages and cards (table `clubhouse_reactions`, four emoji, one per person per emoji, members only, realtime). The Room loads them in one query and applies live changes in place.
+- C-12: notices `friend_joined`, `friend_took_bet` (to the bet's creator) and `friend_reacted` (to the message author) carry the message id. Tapping one in the bell opens the Room and scrolls to and lights up that message.
+- Migration 312 applied 2026-11-19 after a backup. The Room and bet-chat live channels now get a random per-mount name.
+- On hold at the user's request: PUSH-1, J-16.
+
 Last Updated: 2026-11-19

@@ -58,7 +58,7 @@ export function useClubhouseChat(channelId) {
     if (!channelId) return;
 
     const ch = supabase
-      .channel(`clubhouse-msgs-${channelId}`)
+      .channel(`clubhouse-msgs-${channelId}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
