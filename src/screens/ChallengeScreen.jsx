@@ -360,7 +360,7 @@ function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, 
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
           <CoinAmt amount={challenge.stake_coins} size="sm" />
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>frozen in escrow</span>
+          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>on the table</span>
         </div>
       </div>
     );
@@ -382,7 +382,7 @@ function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, 
 
       {!challenge.proposed_by ? (
         <>
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Both staked · escrow held</div>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Both staked · coins on the table</div>
           <button
             onClick={() => onDeclare(challenge)}
             disabled={loading}
@@ -555,7 +555,7 @@ function ArbitrationModal({ challenge, onClose, onSubmit }) {
         </div>
 
         <div style={{ background: 'rgba(140,73,201,.09)', border: '1px solid rgba(140,73,201,.32)', borderRadius: 'var(--radius)', padding: '10px 12px', fontSize: 'var(--fs-label)', color: 'var(--text2)', lineHeight: 1.5, marginBottom: 16 }}>
-          <strong style={{ color: 'var(--text)' }}>{proposerName}</strong> declared <strong style={{ color: 'var(--text)' }}>{proposedWinnerLabel}</strong>{challenge.proposed_winner_id == null ? '' : ' the winner'}, and the other party disputed it. Stakes (<strong style={{ color: 'var(--text)' }}>{challenge.stake_coins}</strong> coins each) are frozen in escrow until you decide.
+          <strong style={{ color: 'var(--text)' }}>{proposerName}</strong> declared <strong style={{ color: 'var(--text)' }}>{proposedWinnerLabel}</strong>{challenge.proposed_winner_id == null ? '' : ' the winner'}, and the other party disputed it. Stakes (<strong style={{ color: 'var(--text)' }}>{challenge.stake_coins}</strong> coins each) are on the table until you decide.
         </div>
 
         {error && <div style={{ fontSize: 'var(--fs-label)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
@@ -655,7 +655,7 @@ const GROUP_BET_ERROR_MAP = {
   INVALID_OPTION:              'Invalid option selected',
   ANSWER_REQUIRED:             'Enter an answer',
   SINGLE_ANSWER_ONLY:          'This bet only allows a single answer',
-  INSUFFICIENT_ESCROW:         'Escrow shortfall — contact support',
+  INSUFFICIENT_ESCROW:         'Coins shortfall — contact support',
 };
 
 function friendlyBetError(message) {
@@ -1545,7 +1545,7 @@ function WalletTabContent({ wallet, walletLoading }) {
                 </div>
                 {escrow > 0 && (
                   <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 16 }}>
-                    {escrow.toLocaleString()} coins locked in challenges
+                    {escrow.toLocaleString()} coins on the table
                   </div>
                 )}
               </>
@@ -1567,7 +1567,7 @@ function WalletTabContent({ wallet, walletLoading }) {
             <div style={{ padding: '16px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
               {[
                 { label: 'Circulating', value: Number(econStats.circulating).toLocaleString() },
-                { label: 'In escrow',   value: Number(econStats.in_escrow).toLocaleString() },
+                { label: 'On the table',   value: Number(econStats.in_escrow).toLocaleString() },
                 { label: 'Challenges',  value: econStats.challenges_total },
                 { label: 'Rake burned', value: Number(econStats.rake_burned).toLocaleString() },
               ].map(({ label, value }) => (
@@ -1770,8 +1770,8 @@ function CreateChallengeModal({
     } catch (e) {
       const friendly = {
         DAILY_STAKE_CAP_EXCEEDED:   'Daily stake limit reached (1,000 coins / 24h)',
-        DAILY_LIMIT_REACHED:        'Daily challenge limit reached for this competition',
-        DUPLICATE_CHALLENGE:        'A challenge already exists between you two for this GW',
+        DAILY_LIMIT_REACHED:        'Daily bet limit reached for this league',
+        DUPLICATE_CHALLENGE:        'A bet already exists between you two for this GW',
         NOT_CIRCLE_MEMBER:          'You are not a member of this Clubhouse',
         OPPONENT_NOT_CIRCLE_MEMBER: 'That member has left this Clubhouse',
         LEAGUE_NOT_IN_CIRCLE:       'That competition is not linked to this Clubhouse',
@@ -1807,8 +1807,8 @@ function CreateChallengeModal({
             </div>
             <button
               onClick={() => setShowInfo(v => !v)}
-              aria-label="How challenges work"
-              title="How challenges work"
+              aria-label="How bets work"
+              title="How bets work"
               style={{
                 width: 22, height: 22, borderRadius: '50%', flexShrink: 0, marginTop: 2,
                 border: `1.5px solid ${showInfo ? 'var(--gold)' : 'var(--rule)'}`,
@@ -1838,7 +1838,7 @@ function CreateChallengeModal({
           <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 8, background: 'var(--elev)', border: '1px solid var(--rule)', fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.55 }}>
             <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>Football GW</strong> — football only: bet against another manager on who scores more fantasy football points in a gameweek. Resolves automatically once the gameweek closes. Only shown when this Clubhouse has a linked football competition.</div>
             <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>Freeform</strong> — bet on anything, settled by agreement. After the event, either side declares a winner (or a push); the other confirms. If you disagree, either side can dispute and the Clubhouse owner arbitrates.</div>
-            <div>Your stake moves to escrow when you send the challenge and is only released once the bet resolves. The winner gets both stakes minus a 5% rake.</div>
+            <div>Your stake goes on the table when you send the bet and is only released once the bet resolves. The winner gets both stakes minus a 5% rake.</div>
           </div>
         )}
 
@@ -1847,11 +1847,11 @@ function CreateChallengeModal({
             {!circleId ? (
               <>
                 <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--text)', marginBottom: 8 }}>No Clubhouse selected</div>
-                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5 }}>Join or create a Clubhouse before starting a challenge.</div>
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5 }}>Join or create a Clubhouse before starting a bet.</div>
               </>
             ) : (
               <>
-                <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--text)', marginBottom: 8 }}>Nobody to challenge yet</div>
+                <div style={{ ...HEAD, fontSize: 'var(--fs-body-lg)', color: 'var(--text)', marginBottom: 8 }}>Nobody to bet with yet</div>
                 <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5 }}>
                   Invite more managers to {circleName ?? 'this Clubhouse'} before you can send a challenge.
                 </div>
@@ -2211,7 +2211,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNew
           </div>
           {escrow > 0 && (
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 13 }}>
-              {escrow.toLocaleString()} coins locked in challenges
+              {escrow.toLocaleString()} coins on the table
             </div>
           )}
         </div>
@@ -2258,7 +2258,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, streak, onNew
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--text2)', lineHeight: 1.55 }}>
             Bet one person, a few, or the whole Clubhouse. Football GW (auto-resolved GW total — only when this Clubhouse has a linked football competition) is head-to-head only; Freeform bets are settled by agreement. Everyone stakes coins — winner(s) split the pool, 5% rake burned.
           </div>
-          <div style={{ marginTop: 9, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Stakes held in escrow until result</div>
+          <div style={{ marginTop: 9, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Stakes stay on the table until the result</div>
         </div>
       </div>
     </>
@@ -2347,10 +2347,10 @@ export default function ChallengeScreen() {
     try { await claimChallenge(id); showToast('Bet claimed — accept it to stake your coins!'); }
     catch (e) {
       const friendly = {
-        ALREADY_CLAIMED:            'Someone already claimed this challenge',
-        CHALLENGE_NOT_PENDING:      'This challenge is no longer open',
-        CHALLENGE_EXPIRED:          'This challenge has expired',
-        CANNOT_CLAIM_OWN_CHALLENGE: "You can't claim your own challenge",
+        ALREADY_CLAIMED:            'Someone already claimed this bet',
+        CHALLENGE_NOT_PENDING:      'This bet is no longer open',
+        CHALLENGE_EXPIRED:          'This bet has expired',
+        CANNOT_CLAIM_OWN_CHALLENGE: "You can't claim your own bet",
         NOT_CIRCLE_MEMBER:          'You are not a member of this Clubhouse',
         NOT_LEAGUE_MEMBER:          'You are not a member of that league',
       }[e.message] ?? e.message;
@@ -2528,7 +2528,7 @@ export default function ChallengeScreen() {
             </div>
             {!isMobile && (
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 3 }}>In escrow</div>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 3 }}>On the table</div>
                 <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', letterSpacing: '-0.02em', color: 'var(--paper)' }}>{escrow.toLocaleString()}</div>
               </div>
             )}

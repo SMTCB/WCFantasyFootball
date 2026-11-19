@@ -483,7 +483,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
       {sectionLabel('Visibility & Features')}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {toggle('Public Clubhouse', 'Anyone can find and join via search.', isPublic, togglePublic)}
-        {toggle('Group bets', 'On by default. Turn off to allow only one-on-one bets.', p2pEnabled, toggleP2p)}
+        {toggle('Bets with the group', 'On by default. Turn off to allow only one-on-one bets.', p2pEnabled, toggleP2p)}
       </div>
 
       {sectionLabel('Archive')}
@@ -954,7 +954,7 @@ export default function ClubhouseScreen() {
                       No competitions yet
                     </p>
                     <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 20px' }}>
-                      Create a Football league, F1 Paddock, or Tennis Player Box to get started.<br />
+                      Create a football, F1 or tennis league to get started.<br />
                       You can also chat and bet without playing.
                     </p>
                     <button

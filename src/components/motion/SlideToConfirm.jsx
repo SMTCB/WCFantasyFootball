@@ -30,7 +30,7 @@ export default function SlideToConfirm({
 
   const tone = danger ? 'var(--danger)' : 'var(--accent)';
 
-  const clamp = (x) => Math.max(0, Math.min(maxX, x));
+  const clamp = useCallback((x) => Math.max(0, Math.min(maxX, x)), [maxX]);
 
   const handlePointerDown = useCallback((e) => {
     if (disabled || reduced) return;
@@ -48,7 +48,7 @@ export default function SlideToConfirm({
     if (!track) return;
     const rect = track.getBoundingClientRect();
     setDragX(clamp(e.clientX - rect.left - THUMB / 2));
-  }, [dragging, maxX]);
+  }, [dragging, clamp]);
 
   const finishDrag = useCallback(() => {
     if (!dragging) return;

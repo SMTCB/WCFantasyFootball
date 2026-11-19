@@ -142,7 +142,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
                   padding: '10px 20px', borderBottom: '1px solid var(--rule)',
                   background: isMe ? 'rgba(0,180,216,0.04)' : 'transparent',
                 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: idx < 3 ? ['var(--gold)','#C0C0C0','#CD7F32'][idx] : 'var(--mute)' }}>{row.h2h_rank}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: idx < 3 ? ['var(--gold-text)','#C0C0C0','#CD7F32'][idx] : 'var(--mute)' }}>{row.h2h_rank}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 18, background: `${hue}18`, border: `1px solid ${hue}66`, color: hue, fontFamily: MONO, fontSize: 'var(--fs-micro)', }}>{mgrMono(row.username ?? '')}</span>
                     <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isMe ? 'var(--accent)' : 'var(--paper)' }}>{row.username ?? '?'}</span>
