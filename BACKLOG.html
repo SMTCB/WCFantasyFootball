@@ -152,12 +152,12 @@
 <header>
   <div class="header-left">
     <h1>Frontrow — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-11-19. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>. Docs index: <a href="DOCS_MAP.html">DOCS_MAP.html</a>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-11-20. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>. Docs index: <a href="DOCS_MAP.html">DOCS_MAP.html</a>.</p>
     <div class="badge-bar"></div>
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>78</strong><span>open</span></div>
+      <div class="total-pill"><strong>87</strong><span>open</span></div>
       <div class="total-pill"><strong>5</strong><span>closed</span></div>
     </div>
   </div>
@@ -171,7 +171,7 @@
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
     <span class="chip" data-filter-priority="p1">P1 — HIGH (9)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (34)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (43)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (35)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
@@ -185,13 +185,13 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">78</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">87</span></button>
       <button class="status-btn" data-status="closed">Closed <span class="status-count">5</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
       <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">9</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">34</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">35</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
@@ -221,6 +221,9 @@
 <p><strong>Wave 3 — Next: bets and people in the Clubhouse</strong></p>
 <p>The redesign proper. Order matters: settlement first (S10), then the room, then bets inside it, then the "your move" line that reads from bets.</p>
 <div class="md-table-wrap"><table class="md-table"><thead><tr><th>Session</th><th>Theme and why these belong together</th><th>Rows</th><th>Needs your yes</th><th>Test afterwards</th></tr></thead><tbody><tr><td><strong>S10: Settlement (done 2026-11-14)</strong></td><td>One flow and one set of database functions and jobs: declare, 24h to object, automatic payout. Also decides what happens when nobody declares.</td><td>J-13</td><td>Yes (database and scheduled job).</td><td>Full lifecycle with two accounts, including an objection and a bet nobody declares; unit tests for the settlement functions.</td></tr><tr><td><strong>S11: The Room: one stream (done 2026-11-14)</strong></td><td>Same files: the Clubhouse screen, its chat and its front page. Chat bug fixes and tidy-up go first because the merge builds on them.</td><td>C-01, C-06, C-07, C-11, CLUB-2</td><td>No.</td><td>On a phone: delete a message by tap, a failed send shows an error, sender names show, chat height holds when the address bar moves; empty Clubhouse offers three actions.</td></tr><tr><td><strong>S12: Tabs and people (done 2026-11-14; CLUB-SCORE-1 left open)</strong></td><td>The tab structure and the People tab belong together; the cross-sport score decision decides what People and Leagues show.</td><td>C-03, C-05, CLUB-SCORE-1</td><td>Maybe: CLUB-SCORE-1 after its decision.</td><td>Three tabs; old tab links and settings still reachable; member records match the standings.</td></tr><tr><td><strong>S13: Bets in the Room (part done 2026-11-14; CLUB-BET-1 left open)</strong></td><td>All four read and write the same bet hooks (<code>useChallenges</code>, <code>useGroupBets</code>, <code>useMyBets</code>). Leagues keep the commissioner-created bets as they are until the end of the season.</td><td>CLUB-BET-1, C-08, C-20, C-19</td><td>Yes (messages tied to a bet need a database change).</td><td>Create a bet from the message box; take or pass on its card; open it as its own conversation; league-level bets still work unchanged.</td></tr><tr><td><strong>S14: Your move (done 2026-11-14)</strong></td><td>One "things waiting for me" query feeds both the Home screen and the line at the top of the Room.</td><td>J-14, C-04</td><td>No.</td><td>A bet to accept, a result to confirm and a lineup to set each show once and clear when done; counts match on Home and in the Room.</td></tr><tr><td><strong>S15: Friends and notices (C-09, C-10, C-12 done 2026-11-19; PUSH-1 and J-16 on hold)</strong></td><td>Feed items, reactions, in-app notices and how they reach a phone: one notice pipeline.</td><td>PUSH-1, J-16 (on hold)</td><td>Yes (new tables or columns, push keys, a job).</td><td>A notice opens the exact item in the Room; push arrives on an installed app on iPhone and Android; email goes first for people who have not opened the app.</td></tr></tbody></table></div>
+<p><strong>Wave 3b — Next: the Matchday screens (added 2026-11-20)</strong></p>
+<p>The owner approved Direction A, "Matchday", for Home, inside a clubhouse, the football league and Bets (design board: https://claude.ai/artifact/PuRe51KFXyT2y6NVEoN68f). Build in this order. The plan, with what each screen reuses and what is new: docs/product/CLUBHOUSE_MATCHDAY_SCREENS_PLAN_2026-11-20.md. Rule for all four: the pitch is the app's existing pitch (<code>PitchView</code> on desktop, <code>MobilePitchField</code> on phone, with their benches), unchanged.</p>
+<div class="md-table-wrap"><table class="md-table"><thead><tr><th>Session</th><th>Theme and why these belong together</th><th>Rows</th><th>Needs your yes</th><th>Test afterwards</th></tr></thead><tbody><tr><td><strong>S26: Home, Matchday</strong></td><td>Home reads every clubhouse at once: live points, where you stand in each league, and Your move. The live points hook built here is reused in S28.</td><td>MD-3, MD-2, MD-1</td><td>Only if MD-2 needs its read-only function (migration 313).</td><td>An account in 1 clubhouse and one in 3 or more: headline counts right, every card names its clubhouse; no live match means no hero; 375px; <code>platform.spec.js</code>.</td></tr><tr><td><strong>S27: Inside a clubhouse</strong></td><td>The clubhouse header (members around the table, who is here now) and the Leagues tab are the same screen.</td><td>MD-5, MD-4</td><td>No.</td><td>Two signed-in browsers: each sees the other glow, and the glow goes on leave; 2 and 12 members lay out cleanly; the Room still works.</td></tr><tr><td><strong>S28: Football league, Matchweek tab</strong></td><td>Live and Standings become one tab: your race, the live pitch (unchanged), and the table as it stands. Touches LeagueScreen, so heed the Rolldown rule.</td><td>MD-7, MD-6</td><td>Yes: MD-7's read-only function.</td><td>A finished matchweek matches today's Standings and Live exactly; live points tick and rows reorder; H2H shows the duel; Squad screen unchanged; old Live links land on the tab; <code>npm run build</code>.</td></tr><tr><td><strong>S29: Bets</strong></td><td>The composer, the sections, the coins card and the thread all read the same bet hooks. League bets stay as they are.</td><td>MD-8, MD-9</td><td>Only for the optional match link on freeform bets (a design decision first).</td><td>Create, take, pass and declare from the new screen; a squad-total bet shows live totals in its thread; league bets unchanged; 375px.</td></tr></tbody></table></div>
 <p><strong>Wave 4 — Later: strengthen and extend</strong></p>
 <p>Safe to reorder. Each session is one code area, so any of them can be done on its own.</p>
 <div class="md-table-wrap"><table class="md-table"><thead><tr><th>Session</th><th>Theme and why these belong together</th><th>Rows</th><th>Needs your yes</th><th>Test afterwards</th></tr></thead><tbody><tr><td><strong>S16: Shared building blocks</strong></td><td>Buttons, inputs, icons, loading states, the shared sheet and the component catalogue are one family of shared components. Heed the Rolldown rule in CLAUDE.md: check that a new import is not already imported by LeagueScreen before adding it to a child.</td><td>UI-AUDIT-SYS-02, UI-AUDIT-FRM-04, UI-AUDIT-ICN-01, UI-AUDIT-FBK-01, CODE-6, M0-BOTTOMSHEET, LOW-2, UX-DESKTOP-1</td><td>No.</td><td><code>npx madge --circular src/</code>; <code>npm run build</code> (the crash only shows in the production build); <code>platform.spec.js</code> both browsers; spot check the screens each component replaced.</td></tr><tr><td><strong>S17: Test coverage</strong></td><td>Do after the screens above settle, so the tests are not written for screens that are about to change.</td><td>TEST-E2E-1, CODE-4</td><td>No.</td><td>New specs pass in CI and fail when the behaviour they cover is broken on purpose.</td></tr><tr><td><strong>S18: League bets</strong></td><td>The commissioner-created league bets: same commissioner panel and the same settlement function. Kept alive until the end of the season; improve, do not remove.</td><td>FB-28, FB-30, FB-29</td><td>Yes (new functions, payout formula, schema for FB-29).</td><td>Create, lock, reopen and settle a league bet; payouts match the formula on a past bet; old bets unchanged.</td></tr><tr><td><strong>S19: Football scoring and seasons</strong></td><td>The scoring function, the trophy job and the season handling all live in the football edge functions and share the same safety steps.</td><td>FALLBACK-1, TROPHY-1, SEASON-1, B-04b</td><td>Yes (function deploys, a job, possible data change). Switching the trophy job on is a separate yes.</td><td><code>npm run test:unit</code> for <code>calculate-scores</code>; re-score a past matchday and compare; run the trophy job in dry-run mode on the completed World Cup.</td></tr><tr><td><strong>S20: Draft and squad</strong></td><td>Squad size is shared with scoring, so after S19. The bench slots and the draft screen are the same code.</td><td>FB-24, DRAFT-20, B-01</td><td>Yes (schema).</td><td>Run a full draft with 15 and with 20 players; a scoring run counts the right 15; the substitution cap holds.</td></tr><tr><td><strong>S21: Market and player cards</strong></td><td>Same screen and same card component.</td><td>FB-15, PCARD-2</td><td>No.</td><td>Sort by price, form and minutes; cards show flags and photos with a fallback; 375px layout.</td></tr><tr><td><strong>S22: Data foundation</strong></td><td>Schema baseline, reconciliation and the forza_id rename all change how the migration folder matches production.</td><td>DATA-1, DATA-2, DATA-RECON, DD-P2-2, ARCH-2, ARCH-3</td><td>Yes. Backup first, per CLAUDE.md.</td><td>A replay of the migration folder on an empty database matches production; the rename changes no behaviour.</td></tr><tr><td><strong>S23: Infrastructure and supply chain</strong></td><td>Staging, point-in-time recovery, dependency hardening and the runbooks.</td><td>OPS-1, DEPS-2, SEC-5, INFRA-1, INFRA-2</td><td>Yes for OPS-1 and INFRA-2.</td><td>A restore drill on staging; the audit gate still passes.</td></tr><tr><td><strong>S24: Before the stores</strong></td><td>Legal, privacy, naming and the store checklist. Push for the native app (LOW-6) needs MOBILE-1 first, so they sit together.</td><td>GDPR-1, GDPR-2, GDPR-3, LEGAL-1, PAY-1, BIZ-1, BRAND-4, MOBILE-1, LOW-6</td><td>Partly: GDPR-2, GDPR-3, LEGAL-1 change data; the rest are decisions or documents.</td><td>Export and erasure work for one test account; the checklist in MOBILE-1 is ticked.</td></tr></tbody></table></div>
@@ -394,8 +397,161 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">34</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">43</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-1 home, matchday: headline across all clubhouses, live hero, ticker, your move cards labelled by clubhouse, &quot;where you stand&quot; rail design approved 2026-11-20 (board https://claude.ai/artifact/pure51kfxyt2y6nveon68f, screen 01). headline &quot;you lead n of your m leagues&quot; with the closest race and its clubhouse; the hero shows only when one of your matches is on. uses md-2 and md-3. session s26. plan: docs/product/clubhouse_matchday_screens_plan_2026-11-20.md open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Home, Matchday: headline across all clubhouses, live hero, ticker, Your move cards labelled by clubhouse, "Where you stand" rail</h3>
+        <p class="card-summary">Design approved 2026-11-20 (board https://claude.ai/artifact/PuRe51KFXyT2y6NVEoN68f, screen 01). Headline "You lead N of your M leagues" with the closest race and its clubhouse; the hero shows only when one of your matches is on. Uses MD-2 and MD-3. Session S26. Plan: docs/product/CLUBHOUSE_MATCHDAY_SCREENS_PLAN_2026-11-20.md</p>
+        <div class="card-foot"><span class="foot-id">MD-1</span><span class="foot-effort">M (~3-4 days)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Home, Matchday: headline across all clubhouses, live hero, ticker, Your move cards labelled by clubhouse, "Where you stand" rail</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Home, Matchday: headline across all clubhouses, live hero, ticker, Your move cards labelled by clubhouse, "Where you stand" rail</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Design approved 2026-11-20 (board https://claude.ai/artifact/PuRe51KFXyT2y6NVEoN68f, screen 01). Headline "You lead N of your M leagues" with the closest race and its clubhouse; the hero shows only when one of your matches is on. Uses MD-2 and MD-3. Session S26. Plan: docs/product/CLUBHOUSE_MATCHDAY_SCREENS_PLAN_2026-11-20.md</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-2 where you stand in every league: rank, total and the people just above and below, across clubhouses and sports new hook `usemyleaguepositions()`. football reads `league_members` (`rank`, `total_points`); f1 and tennis read their own standings. if access rules block reading neighbours, one read-only function `get_my_league_positions()` (migration, needs your yes). feeds md-1 and md-4. session s26. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Where you stand in every league: rank, total and the people just above and below, across clubhouses and sports</h3>
+        <p class="card-summary">New hook <code>useMyLeaguePositions()</code>. Football reads <code>league_members</code> (<code>rank</code>, <code>total_points</code>); F1 and tennis read their own standings. If access rules block reading neighbours, one read-only function <code>get_my_league_positions()</code> (migration, needs your yes). Feeds MD-1 and MD-4. Session S26.</p>
+        <div class="card-foot"><span class="foot-id">MD-2</span><span class="foot-effort">S-M (~1-2 days)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Where you stand in every league: rank, total and the people just above and below, across clubhouses and sports</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Where you stand in every league: rank, total and the people just above and below, across clubhouses and sports</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>New hook <code>useMyLeaguePositions()</code>. Football reads <code>league_members</code> (<code>rank</code>, <code>total_points</code>); F1 and tennis read their own standings. If access rules block reading neighbours, one read-only function <code>get_my_league_positions()</code> (migration, needs your yes). Feeds MD-1 and MD-4. Session S26.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-3 live points as a shared hook (`uselivepoints`), taken out of livescreen the live points logic only lives inside `livescreen.jsx`, so home and the matchweek tab cannot reuse it. move it to a hook; give its realtime channel a random suffix (the current `live-player-stats-…` name has none). livescreen must show the same numbers afterwards. session s26, reused in s28 and md-9. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+        <h3 class="card-title">Live points as a shared hook (<code>useLivePoints</code>), taken out of LiveScreen</h3>
+        <p class="card-summary">The live points logic only lives inside <code>LiveScreen.jsx</code>, so Home and the Matchweek tab cannot reuse it. Move it to a hook; give its realtime channel a random suffix (the current <code>live-player-stats-…</code> name has none). LiveScreen must show the same numbers afterwards. Session S26, reused in S28 and MD-9.</p>
+        <div class="card-foot"><span class="foot-id">MD-3</span><span class="foot-effort">S-M (~1-2 days)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+      <h2 class="drawer-title">Live points as a shared hook (<code>useLivePoints</code>), taken out of LiveScreen</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Live points as a shared hook (<code>useLivePoints</code>), taken out of LiveScreen</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>The live points logic only lives inside <code>LiveScreen.jsx</code>, so Home and the Matchweek tab cannot reuse it. Move it to a hook; give its realtime channel a random suffix (the current <code>live-player-stats-…</code> name has none). LiveScreen must show the same numbers afterwards. Session S26, reused in S28 and MD-9.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-4 inside a clubhouse: members around the table (who is here now, room bubbles, count), leagues tab first, league cards with your rank and gap design approved 2026-11-20 (board screen 02). the table is only the members display: no bets, chips or felt. tab order room, leagues (default), people. the room itself is unchanged. uses md-2 and md-5. session s27. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Inside a clubhouse: members around the table (who is here now, Room bubbles, count), Leagues tab first, league cards with your rank and gap</h3>
+        <p class="card-summary">Design approved 2026-11-20 (board screen 02). The table is only the members display: no bets, chips or felt. Tab order Room, Leagues (default), People. The Room itself is unchanged. Uses MD-2 and MD-5. Session S27.</p>
+        <div class="card-foot"><span class="foot-id">MD-4</span><span class="foot-effort">M (~3 days)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Inside a clubhouse: members around the table (who is here now, Room bubbles, count), Leagues tab first, league cards with your rank and gap</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Inside a clubhouse: members around the table (who is here now, Room bubbles, count), Leagues tab first, league cards with your rank and gap</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Design approved 2026-11-20 (board screen 02). The table is only the members display: no bets, chips or felt. Tab order Room, Leagues (default), People. The Room itself is unchanged. Uses MD-2 and MD-5. Session S27.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-5 here now: show who has the clubhouse open (realtime presence) one presence channel per clubhouse, opened once by a provider around the clubhouse screen (every user must share the channel name, so no random suffix here and no second subscriber). no database change. session s27. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Here now: show who has the clubhouse open (Realtime Presence)</h3>
+        <p class="card-summary">One presence channel per clubhouse, opened once by a provider around the clubhouse screen (every user must share the channel name, so no random suffix here and no second subscriber). No database change. Session S27.</p>
+        <div class="card-foot"><span class="foot-id">MD-5</span><span class="foot-effort">S (~1 day)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Here now: show who has the clubhouse open (Realtime Presence)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Here now: show who has the clubhouse open (Realtime Presence)</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>One presence channel per clubhouse, opened once by a provider around the clubhouse screen (every user must share the channel name, so no random suffix here and no second subscriber). No database change. Session S27.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-6 football league matchweek tab: live and standings in one place (your race, live pitch, table as it stands, fixtures, room line) design approved 2026-11-20 (board screen 03). **the pitch is the app&#x27;s existing pitch, unchanged:** `pitchview` full width on desktop with the bench strip, `mobilepitchfield` on phone with the substitutes rows; live points passed in through `players[].points`. the bench rows move unchanged out of `squadscreen.jsx` into shared components. your race card for total-points leagues, the h2h duel for h2h leagues. old live and standings links redirect. heed the rolldown rule. session s28. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Football league Matchweek tab: Live and Standings in one place (your race, live pitch, table as it stands, fixtures, Room line)</h3>
+        <p class="card-summary">Design approved 2026-11-20 (board screen 03). <strong>The pitch is the app's existing pitch, unchanged:</strong> <code>PitchView</code> full width on desktop with the bench strip, <code>MobilePitchField</code> on phone with the Substitutes rows; live points passed in through <code>players[].points</code>. The bench rows move unchanged out of <code>SquadScreen.jsx</code> into shared components. Your race card for total-points leagues, the H2H duel for H2H leagues. Old Live and Standings links redirect. Heed the Rolldown rule. Session S28.</p>
+        <div class="card-foot"><span class="foot-id">MD-6</span><span class="foot-effort">L (~1 week)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Football league Matchweek tab: Live and Standings in one place (your race, live pitch, table as it stands, fixtures, Room line)</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Football league Matchweek tab: Live and Standings in one place (your race, live pitch, table as it stands, fixtures, Room line)</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Design approved 2026-11-20 (board screen 03). <strong>The pitch is the app's existing pitch, unchanged:</strong> <code>PitchView</code> full width on desktop with the bench strip, <code>MobilePitchField</code> on phone with the Substitutes rows; live points passed in through <code>players[].points</code>. The bench rows move unchanged out of <code>SquadScreen.jsx</code> into shared components. Your race card for total-points leagues, the H2H duel for H2H leagues. Old Live and Standings links redirect. Heed the Rolldown rule. Session S28.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-7 the league table as it stands: live matchweek points and live rank for every member one read-only function `get_live_league_table(league, matchday)` (migration, needs your yes), refetched with a short delay when match stats change. must match the final standings once the matchweek is scored. session s28. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">The league table as it stands: live matchweek points and live rank for every member</h3>
+        <p class="card-summary">One read-only function <code>get_live_league_table(league, matchday)</code> (migration, needs your yes), refetched with a short delay when match stats change. Must match the final Standings once the matchweek is scored. Session S28.</p>
+        <div class="card-foot"><span class="foot-id">MD-7</span><span class="foot-effort">M (~2 days)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">The league table as it stands: live matchweek points and live rank for every member</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>The league table as it stands: live matchweek points and live rank for every member</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>One read-only function <code>get_live_league_table(league, matchday)</code> (migration, needs your yes), refetched with a short delay when match stats change. Must match the final Standings once the matchweek is scored. Session S28.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-8 bets screen, matchday: one-sentence composer, waiting on you, live now, awaiting result, settled, coins card design approved 2026-11-20 (board screen 04). reuses the bet hooks and the create logic from `challengescreen` (moved into a shared component). league bets listed apart and unchanged (c-20). `challengescreen` stays until the new screen is confirmed. session s29. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Bets screen, Matchday: one-sentence composer, Waiting on you, Live now, Awaiting result, Settled, coins card</h3>
+        <p class="card-summary">Design approved 2026-11-20 (board screen 04). Reuses the bet hooks and the create logic from <code>ChallengeScreen</code> (moved into a shared component). League bets listed apart and unchanged (C-20). <code>ChallengeScreen</code> stays until the new screen is confirmed. Session S29.</p>
+        <div class="card-foot"><span class="foot-id">MD-8</span><span class="foot-effort">M-L (~4-5 days)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Bets screen, Matchday: one-sentence composer, Waiting on you, Live now, Awaiting result, Settled, coins card</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Bets screen, Matchday: one-sentence composer, Waiting on you, Live now, Awaiting result, Settled, coins card</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Design approved 2026-11-20 (board screen 04). Reuses the bet hooks and the create logic from <code>ChallengeScreen</code> (moved into a shared component). League bets listed apart and unchanged (C-20). <code>ChallengeScreen</code> stays until the new screen is confirmed. Session S29.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="md-9 live score inside a bet&#x27;s own conversation squad-total bets already carry league and matchday, so the thread shows both squads&#x27; live totals (md-3). freeform bets show no score; linking one to a real match needs a new column and an owner decision first. session s29. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+        <h3 class="card-title">Live score inside a bet's own conversation</h3>
+        <p class="card-summary">Squad-total bets already carry league and matchday, so the thread shows both squads' live totals (MD-3). Freeform bets show no score; linking one to a real match needs a new column and an owner decision first. Session S29.</p>
+        <div class="card-foot"><span class="foot-id">MD-9</span><span class="foot-effort">S (~1 day)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-feature">FEATURE</span></div>
+      <h2 class="drawer-title">Live score inside a bet's own conversation</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Live score inside a bet's own conversation</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Squad-total bets already carry league and matchday, so the thread shows both squads' live totals (MD-3). Freeform bets show no score; linking one to a real match needs a new column and an owner decision first. Session S29.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Open Backlog — Prioritised · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="pay-1 coin faucet is the 500-coin signup grant only — `purchase-coins` is a 503 skeleton found 2026-08-21. **deliberately deferred for the pilot relaunch** by the 2026-08-21 coins scope decision — recorded here so the constraint is visible rather than discovered. verified live: `supabase secrets list` shows no `stripe_secret_key`, no `stripe_webhook_secret`, and no `mock_payments`, so `supabase/functions/purchase-coins/index.ts` returns 503 and `walletscreen` shows its &quot;payments coming soon&quot; state. the only coin faucet in production is the automatic 500-coin grant on user creation (migration `202_p2p_coin_ledger.sql:215`) — confirmed by ledger query: **all 54 `coin_transactions` rows are `type=&#x27;admin&#x27;`, 27,000 coins total**, i.e. 54 × the signup grant, with zero purchases and zero gameplay-earned coins ever. **implication for the pilot**: a tester gets 500 coins once and cannot obtain more except via `admin_grant_coins`. that is sufficient for validating p2p challenges but means the coin economy has no sink-and-source balance to observe. **decision needed before any real-money direction**: whether coins are ever purchasable (stripe, see the plug-in checklist at the top of the function), earned through gameplay, or stay a fixed per-user allocation. interacts with `legal-1` (no-cash-out is convention, not a schema constraint) — do not open the purchase path without resolving that first. open backlog — prioritised p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-business">BUSINESS</span></div>
         <h3 class="card-title">Coin faucet is the 500-coin signup grant only — <code>purchase-coins</code> is a 503 skeleton</h3>
