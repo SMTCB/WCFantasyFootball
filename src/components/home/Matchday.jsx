@@ -230,9 +230,9 @@ export function LiveHero({ leagues, fixtures, positionByLeague, circleByLeague, 
             </span>
           )}
           <button
-            onClick={() => navigate(`/live?leagueId=${league.leagueId}`)}
+            onClick={() => navigate(`/league/${league.leagueId}?tab=matchweek`)}
             style={{ minHeight: 'var(--tap)', padding: '0 14px', borderRadius: 999, border: `1px solid ${DARK_LINE}`, background: 'transparent', color: 'var(--card)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer' }}
-          >Open live →</button>
+          >Open matchweek →</button>
         </span>
       </div>
     </section>

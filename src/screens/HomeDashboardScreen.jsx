@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
 import { supabase } from '../lib/supabase';
-import { ArchivedBadge, FinishedBadge } from '../components/league/LeagueBadges';
 import { useShowArchived } from '../hooks/useShowArchived';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import { useYourMove } from '../hooks/useYourMove';
@@ -13,100 +12,15 @@ import { useViewport } from '../hooks/useViewport';
 import { useLivePoints } from '../hooks/useLivePoints';
 import { useMyLeaguePositions, summarisePositions } from '../hooks/useMyLeaguePositions';
 import { ScoreTicker, HomeHeadline, LiveHero, NextDeadlineCard, WhereYouStand, AcrossYourClubhouses } from '../components/home/Matchday';
-import { useRoomAcross, useUserNames } from '../hooks/useRoomPulse';
+import { useRoomAcross, useRoomLatestByCircle, useUserNames } from '../hooks/useRoomPulse';
+import { useCircleMembersAcross } from '../hooks/useCircleMembersAcross';
+import ClubhouseCard from '../components/home/ClubhouseCard';
 import { useHereNowAcross } from '../hooks/useHereNow';
 import { useAuth } from '../hooks/useAuth';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
-
-// Kept in sync with AppLayout.jsx's ClubhouseSwitcher so a given Clubhouse's
-// identity dot is the same color here as it is in the sidebar.
-const IDENTITY_COLORS = ['var(--accent)', 'var(--gold)', 'var(--f1)', 'var(--positive)', 'var(--danger)'];
-
-const SPORT_META = {
-  football: { label: 'Football', emoji: '⚽', color: 'var(--accent)' },
-  f1:       { label: 'F1',       emoji: '🏁', color: 'var(--f1)'    },
-  tennis:   { label: 'Tennis',   emoji: '🎾', color: 'var(--ten)'   },
-};
-
-// ── Small competition pill, used inside a ClubhouseCard's body grid ──────────
-function CompetitionChip({ item, sport, onClick }) {
-  const meta = SPORT_META[sport] ?? SPORT_META.football;
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 7, minWidth: 0,
-        minHeight: 'var(--tap)', padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)',
-        borderRadius: 'var(--radius)', cursor: 'pointer', textAlign: 'left',
-      }}
-    >
-      <span style={{ width: 4, height: 18, borderRadius: 2, background: meta.color, flexShrink: 0 }} />
-      <span style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-        {item.name}
-      </span>
-      {item.finished && <FinishedBadge />}
-      {item.archived && <ArchivedBadge />}
-      <span style={{ flexShrink: 0, fontSize: 'var(--fs-micro)' }}>{meta.emoji}</span>
-    </button>
-  );
-}
-
-// ── One Clubhouse's card: header (enter clubhouse) + competition chip grid ──
-function ClubhouseCard({ circle, comps, colorIndex, onEnterClubhouse, onEnterCompetition }) {
-  const allComps = [
-    ...(comps?.football ?? []).map(c => ({ ...c, sport: 'football' })),
-    ...(comps?.f1       ?? []).map(c => ({ ...c, sport: 'f1'       })),
-    ...(comps?.tennis   ?? []).map(c => ({ ...c, sport: 'tennis'   })),
-  ];
-  const color = IDENTITY_COLORS[colorIndex % IDENTITY_COLORS.length];
-
-  return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-      <button
-        onClick={onEnterClubhouse}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-          minHeight: 'var(--tap)', padding: '14px 16px', background: 'transparent', border: 'none',
-          borderBottom: '1px solid var(--rule)', cursor: 'pointer', textAlign: 'left',
-        }}
-      >
-        <span style={{ width: 4, height: 24, borderRadius: 2, background: color, flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.2 }}>{circle.name}</div>
-            {circle.archived && <ArchivedBadge />}
-          </div>
-          <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
-            {circle.role === 'owner' ? 'Owner · ' : ''}{allComps.length} {allComps.length === 1 ? 'competition' : 'competitions'}
-          </div>
-        </div>
-        <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>Enter →</span>
-      </button>
-
-      <div style={{ padding: 14 }}>
-        {allComps.length === 0 ? (
-          <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: '8px 0' }}>
-            No competitions yet.
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
-            {allComps.map(item => (
-              <CompetitionChip
-                key={`${item.sport}-${item.id}`}
-                item={item}
-                sport={item.sport}
-                onClick={() => onEnterCompetition(circle, item, item.sport)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ── Find / create a Clubhouse — adapted from ClubhouseScreen's FindTab ───────
 function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, creating, setCreating }) {
@@ -331,6 +245,11 @@ export default function HomeDashboardScreen() {
     return [...ids];
   }, [hereByCircle, user?.id]);
   const friendNames = useUserNames(friendIdsHere);
+  const visibleIds = useMemo(() => visibleCircles.map(c => c.id), [visibleCircles]);
+  const membersAcross = useCircleMembersAcross(visibleIds);
+  const refreshMembers = membersAcross.refresh;
+  const latestByCircle = useRoomLatestByCircle(visibleIds);
+  const refreshLatest = latestByCircle.refresh;
 
   function openCreateClubhouse() {
     setCreatingClubhouse(true);
@@ -369,7 +288,9 @@ export default function HomeDashboardScreen() {
       refreshPositions(),
     ]);
     refreshAcross();
-  }, [refresh, fetchCompetitions, circleIdsKey, refreshLive, refreshPositions, refreshAcross]);
+    refreshMembers();
+    refreshLatest();
+  }, [refresh, fetchCompetitions, circleIdsKey, refreshLive, refreshPositions, refreshAcross, refreshMembers, refreshLatest]);
 
   const pullToRefresh = usePullToRefresh(mainContentRef, refreshDashboard);
 
@@ -409,6 +330,7 @@ export default function HomeDashboardScreen() {
     [live.leagues],
   );
   const liveLeagueIds = useMemo(() => new Set(liveLeagues.map(l => l.leagueId)), [liveLeagues]);
+  const liveByLeague = useMemo(() => Object.fromEntries(live.leagues.map(l => [l.leagueId, l])), [live.leagues]);
   const deadlineLeagues = useMemo(() => {
     const ids = new Set(live.nextDeadline?.leagueIds ?? []);
     return positions.filter(p => p.sport === 'football' && ids.has(p.leagueId));
@@ -468,17 +390,41 @@ export default function HomeDashboardScreen() {
           </button>
         )}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {visibleCircles.map((circle, i) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 14 }}>
+        {visibleCircles.map(circle => (
           <ClubhouseCard
             key={circle.id}
             circle={circle}
             comps={compsByCircle[circle.id]}
-            colorIndex={i}
-            onEnterClubhouse={() => enterClubhouse(circle)}
+            members={membersAcross.byCircle ? (membersAcross.byCircle.get(circle.id) ?? []) : null}
+            meId={user?.id}
+            hereIds={hereByCircle.get(circle.id)}
+            latest={latestByCircle.byCircle.get(circle.id) ?? null}
+            positions={positions.filter(p => p.circleId === circle.id)}
+            liveByLeague={liveByLeague}
+            compact={isMobile}
+            onEnter={() => enterClubhouse(circle)}
             onEnterCompetition={enterCompetition}
+            onOpenRoom={msgId => {
+              setActiveCircleId(circle.id);
+              navigate(`/clubhouse/${circle.id}?tab=room${msgId ? `&msg=${msgId}` : ''}`);
+            }}
           />
         ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', border: '1.5px dashed var(--rule)', borderRadius: isMobile ? 16 : 18, padding: isMobile ? 16 : '18px 22px' }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <b style={{ display: 'block', ...BODY, fontWeight: 800, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Another group of friends?</b>
+            <p style={{ margin: '2px 0 0', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--text-2)' }}>
+              {isMobile ? 'Start one, or join with a code.' : 'Start a clubhouse for them, or join one with an invite code.'}
+            </p>
+          </div>
+          <button
+            onClick={openCreateClubhouse}
+            style={{ minHeight: 'var(--tap)', padding: '0 16px', background: 'var(--paper)', color: 'var(--card)', border: 'none', borderRadius: 999, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            Start or join
+          </button>
+        </div>
       </div>
     </div>
   );

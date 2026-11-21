@@ -1,7 +1,6 @@
 import { LoadingRows } from '../components/Skeleton';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { LeagueRouteTabs } from '../components/league/HubShared';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -345,7 +344,16 @@ function positionPlayers(players) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
+// A league's live view is now its Matchweek tab (MD-6); /live?leagueId= links land there.
+// /live without a league stays as the across-your-leagues live screen.
 export default function LiveScreen() {
+  const [searchParams] = useSearchParams();
+  const leagueId = searchParams.get('leagueId');
+  if (leagueId) return <Navigate to={`/league/${leagueId}?tab=matchweek`} replace />;
+  return <LiveAcrossLeagues />;
+}
+
+function LiveAcrossLeagues() {
   const { user } = useAuth();
 
   const [loading,      setLoading]      = useState(true);
@@ -770,7 +778,6 @@ export default function LiveScreen() {
 
   return (
     <div style={{ display: 'flex', flex: 1, flexDirection: 'column', background: 'var(--bg)', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', minHeight: 0 }}>
-      <LeagueRouteTabs active="live" leagueId={urlLeagueId} />
 
       {/* Live data error banner */}
       {liveError && (

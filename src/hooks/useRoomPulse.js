@@ -119,6 +119,40 @@ export function useRoomAcross(circleIds, { limit = 6 } = {}) {
   };
 }
 
+// The newest Room line in each of several clubhouses, for the Home clubhouse cards.
+// Returns { byCircle: Map circleId -> message, refresh }. Clubhouses with no line are absent.
+export function useRoomLatestByCircle(circleIds) {
+  const key = [...new Set((circleIds ?? []).filter(Boolean))].sort().join(',');
+  const [state, setState] = useState({ key: '', byCircle: new Map() });
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!key) return undefined;
+    let cancelled = false;
+    (async () => {
+      const ids = key.split(',');
+      const results = await Promise.all(ids.map(id => supabase
+        .from('clubhouse_messages')
+        .select(COLUMNS)
+        .eq('clubhouse_channels.circle_id', id)
+        .eq('clubhouse_channels.is_default', true)
+        .is('thread_id', null)
+        .order('created_at', { ascending: false })
+        .limit(1)));
+      const rows = results.flatMap(r => {
+        if (r.error) console.error('useRoomLatestByCircle: fetch failed', r.error);
+        return r.data ?? [];
+      });
+      const messages = await withNames(rows);
+      if (!cancelled) setState({ key, byCircle: new Map(messages.map(m => [m.circleId, m])) });
+    })();
+    return () => { cancelled = true; };
+  }, [key, tick]);
+
+  const refresh = useCallback(() => setTick(t => t + 1), []);
+  return { byCircle: state.key === key ? state.byCircle : new Map(), refresh };
+}
+
 // Usernames for a set of user ids (shares the cache above). Returns a Map id -> name.
 export function useUserNames(userIds) {
   const key = [...new Set((userIds ?? []).filter(Boolean))].sort().join(',');
