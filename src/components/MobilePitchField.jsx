@@ -59,7 +59,7 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
         </div>
 
         {/* Player tokens */}
-        {tokens.map(({ player, x, y, isCaptain }) => {
+        {tokens.map(({ player, x, y, slot, isCaptain }) => {
           const surname   = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? player.name?.toUpperCase() ?? '?';
           const pts       = Math.round(player.points ?? 0);
           const sc        = STATUS_COLOR[player.intel?.status] ?? 'var(--positive)';
@@ -77,6 +77,8 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
               onClick={() => (onPlayerClick ?? (() => {}))(player)}
               style={{
                 position: 'absolute', left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)',
+                // never wider than its slot in the row, so a 5-man line can't overlap
+                maxWidth: `calc(${slot}% - 4px)`,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                 cursor: 'pointer', zIndex: 10, userSelect: 'none',
               }}
@@ -122,7 +124,7 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
               <div style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
                 background: 'var(--card)', border: '1px solid var(--rule)', padding: '2px 5px 3px', borderRadius: 3,
-                maxWidth: 68,
+                maxWidth: 'min(68px, 100%)', boxSizing: 'border-box',
               }}>
                 <div style={{
                   fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',

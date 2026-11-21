@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { scrollInside } from '../lib/scrollInside';
 import { IconClose } from './UiIcons';
 
 const BODY = { fontFamily: 'var(--font-body)' };
@@ -75,7 +76,7 @@ export default function BetThread({ channelId: givenChannelId, circleId, userId,
     return () => { alive = false; };
   }, [givenChannelId, circleId]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages.length]);
+  useEffect(() => { scrollInside(endRef.current, { block: 'nearest' }); }, [messages.length]);
 
   async function send(e) {
     e.preventDefault();

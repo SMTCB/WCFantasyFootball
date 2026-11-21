@@ -1,5 +1,5 @@
 import { IconWarning } from '../components/UiIcons';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 // Empty squad shown when user has no squad yet (instead of demo data)
@@ -492,6 +492,11 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
   const transferWindow = useTransferWindow(activeLeague);
   const isMobile = useIsMobile();
   const isDesktop = useIsDesktop();
+  // Desktop sub out: bring the bench into view above the swap banner
+  const benchStripRef = useRef(null);
+  useEffect(() => {
+    if (swapMode && isDesktop) benchStripRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [swapMode, isDesktop]);
 
   // Per-club cap for the Replace picker (same RPC the market uses).
   const capMatchday = squadData?.matchdayId;
@@ -729,43 +734,6 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
         }
       }
     } finally { setSaving(false); setSelectedPlayer(null); }
-  };
-
-  // FB-021 + FB-023: confirm sell with captain safety warnings
-  const handleSellPlayer = () => {
-    if (!selectedPlayer) return;
-    const isCaptain = selectedPlayer.id === squadData.captainId;
-    const warnings  = [];
-    if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
-
-    setConfirm({
-      title:        `Remove ${selectedPlayer.name}?`,
-      body:         `${selectedPlayer.name} will be removed from your squad. Their slot opens up for a new signing.`,
-      warning:      warnings.length ? warnings.join(' ') : null,
-      confirmLabel: 'Slide to remove',
-      danger:       true,
-      slideToConfirm: true,
-      onConfirm:    doSellPlayer,
-    });
-  };
-
-  const doSellPlayer = async () => {
-    try {
-      setSaving(true);
-      const player = selectedPlayer;
-      const result = await sell(player);
-      if (!result.ok) { showToast(result.error, 'error'); return; }
-      // FB-021: clear captain if selling the captain
-      const newCaptainId = squadData.captainId === player.id ? null : squadData.captainId;
-      setSquadData({
-        ...squadData,
-        players:          squadData.players.filter(p => p.id !== player.id),
-        bench:            squadData.bench.filter(p  => p.id !== player.id),
-        captainId:        newCaptainId,
-        budget:           { ...squadData.budget, current: result.budget_remaining },
-      });
-    } catch (err) { console.error(err); }
-    finally { setSaving(false); setSelectedPlayer(null); }
   };
 
   // No leagues — render full UI chrome with a "join league" prompt in the body.
@@ -1413,7 +1381,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
         {/* A compact Pitch / List switch, a needs-attention line and a back control. */}
         <>
             {(mobileTab === 'pitch' || mobileTab === 'squad') ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 16px', borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
                 <div role="tablist" aria-label="Squad view" style={{ display: 'inline-flex', gap: 2, padding: 3, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 999 }}>
                   {[{ id: 'pitch', label: 'Pitch' }, { id: 'squad', label: 'List' }].map(t => (
                     <button
@@ -1422,7 +1390,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                       aria-selected={mobileTab === t.id}
                       onClick={() => setMobileTab(t.id)}
                       style={{
-                        padding: '6px 16px', minHeight: 32, borderRadius: 999, border: 'none', cursor: 'pointer',
+                        padding: '6px 12px', minHeight: 32, borderRadius: 999, border: 'none', cursor: 'pointer',
                         fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
                         background: mobileTab === t.id ? 'var(--card)' : 'transparent',
                         color: mobileTab === t.id ? 'var(--text)' : 'var(--mute)',
@@ -1433,7 +1401,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                     </button>
                   ))}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div className="text-right">
                     <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Squad</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 1, justifyContent: 'flex-end' }}>
@@ -1447,6 +1415,10 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                       €{budgetLeft}M
                     </div>
                   </div>
+                  {/* Owner 2026-11-21: buying happens in the market, so it sits next to the pitch (Sell left the player card) */}
+                  <button type="button" data-testid="squad-market-btn" onClick={() => setMarketOpen({ pos: null })} className="ffl-btn ffl-btn--primary ffl-btn--sm" style={{ paddingInline: 12 }}>
+                    Market
+                  </button>
                 </div>
               </div>
             ) : (
@@ -1861,8 +1833,9 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
 
       {/* ══ DESKTOP LAYOUT (S32 / MD-13) ══ pitch in the left column, side column on the right.
           The market opens over the side column as the S31 right panel. */}
-      {/* Shrink container by swap-banner height (≈64px) so bench strip stays above the fixed banner */}
-      <div className="hidden lg:flex" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
+      {/* Fixed height keeps the pitch whole (shrinking it in swap mode clipped the GK row).
+          In swap mode the extra bottom margin lets the bench scroll clear of the fixed banner. */}
+      <div className="hidden lg:flex" style={{ height: 'calc(100vh - 88px)', minHeight: 640, marginBottom: swapMode ? 80 : 0 }}>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
         {/* ── Pitch / List switch, squad count and budget ── */}
@@ -1897,6 +1870,9 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
               Budget <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: budgetLow ? 'var(--danger)' : 'var(--accent)' }}>€{budgetLeft}M</span>
             </span>
+            <button type="button" data-testid="squad-market-btn-desktop" onClick={() => setMarketOpen({ pos: null })} className="ffl-btn ffl-btn--primary ffl-btn--sm" style={{ alignSelf: 'center' }}>
+              Market
+            </button>
           </div>
         </div>
 
@@ -1946,8 +1922,8 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
               </div>
               {/* Bench strip — single row of HybridToken-style pills */}
               {bench.length > 0 && (
-                <div style={{
-                  flexShrink: 0, borderTop: '1px solid var(--rule)',
+                <div ref={benchStripRef} data-testid="bench-strip-desktop" style={{
+                  flexShrink: 0, borderTop: '1px solid var(--rule)', scrollMarginBottom: 96,
                   background: 'rgba(8,9,12,0.95)', padding: '12px 40px',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
@@ -2137,7 +2113,6 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
           onMakeCaptain={setCaptain}
           onAddToPitch={addBenchToPitch}
           onSwap={() => setSwapMode(true)}
-          onSell={handleSellPlayer}
           onReplace={canReplace && !basket.some(i => i.player.id === selectedPlayer.id)
             ? () => { setReplacing(selectedPlayer); setSelectedPlayer(null); }
             : undefined}

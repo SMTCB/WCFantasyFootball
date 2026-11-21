@@ -702,6 +702,8 @@ export default function ClubhouseScreen() {
   // A notice about a friend opens the Room on that exact message.
   const [focusMsg, setFocusMsg] = useState(() => searchParams.get('msg'));
   const clearFocus = useCallback(() => setFocusMsg(null), []);
+  // The Room lines up under these tabs when it opens (owner 2026-11-21)
+  const tabsRef = useRef(null);
   const describeNotice = (n) => {
     if (n.source_type !== 'clubhouse') return null;
     const who = (members ?? []).find(m => m.user_id === n.payload?.actor_id)?.username ?? 'A member';
@@ -942,7 +944,7 @@ export default function ClubhouseScreen() {
         <ClubhouseLobby createCircle={createCircle} joinCircleByCode={joinCircleByCode} />
       ) : (
         <>
-          <TabStrip variant="underline" tabs={MAIN_TABS} active={tab} onTab={setTab} />
+          <div ref={tabsRef}><TabStrip variant="underline" tabs={MAIN_TABS} active={tab} onTab={setTab} /></div>
 
           {/* Full-width tabs — rendered outside the max-width container */}
           {(tab === 'frontrow' || (tab === 'settings' && isOwner)) && (
@@ -968,6 +970,7 @@ export default function ClubhouseScreen() {
               feed={feed}
               onEnterLeague={enterLeague}
               layout="full"
+              anchorRef={tabsRef}
               focusMessageId={focusMsg}
               onFocusDone={clearFocus}
             />

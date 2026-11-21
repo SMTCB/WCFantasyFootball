@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { scrollInside } from '../lib/scrollInside';
 import { useAuth } from './useAuth';
 
 export function useClubhouseChat(channelId) {
@@ -85,7 +86,7 @@ export function useClubhouseChat(channelId) {
   }, [channelId, fetchMessages, resolveUsername, user?.id]);
 
   useEffect(() => {
-    scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollInside(scrollEndRef.current);
   }, [messages]);
 
   const sendMessage = useCallback(async (content) => {

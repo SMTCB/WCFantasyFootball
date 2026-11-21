@@ -409,6 +409,116 @@ test.describe('My team — desktop side column and draft leagues', () => {
   });
 });
 
+// Owner fixes 2026-11-21: Sell left the player card for a Market button, no fixtures
+// under the mobile pitch, 5-man rows don't overlap, desktop sub out keeps the bench
+// on screen, and The Room opens with its composer on the bottom edge.
+const XI_352 = ['p1', 'p3', 'p4', 'p5', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14'];
+async function expectNoOverlap(page, selector) {
+  const boxes = await page.locator(selector).evaluateAll(els => els
+    .filter(e => e.offsetParent)
+    .map(e => { const r = e.getBoundingClientRect(); return { id: e.dataset.testid, l: r.left, r: r.right, t: r.top, b: r.bottom }; }));
+  expect(boxes.length).toBeGreaterThanOrEqual(11);
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+    const a = boxes[i], c = boxes[j];
+    const overlaps = a.l < c.r - 1 && c.l < a.r - 1 && a.t < c.b - 1 && c.t < a.b - 1;
+    expect(overlaps, `${a.id} overlaps ${c.id}`).toBe(false);
+  }
+}
+
+test.describe('My team — owner fixes 2026-11-21', () => {
+  test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
+  });
+
+  test('mobile — no Sell on the player card; Market button opens the market; no fixtures under the pitch', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await openMyTeam(page);
+    await expect(page.getByText(/this week's fixtures/i)).toHaveCount(0);
+    await page.getByTestId('mobile-pitch-token-p9').click();
+    await expect(page.getByRole('button', { name: /make captain/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^sell/i })).toHaveCount(0);
+    await openMyTeam(page);
+    await page.getByTestId('squad-market-btn').click();
+    await expect(page.getByTestId('market-panel')).toBeVisible();
+  });
+
+  test('desktop — Market button sits next to the pitch', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openMyTeam(page);
+    await page.getByTestId('squad-market-btn-desktop').click();
+    await expect(page.getByTestId('market-panel')).toBeVisible();
+  });
+
+  test('5 midfielders — tokens do not overlap on desktop and mobile', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openMyTeam(page, { xi: XI_352 });
+    await expect(page.getByTestId('pitch-view')).toBeVisible({ timeout: 15000 });
+    await expectNoOverlap(page, '[data-testid="pitch-view"] [data-testid^="token-"]');
+    await page.setViewportSize({ width: 375, height: 812 });
+    await expect(page.getByTestId('mobile-pitch-field')).toBeVisible();
+    await expectNoOverlap(page, '[data-testid="mobile-pitch-field"] [data-testid^="mobile-pitch-token-"]');
+  });
+
+  test('desktop — sub out keeps the goalkeeper and the bench on screen', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openMyTeam(page);
+    await page.locator('[data-testid="pitch-view"] [data-testid="token-p9"]').click();
+    await page.getByRole('button', { name: 'Sub out' }).click();
+    await expect(page.getByText(/select a bench player/i)).toBeVisible();
+    await expect(page.locator('[data-testid="pitch-view"] [data-testid="token-p1"]')).toBeInViewport();
+    await expect(page.getByTestId('bench-strip-desktop')).toBeInViewport({ ratio: 1 });
+  });
+});
+
+// The Room, answered from a fixed test Clubhouse (no live data needed).
+async function openRoom(page) {
+  const U = '00000000-0000-0000-0000-000000000000';
+  const circle = { id: 'TEST_C1', name: 'TEST_Club', invite_code: 'TEST', is_public: false, p2p_betting_enabled: true, created_by: U, created_at: '2026-11-01T00:00:00Z', archived: false };
+  const TABLE = {
+    circle_members: [{ role: 'owner', user_id: U, circle_id: circle.id, circles: circle, users: { id: U, username: 'demo' } }],
+    clubhouse_channels: [{ id: 'TEST_CH1', is_default: true, circle_id: circle.id, created_at: '2026-11-01T00:00:00Z' }],
+    clubhouse_messages: Array.from({ length: 30 }, (_, i) => ({ id: `m${i}`, user_id: i % 2 ? U : 'u2', content: `Message ${i}`, created_at: new Date(Date.UTC(2026, 10, 20, 10, i)).toISOString(), kind: 'text', bet_ref: null })),
+    users: [{ id: U, username: 'demo' }, { id: 'u2', username: 'Rui' }],
+  };
+  const RPC = { get_circle_feed: [], get_clubhouse_competitions: { football: [], f1: [], tennis: [] }, get_circle_meta_standings: [] };
+  await page.route(/\/rest\/v1\//, async route => {
+    const m = new URL(route.request().url()).pathname.match(/\/rest\/v1\/(rpc\/)?([^/?]+)/);
+    const single = (route.request().headers()['accept'] || '').includes('pgrst.object');
+    let body = m?.[1] ? (RPC[m[2]] ?? null) : (TABLE[m?.[2]] ?? []);
+    if (single) body = Array.isArray(body) ? (body[0] ?? null) : body;
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+  });
+  await page.goto(`/clubhouse/${circle.id}?tab=room`);
+  await waitForContent(page);
+}
+
+test.describe('The Room — opens with the composer on the bottom edge', () => {
+  test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
+  });
+
+  for (const [name, vp, nav] of [['mobile', { width: 375, height: 812 }, 64], ['desktop', { width: 1280, height: 800 }, 0]]) {
+    test(`${name} — composer at the bottom, newest message in view`, async ({ page }) => {
+      test.setTimeout(45000);
+      await page.setViewportSize(vp);
+      await openRoom(page);
+      const composer = page.getByPlaceholder('Message the Room…');
+      await expect(composer).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText('Message 29', { exact: true })).toBeInViewport();
+      await expect.poll(async () => {
+        const r = await composer.boundingBox();
+        return r && vp.height - nav - (r.y + r.height);
+      }).toBeLessThan(60);
+      const r = await composer.boundingBox();
+      expect(r.y + r.height).toBeLessThanOrEqual(vp.height - nav);
+    });
+  }
+});
+
 // ── Fixture player data injected via route mock (avoids DB dependency) ────────
 
 // ── 5. Market (a sheet on the My team tab since S31 / MD-12) ──────────────────
