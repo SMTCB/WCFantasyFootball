@@ -405,7 +405,8 @@ export default function LeagueScreen() {
   const tabToView = (t) => {
     if (t === 'table' || t === 'leaderboard') return 'detail';
     // Matchweek, Live and the old Squad page all became My team (S30, MD-11); old links land there.
-    if (t === 'matchweek' || t === 'live' || t === 'squad') return 'team';
+    // The market is a sheet on My team since S31 (MD-12).
+    if (t === 'matchweek' || t === 'live' || t === 'squad' || t === 'market') return 'team';
     if (t === 'betting') return 'betting_leaderboard';
     if (t === 'admin') return 'commissioner';
     if (t === 'auctions') return 'trading'; // legacy deep-link compat
@@ -425,7 +426,9 @@ export default function LeagueScreen() {
     setView(tabToView(t));
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
-      next.set('tab', t);
+      // Market opens the sheet on My team (S31); SquadScreen reads and clears market=1.
+      if (t === 'market') { next.set('tab', 'team'); next.set('market', '1'); }
+      else next.set('tab', t);
       return next;
     }, { replace: true });
   }, [setSearchParams, navigate, activeLeague?.league_id]);
@@ -1423,7 +1426,7 @@ export default function LeagueScreen() {
             return <StatusBar tone="crit" action={act('My squad', goSquad)}>Squad too small — {mySquadPlayerCount}/11 players. Need {11 - mySquadPlayerCount} more to field a starting XI.</StatusBar>;
           }
           if (draftAllocated && mySquadPlayerCount === null) {
-            return <StatusBar tone="warn" action={act('Market', () => navigate(`/market?leagueId=${activeLeague?.league_id}`))}>No squad yet — head to the market to sign players.</StatusBar>;
+            return <StatusBar tone="warn" action={act('Market', () => setTab('market'))}>No squad yet — head to the market to sign players.</StatusBar>;
           }
           if (isDraft && !lg?.draft_deadline && isCommissioner && !draftAllocated && !leagueDraftRan) {
             return <StatusBar tone="warn" action={act('Admin', () => setView('commissioner'))}>Draft league — set a draft deadline in the Admin tab to open submissions.</StatusBar>;

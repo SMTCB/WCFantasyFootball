@@ -33,7 +33,6 @@ const HomeScreen            = lazy(() => import('./screens/HomeScreen'));
 const AuthScreen            = lazy(() => import('./screens/AuthScreen'));
 const LeagueScreen          = lazy(() => import('./screens/LeagueScreen'));
 const AdminSeedScreen       = lazy(() => import('./screens/AdminSeedScreen'));
-const MarketScreen          = lazy(() => import('./screens/MarketScreen'));
 const LiveScreen            = lazy(() => import('./screens/LiveScreen'));
 const RecapScreen           = lazy(() => import('./screens/RecapScreen'));
 const BracketScreen         = lazy(() => import('./screens/BracketScreen'));
@@ -101,6 +100,17 @@ function SquadRedirect() {
   return <Navigate to={leagueId ? `/league/${leagueId}?tab=team` : '/clubhouse'} replace />;
 }
 
+// MarketRedirect: the market became a sheet on the My team tab (S31, MD-12). Old
+// /market?leagueId= links open that tab with the sheet up (keeping ?pos=); without a
+// league there is no squad to shop for, so they go to the Clubhouse list.
+function MarketRedirect() {
+  const [searchParams] = useSearchParams();
+  const leagueId = searchParams.get('leagueId');
+  const pos = searchParams.get('pos');
+  if (!leagueId) return <Navigate to="/clubhouse" replace />;
+  return <Navigate to={`/league/${leagueId}?tab=team&market=1${pos ? `&pos=${encodeURIComponent(pos)}` : ''}`} replace />;
+}
+
 // F1PicksRedirect: the standalone PICKS screen was folded into CALENDAR
 // (race rows expand in place). Bounces old bookmarked/shared /picks links
 // to the paddock's CALENDAR screen instead of 404ing.
@@ -160,7 +170,7 @@ function AppRoutes() {
                   <Route path="/league/:leagueId/draft/recover" element={<ErrorBoundary screen="DraftRecovery"><DraftRecoveryScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId/wishlist" element={<ErrorBoundary screen="WishlistDraft"><WishlistDraftScreen /></ErrorBoundary>} />
                   <Route path="/live"             element={<ErrorBoundary screen="Live"><LiveScreen /></ErrorBoundary>} />
-                  <Route path="/market"           element={<ErrorBoundary screen="Market"><MarketScreen /></ErrorBoundary>} />
+                  <Route path="/market"           element={<MarketRedirect />} />
                   <Route path="/recap"            element={<ErrorBoundary screen="Recap"><RecapScreen /></ErrorBoundary>} />
                   <Route path="/predictions"      element={<ErrorBoundary screen="Bracket"><BracketScreen /></ErrorBoundary>} />
                   <Route path="/bracket"          element={<Navigate to="/predictions" replace />} />

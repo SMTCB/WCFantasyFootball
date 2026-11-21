@@ -1,8 +1,10 @@
-// Fixed test league and squad for the My team tab tests (S30 / MD-11).
+// Fixed test league and squad for the My team tab tests (S30 / MD-11, S31 / MD-12).
 // The demo user has no league in the live database, so without this the tab
 // tests would always skip. Every Supabase REST call is answered from here;
-// writes and unknown RPCs return empty, and `calls` records each RPC so a
-// test can check what the tab sent.
+// writes and unknown RPCs return empty, and `calls` records each RPC (and each
+// process-transfer request, as name 'process-transfer') so a test can check
+// what the tab sent. Options: `window` ('open' | 'upcoming'), `joker` (chip
+// status) and `failTransfer(body)` (true makes that transfer fail).
 
 export const MOCK_LEAGUE_ID = 'TEST_L1';
 const DEMO = '00000000-0000-0000-0000-000000000000';
@@ -15,6 +17,12 @@ const PLAYERS = [
   ['p8', 'Saka', 'MID', 'Arsenal', 10.0], ['p9', 'Rice', 'MID', 'Arsenal', 6.5], ['p10', 'Palmer', 'MID', 'Chelsea', 10.5],
   ['p11', 'Mbeumo', 'MID', 'Manchester United', 8.0], ['p12', 'Andreas', 'MID', 'Fulham', 5.5],
   ['p13', 'Isak', 'FWD', 'Liverpool', 10.5], ['p14', 'Haaland', 'FWD', 'Manchester City', 14.5], ['p15', 'Wissa', 'FWD', 'Newcastle United', 6.0],
+].map(([id, name, position, club, price]) => ({ id, name, position, club, price, tournament_id: 'T1', forza_id: id }));
+// Free agents for the Replace picker and the market sheet (S31).
+const MARKET = [
+  ['m1', 'Watkins', 'FWD', 'Aston Villa', 9.0], ['m2', 'Solanke', 'FWD', 'Tottenham Hotspur', 7.5],
+  ['m3', 'Expensive', 'FWD', 'Real Test FC', 12.0], ['m4', 'Odegaard', 'MID', 'Arsenal', 8.5],
+  ['m5', 'Wharton', 'MID', 'Crystal Palace', 5.0], ['m6', 'Munoz', 'DEF', 'Crystal Palace', 4.5],
 ].map(([id, name, position, club, price]) => ({ id, name, position, club, price, tournament_id: 'T1', forza_id: id }));
 const XI = ['p1', 'p3', 'p4', 'p5', 'p8', 'p9', 'p10', 'p11', 'p13', 'p14', 'p15'];
 
@@ -37,7 +45,7 @@ function tables() {
       starting_xi: XI, captain_id: 'p10', budget_remaining: 3.5, is_triple_captain: false, lineup_locks: {},
       created_at: '2026-11-20T00:00:00Z',
     }],
-    players: PLAYERS,
+    players: [...PLAYERS, ...MARKET],
     player_status: [
       { player_id: 'p8', status: 'injured', reason: 'Hamstring', confidence: 90 },
       { player_id: 'p13', status: 'doubtful', reason: 'Knock', confidence: 50 },
@@ -54,16 +62,33 @@ function tables() {
   };
 }
 
-const RPC = {
-  get_my_chips: { round: 'M1', disabled: false, chips: { triple_captain: { status: 'available' }, joker: { status: 'used' }, max_cap: { status: 'available' } } },
-  get_transfer_window_status: { status: 'open', closes_at: future(2), opens_at: null, transfers_remaining: null, window_type: 'unlimited' },
-  set_captain: { ok: true },
-  set_lineup: { ok: true },
-};
+function rpcs({ window = 'open', joker = 'used' } = {}) {
+  return {
+    get_my_chips: { round: 'M1', disabled: false, chips: { triple_captain: { status: 'available' }, joker: { status: joker }, max_cap: { status: 'available' } } },
+    get_transfer_window_status: window === 'open'
+      ? { status: 'open', closes_at: future(2), opens_at: null, transfers_remaining: null, window_type: 'unlimited' }
+      : { status: window, closes_at: null, opens_at: future(1), transfers_remaining: null, window_type: 'unlimited' },
+    get_club_cap: 3,
+    set_captain: { ok: true },
+    set_lineup: { ok: true },
+  };
+}
 
-export async function mockMyTeam(page) {
+// PostgREST `in.(a,b)` list, with or without quotes.
+const inList = v => v.slice(4, -1).split(',').map(x => x.replace(/^"|"$/g, ''));
+
+export async function mockMyTeam(page, opts = {}) {
   const calls = [];
   const TABLE = tables();
+  const RPC = rpcs(opts);
+  await page.route('**/functions/v1/process-transfer', async route => {
+    const body = route.request().postDataJSON();
+    calls.push({ name: 'process-transfer', args: body });
+    if (opts.failTransfer?.(body)) {
+      return route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'Squad full' }) });
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, players: [], budget_remaining: 3.5 }) });
+  });
   await page.route(/\/rest\/v1\//, async route => {
     const req = route.request();
     const url = new URL(req.url());
@@ -75,6 +100,11 @@ export async function mockMyTeam(page) {
     let body = isRpc ? (RPC[name] ?? null) : (TABLE[name] ?? []);
     if (!isRpc && Array.isArray(body)) {
       for (const [k, v] of url.searchParams) {
+        if (v.startsWith('in.(')) {
+          const list = inList(v);
+          body = body.filter(row => !(k in row) || list.includes(String(row[k])));
+          continue;
+        }
         if (!v.startsWith('eq.')) continue;
         body = body.filter(row => !(k in row) || String(row[k]) === v.slice(3));
       }

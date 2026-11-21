@@ -133,9 +133,10 @@ export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '�
 }
 
 // League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5).
-// market is a separate route until S31 moves it into a sheet; callers navigate when it is picked.
-// Squad became the My team tab (S30), so 'squad' now resolves inside the league.
-export const ROUTE_TABS = ['market'];
+// Squad became the My team tab (S30) and the market a sheet on it (S31), so no tab leaves
+// the league any more. Picking Market opens My team with the market sheet up.
+export const ROUTE_TABS = [];
+export const MARKET_TAB_QUERY = 'tab=team&market=1';
 
 // One tab row (redesign). My team (S30, MD-11) holds your pitch, the race card and this
 // round's fixtures; it replaced Matchweek and the Squad page. Table holds the season table,
@@ -199,7 +200,7 @@ export function LeagueRouteTabs({ active, leagueId }) {
   if (!leagueId) return null;
   const go = (t) => {
     if (t === active) return;
-    if (ROUTE_TABS.includes(t)) navigate(`/${t}?leagueId=${leagueId}`);
+    if (t === 'market') navigate(`/league/${leagueId}?${MARKET_TAB_QUERY}`);
     else navigate(`/league/${leagueId}?tab=${t}`);
   };
   return <HubTabRow tabs={hubTabList({})} active={hubGroupOf(active)} onTab={go} />;

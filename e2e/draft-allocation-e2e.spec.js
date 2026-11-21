@@ -721,10 +721,12 @@ test.describe('Classic Mode — 15-slot auto-fill with constraints', () => {
     await page.goto(`/market?leagueId=${CLASSIC_LEAGUE_ID}`);
     await waitFor(page, 1200);
 
-    // ✅ Budget display is present in classic mode
+    // Since S31 (MD-12) /market redirects to the league's My team tab with the market sheet.
+    await expect(page).toHaveURL(new RegExp(`/league/${CLASSIC_LEAGUE_ID}`));
+
+    // A member sees the budget; a non-member (the local test user) sees the join gate.
     const bodyText = await page.locator('body').innerText();
-    // Should show a budget figure (£xM or similar)
-    expect(bodyText).toMatch(/£|budget|remaining/i);
+    expect(bodyText).toMatch(/€|£|budget|remaining|join to continue/i);
 
     expect(errors.filter(e => !e.includes('ResizeObserver'))).toHaveLength(0);
   });

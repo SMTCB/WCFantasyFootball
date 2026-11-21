@@ -2,6 +2,7 @@
 // It only summarises: each pill shows the chip's badge, name and state, and tapping
 // any pill opens the full ChipsPanel, where chips are played as before.
 // Hidden entirely when the commissioner has turned every chip off.
+// S31 (MD-12): with `onJoker`, the Joker gets its own button that goes straight to the picker.
 import { useChips } from '../../hooks/useChips';
 import { CHIPS } from '../../lib/chips';
 
@@ -13,12 +14,14 @@ const STATE_TEXT = {
   available: 'Ready',
 };
 
-export default function ChipsRow({ leagueId, userId, onOpen }) {
+export default function ChipsRow({ leagueId, userId, onOpen, onJoker }) {
   const { state, loading, error } = useChips(leagueId, userId);
   if (loading || error || !state?.chips) return null;
 
   const visible = CHIPS.filter(c => state.chips[c.id]?.status !== 'disabled');
   if (visible.length === 0) return null;
+  const jokerStatus = state.chips.joker?.status;
+  const showJoker = onJoker && (jokerStatus === 'available' || jokerStatus === 'active');
 
   return (
     <div data-testid="chips-row" style={{ padding: '12px 16px 4px', borderTop: '1px solid var(--rule)' }}>
@@ -65,6 +68,17 @@ export default function ChipsRow({ leagueId, userId, onOpen }) {
           );
         })}
       </div>
+      {showJoker && (
+        <button
+          type="button"
+          onClick={onJoker}
+          data-testid="chips-row-joker"
+          className="w-full transition-all active:scale-95"
+          style={{ marginTop: 8, minHeight: 44, background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 10, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer' }}
+        >
+          {jokerStatus === 'active' ? 'Change your Joker' : 'Pick your Joker'}
+        </button>
+      )}
     </div>
   );
 }

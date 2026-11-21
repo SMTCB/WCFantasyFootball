@@ -21,7 +21,7 @@ import { xPositions, buildPitchTokens, STATUS_COLOR } from '../lib/pitchLayout';
  */
 
 // ── HybridToken — the only token style (spec §Token spec) ─────────────────────
-function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact }) {
+function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact, pending }) {
   const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? player.name?.toUpperCase() ?? '?';
   const club    = (player.club ?? '').substring(0, 3).toUpperCase();
   const pts     = Math.round(player.points ?? 0);
@@ -88,6 +88,14 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
             justifyContent: 'center',
             border:      '1.5px solid var(--bg)',
           }}>C</div>
+        )}
+        {/* S31 (MD-12): optional; marks an incoming player not yet confirmed */}
+        {pending === 'in' && (
+          <div data-testid={`pending-in-${player.id}`} style={{
+            position: 'absolute', top: -7, left: -7, padding: '0 3px', borderRadius: 3,
+            background: 'var(--accent)', color: '#fff', fontFamily: 'Archivo Black, sans-serif',
+            fontSize: 9, lineHeight: '13px', border: '1.5px solid var(--bg)',
+          }}>IN</div>
         )}
       </div>
     );
@@ -216,6 +224,14 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           C
         </div>
       )}
+      {/* S31 (MD-12): optional; marks an incoming player not yet confirmed */}
+      {pending === 'in' && (
+        <div data-testid={`pending-in-${player.id}`} style={{
+          position: 'absolute', top: -7, left: -7, padding: '0 3px', borderRadius: 3,
+          background: 'var(--accent)', color: '#fff', fontFamily: 'Archivo Black, sans-serif',
+          fontSize: 9, lineHeight: '13px', border: '1.5px solid var(--bg)',
+        }}>IN</div>
+      )}
     </div>
   );
 }
@@ -227,6 +243,7 @@ export default function PitchView({
   selectedPlayerId,
   variant = 'desktop',   // 'desktop' | 'mobile' | 'compact'
   matchdayLabel = '',
+  pendingMarks,          // S31 (MD-12): optional { [playerId]: 'in' }
 }) {
   const isCompact = variant === 'compact';
   const insetRef = useRef(null);
@@ -399,6 +416,7 @@ export default function PitchView({
             onClick={() => (onPlayerClick ?? (() => {}))(player)}
             isSelected={selectedPlayerId === player.id}
             compact={useCompactTokens}
+            pending={pendingMarks?.[player.id]}
           />
         ))}
       </div>

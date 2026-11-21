@@ -6823,4 +6823,15 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - Tests: the My team tests in `platform.spec.js` now run on a fixed test league (`e2e/fixtures/myTeamMock.js`) instead of skipping when the demo account has no league; they cover the redirect, the pitch, budget, needs-attention line and making a captain from the tab.
 - Checked with mock data at 375px and 1280px; `npm run lint`; `npm run build`; `npx madge --circular src/`; `platform.spec.js`.
 
+## S31 Replace from the pitch, market sheet, one confirm (2026-11-21)
+
+- MD-12: on My team, tap a player and then **Replace** (shown only while the transfer window is open). A sheet lists affordable players in the same position, sorted by form; players from a club you already have the most of show CLUB LIMIT and cannot be picked. A "Browse full market" link opens the whole market.
+- The market is now a sheet on My team (tall sheet on phone, right panel on desktop): `src/components/squad/MarketPanel.jsx` loads `MarketScreen` in `embedded` mode, with its filters, list and auto-fill.
+- Changes wait. The incoming player stands on the pitch in the outgoing player's place with a small IN mark; tap them to undo. A **Review changes** bar shows how many changes and the money left. **Confirm transfers** sends the sells, then the buys, one at a time through `useTransfer` (`src/lib/transferBasket.js`); if one fails it stops, says which, and keeps the rest pending. A new starter takes the old starter's place in the XI, and a replaced captain hands the armband on.
+- The Joker chip has its own button in the chips row, which opens the Joker picker.
+- `/market?leagueId=` redirects to My team with the market sheet open (`/market` with no league goes to the Clubhouse list). The league Market tab, the Squad Market buttons and the `M` shortcut open the sheet.
+- Design lock kept: `MobilePitchField` and `PitchView` gain only an optional `pendingMarks` prop and `PlayerActionSheet` an optional `onReplace`; `pitchLayout`, `ClubCrest` and the bench rows are unchanged. With no pending changes the pitch and page are pixel-identical before and after at 375px and 1280px. Screenshots: `docs/design/s31-design-lock/`.
+- Tests: `platform.spec.js` covers replacing one and three players with confirm (sells before buys), a failed transfer, the club limit, a closed window, the Joker button, and the market sheet (redirect, filters, budget, Done, the Market tab, no sideways scroll), on the fixed test league.
+- Checked: `npm run lint`; `npm run build`; `npx madge --circular src/`; `platform.spec.js`.
+
 Last Updated: 2026-11-21

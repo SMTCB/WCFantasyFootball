@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 
 export default function PlayerActionSheet({
   selectedPlayer, captainId, selectedIsBench, saving, squadStatsMap, starterCount, benchCount,
-  onClose, onOpenStats, onMakeCaptain, onAddToPitch, onSwap, onSell, ...components
+  onClose, onOpenStats, onMakeCaptain, onAddToPitch, onSwap, onSell, onReplace, ...components
 }) {
   const { ClubCrest, FormStrip } = components;
   return createPortal(
@@ -151,6 +151,18 @@ export default function PlayerActionSheet({
             SELL
           </button>
         </div>
+        {/* S31 (MD-12): optional, only passed while the transfer window is open */}
+        {onReplace && (
+          <button
+            onClick={onReplace}
+            disabled={saving}
+            data-testid="player-sheet-replace"
+            className="w-full py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+            style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
+          >
+            Replace
+          </button>
+        )}
       </div>
     </div>
     </>,

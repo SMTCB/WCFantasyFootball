@@ -126,9 +126,10 @@ function ChipCard({ chip, info, busy, hasCaptain, onActivate, onDeactivate, onPi
  * ChipsPanel — Squad "Chips" tab. Server is the source of truth (get_my_chips);
  * the panel only renders state and fires the activate / joker RPCs behind a ConfirmModal.
  */
-export default function ChipsPanel({ leagueId, userId, tournamentId, ownedIds, hasCaptain, setConfirm, showToast }) {
+// `startPicking` (S31) opens the Joker picker straight away, for the Joker button in ChipsRow.
+export default function ChipsPanel({ leagueId, userId, tournamentId, ownedIds, hasCaptain, setConfirm, showToast, startPicking = false }) {
   const { state, loading, error, busy, toggleChip, setJoker, clearJoker } = useChips(leagueId, userId);
-  const [picking, setPicking] = useState(false);
+  const [picking, setPicking] = useState(startPicking);
   const countdown = useCountdown(state?.round?.deadline_at);
 
   const report = (res, okMsg) => {

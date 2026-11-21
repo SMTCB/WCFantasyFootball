@@ -46,6 +46,9 @@ import ChipsRow from '../components/squad/ChipsRow';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { useIsMobile } from '../hooks/useViewport';
 import PrimaryActionBar from '../components/shared/PrimaryActionBar';
+import MarketPanel from '../components/squad/MarketPanel';
+import TransferReviewBar from '../components/squad/TransferReviewBar';
+import { useTransferBasket, runBasket, pairBasket } from '../lib/transferBasket';
 
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -56,7 +59,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   const { user } = useAuth();
   const { show: showToast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const leagueIdParam = leagueIdProp ?? searchParams.get('leagueId');
   const [activeLeague,       setActiveLeague]      = useState(leagueIdParam);
   const [leagues,            setLeagues]           = useState(null);   // null = not yet loaded
@@ -79,6 +82,13 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   const [fetchError,         setFetchError]        = useState(null);
   const [tournamentId,       setTournamentId]      = useState(null);
   const [showScoringModal,   setShowScoringModal]  = useState(false);
+  // S31 (MD-12): market sheet ({ pos } while open), the player being replaced, the Joker
+  // button's straight-to-picker flag, and the per-club cap used to block picks.
+  const [marketOpen,         setMarketOpen]        = useState(null);
+  const [replacing,          setReplacing]         = useState(null);
+  const [jokerPick,          setJokerPick]         = useState(false);
+  const [clubCap,            setClubCap]           = useState(3);
+  const [confirmingBasket,   setConfirmingBasket]  = useState(false);
 
   // Card warnings derived from player_match_stats (player_status table is unused)
   const cardMap = usePlayerCards(tournamentId);
@@ -183,6 +193,20 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(activeLeague);
+
+  // S31 (MD-12): pending sells and buys, shared with the market sheet. Nothing is sent
+  // until "Confirm transfers".
+  const [basket, setBasket] = useTransferBasket(activeLeague);
+
+  // /market and the league's Market tab land here with ?market=1 (optionally &pos=MID).
+  useEffect(() => {
+    if (searchParams.get('market') !== '1') return;
+    setMarketOpen({ pos: searchParams.get('pos') || null });
+    const next = new URLSearchParams(searchParams);
+    next.delete('market');
+    next.delete('pos');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Availability flags hook — league-scoped player flags for trade offers
   const { flagMap, toggleFlag } = useAvailabilityFlag(activeLeague);
@@ -476,6 +500,17 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   // Transfer window status for the sticky banner (open / upcoming / no_window).
   const transferWindow = useTransferWindow(activeLeague);
   const isMobile = useIsMobile();
+
+  // Per-club cap for the Replace picker (same RPC the market uses).
+  const capMatchday = squadData?.matchdayId;
+  useEffect(() => {
+    if (!activeLeague || !capMatchday) return;
+    supabase
+      .rpc('get_club_cap', { p_league_id: activeLeague, p_matchday_id: capMatchday })
+      .then(({ data }) => { if (data !== null && data !== undefined) setClubCap(data); });
+  }, [activeLeague, capMatchday]);
+  // Stable, so the market sheet's focus/scroll-lock effect runs once per opening.
+  const closeMarket = useCallback(() => setMarketOpen(null), []);
 
   // KPI header: when window is in recovery (upcoming), count down to opensAt.
   // When open, use the deadline countdown (closes at next matchday).
@@ -970,11 +1005,11 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             {cfg.format === 'noduplicate' ? (
-              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', border: 'none' }}>
+              <button onClick={() => setMarketOpen({ pos: null })} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', border: 'none' }}>
                 Transfer Market →
               </button>
             ) : (
-              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', border: 'none' }}>
+              <button onClick={() => setMarketOpen({ pos: null })} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', border: 'none' }}>
                 Transfer Market →
               </button>
             )}
@@ -995,6 +1030,118 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   const allSquadPlayers = [...players, ...bench];
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
+
+  // ── S31 (MD-12): pending transfers ────────────────────────────────────────
+  // Each incoming player stands where the outgoing one stood until the basket is
+  // confirmed; with an empty basket the pitch gets exactly the arrays it always got.
+  const canReplace   = transferWindow.status === 'open' || transferWindow.status === 'no_window';
+  const pendingPairs = pairBasket(basket);
+  const moneyLeft    = basket.reduce((m, i) => (i.type === 'sell' ? m + Number(i.player.price) : m - Number(i.player.price)), Number(budget.current));
+  const swapIn       = {};
+  const pendingIn    = {};
+  for (const pr of pendingPairs) {
+    if (pr.out && pr.in) { swapIn[pr.out.id] = pr.in; pendingIn[pr.in.id] = 'in'; }
+  }
+  const asIncoming = (p) => (swapIn[p.id]
+    ? { ...swapIn[p.id], points: 0, isBench: p.isBench, pendingFor: p }
+    : p);
+  const pitchPlayers   = basket.length ? players.map(asIncoming) : players;
+  const benchPlayers   = basket.length ? bench.map(asIncoming) : bench;
+  const pitchCaptainId = swapIn[captainId]?.id ?? captainId;
+  const pendingMarks   = basket.length ? pendingIn : undefined;
+
+  const removeFromBasket = (ids) => setBasket(prev => prev.filter(i => !ids.includes(i.player.id)));
+
+  // Tapping an incoming player offers to undo that change; everyone else opens the usual sheet.
+  const handlePitchTap = (p) => {
+    if (p.pendingFor) {
+      if (swapMode) { showToast('Confirm or undo your pending transfers before swapping.', 'info'); return; }
+      setConfirm({
+        title:        `Undo ${p.name}?`,
+        body:         `${p.pendingFor.name} stays in your squad and ${p.name} is not signed.`,
+        confirmLabel: 'Undo change',
+        onConfirm:    async () => removeFromBasket([p.id, p.pendingFor.id]),
+      });
+      return;
+    }
+    handlePlayerClick(p);
+  };
+
+  // How many players from `club` the squad would hold after the pending changes,
+  // leaving out the player being replaced.
+  const clubCountAfter = (club, outId) => {
+    const byId = Object.fromEntries(allSquadPlayers.map(p => [p.id, p]));
+    const ids  = new Set(allSquadPlayers.map(p => p.id));
+    for (const i of basket) {
+      if (i.type === 'sell') ids.delete(i.player.id);
+      else { ids.add(i.player.id); byId[i.player.id] = i.player; }
+    }
+    ids.delete(outId);
+    let n = 0;
+    for (const id of ids) if (byId[id]?.club === club) n += 1;
+    return n;
+  };
+
+  const pickReplacement = (incoming) => {
+    const out = replacing;
+    setBasket(prev => [
+      ...prev.filter(i => i.player.id !== out.id),
+      { type: 'sell', player: out },
+      { type: 'buy',  player: incoming },
+    ]);
+    setReplacing(null);
+    showToast(`${incoming.name} in for ${out.name}. Confirm when you are ready.`, 'info');
+  };
+
+  const replaceViaMarket = () => {
+    const out = replacing;
+    setBasket(prev => (prev.some(i => i.player.id === out.id) ? prev : [...prev, { type: 'sell', player: out }]));
+    setReplacing(null);
+    setMarketOpen({ pos: out.position });
+  };
+
+  // Sells, then buys, one at a time through useTransfer. Stops at the first failure and
+  // leaves the rest pending. An incoming starter takes the outgoing starter's slot, and a
+  // replaced captain hands the armband to their replacement when the match allows it.
+  const confirmBasket = async () => {
+    if (confirmingBasket || basket.length === 0) return;
+    setConfirmingBasket(true);
+    try {
+      const pairs     = pairBasket(basket);
+      const xiBefore  = players.map(p => p.id);
+      const capBefore = captainId;
+      const { done, failed } = await runBasket(basket, { buy, sell });
+      const doneIds = new Set(done.map(i => i.player.id));
+      setBasket(prev => prev.filter(i => !doneIds.has(i.player.id)));
+
+      const xi = [...xiBefore];
+      let newCaptain = null;
+      for (const pr of pairs) {
+        if (!pr.out || !pr.in || !doneIds.has(pr.out.id) || !doneIds.has(pr.in.id)) continue;
+        const at = xi.indexOf(pr.out.id);
+        if (at >= 0) xi[at] = pr.in.id;
+        if (pr.out.id === capBefore) newCaptain = pr.in;
+      }
+      if (xi.some((id, k) => id !== xiBefore[k])) {
+        const { error } = await supabase.from('squads').update({ starting_xi: xi }).eq('id', squadData.squadId);
+        if (error) console.error('S31: starting XI update failed', error);
+      }
+      if (newCaptain) {
+        const { data: res, error } = await supabase.rpc('set_captain', { p_squad_id: squadData.squadId, p_player_id: newCaptain.id });
+        if (error || !res?.ok) showToast(`Your captain was replaced. Pick a new captain${res?.code === 'FIXTURE_STARTED' ? ` (${newCaptain.name}'s match has started)` : ''}.`, 'warning');
+      }
+      await fetchSquad();
+
+      if (failed) {
+        const left = basket.length - done.length;
+        showToast(`Stopped at ${failed.item.type === 'sell' ? 'selling' : 'buying'} ${failed.item.player.name}: ${failed.error}. ${left} change${left === 1 ? '' : 's'} still pending.`, 'error');
+      } else {
+        showToast(`Transfers confirmed: ${pairs.length} change${pairs.length === 1 ? '' : 's'}.`, 'success');
+      }
+    } finally {
+      setConfirmingBasket(false);
+    }
+  };
   // Bench player straight onto the pitch when fewer than 11 start (no swap needed).
   const addBenchToPitch = async () => {
     try {
@@ -1506,7 +1653,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setMobileTab(tab.id)}
+                onClick={() => { setJokerPick(false); setMobileTab(tab.id); }}
                 className="flex-1 py-2.5 text-center transition-all relative"
                 style={{
                   fontFamily: 'Archivo Black, sans-serif',
@@ -1539,7 +1686,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
                 Need {11 - allSquadPlayers.length} more to field a starting XI
               </div>
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => setMarketOpen({ pos: null })} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
               Market →
             </button>
           </div>
@@ -1554,7 +1701,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
                 {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players
               </div>
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => setMarketOpen({ pos: null })} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
               Sign →
             </button>
           </div>
@@ -1596,8 +1743,9 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
 
               <div style={{ padding: '12px 16px 4px' }}>
                 <MobilePitchField
-                  squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain }}
-                  onPlayerClick={handlePlayerClick}
+                  squad={{ players: pitchPlayers, captainId: pitchCaptainId, isTripleCaptain: squadData.isTripleCaptain }}
+                  onPlayerClick={handlePitchTap}
+                  pendingMarks={pendingMarks}
                   selectedPlayerId={selectedPlayer?.id}
                   matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
                   ClubCrest={ClubCrest}
@@ -1613,7 +1761,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
                     <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
                     <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{bench.length}</div>
                   </div>
-                  {bench.map((player, bi) => {
+                  {benchPlayers.map((player, bi) => {
                     const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? '?';
                     const posColor = player.position === 'GK' ? 'var(--pos-gk)' : player.position === 'DEF' ? 'var(--pos-def)' : player.position === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
                     const isSelected   = selectedPlayer?.id === player.id;
@@ -1622,7 +1770,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
                     return (
                       <button
                         key={player.id}
-                        onClick={() => handlePlayerClick(player)}
+                        onClick={() => handlePitchTap(player)}
                         style={{
                           width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                           padding: '9px 16px',
@@ -1665,7 +1813,12 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
               )}
 
               {embedded && (
-                <ChipsRow leagueId={activeLeague} userId={user?.id} onOpen={() => setMobileTab('chips')} />
+                <ChipsRow
+                  leagueId={activeLeague}
+                  userId={user?.id}
+                  onOpen={() => { setJokerPick(false); setMobileTab('chips'); }}
+                  onJoker={() => { setJokerPick(true); setMobileTab('chips'); }}
+                />
               )}
             </div>
           );
@@ -1863,6 +2016,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
         {mobileTab === 'chips' && (
           <div className="pb-24">
             <ChipsPanel
+              key={jokerPick ? 'joker' : 'chips'}
               leagueId={activeLeague}
               userId={user?.id}
               tournamentId={tournamentId}
@@ -1870,6 +2024,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
               hasCaptain={!!captainId}
               setConfirm={setConfirm}
               showToast={showToast}
+              startPicking={jokerPick}
             />
           </div>
         )}
@@ -1938,7 +2093,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
             <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,58,58,0.8)' }}>
               Need {11 - allSquadPlayers.length} more to field a starting XI
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => setMarketOpen({ pos: null })} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
               Go to market →
             </button>
           </div>
@@ -1951,7 +2106,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
             <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'rgba(240,180,0,0.75)' }}>
               {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players to complete your squad
             </div>
-            <button className="hit-44" onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
+            <button className="hit-44" onClick={() => setMarketOpen({ pos: null })} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}>
               Sign players →
             </button>
           </div>
@@ -1967,8 +2122,9 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
               <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <PitchView
                   variant="desktop"
-                  squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain }}
-                  onPlayerClick={handlePlayerClick}
+                  squad={{ players: pitchPlayers, captainId: pitchCaptainId, isTripleCaptain: squadData.isTripleCaptain }}
+                  onPlayerClick={handlePitchTap}
+                  pendingMarks={pendingMarks}
                   selectedPlayerId={selectedPlayer?.id}
                   matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
                 />
@@ -1982,14 +2138,14 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
                 }}>
                   <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', flexShrink: 0 }}>BENCH</div>
                   <div style={{ flex: 1, display: 'flex', gap: 10, flexWrap: 'nowrap', overflow: 'hidden' }}>
-                    {bench.map((player) => {
+                    {benchPlayers.map((player) => {
                       const pos = player.position;
                       const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
                       const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? '?';
                       return (
                         <button className="hit-44"
                           key={player.id}
-                          onClick={() => handlePlayerClick(player)}
+                          onClick={() => handlePitchTap(player)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
                             padding: '6px 10px 6px 8px',
@@ -2090,6 +2246,9 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
           onAddToPitch={addBenchToPitch}
           onSwap={() => setSwapMode(true)}
           onSell={handleSellPlayer}
+          onReplace={canReplace && !basket.some(i => i.player.id === selectedPlayer.id)
+            ? () => { setReplacing(selectedPlayer); setSelectedPlayer(null); }
+            : undefined}
           ClubCrest={ClubCrest}
           FormStrip={FormStrip}
         />
@@ -2114,6 +2273,49 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
           onSelect={handlePickerBuy}
           onClose={() => setPickerPos(null)}
           tournamentId={tournamentId}
+        />
+      )}
+
+      {/* S31 (MD-12): replacements for one player, then the full market */}
+      {replacing && (
+        <PlayerPickerSheet
+          position={replacing.position}
+          budget={moneyLeft + Number(replacing.price)}
+          takenMap={takenMap}
+          isOwnedBy={isOwnedBy}
+          onSelect={pickReplacement}
+          onClose={() => setReplacing(null)}
+          tournamentId={tournamentId}
+          title={`Replace ${replacing.name}`}
+          actionLabel="Pick"
+          formMap={squadStatsMap}
+          onlyAvailable
+          excludeIds={basket.filter(i => i.type === 'buy').map(i => i.player.id)}
+          blockReason={(p) => (clubCountAfter(p.club, replacing.id) >= clubCap ? 'CLUB LIMIT' : null)}
+          onBrowseMarket={replaceViaMarket}
+        />
+      )}
+
+      {marketOpen && (
+        <MarketPanel
+          leagueId={activeLeague}
+          initialPos={marketOpen.pos}
+          pendingCount={pendingPairs.length}
+          isMobile={isMobile}
+          onClose={closeMarket}
+        />
+      )}
+
+      {!marketOpen && !swapMode && (
+        <TransferReviewBar
+          basket={basket}
+          moneyLeft={moneyLeft}
+          busy={confirmingBasket}
+          isMobile={isMobile}
+          onConfirm={confirmBasket}
+          onRemove={removeFromBasket}
+          onClear={() => setBasket([])}
+          onOpenMarket={(pos) => setMarketOpen({ pos })}
         />
       )}
 
@@ -2150,7 +2352,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
 
       {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {/* Mobile transfer-window action bar */}
-      {!embedded && isMobile && (() => {
+      {!embedded && isMobile && basket.length === 0 && (() => {
         const isOpen     = transferWindow.status === 'open';
         const isUpcoming = transferWindow.status === 'upcoming';
         const barState   = isOpen ? 'action' : 'locked';
