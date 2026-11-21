@@ -89,7 +89,9 @@ How to fold the Squad and Market pages into the football league. The owner appro
 
 **Test:** the design-lock checks in section 0; set the lineup, captain and a chip from the new tab; the "my squad" tests point at the tab; `npm run build`; `platform.spec.js`.
 
-### S31: Replace, the market sheet and one confirm (row MD-12)
+### S31: Replace, the market sheet and one confirm (row MD-12) (done 2026-11-21)
+
+**Done.** Screenshots: [s31-design-lock/](../design/s31-design-lock/). Notes: the pending basket lives in `SquadScreen` (`src/lib/transferBasket.js`), the market sheet is `src/components/squad/MarketPanel.jsx` (it loads `MarketScreen` with `embedded`), and the review bar is `src/components/squad/TransferReviewBar.jsx`. On desktop the market already opens as a right panel; S32 does the rest of the desktop layout.
 
 **Goal:** you swap players from the pitch and confirm all your changes at once.
 

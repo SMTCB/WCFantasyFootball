@@ -185,8 +185,8 @@ test.describe('ClubhouseScreen', () => {
 // /squad now redirects into the league's My team tab. The demo user has no
 // league in the live database, so these tests answer Supabase from a fixed
 // test league and squad (e2e/fixtures/myTeamMock.js).
-async function openMyTeam(page) {
-  const calls = await mockMyTeam(page);
+async function openMyTeam(page, opts) {
+  const calls = await mockMyTeam(page, opts);
   await page.goto(`/league/${MOCK_LEAGUE_ID}?tab=team`);
   await waitForContent(page);
   return calls;
@@ -256,80 +256,165 @@ test.describe('My team tab', () => {
   });
 });
 
-// ── Fixture player data injected via route mock (avoids DB dependency) ────────
+// S31 (MD-12): Replace, pending changes and Confirm transfers on My team.
+const transfersSent = calls => calls.filter(c => c.name === 'process-transfer').map(c => `${c.args.action}:${c.args.player_id}`);
 
-// ── 5. Market Screen ─────────────────────────────────────────────────────────
-// Helper: dismiss the "Select a League" picker that appears when the demo user
-// has multiple leagues — click the first league button so the market UI loads.
-async function selectFirstLeagueIfPicker(page) {
-  const pickerHeading = page.getByText(/select a league/i);
-  const isVisible = await pickerHeading.isVisible().catch(() => false);
-  if (isVisible) {
-    // Click the first league button in the picker
-    await page.locator('button').filter({ hasText: /./}).first().click();
-    await waitForContent(page);
-  }
-}
-
-test.describe('MarketScreen', () => {
+test.describe('My team — Replace and Confirm transfers', () => {
   test.beforeEach(async ({ page }) => {
     await skipOnboarding(page);
+    await page.setViewportSize({ width: 375, height: 812 });
+  });
+
+  test('replace one player, then confirm', async ({ page }) => {
+    test.setTimeout(45000);
+    const calls = await openMyTeam(page);
+    await page.getByTestId('mobile-pitch-token-p15').click();
+    await page.getByTestId('player-sheet-replace').click();
+    await expect(page.getByText('Replace Wissa')).toBeVisible();
+    // €3.5M in the bank + €6.0M for Wissa: the €12.0M striker is not offered.
+    await expect(page.getByText('Expensive', { exact: true })).toHaveCount(0);
+    await page.getByTestId('picker-pick-m1').click();
+
+    // Pending: Watkins stands in Wissa's place, marked IN, and nothing is sent yet.
+    await expect(page.getByTestId('mobile-pitch-field').getByTestId('pending-in-m1')).toBeVisible();
+    await expect(page.getByTestId('mobile-pitch-token-p15')).toHaveCount(0);
+    await expect(page.getByTestId('transfer-review-count')).toHaveText('1');
+    await expect(page.getByTestId('transfer-review-money')).toContainText('€0.5M left');
+    expect(transfersSent(calls)).toEqual([]);
+
+    await page.getByTestId('transfer-review-confirm').click();
+    await expect.poll(() => transfersSent(calls)).toEqual(['sell:p15', 'buy:m1']);
+    await expect(page.getByTestId('transfer-review-bar')).toHaveCount(0);
+  });
+
+  test('replace three players, then confirm sells before buys', async ({ page }) => {
+    test.setTimeout(60000);
+    const calls = await openMyTeam(page);
+    const replace = async (tap, pick) => {
+      await tap.click();
+      await page.getByTestId('player-sheet-replace').click();
+      await page.getByTestId(`picker-pick-${pick}`).click();
+      await expect(page.getByTestId(`picker-pick-${pick}`)).toHaveCount(0);
+    };
+    await replace(page.getByTestId('mobile-pitch-token-p15'), 'm2');
+    await replace(page.locator('button', { hasText: /mykolenko/i }).first(), 'm6');
+    await replace(page.locator('button', { hasText: /andreas/i }).first(), 'm5');
+
+    await expect(page.getByTestId('transfer-review-count')).toHaveText('3');
+    await expect(page.getByTestId('transfer-review-money')).toContainText('€2.5M left');
+    expect(transfersSent(calls)).toEqual([]);
+
+    await page.getByTestId('transfer-review-confirm').click();
+    await expect.poll(() => transfersSent(calls)).toEqual(['sell:p15', 'sell:p7', 'sell:p12', 'buy:m2', 'buy:m6', 'buy:m5']);
+    await expect(page.getByTestId('transfer-review-bar')).toHaveCount(0);
+  });
+
+  test('a full club is blocked in the replacements list', async ({ page }) => {
+    test.setTimeout(45000);
+    await openMyTeam(page);
+    // Five Arsenal players already: Odegaard shows CLUB LIMIT and cannot be picked.
+    await page.getByTestId('mobile-pitch-token-p10').click();
+    await page.getByTestId('player-sheet-replace').click();
+    await expect(page.getByText('Odegaard')).toBeVisible();
+    await expect(page.getByText('CLUB LIMIT')).toBeVisible();
+    await expect(page.getByTestId('picker-pick-m4')).toHaveCount(0);
+    await expect(page.getByTestId('picker-pick-m5')).toBeVisible();
+  });
+
+  test('a failed transfer stops and leaves the rest pending', async ({ page }) => {
+    test.setTimeout(45000);
+    const calls = await openMyTeam(page, { failTransfer: b => b.action === 'buy' });
+    await page.getByTestId('mobile-pitch-token-p15').click();
+    await page.getByTestId('player-sheet-replace').click();
+    await page.getByTestId('picker-pick-m1').click();
+    await page.getByTestId('transfer-review-confirm').click();
+    await expect(page.getByText(/stopped at buying watkins/i)).toBeVisible();
+    expect(transfersSent(calls)).toEqual(['sell:p15', 'buy:m1']);
+    await expect(page.getByTestId('transfer-review-count')).toHaveText('1');
+  });
+
+  test('a closed transfer window hides Replace', async ({ page }) => {
+    test.setTimeout(45000);
+    await openMyTeam(page, { window: 'upcoming' });
+    await page.getByTestId('mobile-pitch-token-p15').click();
+    await expect(page.getByRole('button', { name: /make captain/i })).toBeVisible();
+    await expect(page.getByTestId('player-sheet-replace')).toHaveCount(0);
+  });
+
+  test('the Joker has its own button in the chips row', async ({ page }) => {
+    test.setTimeout(45000);
+    await openMyTeam(page, { joker: 'available' });
+    await page.getByTestId('chips-row-joker').click();
+    await expect(page.getByRole('dialog', { name: /choose your joker/i })).toBeVisible();
+  });
+});
+
+// ── Fixture player data injected via route mock (avoids DB dependency) ────────
+
+// ── 5. Market (a sheet on the My team tab since S31 / MD-12) ──────────────────
+// /market redirects to the league's My team tab with the market sheet open.
+async function openMarketSheet(page) {
+  await mockMyTeam(page);
+  await page.goto(`/market?leagueId=${MOCK_LEAGUE_ID}`);
+  await waitForContent(page);
+  const panel = page.getByTestId('market-panel');
+  await expect(panel).toBeVisible({ timeout: 15000 });
+  return panel;
+}
+
+test.describe('Market sheet', () => {
+  test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
+  });
+
+  test('/market?leagueId= opens My team with the market sheet', async ({ page }) => {
+    const panel = await openMarketSheet(page);
+    await expect(page).toHaveURL(new RegExp(`/league/${MOCK_LEAGUE_ID}\\?tab=team`));
+    await expect(panel.getByText(/player market/i).first()).toBeVisible();
+  });
+
+  test('/market without a league goes to the Clubhouse list', async ({ page }) => {
     await page.goto('/market');
     await waitForContent(page);
-    await selectFirstLeagueIfPicker(page);
+    await expect(page).toHaveURL(/\/clubhouse/);
   });
 
-  test('shows Player Market heading', async ({ page }) => {
-    await expect(page.getByText(/player market/i).first()).toBeVisible();
-  });
-
-  test('renders player list with real player data', async ({ page }) => {
-    // Real players should be loaded from database
-    const bodyText = await page.locator('body').innerText();
-    if (REAL_PLAYERS && REAL_PLAYERS.length > 0) {
-      // Check if any real player name appears in the page
-      const hasPlayerName = REAL_PLAYERS.some(p => bodyText.includes(p.name));
-      expect(hasPlayerName || /GK|DEF|MID|FWD/.test(bodyText), 'No player data found').toBe(true);
-    } else {
-      // If no players available, verify market page still loads
-      expect(bodyText.toUpperCase()).toContain('MARKET');
-    }
+  test('renders the player list, filters and budget', async ({ page }) => {
+    const panel = await openMarketSheet(page);
+    await expect(panel.locator('[data-tour="market-filters"]')).toBeVisible({ timeout: 15000 });
+    await expect(panel.locator('[data-tour="market-budget"]').first()).toBeVisible();
+    await expect(panel.locator('[data-tour="market-player-list"]')).toContainText(/watkins/i);
   });
 
   test('position filter tabs are clickable', async ({ page }) => {
-    // Click FWD tab
-    await page.getByText('FWD').first().click();
-    await page.waitForTimeout(300);
-    // After filtering, only FWDs should appear
-    const body = await page.locator('body').innerText();
-    expect(body).toMatch(/FWD/);
+    const panel = await openMarketSheet(page);
+    const filters = panel.locator('[data-tour="market-filters"]');
+    await filters.waitFor({ state: 'visible', timeout: 15000 });
+    await filters.locator('button', { hasText: 'FWD' }).first().click();
+    await expect(panel.locator('[data-tour="market-player-list"]')).toContainText(/watkins/i);
+    await expect(panel.locator('[data-tour="market-player-list"]')).not.toContainText(/wharton/i);
+    await filters.locator('button', { hasText: 'ALL' }).first().click();
+    await expect(panel.locator('[data-tour="market-player-list"]')).toContainText(/wharton/i);
   });
 
-  test('shows budget display', async ({ page }) => {
-    await expect(page.getByText(/budget|\$\d+/i).first()).toBeVisible();
+  test('Done closes the sheet back to the pitch', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await openMarketSheet(page);
+    await page.getByTestId('market-panel-done').click();
+    await expect(page.getByTestId('market-panel')).toHaveCount(0);
+    await expect(page.getByTestId('mobile-pitch-field')).toBeVisible();
   });
 
-  test('shows squad slot count', async ({ page }) => {
-    const main = page.locator('[data-testid="main-content"]');
-    await expect(main.getByText(/squad|\d+\/15/i).first()).toBeVisible();
-  });
-
-  test('ALL filter shows all positions', async ({ page }) => {
-    // Wait for market filters to be visible
-    await page.locator('[data-tour="market-filters"]').waitFor({ state: 'visible', timeout: 5000 });
-    // Click the ALL filter button (first button in filter bar with "ALL" text)
-    const filterContainer = page.locator('[data-tour="market-filters"]');
-    await filterContainer.locator('button', { hasText: 'ALL' }).click();
-    await page.waitForTimeout(300);
-    const body = await page.locator('body').innerText();
-    expect(body).toMatch(/GK|DEF|MID|FWD/);
+  test('the league Market tab opens the sheet', async ({ page }) => {
+    test.setTimeout(45000);
+    await openMyTeam(page);
+    await page.getByText(/^market$/i).filter({ visible: true }).first().click();
+    await expect(page.getByTestId('market-panel')).toBeVisible({ timeout: 15000 });
   });
 
   test('mobile — no horizontal overflow', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/market');
-    await waitForContent(page);
-    await selectFirstLeagueIfPicker(page);
+    await openMarketSheet(page);
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     expect(bodyWidth).toBeLessThanOrEqual(377);
   });
@@ -439,9 +524,8 @@ test.describe('Layout consistency', () => {
   test('mobile — bottom nav does not obscure content', async ({ page }) => {
     await skipOnboarding(page);
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/market');
+    await page.goto('/clubhouse');
     await waitForContent(page);
-    await selectFirstLeagueIfPicker(page);
 
     // Main content must have padding-bottom so last items aren't behind the 64px nav
     const paddingBottom = await page.evaluate(() => {

@@ -13,11 +13,21 @@ const POS_CONFIG = {
 
 const POS_LABEL = { GK: 'Goalkeeper', DEF: 'Defender', MID: 'Midfielder', FWD: 'Forward' };
 
+// Recent form = points over the last 3 finished rounds (statsMap is most recent first).
+const formOf = (rounds) => (rounds ?? []).slice(0, 3).reduce((a, v) => a + (Number(v) || 0), 0);
+
 /**
  * Bottom sheet for picking a player to buy.
  * Pre-filtered to `position` and `tournament_id`, shows taken/available state.
+ * Replace mode (S31, MD-12) passes the optional props: `title`, `actionLabel`, `formMap`
+ * (sort by recent form instead of price), `onlyAvailable` (hide players you cannot pick),
+ * `excludeIds` (players already pending), `blockReason(player)` (e.g. club limit) and
+ * `onBrowseMarket` (a link to the full market).
  */
-export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedBy, onSelect, onClose, tournamentId }) {
+export default function PlayerPickerSheet({
+  position, budget, takenMap, isOwnedBy, onSelect, onClose, tournamentId,
+  title, actionLabel = 'Buy', formMap, onlyAvailable = false, excludeIds, blockReason, onBrowseMarket,
+}) {
   const [players,  setPlayers]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [search,   setSearch]   = useState('');
@@ -50,11 +60,14 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) return players;
-    return players.filter(p =>
+    let list = !q ? players : players.filter(p =>
       p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q)
     );
-  }, [players, search]);
+    if (excludeIds?.length) list = list.filter(p => !excludeIds.includes(p.id));
+    if (onlyAvailable) list = list.filter(p => !isOwnedBy(p.id) && !takenMap[p.id] && budget >= p.price);
+    if (formMap) list = [...list].sort((a, b) => formOf(formMap[b.id]) - formOf(formMap[a.id]) || b.price - a.price);
+    return list;
+  }, [players, search, excludeIds, onlyAvailable, formMap, isOwnedBy, takenMap, budget]);
 
   const handleBuy = async (player) => {
     setBuying(player.id);
@@ -65,7 +78,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
   const posCfg = POS_CONFIG[position] ?? POS_CONFIG.MID;
 
   return (
-    <BottomSheet ariaLabel="Pick a player" onClose={onClose}>
+    <BottomSheet ariaLabel={title ?? 'Pick a player'} onClose={onClose}>
         {/* Header */}
         <div className="px-5 pb-3 shrink-0 flex items-center justify-between">
           <div>
@@ -73,7 +86,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
               className="text-[11px] font-black uppercase tracking-widest"
               style={{ color: posCfg.color, fontFamily: 'Archivo Black, sans-serif' }}
             >
-              Sign a {POS_LABEL[position] ?? position}
+              {title ?? `Sign a ${POS_LABEL[position] ?? position}`}
             </span>
             <div className="text-[12px] mt-0.5" style={{ color: 'var(--mute)' }}>
               Budget: <span style={{ color: 'var(--paper)' }}>€{budget?.toFixed(1)}M</span>
@@ -105,18 +118,35 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
           />
         </div>
 
+        {onBrowseMarket && (
+          <div className="px-5 pb-3 shrink-0">
+            <button
+              type="button"
+              onClick={onBrowseMarket}
+              data-testid="picker-browse-market"
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--accent)' }}
+            >
+              Browse full market ›
+            </button>
+          </div>
+        )}
+
         {/* Player list */}
         <div className="overflow-y-auto flex-1 pb-6">
           {loading ? (
             <LoadingRows rows={3} />
           ) : filtered.length === 0 ? (
-            <div className="p-8 text-center text-[13px]" style={{ color: 'var(--mute)' }}>No players found</div>
+            <div className="p-8 text-center text-[13px]" style={{ color: 'var(--mute)' }}>
+              {onlyAvailable ? 'No one you can afford in this position. Try the full market.' : 'No players found'}
+            </div>
           ) : (
             filtered.map(p => {
               const owned      = isOwnedBy(p.id);
               const taken      = !owned && takenMap[p.id];
               const canAfford  = budget >= p.price;
-              const available  = !owned && !taken && canAfford;
+              const blocked    = blockReason?.(p) ?? null;
+              const available  = !owned && !taken && canAfford && !blocked;
+              const form       = formMap ? formOf(formMap[p.id]) : null;
               const isBuying   = buying === p.id;
 
               return (
@@ -158,18 +188,27 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                           OVER BUDGET
                         </span>
                       )}
+                      {!taken && !owned && canAfford && blocked && (
+                        <span className="text-[11px] font-black" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+                          {blocked}
+                        </span>
+                      )}
+                      {form !== null && (
+                        <span className="text-[11px]" style={{ color: 'var(--mute)' }}>Form {form}</span>
+                      )}
                     </div>
                   </div>
 
                   {/* Price + button */}
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[13px] font-bold" style={{ color: 'var(--paper)' }}>
-                      ${p.price}M
+                      €{Number(p.price).toFixed(1)}M
                     </span>
                     {available && (
                       <button
                         disabled={isBuying}
                         onClick={() => handleBuy(p)}
+                        data-testid={`picker-pick-${p.id}`}
                         className="hit-44 px-3 py-1.5 rounded text-[11px] font-black uppercase tracking-wide"
                         style={{
                           background:    'rgba(24,201,107,0.15)',
@@ -180,7 +219,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                           letterSpacing: '0.08em',
                         }}
                       >
-                        {isBuying ? '…' : 'Buy'}
+                        {isBuying ? '…' : actionLabel}
                       </button>
                     )}
                   </div>

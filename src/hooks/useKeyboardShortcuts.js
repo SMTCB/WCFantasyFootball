@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export function useKeyboardShortcuts(onHelpOpen) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const lastKeyRef = useRef(null);
   const timeoutRef = useRef(null);
 
@@ -42,7 +43,10 @@ export function useKeyboardShortcuts(onHelpOpen) {
           navigate('/league');
         } else if (key === 'm') {
           e.preventDefault();
-          navigate('/market');
+          // The market is a sheet on the league's My team tab (S31); outside a league,
+          // /market sends you to the Clubhouse list to pick one.
+          const leagueId = pathname.match(/^\/league\/([^/]+)/)?.[1];
+          navigate(leagueId ? `/league/${leagueId}?tab=team&market=1` : '/market');
         }
       }
     };
@@ -52,5 +56,5 @@ export function useKeyboardShortcuts(onHelpOpen) {
       window.removeEventListener('keydown', handleKeyDown);
       clearTimeout(timeoutRef.current);
     };
-  }, [navigate, onHelpOpen]);
+  }, [navigate, onHelpOpen, pathname]);
 }

@@ -15,7 +15,7 @@ import NumberFlow from './motion/NumberFlow';
  * SquadScreen already imports it at depth 1 — importing the same module again
  * here, at depth 2, is the Rolldown TDZ crash pattern documented in CLAUDE.md.
  */
-export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerId, matchdayLabel = '', ClubCrest }) {
+export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerId, matchdayLabel = '', ClubCrest, pendingMarks }) {
   const { tokens, formation } = buildPitchTokens(squad.players, squad.captainId);
 
   return (
@@ -107,6 +107,16 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '1.5px solid var(--bg)',
                   }}>C</div>
+                )}
+                {/* S31 (MD-12): optional; marks an incoming player not yet confirmed */}
+                {pendingMarks?.[player.id] === 'in' && (
+                  <div data-testid={`pending-in-${player.id}`} style={{
+                    position: 'absolute', top: -5, right: -9,
+                    padding: '0 3px', borderRadius: 3,
+                    background: 'var(--accent)', color: '#fff',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 9, lineHeight: '13px',
+                    border: '1.5px solid var(--bg)',
+                  }}>IN</div>
                 )}
               </div>
               <div style={{

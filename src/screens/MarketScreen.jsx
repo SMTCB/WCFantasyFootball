@@ -34,6 +34,7 @@ import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 import { useIsMobile } from '../hooks/useViewport';
+import { useTransferBasket } from '../lib/transferBasket';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -62,13 +63,16 @@ const MARKET_TOUR_STEPS = [
   },
 ];
 
-export default function MarketScreen() {
+// `embedded` (S31, MD-12): the market opens as a sheet over the My team tab. The league
+// comes in as a prop, the tab row, tour and pending-changes bar are left to the host, and
+// the pending changes live in the shared transfer basket so the pitch can show them.
+export default function MarketScreen({ embedded = false, leagueId: leagueIdProp = null, initialPos = null }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
-  const leagueId = searchParams.get('leagueId') || searchParams.get('league');
+  const leagueId = leagueIdProp || searchParams.get('leagueId') || searchParams.get('league');
   const { showMarketTour, completeMarketTour } = useOnboarding();
   const [players,       setPlayers]       = useState([]);
   const [mySquad,       setMySquad]       = useState(null);
@@ -78,7 +82,7 @@ export default function MarketScreen() {
   const [leagueFormat,  setLeagueFormat]  = useState('classic'); // 'classic' | 'noduplicate'
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
-  const [filterPos,     setFilterPos]     = useState(() => localStorage.getItem('market_filterPos') || 'ALL');
+  const [filterPos,     setFilterPos]     = useState(() => initialPos || localStorage.getItem('market_filterPos') || 'ALL');
   const [searchQuery,   setSearchQuery]   = useState(() => localStorage.getItem('market_searchQuery') || '');
   const [selectedTeams, setSelectedTeams] = useState(new Set());
   const [showTeamPicker, setShowTeamPicker] = useState(false);
@@ -99,7 +103,7 @@ export default function MarketScreen() {
   const [clubCap,           setClubCap]           = useState(3);    // dynamic per-round, from club_cap_rules
   const [activeRoundFixtures, setActiveRoundFixtures] = useState([]);
   const [confirm,       setConfirm]       = useState(null);
-  const [basket,        setBasket]        = useState([]);  // pending [{type:'buy'|'sell', player}]
+  const [basket,        setBasket]        = useTransferBasket(activeLeague);  // pending [{type:'buy'|'sell', player}]
   const [confirming,    setConfirming]    = useState(false);
   const marketListRef   = useRef(null);
 
@@ -270,7 +274,7 @@ export default function MarketScreen() {
       if (prev.some(b => b.player.id === player.id)) return prev; // already queued
       return [...prev, { type: 'buy', player }];
     });
-  }, []);
+  }, [setBasket]);
 
   // Auto-fill hook — adds suggestions to basket (no DB writes until basket confirmed)
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, addToBasket, cfg, basket, relaxation);
@@ -690,7 +694,7 @@ export default function MarketScreen() {
   if (leagues && leagues.length >= 1 && !activeLeague) return null;
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className={embedded ? 'bg-bg' : 'min-h-screen bg-bg'}>
       {/* Team picker backdrop — closes dropdown on outside tap */}
       {showTeamPicker && (
         <div role="presentation"
@@ -707,7 +711,7 @@ export default function MarketScreen() {
       )}
 
       {/* First-visit spotlight tour */}
-      {showMarketTour && !loading && (
+      {showMarketTour && !loading && !embedded && (
         <OnboardingTour
           steps={MARKET_TOUR_STEPS}
           onComplete={completeMarketTour}
@@ -726,7 +730,7 @@ export default function MarketScreen() {
       )}
 
       {/* â"€â"€ Transfer Window Status Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-      <LeagueRouteTabs active="market" leagueId={activeLeague} />
+      {!embedded && <LeagueRouteTabs active="market" leagueId={activeLeague} />}
       <TransferWindowBanner
         {...transferWindow}
         isDraftLeague={isDraftLeague}
@@ -1519,7 +1523,7 @@ export default function MarketScreen() {
       {/* ── Transfer Basket ─────────────────────────────────────────────────── */}
       {/* Uses createPortal so position:fixed renders relative to the viewport,  */}
       {/* not the AppLayout scroll container (which creates a stacking context). */}
-      {basket.length > 0 && createPortal((() => {
+      {basket.length > 0 && !embedded && createPortal((() => {
         const sells        = basket.filter(b => b.type === 'sell');
         const buys         = basket.filter(b => b.type === 'buy');
         const numTransfers = Math.max(sells.length, buys.length);
