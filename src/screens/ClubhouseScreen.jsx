@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
@@ -15,11 +15,14 @@ import { ArchivedBadge, FinishedBadge } from '../components/league/LeagueBadges'
 import NotificationBell from '../components/NotificationBell';
 import ClubhouseInviteModal from '../components/ClubhouseInviteModal';
 import useConfirmDialog from '../hooks/useConfirmDialog';
+import MembersTable from '../components/clubhouse/MembersTable';
+import { useHereNow } from '../hooks/useHereNow';
+import { useRoomPulse } from '../hooks/useRoomPulse';
+import { useMyLeaguePositions, summarisePositions } from '../hooks/useMyLeaguePositions';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
-const AVATAR_COLORS = ['var(--accent)', 'var(--f1)', 'var(--ten)', 'var(--gold)', 'var(--positive)', 'var(--mute)'];
 const SPORT_META = {
   football: { label: 'Football', color: 'var(--accent)' },
   f1:       { label: 'F1',       color: 'var(--f1)'    },
@@ -140,7 +143,34 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
 
 // ── Quick-access shortcut card ────────────────────────────────────────────────
 // ── Unified competition cards (all sports, one grid) ─────────────────────────
-function AllCompetitions({ competitions, onEnter }) {
+function ordinal(n) {
+  const v = n % 100;
+  const s = (v >= 11 && v <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th');
+  return `${n}${s}`;
+}
+
+// "3rd of 8 · 412 pts · 6 behind Sam" for a league card. Leaders show their lead.
+function standingText(p) {
+  const head = p.size > 1 ? `${ordinal(p.rank)} of ${p.size}` : 'Only entry';
+  const parts = [head, `${p.total} pts`];
+  if (p.rank === 1 && p.below) parts.push(`${p.total - p.below.total} clear of ${p.below.name}`);
+  else if (p.above) parts.push(`${p.above.total - p.total} behind ${p.above.name}`);
+  return parts.join(' · ');
+}
+
+// The line under a clubhouse name: how you are doing across its leagues.
+function clubhouseLine(summary) {
+  if (!summary.total) return null;
+  const { leading, contested, closest, best } = summary;
+  let line;
+  if (leading > 0) line = `You lead ${leading} of ${contested} ${contested === 1 ? 'league' : 'leagues'}`;
+  else if (best && best.size > 1) line = `You're ${ordinal(best.rank)} in ${best.leagueName}`;
+  else return null;
+  if (closest) line += closest.gap === 0 ? ` · level with ${closest.other}` : ` · ${closest.gap} pts ${closest.dir} ${closest.other}`;
+  return line;
+}
+
+function AllCompetitions({ competitions, onEnter, positionFor }) {
   const allComps = [
     ...(competitions.football ?? []).map(c => ({ ...c, sport: 'football' })),
     ...(competitions.f1      ?? []).map(c => ({ ...c, sport: 'f1'       })),
@@ -183,9 +213,19 @@ function AllCompetitions({ competitions, onEnter }) {
                   {item.finished && <FinishedBadge />}
                   {item.archived && <ArchivedBadge />}
                 </div>
-                <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-                  <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)' }}>Enter →</span>
-                </div>
+                {(() => {
+                  const pos = positionFor?.(item.sport, item.id);
+                  return (
+                    <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
+                      {pos ? (
+                        <span className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: pos.rank === 1 && pos.size > 1 ? 'var(--gold-text)' : 'var(--text-2)', lineHeight: 1.35, minWidth: 0 }}>
+                          {standingText(pos)}
+                        </span>
+                      ) : <span />}
+                      <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>Enter →</span>
+                    </div>
+                  );
+                })()}
               </div>
             </button>
           );
@@ -641,6 +681,26 @@ export default function ClubhouseScreen() {
   const move = useYourMove(activeCircleId);
   const frontpage = useClubhouseFrontpage(activeCircleId);
 
+  // MD-5: being on this screen marks you as here now; everyone's dot comes from the same channel.
+  const presentIds = useHereNow(activeCircleId, { track: true });
+  const hereIds = useMemo(() => {
+    const ids = new Set(presentIds);
+    if (user?.id) ids.add(user.id);
+    return ids;
+  }, [presentIds, user?.id]);
+  // MD-4: the newest Room line (not a bet notice) pops up over its sender on the table.
+  const pulse = useRoomPulse(activeCircleId, { limit: 4 });
+  const latestLine = pulse.messages.find(m => m.kind !== 'bet_activity') ?? null;
+  // Your standing in each league of this clubhouse, for the cards and the line under the name.
+  const thisCircle = useMemo(() => (activeCircle ? [activeCircle] : []), [activeCircle]);
+  const compsHere = useMemo(() => (activeCircleId ? { [activeCircleId]: competitions } : {}), [activeCircleId, competitions]);
+  const { positions } = useMyLeaguePositions(thisCircle, compsHere);
+  const standLine = useMemo(() => clubhouseLine(summarisePositions(positions)), [positions]);
+  const positionFor = useCallback(
+    (sport, id) => positions.find(p => p.sport === sport && String(p.leagueId) === String(id)) ?? null,
+    [positions],
+  );
+
   // Three tabs: room, leagues, people. Old links (home, chat, members) still land on the right tab;
   // 'frontrow' (The Paper) and 'settings' are reachable from Leagues and the gear, not the strip.
   const LEGACY_TABS = { home: 'leagues', chat: 'room', members: 'people' };
@@ -685,13 +745,14 @@ export default function ClubhouseScreen() {
     return () => { alive = false; };
   }, [activeCircleId]);
 
-  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+  const [viewW, setViewW] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1280);
+  const isDesktop = viewW >= 1024;
   const [showInvite, setShowInvite] = useState(false);
   const [joinCodeStatus, setJoinCodeStatus] = useState(null); // 'joining' | { error } | null
   const handledCircleCode = useRef(null);
 
   useEffect(() => {
-    const handler = () => setIsDesktop(window.innerWidth >= 1024);
+    const handler = () => setViewW(window.innerWidth);
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
   }, []);
@@ -748,7 +809,6 @@ export default function ClubhouseScreen() {
 
   const isOwner = activeCircle?.role === 'owner';
   const totalComps  = (competitions.football?.length ?? 0) + (competitions.f1?.length ?? 0) + (competitions.tennis?.length ?? 0);
-  const activeSports = [(competitions.football?.length ?? 0) > 0, (competitions.f1?.length ?? 0) > 0, (competitions.tennis?.length ?? 0) > 0].filter(Boolean).length;
 
   const MAIN_TABS = [
     { key: 'room',    label: 'The Room' },
@@ -759,105 +819,120 @@ export default function ClubhouseScreen() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 32 }}>
 
-      {/* Header */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '20px 20px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          {/* Left: name + member avatars */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: 10 }}>
-            <span aria-hidden style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: 'var(--accent)', flexShrink: 0 }} />
-            <div style={{ minWidth: 0 }}>
-              <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.1, overflowWrap: 'anywhere' }}>
-                {activeCircle ? activeCircle.name : 'Clubhouse'}
-              </h1>
-              {activeCircle && (
-                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', rowGap: 6, marginTop: 10 }}>
-                  {members.slice(0, 5).map((m, i) => (
-                    <div
-                      key={m.user_id}
-                      style={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        background: AVATAR_COLORS[i % AVATAR_COLORS.length],
-                        display: 'grid', placeItems: 'center',
-                        fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--on-accent)',
-                        border: '2px solid var(--card)',
-                        marginRight: -6, position: 'relative', zIndex: 5 - i,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {(m.username?.[0] ?? '?').toUpperCase()}
-                    </div>
-                  ))}
-                  {members.length > 5 && (
-                    <div className="num" style={{
-                      width: 28, height: 28, borderRadius: '50%',
-                      background: 'var(--elev)',
-                      display: 'grid', placeItems: 'center',
-                      fontSize: 'var(--fs-micro)', color: 'var(--mute)',
-                      border: '2px solid var(--card)',
-                      marginRight: -6, zIndex: 0, flexShrink: 0,
-                    }}>
-                      +{members.length - 5}
-                    </div>
-                  )}
-                  <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginLeft: 18, flexShrink: 0 }}>
-                    {members.length} {members.length === 1 ? 'member' : 'members'}
-                    {activeCircle.is_public && <span style={{ color: 'var(--positive)', marginLeft: 6 }}>· Public</span>}
-                  </span>
-                </div>
-              )}
-              {activeCircle?.invite_code && (
-                <button
-                  onClick={() => setShowInvite(true)}
-                  title="Invite people to this Clubhouse"
-                  style={{ marginTop: 12, minHeight: 'var(--tap)', padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-                >
-                  <span style={{ fontSize: 'var(--fs-label)' }}>💬</span>
-                  <span style={{ ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--on-accent)' }}>
-                    Invite
-                  </span>
-                </button>
-              )}
-            </div>
+      {/* Header: the members table (MD-4), with who is here now (MD-5) */}
+      {(() => {
+        const gear = isOwner && (
+          <button
+            onClick={() => setTab('settings')}
+            aria-label="Clubhouse settings"
+            className="hit-44"
+            style={{ minWidth: 'var(--tap)', minHeight: 'var(--tap)', background: 'transparent', border: 'none', color: tab === 'settings' ? 'var(--accent)' : 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          </button>
+        );
+        const bell = (
+          <NotificationBell
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkRead={markRead}
+            onMarkAll={() => markAllRead(activeCircleId)}
+            isDesktop={isDesktop}
+            describe={describeNotice}
+            onNavigate={(n) => n.source_type === 'clubhouse' && n.payload?.message_id ? (setFocusMsg(n.payload.message_id), setTab('room')) : navigate((n.source_type === 'p2p_bet' || n.source_type === 'p2p_challenge') ? '/challenges' : `/league/${n.source_id}`)}
+          />
+        );
+        const invite = activeCircle?.invite_code && (
+          <button
+            onClick={() => setShowInvite(true)}
+            title="Invite people to this Clubhouse"
+            style={{ minHeight: 'var(--tap)', padding: '8px 18px', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: isDesktop ? 'auto' : '100%' }}
+          >
+            <span style={{ ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--on-accent)' }}>Invite</span>
+          </button>
+        );
+        const eyebrow = (
+          <div style={{ ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
+            Clubhouse{activeCircle && totalComps > 0 ? ` · ${totalComps} ${totalComps === 1 ? 'league' : 'leagues'}` : ''}
+            {activeCircle?.is_public && <span style={{ color: 'var(--positive)' }}> · Public</span>}
           </div>
+        );
+        const name = (
+          <h1 style={{ ...HEAD, fontSize: isDesktop ? 'var(--fs-display)' : 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.02, letterSpacing: '-.01em', overflowWrap: 'anywhere' }}>
+            {activeCircle ? activeCircle.name : 'Clubhouse'}
+          </h1>
+        );
+        const sub = standLine && (
+          <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--text-2)', margin: '10px 0 0', lineHeight: 1.4 }}>{standLine}</p>
+        );
+        const legend = (
+          <div aria-hidden style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap', ...MONO, fontSize: 'var(--fs-micro)', fontWeight: 600, color: 'var(--mute)' }}>
+            {[['var(--gold)', 'you'], ['var(--positive)', 'here now'], ['var(--rule)', 'away']].map(([c, l]) => (
+              <span key={l} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />{l}
+              </span>
+            ))}
+          </div>
+        );
+        const table = activeCircle && members.length > 0 && (
+          <MembersTable
+            members={members}
+            meId={user?.id}
+            hereIds={hereIds}
+            latest={latestLine}
+            size={isDesktop ? 380 : Math.min(290, viewW - 40)}
+            showNames={isDesktop}
+          />
+        );
 
-          {/* Right: stats + notif bell (Invite lives under the member row so it can't collide with the member count) */}
-          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-              {activeCircle && totalComps > 0 && (
-                <div style={{ display: 'flex', gap: 20 }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{activeSports}</div>
-                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Sports</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{totalComps}</div>
-                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Leagues</div>
+        if (isDesktop) {
+          return (
+            <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '28px 32px 22px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: table ? 'minmax(0, 1fr) 440px' : 'minmax(0, 1fr)', gap: 32, alignItems: 'center', maxWidth: 1280, margin: '0 auto' }}>
+                <div style={{ minWidth: 0 }}>
+                  {eyebrow}
+                  {name}
+                  {sub}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20 }}>
+                    {invite}
+                    <span style={{ flex: 1 }} />
+                    {gear}
+                    {bell}
                   </div>
                 </div>
-              )}
+                {table && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 18 }}>
+                    {table}
+                    {legend}
+                  </div>
+                )}
+              </div>
             </div>
-            {isOwner && (
-              <button
-                onClick={() => setTab('settings')}
-                aria-label="Clubhouse settings"
-                className="hit-44"
-                style={{ minWidth: 'var(--tap)', minHeight: 'var(--tap)', background: 'transparent', border: 'none', color: tab === 'settings' ? 'var(--accent)' : 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-              </button>
+          );
+        }
+        return (
+          <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '18px 20px 18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                {eyebrow}
+                {name}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                {gear}
+                {bell}
+              </div>
+            </div>
+            {sub}
+            {table && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 22 }}>
+                {table}
+                {legend}
+              </div>
             )}
-            <NotificationBell
-              notifications={notifications}
-              unreadCount={unreadCount}
-              onMarkRead={markRead}
-              onMarkAll={() => markAllRead(activeCircleId)}
-              isDesktop={isDesktop}
-              describe={describeNotice}
-              onNavigate={(n) => n.source_type === 'clubhouse' && n.payload?.message_id ? (setFocusMsg(n.payload.message_id), setTab('room')) : navigate((n.source_type === 'p2p_bet' || n.source_type === 'p2p_challenge') ? '/challenges' : `/league/${n.source_id}`)}
-            />
+            {invite && <div style={{ marginTop: 16 }}>{invite}</div>}
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {joinCodeStatus === 'joining' && (
         <div style={{ padding: '10px 16px', background: 'var(--accent-soft)', borderBottom: '1px solid var(--rule)', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--accent)', textAlign: 'center' }}>
@@ -954,6 +1029,7 @@ export default function ClubhouseScreen() {
                 {/* All competition cards — unified grid */}
                 <AllCompetitions
                   competitions={competitions}
+                  positionFor={positionFor}
                   onEnter={(item, sport) => {
                     if (sport === 'football') enterLeague(item);
                     else if (sport === 'f1') enterPaddock(item);

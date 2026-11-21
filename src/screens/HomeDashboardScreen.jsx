@@ -12,7 +12,10 @@ import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator'
 import { useViewport } from '../hooks/useViewport';
 import { useLivePoints } from '../hooks/useLivePoints';
 import { useMyLeaguePositions, summarisePositions } from '../hooks/useMyLeaguePositions';
-import { ScoreTicker, HomeHeadline, LiveHero, NextDeadlineCard, WhereYouStand } from '../components/home/Matchday';
+import { ScoreTicker, HomeHeadline, LiveHero, NextDeadlineCard, WhereYouStand, AcrossYourClubhouses } from '../components/home/Matchday';
+import { useRoomAcross, useUserNames } from '../hooks/useRoomPulse';
+import { useHereNowAcross } from '../hooks/useHereNow';
+import { useAuth } from '../hooks/useAuth';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -292,8 +295,8 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
 // ── Main screen: the Matchday Home (MD-1) ────────────────────────────────────
 // Headline across all your leagues, a live hero while one of your matches is on
 // (else the next deadline), Your move labelled by clubhouse, "Where you stand",
-// then the clubhouse cards and find/create. Presence and the cross-clubhouse
-// feed come later (S27).
+// then the clubhouse cards and find/create. Beside "Where you stand", the latest
+// Room lines from every clubhouse and who is in one right now (MD-10).
 export default function HomeDashboardScreen() {
   const { myCircles, setActiveCircleId, searchClubhouses, joinCircleByCode, createCircle, loading, refresh } = useClubhouseContext();
   const { setActivePaddockId, setActivePlayerBoxId } = useSport();
@@ -316,6 +319,18 @@ export default function HomeDashboardScreen() {
   const refreshLive = live.refresh;
   const { positions, loading: positionsLoading, refresh: refreshPositions } = useMyLeaguePositions(activeCircles, compsByCircle);
   const summary = useMemo(() => summarisePositions(positions), [positions]);
+
+  const { user } = useAuth();
+  const activeIds = useMemo(() => activeCircles.map(c => c.id), [activeCircles]);
+  const roomAcross = useRoomAcross(activeIds, { limit: 6 });
+  const refreshAcross = roomAcross.refresh;
+  const hereByCircle = useHereNowAcross(activeIds);
+  const friendIdsHere = useMemo(() => {
+    const ids = new Set();
+    hereByCircle.forEach(set => set.forEach(id => { if (id !== user?.id) ids.add(id); }));
+    return [...ids];
+  }, [hereByCircle, user?.id]);
+  const friendNames = useUserNames(friendIdsHere);
 
   function openCreateClubhouse() {
     setCreatingClubhouse(true);
@@ -353,7 +368,8 @@ export default function HomeDashboardScreen() {
       refreshLive(),
       refreshPositions(),
     ]);
-  }, [refresh, fetchCompetitions, circleIdsKey, refreshLive, refreshPositions]);
+    refreshAcross();
+  }, [refresh, fetchCompetitions, circleIdsKey, refreshLive, refreshPositions, refreshAcross]);
 
   const pullToRefresh = usePullToRefresh(mainContentRef, refreshDashboard);
 
@@ -415,6 +431,26 @@ export default function HomeDashboardScreen() {
 
   const standings = (
     <WhereYouStand positions={positions} liveLeagueIds={liveLeagueIds} onOpen={openPosition} />
+  );
+
+  const hereNow = activeCircles
+    .map(c => ({
+      circleId: c.id,
+      circleName: c.name,
+      names: [...(hereByCircle.get(c.id) ?? [])].filter(id => id !== user?.id).map(id => friendNames.get(id)).filter(Boolean),
+    }))
+    .filter(h => h.names.length > 0);
+  const hasAcross = roomAcross.items.length > 0 || hereNow.length > 0;
+  const across = hasAcross && (
+    <AcrossYourClubhouses
+      items={roomAcross.items}
+      here={hereNow}
+      circleNames={circleNames}
+      onOpen={(circleId, msgId) => {
+        setActiveCircleId(circleId);
+        navigate(`/clubhouse/${circleId}?tab=room${msgId ? `&msg=${msgId}` : ''}`);
+      }}
+    />
   );
 
   const clubhouses = myCircles.length > 0 && (
@@ -500,7 +536,7 @@ export default function HomeDashboardScreen() {
               </button>
             </div>
 
-            {twoColumns && positions.length > 0 ? (
+            {twoColumns && (positions.length > 0 || hasAcross) ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: 28, alignItems: 'start', marginTop: 20 }}>
                 <div style={{ minWidth: 0 }}>
                   {hero && <div style={{ marginBottom: 28 }}>{hero}</div>}
@@ -508,8 +544,9 @@ export default function HomeDashboardScreen() {
                   {clubhouses}
                   {findPanel}
                 </div>
-                <aside style={{ position: 'sticky', top: 16 }}>
-                  {standings}
+                <aside style={{ position: 'sticky', top: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {positions.length > 0 && standings}
+                  {across}
                 </aside>
               </div>
             ) : (
@@ -517,6 +554,7 @@ export default function HomeDashboardScreen() {
                 {hero && <div style={{ marginBottom: 24 }}>{hero}</div>}
                 <YourMoveList move={move} circleNames={circleNames} />
                 {positions.length > 0 && <div style={{ marginBottom: 28 }}>{standings}</div>}
+                {across && <div style={{ marginBottom: 28 }}>{across}</div>}
                 {clubhouses}
                 {findPanel}
               </div>
