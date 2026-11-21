@@ -4,6 +4,10 @@ import { useSearchParams } from 'react-router-dom';
 import { LeagueRouteTabs } from '../components/league/HubShared';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import {
+  LIVE_FIXTURE_COLUMNS, withGoals, uniqueChannelName, fetchActiveMatchdays,
+  fetchLiveFixtures, fetchStatsFixtureIds, resolveRoundSquad, scoreSquad,
+} from '../lib/livePoints';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -323,39 +327,6 @@ function buildFormation(players) {
   return parts.join('-') || '—';
 }
 
-// Enforce valid starting XI: exactly 1 GK, at least 1 DEF/MID/FWD, total 11.
-// Takes the full squad id array and a {id→player} lookup.
-// Returns a Set of the 11 valid starter ids.
-function pickValidStarters(squadIds, playerLookup) {
-  const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
-  for (const id of squadIds) {
-    const p = playerLookup[id];
-    if (p && byPos[p.position]) byPos[p.position].push(id);
-  }
-
-  const starters = new Set();
-
-  // Step 1 — mandatory minimums (1 GK + 1 each outfield)
-  if (byPos.GK.length)  starters.add(byPos.GK[0]);
-  if (byPos.DEF.length) starters.add(byPos.DEF[0]);
-  if (byPos.MID.length) starters.add(byPos.MID[0]);
-  if (byPos.FWD.length) starters.add(byPos.FWD[0]);
-
-  // Step 2 — fill remaining slots in squad-array order, skip extra GKs
-  for (const id of squadIds) {
-    if (starters.size >= 11) break;
-    if (starters.has(id)) continue;
-    const p = playerLookup[id];
-    if (!p) continue;
-    // Only allow 1 GK in the starting XI
-    const gkAlreadyIn = [...starters].some(sid => playerLookup[sid]?.position === 'GK');
-    if (p.position === 'GK' && gkAlreadyIn) continue;
-    starters.add(id);
-  }
-
-  return starters;
-}
-
 function positionPlayers(players) {
   const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
   players.forEach(p => { if (byPos[p.position]) byPos[p.position].push(p); });
@@ -429,92 +400,29 @@ export default function LiveScreen() {
       memberships.sort((a, b) => (a.leagues?.name ?? '').localeCompare(b.leagues?.name ?? ''));
       const userTournamentIds = [...new Set((memberships || []).map(m => m.leagues?.tournament_id).filter(Boolean))];
 
-      // 1b. Active matchday_ids — find the most recent matchday deadline per tournament.
-      // This scopes the live strip to only the current round's fixtures, preventing
-      // unrelated matches (e.g. other nations in a large tournament) from appearing.
-      let activeMatchdayIds = [];
-      const matchdayIdByTournament = {}; // tournament_id → active matchday_id
-      if (userTournamentIds.length) {
-        const { data: mdRows = [] } = await supabase
-          .from('matchday_deadlines')
-          .select('matchday_id, tournament_id, deadline_at')
-          .in('tournament_id', userTournamentIds)
-          .lte('deadline_at', new Date().toISOString())  // deadline has passed = round is live/recent
-          .order('deadline_at', { ascending: false });
-        // One matchday_id per tournament (the most recent past deadline)
-        const seen = new Set();
-        for (const row of (mdRows || [])) {
-          if (!seen.has(row.tournament_id)) {
-            seen.add(row.tournament_id);
-            activeMatchdayIds.push(row.matchday_id);
-            matchdayIdByTournament[row.tournament_id] = row.matchday_id;
-          }
-        }
-      }
+      // 1b. Active round per tournament (latest passed deadline), 1c. its live
+      // fixtures, and the fixtures whose stats count — shared with Home (lib/livePoints).
+      const { activeMatchdayIds, matchdayIdByTournament } = await fetchActiveMatchdays(userTournamentIds);
+      const liveFixData = await fetchLiveFixtures({ activeMatchdayIds, tournamentIds: userTournamentIds });
 
-      // 1c. Live fixtures — scoped to the active matchday(s) when possible, otherwise all user tournaments.
-      let liveQ = supabase
-        .from('fixtures')
-        .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id, matchday_id')
-        .eq('status', 'live')
-        .order('kickoff_at', { ascending: true });
-      if (activeMatchdayIds.length) {
-        liveQ = liveQ.in('matchday_id', activeMatchdayIds);
-      } else if (userTournamentIds.length) {
-        liveQ = liveQ.in('tournament_id', userTournamentIds);
-      }
-      const { data: liveFixData = [] } = await liveQ;
-
-      const enrichedFix = (liveFixData || []).map(f => ({
-        ...f,
-        homeGoals: f.home_score ?? 0,
-        awayGoals: f.away_score ?? 0,
-      }));
+      const enrichedFix = liveFixData.map(withGoals);
       setLiveFixtures(enrichedFix);
 
       // All fixtures for the active matchday — used by the FIXTURES tab.
       if (activeMatchdayIds.length) {
         const { data: allFix = [] } = await supabase
           .from('fixtures')
-          .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id, matchday_id')
+          .select(LIVE_FIXTURE_COLUMNS)
           .in('matchday_id', activeMatchdayIds)
           .order('kickoff_at', { ascending: true });
-        setAllFixtures((allFix || []).map(f => ({
-          ...f,
-          homeGoals: f.home_score ?? 0,
-          awayGoals: f.away_score ?? 0,
-        })));
+        setAllFixtures((allFix || []).map(withGoals));
       } else if (enrichedFix.length) {
         setAllFixtures(enrichedFix);
       }
 
-      // Stats window: live fixtures + all finished fixtures in the active matchday(s).
-      // Using matchday scope (not a time window) so multi-day WC matchdays stay visible
-      // throughout the round — e.g. an Argentina game at 00:30 UTC shows correct pts
-      // for the rest of the day while Portugal plays the same evening.
-      let statsFixIds = (liveFixData || []).map(f => f.id);
-      if (activeMatchdayIds.length) {
-        const { data: mdFinished = [] } = await supabase
-          .from('fixtures')
-          .select('id')
-          .in('matchday_id', activeMatchdayIds)
-          .eq('status', 'finished');
-        statsFixIds = [...new Set([...statsFixIds, ...(mdFinished || []).map(f => f.id)])];
-      }
-      if (!statsFixIds.length) {
-        // Fallback when no active matchday is known: 6h window based on kickoff_at.
-        const cutoff = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-        let recentQ = supabase
-          .from('fixtures')
-          .select('id')
-          .eq('status', 'finished')
-          .gte('kickoff_at', cutoff);
-        if (activeTournamentId) recentQ = recentQ.eq('tournament_id', activeTournamentId);
-        const { data: recentFix = [] } = await recentQ;
-        statsFixIds = (recentFix || []).map(f => f.id);
-      }
-      // Keep a backward-compatible alias so the rest of the function uses statsFixIds
-      const activeFixIds = statsFixIds;
+      const activeFixIds = await fetchStatsFixtureIds({
+        liveFixtures: liveFixData, activeMatchdayIds, tournamentId: activeTournamentId,
+      });
 
 
       // Fetch next upcoming fixture — filtered by active league's tournament (BUG-12 fix)
@@ -602,24 +510,9 @@ export default function LiveScreen() {
         : (memberships?.[0]?.league_id ?? null);
       const squadRow = squadByLeague[activeLeagueId] ?? null;
 
-      // When a round is complete, points_breakdown.effective_xi and bench_players hold the
-      // exact players and lineup that were scored — use them to override the current squad
-      // so that post-round transfers don't pollute the historical display (e.g. a player
-      // bought after the round closes appearing in MY XI with stats from that round).
+      // A settled round uses the XI, bench and captain that were actually scored.
       const activeBreakdown = squadRow ? fpBreakdownBySquad[squadRow.id] : null;
-      const settledEffectiveXi   = activeBreakdown?.effective_xi?.length  ? activeBreakdown.effective_xi   : null;
-      const settledBenchPlayers  = activeBreakdown?.bench_players?.length  ? activeBreakdown.bench_players  : null;
-      const roundIsSettled       = Boolean(settledEffectiveXi);
-
-      const squadPlayerIds  = roundIsSettled
-        ? [...(settledEffectiveXi || []), ...(settledBenchPlayers || [])]
-        : (squadRow?.players || []);
-      const startingXi      = roundIsSettled
-        ? settledEffectiveXi
-        : (squadRow?.starting_xi?.length > 0 ? squadRow.starting_xi : null);
-      // Fall back to first starter when captain_id is null — mirrors SquadScreen behaviour.
-      const captainId       = (activeBreakdown?.effective_captain_id) ?? squadRow?.captain_id ?? (startingXi?.[0] ?? squadPlayerIds[0] ?? null);
-      const isTripleCap     = activeBreakdown?.is_triple_captain ?? squadRow?.is_triple_captain ?? false;
+      const { squadPlayerIds, startingXi, captainId, isTripleCap } = resolveRoundSquad(squadRow, activeBreakdown);
 
       // 5. Player details + live stats in parallel — U50/U52: fetch minutes_played
       const [{ data: playerRows = [] }, { data: statsData = [] }] = await Promise.all([
@@ -634,61 +527,16 @@ export default function LiveScreen() {
           : Promise.resolve({ data: [] }),
       ]);
 
-      // Live player set (has stats in a fixture that is CURRENTLY live with > 0 minutes).
-      // statsData spans the whole active matchday (live + finished fixtures) so the
-      // points total stays correct across multi-day rounds — but the "live" pulse
-      // must only fire for fixtures still in progress, not ones that finished
-      // hours/days ago. Scope to liveFixData (status='live'), not the full matchday.
-      const minutesMap = {};
-      (statsData || []).forEach(s => {
-        minutesMap[s.player_id] = (minutesMap[s.player_id] || 0) + (s.minutes_played ?? 0);
-      });
-      const liveFixtureIdSet = new Set((liveFixData || []).map(f => f.id));
-      const livePlayerSet = new Set(
-        (statsData || [])
-          .filter(s => liveFixtureIdSet.has(s.fixture_id) && (s.minutes_played ?? 0) > 0)
-          .map(s => s.player_id)
-      );
-      const pointsMap = {};
-      (statsData || []).forEach(s => {
-        pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
+      // Points, captain multiplier, live flags and the XI/bench split (lib/livePoints).
+      // displayPoints is Math.round(points), so a player shows the same score in
+      // every league; the sum may differ from the GW total by ±1.
+      const { starters, bench, pointsMap, livePlayerSet, benchSet } = scoreSquad({
+        squadPlayerIds, startingXi, captainId, isTripleCap,
+        playerRows, statsData, liveFixtureIds: liveFixData.map(f => f.id),
       });
 
-      // Apply captain multiplier; tag bench players.
-      // Use starting_xi when set (respects user's lineup); fall back to pickValidStarters
-      // for legacy squads that have never had set_lineup called.
-      const playerLookup = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
-      const starterIdSet = startingXi
-        ? new Set(startingXi.filter(id => playerLookup[id]))
-        : pickValidStarters(squadPlayerIds, playerLookup);
-      const benchSet = new Set(squadPlayerIds.filter(id => !starterIdSet.has(id)));
-      const enrichedPlayers = (playerRows || []).map(p => {
-        let pts = pointsMap[p.id] || 0;
-        const isBench = benchSet.has(p.id);
-        // Round the raw score BEFORE applying the captain multiplier so e.g.
-        // 1.4 pts doubled reads as 1*2=2, not round(1.4*2)=3.
-        if (!isBench && p.id === captainId) pts = Math.round(pts) * (isTripleCap ? 3 : 2);
-        return { ...p, points: pts, live: livePlayerSet.has(p.id), isBench, minutes: minutesMap[p.id] ?? null };
-      });
-
-      // Starters only on pitch; bench ordered by squad array position after the first 11
-      const starters = startingXi
-        ? startingXi.map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean)
-        : enrichedPlayers.filter(p => !p.isBench);
-      const bench = squadPlayerIds.filter(id => benchSet.has(id)).map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean);
-
-      // Each player's displayPoints is simply Math.round(raw points) (captain
-      // multiplier already applied above) — so the same player always shows
-      // the same score regardless of which squad/league they're viewed in.
-      // The sum may occasionally differ from the GW total by ±1 due to
-      // independent rounding, which is preferable to a per-squad "largest
-      // remainder" distribution that made the same player's score vary
-      // across leagues.
-      const withDisplayPoints = (group) => group.map(p => ({ ...p, displayPoints: Math.round(p.points ?? 0) }));
-
-      const positioned = positionPlayers(withDisplayPoints(starters));
-      setSquadPlayers(positioned);
-      setBenchPlayers(withDisplayPoints(bench));
+      setSquadPlayers(positionPlayers(starters));
+      setBenchPlayers(bench);
 
       // 6. Enrich leagues with tones + totals
       // U48: use per-league squad row so chip state is scoped to each league
@@ -837,7 +685,7 @@ export default function LiveScreen() {
     if (!liveFixtureIdList) return;
 
     const statsCh = supabase
-      .channel(`live-player-stats-${liveFixtureIdList}`)
+      .channel(uniqueChannelName(`live-player-stats-${liveFixtureIdList}`))
       .on('postgres_changes', {
         event:  'UPDATE',
         schema: 'public',

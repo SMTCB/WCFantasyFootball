@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
@@ -9,6 +9,10 @@ import usePullToRefresh from '../hooks/usePullToRefresh';
 import { useYourMove } from '../hooks/useYourMove';
 import { YourMoveList } from '../components/YourMove';
 import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
+import { useViewport } from '../hooks/useViewport';
+import { useLivePoints } from '../hooks/useLivePoints';
+import { useMyLeaguePositions, summarisePositions } from '../hooks/useMyLeaguePositions';
+import { ScoreTicker, HomeHeadline, LiveHero, NextDeadlineCard, WhereYouStand } from '../components/home/Matchday';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -285,20 +289,33 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
   );
 }
 
-// ── Main screen ───────────────────────────────────────────────────────────────
+// ── Main screen: the Matchday Home (MD-1) ────────────────────────────────────
+// Headline across all your leagues, a live hero while one of your matches is on
+// (else the next deadline), Your move labelled by clubhouse, "Where you stand",
+// then the clubhouse cards and find/create. Presence and the cross-clubhouse
+// feed come later (S27).
 export default function HomeDashboardScreen() {
   const { myCircles, setActiveCircleId, searchClubhouses, joinCircleByCode, createCircle, loading, refresh } = useClubhouseContext();
   const { setActivePaddockId, setActivePlayerBoxId } = useSport();
   const navigate = useNavigate();
   const move = useYourMove();
+  const { isMobile, isDesktop } = useViewport();
+  const twoColumns = isDesktop;
 
   const [compsByCircle, setCompsByCircle] = useState({});
+  const [compsLoaded, setCompsLoaded] = useState(false);
   const [creatingClubhouse, setCreatingClubhouse] = useState(false);
   const findOrCreateRef = useRef(null);
   const circleIdsKey = myCircles.map(c => c.id).join(',');
   const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_clubhouses');
   const archivedCount = myCircles.filter(c => c.archived).length;
   const visibleCircles = showArchived ? myCircles : myCircles.filter(c => !c.archived);
+  const activeCircles = useMemo(() => myCircles.filter(c => !c.archived), [myCircles]);
+
+  const live = useLivePoints();
+  const refreshLive = live.refresh;
+  const { positions, loading: positionsLoading, refresh: refreshPositions } = useMyLeaguePositions(activeCircles, compsByCircle);
+  const summary = useMemo(() => summarisePositions(positions), [positions]);
 
   function openCreateClubhouse() {
     setCreatingClubhouse(true);
@@ -306,7 +323,7 @@ export default function HomeDashboardScreen() {
   }
 
   const fetchCompetitions = useCallback(async (ids) => {
-    if (!ids.length) { setCompsByCircle({}); return; }
+    if (!ids.length) { setCompsByCircle({}); setCompsLoaded(true); return; }
     const results = await Promise.all(ids.map(id => supabase.rpc('get_clubhouse_competitions', { p_circle_id: id })));
     const next = {};
     ids.forEach((id, i) => {
@@ -315,6 +332,7 @@ export default function HomeDashboardScreen() {
       else next[id] = { football: [], f1: [], tennis: [] };
     });
     setCompsByCircle(next);
+    setCompsLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -330,8 +348,12 @@ export default function HomeDashboardScreen() {
 
   const refreshDashboard = useCallback(async () => {
     await refresh();
-    await fetchCompetitions(circleIdsKey ? circleIdsKey.split(',') : []);
-  }, [refresh, fetchCompetitions, circleIdsKey]);
+    await Promise.all([
+      fetchCompetitions(circleIdsKey ? circleIdsKey.split(',') : []),
+      refreshLive(),
+      refreshPositions(),
+    ]);
+  }, [refresh, fetchCompetitions, circleIdsKey, refreshLive, refreshPositions]);
 
   const pullToRefresh = usePullToRefresh(mainContentRef, refreshDashboard);
 
@@ -350,108 +372,155 @@ export default function HomeDashboardScreen() {
     else { setActivePlayerBoxId(item.id); navigate('/tennis'); }
   }
 
-  const totalComps = Object.values(compsByCircle).reduce(
-    (sum, c) => sum + (c.football?.length ?? 0) + (c.f1?.length ?? 0) + (c.tennis?.length ?? 0),
-    0
+  function openPosition(p) {
+    enterCompetition({ id: p.circleId }, { id: p.leagueId }, p.sport);
+  }
+
+  const circleNames = useMemo(() => Object.fromEntries(myCircles.map(c => [c.id, c.name])), [myCircles]);
+  // Football league id → clubhouse name, for the live hero's league chips.
+  const circleByLeague = useMemo(() => {
+    const out = {};
+    for (const c of myCircles) for (const l of (compsByCircle[c.id]?.football ?? [])) out[l.id] = c.name;
+    return out;
+  }, [myCircles, compsByCircle]);
+  const positionByLeague = useMemo(
+    () => Object.fromEntries(positions.filter(p => p.sport === 'football').map(p => [p.leagueId, p])),
+    [positions],
+  );
+
+  const liveLeagues = useMemo(
+    () => live.leagues.filter(l => l.hasLive).sort((a, b) => b.liveCount - a.liveCount),
+    [live.leagues],
+  );
+  const liveLeagueIds = useMemo(() => new Set(liveLeagues.map(l => l.leagueId)), [liveLeagues]);
+  const deadlineLeagues = useMemo(() => {
+    const ids = new Set(live.nextDeadline?.leagueIds ?? []);
+    return positions.filter(p => p.sport === 'football' && ids.has(p.leagueId));
+  }, [live.nextDeadline, positions]);
+
+  const headlineReady = compsLoaded && !positionsLoading;
+  const gutter = isMobile ? 16 : 24;
+
+  const hero = liveLeagues.length > 0 ? (
+    <LiveHero
+      leagues={liveLeagues}
+      fixtures={live.liveFixtures}
+      positionByLeague={positionByLeague}
+      circleByLeague={circleByLeague}
+      isMobile={isMobile}
+    />
+  ) : live.nextDeadline ? (
+    <NextDeadlineCard nextDeadline={live.nextDeadline} leagues={deadlineLeagues} onOpen={openPosition} />
+  ) : null;
+
+  const standings = (
+    <WhereYouStand positions={positions} liveLeagueIds={liveLeagueIds} onOpen={openPosition} />
+  );
+
+  const clubhouses = myCircles.length > 0 && (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>
+          Your Clubhouses
+        </h2>
+        {archivedCount > 0 && (
+          <button
+            onClick={() => setShowArchived(v => !v)}
+            style={{ minHeight: 'var(--tap)', padding: '0 4px', border: 'none', background: 'transparent', color: 'var(--mute)', ...BODY, fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+          >
+            {showArchived ? '▾ Hide archived' : `▸ Show archived (${archivedCount})`}
+          </button>
+        )}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {visibleCircles.map((circle, i) => (
+          <ClubhouseCard
+            key={circle.id}
+            circle={circle}
+            comps={compsByCircle[circle.id]}
+            colorIndex={i}
+            onEnterClubhouse={() => enterClubhouse(circle)}
+            onEnterCompetition={enterCompetition}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
+  const findPanel = (
+    <div ref={findOrCreateRef} style={{ marginBottom: 28, scrollMarginTop: 20 }}>
+      <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>
+        {myCircles.length > 0 ? 'Find another Clubhouse' : 'Get started'}
+      </h2>
+      <FindOrCreatePanel
+        searchClubhouses={searchClubhouses}
+        joinCircleByCode={joinCircleByCode}
+        createCircle={createCircle}
+        creating={creatingClubhouse}
+        setCreating={setCreatingClubhouse}
+      />
+    </div>
   );
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 40 }}>
       <PullToRefreshIndicator progress={pullToRefresh.progress} refreshing={pullToRefresh.refreshing} />
-      {/* Header */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '20px 20px 16px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-              <span aria-hidden style={{ width: 4, height: 28, borderRadius: 2, background: 'var(--accent)', flexShrink: 0 }} />
-              <h1 style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.15 }}>Home</h1>
-            </div>
-            <button
-              onClick={openCreateClubhouse}
-              title="Create a Clubhouse"
-              aria-label="Create a Clubhouse"
-              style={{
-                flexShrink: 0, width: 'var(--tap)', height: 'var(--tap)', borderRadius: '50%',
-                background: 'var(--accent-soft)', border: '1px solid var(--rule)',
-                color: 'var(--accent)', fontSize: 'var(--fs-heading)', fontWeight: 700, lineHeight: 1,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              +
-            </button>
-          </div>
-          <p style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--mute)', lineHeight: 1.5, margin: '10px 0 0', maxWidth: 520 }}>
-            Jump into any competition across every Clubhouse you are part of, or find a new one to join.
-          </p>
+      <ScoreTicker fixtures={live.liveFixtures} />
 
-          {myCircles.length > 0 && (
-            <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
-              <div>
-                <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{myCircles.length}</div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
-                  {myCircles.length === 1 ? 'Clubhouse' : 'Clubhouses'}
-                </div>
-              </div>
-              <div>
-                <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1 }}>{totalComps}</div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>Leagues</div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '22px 20px 0' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: `${isMobile ? 4 : 24}px ${gutter}px 0` }}>
         {loading && myCircles.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             Loading…
           </div>
         ) : (
           <>
-            <YourMoveList move={move} />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0, minHeight: isMobile ? 120 : 160 }}>
+                {headlineReady && (
+                  <HomeHeadline
+                    summary={summary}
+                    clubhouseCount={activeCircles.length}
+                    liveLeagueCount={liveLeagues.length}
+                    isMobile={isMobile}
+                  />
+                )}
+              </div>
+              <button
+                onClick={openCreateClubhouse}
+                title="Create a Clubhouse"
+                aria-label="Create a Clubhouse"
+                style={{
+                  flexShrink: 0, marginTop: isMobile ? 14 : 0, width: 'var(--tap)', height: 'var(--tap)', borderRadius: '50%',
+                  background: 'var(--accent-soft)', border: '1px solid var(--rule)',
+                  color: 'var(--accent)', fontSize: 'var(--fs-heading)', fontWeight: 700, lineHeight: 1,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                +
+              </button>
+            </div>
 
-            {myCircles.length > 0 && (
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <h2 style={{ margin: 0, fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>
-                    Your Clubhouses
-                  </h2>
-                  {archivedCount > 0 && (
-                    <button
-                      onClick={() => setShowArchived(v => !v)}
-                      style={{ minHeight: 'var(--tap)', padding: '0 4px', border: 'none', background: 'transparent', color: 'var(--mute)', ...BODY, fontSize: 'var(--fs-label)', cursor: 'pointer' }}
-                    >
-                      {showArchived ? '▾ Hide archived' : `▸ Show archived (${archivedCount})`}
-                    </button>
-                  )}
+            {twoColumns && positions.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: 28, alignItems: 'start', marginTop: 20 }}>
+                <div style={{ minWidth: 0 }}>
+                  {hero && <div style={{ marginBottom: 28 }}>{hero}</div>}
+                  <YourMoveList move={move} circleNames={circleNames} />
+                  {clubhouses}
+                  {findPanel}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {visibleCircles.map((circle, i) => (
-                    <ClubhouseCard
-                      key={circle.id}
-                      circle={circle}
-                      comps={compsByCircle[circle.id]}
-                      colorIndex={i}
-                      onEnterClubhouse={() => enterClubhouse(circle)}
-                      onEnterCompetition={enterCompetition}
-                    />
-                  ))}
-                </div>
+                <aside style={{ position: 'sticky', top: 16 }}>
+                  {standings}
+                </aside>
+              </div>
+            ) : (
+              <div style={{ marginTop: 16 }}>
+                {hero && <div style={{ marginBottom: 24 }}>{hero}</div>}
+                <YourMoveList move={move} circleNames={circleNames} />
+                {positions.length > 0 && <div style={{ marginBottom: 28 }}>{standings}</div>}
+                {clubhouses}
+                {findPanel}
               </div>
             )}
-
-            <div ref={findOrCreateRef} style={{ marginBottom: 28, scrollMarginTop: 20 }}>
-              <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>
-                {myCircles.length > 0 ? 'Find another Clubhouse' : 'Get started'}
-              </h2>
-              <FindOrCreatePanel
-                searchClubhouses={searchClubhouses}
-                joinCircleByCode={joinCircleByCode}
-                createCircle={createCircle}
-                creating={creatingClubhouse}
-                setCreating={setCreatingClubhouse}
-              />
-            </div>
           </>
         )}
       </div>
