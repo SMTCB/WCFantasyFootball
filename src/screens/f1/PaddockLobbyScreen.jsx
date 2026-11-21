@@ -231,7 +231,7 @@ export default function PaddockLobbyScreen() {
                 <select
                   value={selectedCircleId ?? ''}
                   onChange={e => setSelectedCircleId(e.target.value || null)}
-                  style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
+                  className="ffl-input"
                 >
                   <option value="">No clubhouse</option>
                   {myCircles.map(c => (
@@ -249,7 +249,7 @@ export default function PaddockLobbyScreen() {
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. The Tifosi Garage"
                 maxLength={40}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
+                className="ffl-input"
               />
             </div>
             {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{err}</div>}
@@ -275,7 +275,7 @@ export default function PaddockLobbyScreen() {
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="8-CHARACTER CODE"
                 maxLength={8}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-heading)', fontWeight: 700, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
+                className="ffl-input" style={{ fontWeight: 700 }}
               />
             </div>
             {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{err}</div>}

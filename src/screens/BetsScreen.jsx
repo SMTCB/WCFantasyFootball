@@ -273,7 +273,7 @@ function BetComposer({ circles, defaultCircleId, userId, balance, onPut, onTempl
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--text)' }}>New bet</span>
         {circles.length > 1 ? (
-          <select aria-label="Clubhouse" value={circleId ?? ''} onChange={e => setCircleId(e.target.value)} style={{ ...sel, fontSize: 'var(--fs-label)' }}>
+          <select aria-label="Clubhouse" value={circleId ?? ''} onChange={e => setCircleId(e.target.value)} className="ffl-input ffl-input--sm" style={{ width: 'auto', maxWidth: '100%' }}>
             {circles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         ) : (
@@ -283,7 +283,7 @@ function BetComposer({ circles, defaultCircleId, userId, balance, onPut, onTempl
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 'var(--fs-body)', color: 'var(--text)' }}>
         <span>I bet</span>
-        <select aria-label="Who you are betting" value={opponentId} onChange={e => setOpponentId(e.target.value)} style={sel}>
+        <select aria-label="Who you are betting" value={opponentId} onChange={e => setOpponentId(e.target.value)} className="ffl-input ffl-input--sm" style={{ width: 'auto', maxWidth: '100%' }}>
           {members.length === 0 && <option value="">nobody yet</option>}
           {members.map(m => <option key={m.user_id} value={m.user_id}>{m.username}</option>)}
         </select>
@@ -297,7 +297,7 @@ function BetComposer({ circles, defaultCircleId, userId, balance, onPut, onTempl
       </div>
       <textarea ref={inputRef} aria-label="What the bet is" value={text} maxLength={MAX_QUESTION} rows={2}
         onChange={e => setText(e.target.value)} placeholder="Spurs drop points at home on Saturday"
-        style={{ width: '100%', boxSizing: 'border-box', resize: 'none', padding: '9px 11px', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', background: 'var(--elev)', color: 'var(--text)', fontSize: 'var(--fs-body)', fontFamily: 'inherit', outline: 'none' }} />
+        className="ffl-input" />
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexWrap: 'wrap' }}>
         <span className="num">{question.length} / {MAX_QUESTION}</span>
         <span>You settle it · {opponent?.username ?? 'they'} can dispute</span>

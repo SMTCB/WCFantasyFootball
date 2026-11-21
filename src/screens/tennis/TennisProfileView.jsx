@@ -2,6 +2,7 @@ import { LoadingRows } from '../../components/Skeleton';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import Button from '../../components/Button';
 
 const TYPE_LABEL = { grand_slam: 'Grand Slam', masters_1000: 'M1000', atp_finals: 'ATP Finals' };
 const SURFACE_ICON = { hard: '🎾', clay: '🟤', grass: '🌿', hard_indoor: '🏟️' };
@@ -34,12 +35,10 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
     <div style={{ padding: '20px 0' }}>
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 8 }}>🎾 Tennis</div>
       <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: 0 }}>No tennis scores yet this season.</p>
-      <button
-        onClick={() => navigate('/tennis')}
-        style={{ marginTop: 12, padding: '9px 18px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
-      >
+      <Button
+        onClick={() => navigate('/tennis')} style={{ marginTop: 12 }}>
         Enter the Player's Box
-      </button>
+      </Button>
     </div>
   );
 

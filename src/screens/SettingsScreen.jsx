@@ -171,16 +171,7 @@ export default function SettingsScreen() {
                   maxLength={30}
                   placeholder={usernameLoaded ? 'Enter a username…' : 'Loading…'}
                   disabled={!usernameLoaded || isSavingUsername}
-                  style={{
-                    flex: 1,
-                    fontSize: 'var(--fs-label)',
-                    color: 'var(--paper)',
-                    minHeight: 'var(--tap)', padding: '8px 12px',
-                    background: 'var(--elev)',
-                    border: `1px solid ${usernameInput.trim() !== currentUsername && usernameInput.trim() ? 'var(--accent)' : 'var(--rule)'}`,
-                    borderRadius: 'var(--radius)',
-                    outline: 'none',
-                  }}
+                  className="ffl-input ffl-input--sm" style={{ flex: 1, border: `1px solid ${usernameInput.trim() !== currentUsername && usernameInput.trim() ? 'var(--accent)' : 'var(--rule)'}` }}
                 />
                 <button
                   onClick={handleSaveUsername}

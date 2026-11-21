@@ -229,7 +229,7 @@ export default function PlayerBoxScreen() {
               <select
                 value={selectedCircleId ?? ''}
                 onChange={e => setSelectedCircleId(e.target.value || null)}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
+                className="ffl-input"
               >
                 {myCircles.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -245,7 +245,7 @@ export default function PlayerBoxScreen() {
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. The Baseline Crew"
                 maxLength={40}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
+                className="ffl-input"
               />
             </div>
             {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)' }}>{err}</div>}
@@ -272,7 +272,7 @@ export default function PlayerBoxScreen() {
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="8-CHARACTER CODE"
                 maxLength={8}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-heading)', fontWeight: 700, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
+                className="ffl-input" style={{ fontWeight: 700 }}
               />
             </div>
             {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)' }}>{err}</div>}

@@ -91,22 +91,19 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. The Friday Night Crew"
                   maxLength={40}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--elev)', outline: 'none', boxSizing: 'border-box' }}
+                  className="ffl-input"
                 />
                 {createErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{createErr}</div>}
-                <button
+                <button className="ffl-btn ffl-btn--primary ffl-btn--md" data-full-width="true"
                   type="submit"
-                  disabled={busy === 'create' || !name.trim()}
-                  style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
-                >
+                  disabled={busy === 'create' || !name.trim()}>
                   {busy === 'create' ? 'Creating…' : 'Create Clubhouse'}
                 </button>
               </form>
             ) : (
-              <button
-                onClick={() => setCreating(true)}
-                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: 'pointer' }}
-              >
+              <button className="ffl-btn ffl-btn--primary ffl-btn--md" data-full-width="true"
+                type="button"
+                onClick={() => setCreating(true)}>
                 Create Clubhouse
               </button>
             )}
@@ -124,14 +121,12 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="FK-XXXXX"
                 maxLength={8}
-                style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...MONO, fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
+                className="ffl-input" style={{ ...MONO, fontWeight: 600 }}
               />
               {joinErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{joinErr}</div>}
-              <button
+              <button className="ffl-btn ffl-btn--primary ffl-btn--md" data-full-width="true"
                 type="submit"
-                disabled={busy === 'join' || code.trim().length < 6}
-                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
-              >
+                disabled={busy === 'join' || code.trim().length < 6}>
                 {busy === 'join' ? 'Joining…' : 'Join Clubhouse'}
               </button>
             </form>
@@ -498,7 +493,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
           value={name}
           onChange={e => setName(e.target.value)}
           maxLength={40}
-          style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+          className="ffl-input" style={{ flex: 1 }}
         />
         <button
           type="submit"
@@ -600,7 +595,7 @@ function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLink
                       <select
                         value={assignPicks[comp.id] ?? ''}
                         onChange={e => setAssignPicks(prev => ({ ...prev, [comp.id]: e.target.value }))}
-                        style={{ flex: 1, padding: '6px 10px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                        className="ffl-input ffl-input--sm" style={{ flex: 1 }}
                       >
                         <option value="">Assign admin…</option>
                         {(members ?? [])

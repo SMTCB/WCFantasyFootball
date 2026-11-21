@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import Button from '../components/Button';
 
 export default function NotFoundScreen() {
   const navigate = useNavigate();
@@ -35,24 +36,10 @@ export default function NotFoundScreen() {
         }}>
           This page doesn't exist or has moved.
         </p>
-        <button
-          onClick={() => navigate('/', { replace: true })}
-          style={{
-            fontFamily:    'Archivo Black, sans-serif',
-            fontSize: 'var(--fs-micro)',
-            fontWeight:    800,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            padding:       '10px 20px',
-            background:    'var(--accent)',
-            color:         'var(--on-accent)',
-            border:        'none',
-            borderRadius:  '4px',
-            cursor:        'pointer',
-          }}
-        >
+        <Button
+          onClick={() => navigate('/', { replace: true })}>
           ← Back to Home
-        </button>
+        </Button>
       </div>
     </div>
   );

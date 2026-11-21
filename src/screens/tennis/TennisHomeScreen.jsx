@@ -66,7 +66,7 @@ export default function TennisHomeScreen() {
               <select
                 value={activeBox?.player_box_id ?? ''}
                 onChange={e => setActivePlayerBoxId(e.target.value)}
-                style={{ background: 'var(--elev)', color: 'var(--text)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+                className="ffl-input ffl-input--sm" style={{ width: 'auto' }}
               >
                 {visibleBoxes.map(b => (
                   <option key={b.player_box_id} value={b.player_box_id}>{b.name}{b.archived ? ' (Archived)' : ''}</option>
@@ -119,10 +119,9 @@ export default function TennisHomeScreen() {
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 20px' }}>
               A Player's Box is your private prediction group for the ATP season.
             </p>
-            <button
-              onClick={() => navigate('/tennis/box')}
-              style={{ padding: '11px 28px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
-            >
+            <button className="ffl-btn ffl-btn--primary ffl-btn--md"
+              type="button"
+              onClick={() => navigate('/tennis/box')}>
               Create or join a box
             </button>
           </div>

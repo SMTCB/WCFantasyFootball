@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
 import { CompetitionResultsHeader } from '../../components/competition/CompetitionResultsHeader';
+import Button from '../../components/Button';
 
 export default function TennisLeaderboardScreen() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function TennisLeaderboardScreen() {
             <select
               value={activeBox?.player_box_id ?? ''}
               onChange={e => setActivePlayerBoxId(e.target.value)}
-              style={{ background: 'var(--elev)', color: 'var(--text)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
+              className="ffl-input ffl-input--sm" style={{ width: 'auto' }}
             >
               {myBoxes.map(b => (
                 <option key={b.player_box_id} value={b.player_box_id}>{b.name}</option>
@@ -50,9 +51,9 @@ export default function TennisLeaderboardScreen() {
         ) : !activeBox ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '0 0 16px' }}>Join a Player's Box to see standings.</p>
-            <button onClick={() => navigate('/tennis/box')} style={{ padding: '10px 24px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}>
+            <Button onClick={() => navigate('/tennis/box')}>
               Join a box
-            </button>
+            </Button>
           </div>
         ) : error ? (
           <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)', padding: 16 }}>{error}</div>

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import BottomSheet from './shared/BottomSheet';
+import TextInput from './TextInput';
+import Select from './Select';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useIsDesktop } from '../hooks/useViewport';
+import Button from './Button';
 
 const SPORT_COLOR = { football: 'var(--accent)', f1: 'var(--f1)', tennis: 'var(--ten)' };
 const SPORT_EMOJI = { football: '⚽', f1: '🏁', tennis: '🎾' };
@@ -225,31 +228,12 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
     fontSize: 'var(--fs-label)',
    color: 'var(--mute)',
   };
-  const INPUT_STYLE = {
-    width: '100%', padding: '11px 13px', borderRadius: 'var(--radius)',
-    background: 'var(--elev)', border: 'none',
-    color: 'var(--paper)', fontFamily: 'inherit', fontSize: 'var(--fs-body)',
-    outline: 'none', boxSizing: 'border-box',
-  };
   const SPORT_TILE = (active) => ({
     flex: 1, border: `1.5px solid ${active ? 'var(--accent)' : 'var(--rule)'}`,
     background: active ? 'var(--accent-soft)' : 'transparent',
     borderRadius: 'var(--radius)', padding: '14px 8px', textAlign: 'center',
     cursor: 'pointer', transition: 'all .12s',
   });
-  const GHOST_BTN = {
-    flex: 1, textAlign: 'center', padding: 12, borderRadius: 'var(--radius)',
-    border: '1px solid var(--rule)', background: 'transparent', color: 'var(--mute)',
-    fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)',
-   fontWeight: 600, cursor: 'pointer',
-  };
-  const PRIMARY_BTN = {
-    flex: 1, textAlign: 'center', padding: 12, borderRadius: 'var(--radius)',
-    border: 'none', background: 'var(--accent)', color: 'var(--on-accent)',
-    fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)',
-   fontWeight: 600,
-    cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
-  };
 
   const formContent = (
     <>
@@ -273,46 +257,40 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
         ))}
       </div>
 
-      <div style={{ marginBottom: 14 }}>
-        <label style={LABEL_STYLE}>League name</label>
-        <input
-          autoFocus
-          style={INPUT_STYLE}
-          placeholder="e.g. Sunday League Redux"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          maxLength={60}
-        />
-      </div>
+      <TextInput
+        label="League name"
+        fieldStyle={{ marginBottom: 14 }}
+        autoFocus
+        placeholder="e.g. Sunday League Redux"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        maxLength={60}
+      />
 
       {sport === 'football' && (
         <>
-          <div style={{ marginBottom: 14 }}>
-            <label style={LABEL_STYLE}>Tournament</label>
-            <select
-              style={{ ...INPUT_STYLE, cursor: 'pointer' }}
-              value={tournamentId}
-              onChange={e => setTournamentId(e.target.value)}
-            >
-              {tournaments.length === 0 && <option value="">Loading...</option>}
-              {tournaments.map(t => (
-                <option key={t.forza_id} value={t.forza_id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Tournament"
+            fieldStyle={{ marginBottom: 14 }}
+            value={tournamentId}
+            onChange={e => setTournamentId(e.target.value)}
+          >
+            {tournaments.length === 0 && <option value="">Loading...</option>}
+            {tournaments.map(t => (
+              <option key={t.forza_id} value={t.forza_id}>{t.name}</option>
+            ))}
+          </Select>
 
-          <div style={{ marginBottom: 14 }}>
-            <label style={LABEL_STYLE}>Format</label>
-            <select
-              style={{ ...INPUT_STYLE, cursor: 'pointer' }}
-              value={format}
-              onChange={e => setFormat(e.target.value)}
-            >
-              {FORMATS.map(f => (
-                <option key={f.value} value={f.value}>{f.label}</option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Format"
+            fieldStyle={{ marginBottom: 14 }}
+            value={format}
+            onChange={e => setFormat(e.target.value)}
+          >
+            {FORMATS.map(f => (
+              <option key={f.value} value={f.value}>{f.label}</option>
+            ))}
+          </Select>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 6 }}>
             <input
@@ -329,10 +307,10 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
       {error && <div style={{ color: 'var(--danger)', fontSize: 'var(--fs-label)', marginTop: 8 }}>{error}</div>}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-        <button onClick={close} style={GHOST_BTN}>Cancel</button>
-        <button onClick={handleCreate} disabled={loading} style={PRIMARY_BTN}>
+        <Button variant="secondary" onClick={close} style={{ flex: 1 }}>Cancel</Button>
+        <Button onClick={handleCreate} disabled={loading} loading={loading} style={{ flex: 1 }}>
           {loading ? 'Creating…' : 'Create competition'}
-        </button>
+        </Button>
       </div>
 
       <div style={{ marginTop: 18 }}>
@@ -368,7 +346,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
-                style={{ ...INPUT_STYLE, flex: 1 }}
+                className="ffl-input" style={{ flex: 1 }}
                 placeholder="Invite code"
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value)}

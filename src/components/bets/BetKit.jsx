@@ -5,6 +5,7 @@ import BottomSheet from '../shared/BottomSheet';
 import { useNavigate } from 'react-router-dom';
 import PrimaryActionBar from '../shared/PrimaryActionBar';
 import { supabase } from '../../lib/supabase';
+import Button from '../Button';
 
 // Shared bet cards, forms and helpers, used by the Challenges screen and the Bets screen (MD-8).
 export const MONO = { fontFamily: 'Archivo, sans-serif' };
@@ -804,7 +805,7 @@ export function CreateGroupBetModal({
                 type="number" inputMode="numeric" min={10} max={500} value={stakeCoins}
                 aria-label="Stake in coins"
                 onChange={e => setStakeCoins(Math.max(0, parseInt(e.target.value) || 0))}
-                style={{ width: 84, minHeight: 'var(--tap)', boxSizing: 'border-box', padding: '0 10px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--gold)'}`, color: overBudget ? 'var(--neg)' : 'var(--gold)', fontWeight: 700, fontSize: 'var(--fs-body)', textAlign: 'center' }}
+                className="ffl-input" style={{ width: 84, border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--gold)'}`, color: overBudget ? 'var(--neg)' : 'var(--gold)', fontWeight: 700, textAlign: 'center' }}
               />
               <span>coins that</span>
             </div>
@@ -816,7 +817,7 @@ export function CreateGroupBetModal({
                 maxLength={140} value={question} onChange={e => setQuestion(e.target.value)}
                 placeholder="Benfica beat Porto"
                 rows={2}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)', resize: 'none', fontFamily: 'inherit' }}
+                className="ffl-input"
               />
             </label>
 
@@ -864,7 +865,7 @@ export function CreateGroupBetModal({
                       <input
                         value={opt} onChange={e => updateOption(i, e.target.value)}
                         placeholder={`Option ${i + 1}`}
-                        style={{ flex: 1, boxSizing: 'border-box', padding: '9px 11px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)' }}
+                        className="ffl-input" style={{ flex: 1 }}
                       />
                       {options.length > 2 && (
                         <button
@@ -954,11 +955,7 @@ export function CreateGroupBetModal({
               <input
                 type="number" min={10} max={500} value={stakeCoins}
                 onChange={e => setStakeCoins(Math.max(10, parseInt(e.target.value) || 0))}
-                style={{
-                  width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 'var(--radius)',
-                  background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--rule)'}`,
-                  color: overBudget ? 'var(--neg)' : 'var(--text)', fontSize: 'var(--fs-body)',
-                }}
+                className="ffl-input" aria-invalid={overBudget || undefined} style={{ color: overBudget ? 'var(--neg)' : undefined }}
               />
             </div>
 
@@ -968,14 +965,14 @@ export function CreateGroupBetModal({
                 <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Starts</span>
                 <input
                   type="datetime-local" value={startsAt} onChange={e => setStartsAt(e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '9px 10px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', fontSize: 'var(--fs-label)' }}
+                  className="ffl-input ffl-input--sm"
                 />
               </label>
               <label style={{ flex: 1, display: 'block' }}>
                 <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Ends</span>
                 <input
                   type="datetime-local" value={endsAt} disabled={noEnd} onChange={e => setEndsAt(e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '9px 10px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: noEnd ? 'var(--mute)' : 'var(--text)', fontSize: 'var(--fs-label)', opacity: noEnd ? 0.5 : 1 }}
+                  className="ffl-input ffl-input--sm" style={{ color: noEnd ? 'var(--mute)' : 'var(--text)', opacity: noEnd ? 0.5 : 1 }}
                 />
               </label>
             </div>
@@ -1073,7 +1070,7 @@ export function SubmitAnswerModal({ bet, onClose, onSubmit, fetchAnswers, userId
           <textarea
             value={answerText} onChange={e => setAnswerText(e.target.value)}
             placeholder="Your answer…" rows={3}
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)', resize: 'none', fontFamily: 'inherit', marginBottom: 14 }}
+            className="ffl-input" style={{ marginBottom: 14 }}
           />
         )}
 
@@ -1867,7 +1864,7 @@ export function CreateChallengeModal({
                   maxLength={140} value={question} onChange={e => setQuestion(e.target.value)}
                   placeholder="Will it rain at kickoff for Saturday's derby?"
                   rows={2}
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)', resize: 'none', fontFamily: 'inherit' }}
+                  className="ffl-input"
                 />
               </label>
             ) : (
@@ -1920,11 +1917,7 @@ export function CreateChallengeModal({
               <input
                 type="number" min={10} max={balance} value={stakeCoins}
                 onChange={e => setStakeCoins(Math.max(10, parseInt(e.target.value) || 0))}
-                style={{
-                  width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 'var(--radius)',
-                  background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--rule)'}`,
-                  color: overBudget ? 'var(--neg)' : 'var(--text)', fontSize: 'var(--fs-body)',
-                }}
+                className="ffl-input" aria-invalid={overBudget || undefined} style={{ color: overBudget ? 'var(--neg)' : undefined }}
               />
               <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 5 }}>
                 Net win if you win: <span style={{ color: 'var(--pos)' }}>{netWin.toLocaleString()} coins</span> after 5% rake
@@ -1939,7 +1932,7 @@ export function CreateChallengeModal({
               <input
                 maxLength={140} value={message} onChange={e => setMessage(e.target.value)}
                 placeholder="trash talk here…"
-                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 'var(--radius)', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 'var(--fs-body)' }}
+                className="ffl-input"
               />
             </label>
 
@@ -2014,10 +2007,8 @@ export function NoClubhousePrompt({ onClose }) {
           Create a Clubhouse for your friends, or join one with an invite code. Then you can start a bet.
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button
-            onClick={go}
-            style={{ minHeight: 'var(--tap)', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 'var(--fs-body)', ...HEAD }}
-          >Create or join a Clubhouse</button>
+          <Button
+            onClick={go}>Create or join a Clubhouse</Button>
           <button
             onClick={onClose}
             style={{ minHeight: 'var(--tap)', padding: 12, borderRadius: 10, border: '1px solid var(--rule)', cursor: 'pointer', background: 'transparent', color: 'var(--mute)', fontSize: 'var(--fs-label)', ...HEAD }}

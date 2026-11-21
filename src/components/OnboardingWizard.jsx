@@ -342,11 +342,7 @@ export default function OnboardingWizard({ onComplete, onSkip }) {
                 placeholder="e.g. The Sunday League"
                 maxLength={40}
                 autoFocus
-                style={{
-                  width: '100%', padding: '12px 14px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)',
-                  color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
-                  borderRadius: 'var(--radius)', outline: 'none', boxSizing: 'border-box',
-                }}
+                className="ffl-input"
               />
             ) : (
               <input
@@ -356,12 +352,7 @@ export default function OnboardingWizard({ onComplete, onSkip }) {
                 placeholder="Invite code"
                 maxLength={8}
                 autoFocus
-                style={{
-                  width: '100%', padding: '12px 14px', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-heading)',
-                  fontWeight: 700,
-                  color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
-                  borderRadius: 'var(--radius)', outline: 'none', boxSizing: 'border-box',
-                }}
+                className="ffl-input" style={{ fontWeight: 700 }}
               />
             )}
 
