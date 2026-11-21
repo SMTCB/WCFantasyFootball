@@ -13,15 +13,11 @@ import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../l
 import { normalisePlayer, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useTransferWindow } from '../hooks/useTransferWindow';
-import { LeagueRouteTabs } from '../components/league/HubShared';
-import TransferWindowBanner from '../components/TransferWindowBanner';
-import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAvailabilityFlag } from '../hooks/useAvailabilityFlag';
 import { useAuctions } from '../hooks/useAuctions';
 import { useToast } from '../hooks/useToast';
-import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 import Button from '../components/Button';
 import Skeleton from '../components/Skeleton';
@@ -44,18 +40,19 @@ import FormStrip from '../components/FormStrip';
 import PlayerActionSheet from '../components/squad/PlayerActionSheet';
 import ChipsRow from '../components/squad/ChipsRow';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
-import { useIsMobile } from '../hooks/useViewport';
-import PrimaryActionBar from '../components/shared/PrimaryActionBar';
+import { useIsMobile, useIsDesktop } from '../hooks/useViewport';
 import MarketPanel from '../components/squad/MarketPanel';
 import TransferReviewBar from '../components/squad/TransferReviewBar';
 import { useTransferBasket, runBasket, pairBasket } from '../lib/transferBasket';
 
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-// `embedded` draws the squad inside the league's My team tab (S30): no page header,
-// no league tabs, no transfer banner (the league shows its own), and a compact
-// Pitch / List switch with a needs-attention line and a chips row on phone.
-export default function SquadScreen({ embedded = false, leagueId: leagueIdProp = null } = {}) {
+// The squad inside the league's My team tab (S30). Since S32 (MD-13) that is the
+// only place it is drawn: `/squad` redirects here, so the old page header, league
+// tabs, transfer banner and Squad tour are gone. On desktop the pitch takes the left
+// column and a side column holds Needs attention, Chips and `sideExtra` (the round's
+// matches, passed in by the league's matchweek view).
+export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra = null } = {}) {
   const { user } = useAuth();
   const { show: showToast } = useToast();
   const navigate = useNavigate();
@@ -70,7 +67,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   const [saving,             setSaving]            = useState(false);
   // Mobile tab: 'pitch' | 'squad' | 'tools'
   const [mobileTab,          setMobileTab]         = useState('pitch');
-  // Desktop sub-tab: 'pitch' | 'list' | 'chips' | 'status'
+  // Desktop sub-tab: 'pitch' | 'list'
   const [desktopTab,         setDesktopTab]        = useState('pitch');
   // Danger banner dismissed on mobile
   const [dangerDismissed,    setDangerDismissed]   = useState(false);
@@ -89,6 +86,8 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   const [jokerPick,          setJokerPick]         = useState(false);
   const [clubCap,            setClubCap]           = useState(3);
   const [confirmingBasket,   setConfirmingBasket]  = useState(false);
+  // S32 (MD-13): the desktop side column shows the overview, the chips panel or player status.
+  const [sideMode,           setSideMode]          = useState('overview');
 
   // Card warnings derived from player_match_stats (player_status table is unused)
   const cardMap = usePlayerCards(tournamentId);
@@ -138,14 +137,6 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
     };
     if (user?.id) init();
   }, [user?.id, leagueIdParam]);
-
-  // Squad is only ever reached via Clubhouse → League → Squad, so a missing
-  // ?leagueId= (e.g. a stale bookmark) means the entry point was wrong, not
-  // that the user should pick from an in-page list of all their leagues —
-  // send them back to the Clubhouse to re-enter through the league itself.
-  useEffect(() => {
-    if (!embedded && leagues && leagues.length >= 1 && !activeLeague) navigate('/clubhouse', { replace: true });
-  }, [embedded, leagues, activeLeague, navigate]);
 
   // Resolve tournament_id whenever the active league is known or changes
   useEffect(() => {
@@ -500,6 +491,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   // Transfer window status for the sticky banner (open / upcoming / no_window).
   const transferWindow = useTransferWindow(activeLeague);
   const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   // Per-club cap for the Replace picker (same RPC the market uses).
   const capMatchday = squadData?.matchdayId;
@@ -512,62 +504,6 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   // Stable, so the market sheet's focus/scroll-lock effect runs once per opening.
   const closeMarket = useCallback(() => setMarketOpen(null), []);
 
-  // KPI header: when window is in recovery (upcoming), count down to opensAt.
-  // When open, use the deadline countdown (closes at next matchday).
-  const [windowKpi, setWindowKpi] = useState({ label: 'Transfers', text: '', color: 'var(--mute)' });
-  useEffect(() => {
-    const target = transferWindow.status === 'upcoming'
-      ? transferWindow.opensAt
-      : transferWindow.status === 'open'
-      ? transferWindow.closesAt
-      : null;
-    if (!target) {
-      setWindowKpi({ label: 'Transfers', text: transferWindow.status === 'no_window' ? '—' : 'CLOSED', color: 'var(--mute)' });
-      return;
-    }
-    const tick = () => {
-      const ms = new Date(target) - Date.now();
-      if (ms <= 0) { setWindowKpi({ label: transferWindow.status === 'upcoming' ? 'Opens In' : 'Transfers', text: '—', color: 'var(--mute)' }); return; }
-      const d = Math.floor(ms / 86400000);
-      const h = Math.floor((ms % 86400000) / 3600000);
-      const m = Math.floor((ms % 3600000) / 60000);
-      const s = Math.floor((ms % 60000) / 1000);
-      const text = d > 0 ? `${d}d ${h}h ${m}m` : h > 0 ? `${h}h ${m}m` : `${m}m ${s}s`;
-      setWindowKpi(transferWindow.status === 'upcoming'
-        ? { label: 'Opens In', text, color: 'var(--warn)' }
-        : { label: 'Transfers', text, color: h < 2 ? 'var(--danger)' : 'var(--positive)' }
-      );
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [transferWindow.status, transferWindow.opensAt, transferWindow.closesAt]);
-
-  // First-visit tour
-  const { showSquadTour, completeSquadTour } = useOnboarding();
-
-  const SQUAD_TOUR_STEPS = [
-    {
-      target: 'squad-pitch',
-      title:  'Your Pitch',
-      body:   'This is your starting XI laid out on a pitch. Tap any player to see options — swap positions, set captain, or activate your Matchday Joker.',
-    },
-    {
-      target: 'squad-budget',
-      title:  'Budget & Deadline',
-      body:   'Your remaining budget and the transfer window countdown live here. When the window closes, no more transfers until the next matchday.',
-    },
-    {
-      target: 'squad-power-tools',
-      title:  'Power Tools',
-      body:   'Triple Captain and Matchday Joker live here. Each is one-use — activate carefully.',
-    },
-    {
-      target: 'squad-chips',
-      title:  'Chips & Boosts',
-      body:   'Triple Captain scores 3× points — or 0 if they don\'t play. Matchday Joker adds a 16th man for this matchday. Use them wisely, they\'re one-per-season.',
-    },
-  ];
 
 
   useEffect(() => {
@@ -906,7 +842,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   // â"€â"€ Loading â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   if (loading || !squadData) {
     return (
-      <div className={embedded ? '' : 'min-h-screen bg-bg'} style={{ padding: '16px 20px' }}>
+      <div style={{ padding: '16px 20px' }}>
         <div className="flex items-center justify-between mb-4">
           <Skeleton shape="line" variant="shimmer" className="w-32" style={{ height: 20, marginBottom: 0 }} />
           <Skeleton shape="line" variant="shimmer" className="w-16" style={{ height: 20, marginBottom: 0 }} />
@@ -1034,7 +970,9 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   // ── S31 (MD-12): pending transfers ────────────────────────────────────────
   // Each incoming player stands where the outgoing one stood until the basket is
   // confirmed; with an empty basket the pitch gets exactly the arrays it always got.
-  const canReplace   = transferWindow.status === 'open' || transferWindow.status === 'no_window';
+  // Draft leagues (S32): no free buys while the market is locked for the wishlist draft.
+  const draftLocked  = cfg.format === 'noduplicate' && Boolean(transferWindow.windowType?.startsWith('wishlist'));
+  const canReplace   = (transferWindow.status === 'open' || transferWindow.status === 'no_window') && !draftLocked;
   const pendingPairs = pairBasket(basket);
   const moneyLeft    = basket.reduce((m, i) => (i.type === 'sell' ? m + Number(i.player.price) : m - Number(i.player.price)), Number(budget.current));
   const swapIn       = {};
@@ -1432,21 +1370,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
   // â"€â"€ RENDER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
-    <div className={embedded ? 'overflow-x-hidden' : 'min-h-screen bg-bg overflow-x-hidden'}>
-      {!embedded && <LeagueRouteTabs active="squad" leagueId={activeLeague} />}
-
-      {/* ── Transfer window status banner (U5) ──────────────────────────────── */}
-      {!embedded && <TransferWindowBanner
-        status={transferWindow.status}
-        closesAt={transferWindow.closesAt}
-        opensAt={transferWindow.opensAt}
-        transfersRemaining={transferWindow.transfersRemaining}
-        isUnlimited={transferWindow.isUnlimited}
-        windowType={transferWindow.windowType}
-        draftMode={transferWindow.draftMode}
-        isDraftLeague={cfg.format === 'noduplicate'}
-      />}
-
+    <div className="overflow-x-hidden">
       {/* ── Fetch error banner ──────────────────────────────────────────────── */}
       {fetchError && (
         <div
@@ -1483,85 +1407,11 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
 
       {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
 
-      {/* First-visit spotlight tour */}
-      {!embedded && showSquadTour && !loading && (
-        <OnboardingTour
-          steps={SQUAD_TOUR_STEPS}
-          onComplete={completeSquadTour}
-          onSkip={completeSquadTour}
-        />
-      )}
-
-      {/* â•â• STICKY HEADER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {!embedded && (
-      <div
-        className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
-        style={{
-          background: 'var(--card)', borderLeft: '4px solid var(--sport-marker, var(--accent))',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid var(--rule)',
-        }}
-      >
-        {/* Left: eyebrow + title + tour replay */}
-        <div>
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>
-            Tactical Sheet
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--text)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
-              My Squad
-            </div>
-            <button
-              onClick={() => setShowScoringModal(true)}
-              title="Scoring & game rules"
-              style={{
-                width: 22, height: 22, borderRadius: '50%',
-                border: '1px solid var(--rule)',
-                background: 'var(--elev)',
-                color: 'var(--mute)',
-                fontSize: 'var(--fs-micro)', fontWeight: 700, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, marginTop: 6,
-              }}
-            >?</button>
-          </div>
-        </div>
-
-        {/* Right: KPI cluster — Transfers (desktop only) · Squad · Budget */}
-        <div className="flex items-center gap-3 lg:gap-5">
-          {windowKpi.text && (
-            <div className="text-right hidden lg:block" aria-hidden="true">
-              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>{windowKpi.label}</div>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: windowKpi.color, letterSpacing: '-0.01em' }}>
-                {windowKpi.text}
-              </div>
-            </div>
-          )}
-          <div className="text-right">
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>Squad</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1 }}>{allSquadPlayers.length}</span>
-              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>/15</span>
-            </div>
-          </div>
-          <div className="text-right" data-tour="squad-budget">
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)',  }}>Budget</div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: budgetLow ? 'var(--danger)' : 'var(--accent)', lineHeight: 1 }}>
-              €{budgetLeft}M
-            </div>
-          </div>
-        </div>
-      </div>
-      )}
-
       {/* â•â• MOBILE LAYOUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="lg:hidden">
 
-        {/* Tab strip — 4 tabs matching desktop. In the league's My team tab a compact
-            Pitch / List switch, a needs-attention line and a back control replace it. */}
-        {embedded ? (
-          <>
+        {/* A compact Pitch / List switch, a needs-attention line and a back control. */}
+        <>
             {(mobileTab === 'pitch' || mobileTab === 'squad') ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
                 <div role="tablist" aria-label="Squad view" style={{ display: 'inline-flex', gap: 2, padding: 3, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 999 }}>
@@ -1643,36 +1493,6 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
               );
             })()}
           </>
-        ) : (
-          <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
-            {[
-              { id: 'pitch',  label: '⚽ PITCH'  },
-              { id: 'squad',  label: '📋 LIST'   },
-              { id: 'chips',  label: '⚡ CHIPS'  },
-              { id: 'status', label: '⚠️ STATUS' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => { setJokerPick(false); setMobileTab(tab.id); }}
-                className="flex-1 py-2.5 text-center transition-all relative"
-                style={{
-                  fontFamily: 'Archivo Black, sans-serif',
-                  fontSize: 'var(--fs-micro)',
-                  color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)',
-                  background: 'transparent',
-                }}
-              >
-                {tab.label}
-                {mobileTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />
-                )}
-                {tab.id === 'status' && dangerPlayers.length > 0 && (
-                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Incomplete squad banner — shown on all mobile tabs */}
         {allSquadPlayers.length < 11 ? (
@@ -1741,7 +1561,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
                 </div>
               </div>
 
-              <div style={{ padding: '12px 16px 4px' }}>
+              <div data-tour="my-team-pitch" style={{ padding: '12px 16px 4px' }}>
                 <MobilePitchField
                   squad={{ players: pitchPlayers, captainId: pitchCaptainId, isTripleCaptain: squadData.isTripleCaptain }}
                   onPlayerClick={handlePitchTap}
@@ -1812,7 +1632,7 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
                 </>
               )}
 
-              {embedded && (
+              {!isDesktop && (
                 <ChipsRow
                   leagueId={activeLeague}
                   userId={user?.id}
@@ -2039,48 +1859,45 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
 
       </div>
 
-      {/* â•â• DESKTOP LAYOUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {/* Shrink container by swap-banner height (â‰ˆ64px) so bench strip stays above the fixed banner */}
-      <div className="hidden lg:flex flex-col" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
+      {/* ══ DESKTOP LAYOUT (S32 / MD-13) ══ pitch in the left column, side column on the right.
+          The market opens over the side column as the S31 right panel. */}
+      {/* Shrink container by swap-banner height (≈64px) so bench strip stays above the fixed banner */}
+      <div className="hidden lg:flex" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
-        {/* â"€â"€ Sub-tab row: Pitch / List / Chips / Status â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+        {/* ── Pitch / List switch, squad count and budget ── */}
         <div className="flex shrink-0 items-center" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
           {[
-            { id: 'pitch',  label: 'Pitch'  },
-            { id: 'list',   label: 'List'   },
-            { id: 'chips',  label: 'Chips'  },
-            { id: 'status', label: 'Status' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setDesktopTab(tab.id)}
-              className="relative px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all"
-              style={{
-                fontFamily: 'Archivo Black, sans-serif',
-                color: desktopTab === tab.id ? 'var(--accent)' : 'var(--mute)',
-                background: 'transparent',
-              }}
-            >
-              {tab.label}
-              {desktopTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />
-              )}
-              {tab.id === 'status' && dangerPlayers.length > 0 && (
-                <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
-              )}
-            </button>
-          ))}
-          {/* Embedded in the league, the page header that held these is hidden. */}
-          {embedded && (
-            <div data-testid="squad-budget-desktop" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'baseline', gap: 18, padding: '0 20px' }}>
-              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-                Squad <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text)' }}>{allSquadPlayers.length}</span>/15
-              </span>
-              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-                Budget <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: budgetLow ? 'var(--danger)' : 'var(--accent)' }}>€{budgetLeft}M</span>
-              </span>
-            </div>
-          )}
+            { id: 'pitch', label: 'Pitch' },
+            { id: 'list',  label: 'List'  },
+          ].map(tab => {
+            const on = tab.id === 'list' ? desktopTab === 'list' : desktopTab !== 'list';
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setDesktopTab(tab.id)}
+                className="relative px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all"
+                style={{
+                  fontFamily: 'Archivo Black, sans-serif',
+                  color: on ? 'var(--accent)' : 'var(--mute)',
+                  background: 'transparent',
+                }}
+              >
+                {tab.label}
+                {on && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />
+                )}
+              </button>
+            );
+          })}
+          <div data-testid="squad-budget-desktop" data-tour="squad-budget" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'baseline', gap: 18, padding: '0 20px' }}>
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+              Squad <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text)' }}>{allSquadPlayers.length}</span>/15
+            </span>
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+              Budget <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: budgetLow ? 'var(--danger)' : 'var(--accent)' }}>€{budgetLeft}M</span>
+            </span>
+          </div>
         </div>
 
         {/* Incomplete squad banner — desktop */}
@@ -2111,12 +1928,10 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
             </button>
           </div>
         ) : null}
+        <div data-tour="my-team-pitch" className="flex-1 overflow-hidden flex">
 
-        {/* â"€â"€ Tab content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        <div className="flex-1 overflow-hidden flex">
-
-          {/* â"€â"€ PITCH TAB — XI on pitch + bench strip below â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-          {desktopTab === 'pitch' && (
+          {/* ── PITCH — XI on pitch + bench strip below (design lock: unchanged) ── */}
+          {desktopTab !== 'list' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {/* Pitch — flex:1 to fill most of the height */}
               <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2177,57 +1992,134 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
             </div>
           )}
 
-          {/* â"€â"€ LIST TAB — player list + bench panel â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+          {/* ── LIST ── */}
           {desktopTab === 'list' && (
-            <>
-              <div className="flex-1 min-w-0 overflow-y-auto">
-                <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--rule)' }}>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Squad List</div>
-                  <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
-                </div>
-                {PlayerList()}
+            <div className="flex-1 min-w-0 overflow-y-auto">
+              <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--rule)' }}>
+                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Squad List</div>
+                <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
               </div>
-            </>
-          )}
-
-          {desktopTab === 'chips' && (
-            <div className="flex-1 overflow-y-auto max-w-xl">
-              <ChipsPanel
-              leagueId={activeLeague}
-              userId={user?.id}
-              tournamentId={tournamentId}
-              ownedIds={allSquadPlayers.map(p => p.id)}
-              hasCaptain={!!captainId}
-              setConfirm={setConfirm}
-              showToast={showToast}
-            />
-            </div>
-          )}
-
-          {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-          {desktopTab === 'status' && (
-            <div className="flex-1 overflow-y-auto max-w-xl">
-              <SectionHeader title="Player Status" accent="gold" />
-              <DangerList />
-              <div className="mt-4">
-                <SectionHeader title="Captain" />
-                {(() => {
-                  const cap = allSquadPlayers.find(p => p.id === captainId);
-                  if (!cap) return null;
-                  return (
-                    <div className="px-4 py-3 flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center text-[11px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold-text)' }}>C</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-semibold text-[var(--paper)] truncate">{cap.name}</div>
-                        <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · €{cap.price}M</div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
+              {PlayerList()}
             </div>
           )}
         </div>
+        </div>
+
+        {/* ── Side column: Needs attention, Chips, This round's matches ── */}
+        {isDesktop && (
+          <aside
+            data-testid="my-team-side"
+            style={{ width: 340, flexShrink: 0, boxSizing: 'border-box', borderLeft: '1px solid var(--rule)', background: 'var(--bg)', overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}
+          >
+            {sideMode === 'overview' ? (
+              <>
+                <div data-testid="needs-attention-card" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 16, padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>Needs attention</div>
+                    {dangerPlayers.length > 0 && (
+                      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--danger)' }}>{dangerPlayers.length}</span>
+                    )}
+                  </div>
+                  {dangerPlayers.length === 0 ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--positive)', flexShrink: 0 }} />
+                      Everyone is fit. No injury or suspension alerts.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {dangerPlayers.slice(0, 4).map(p => {
+                        const st = LINEUP_STATUS[p.intel?.status];
+                        const pending = basket.some(i => i.player.id === p.id);
+                        return (
+                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <button
+                              type="button"
+                              onClick={() => handlePlayerClick(p)}
+                              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, minHeight: 40, padding: '6px 10px', textAlign: 'left', cursor: 'pointer', background: st?.bg ?? 'transparent', border: `1px solid ${st?.color ?? 'var(--rule)'}30`, borderRadius: 10 }}
+                            >
+                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: st?.color ?? 'var(--mute)', flexShrink: 0 }}>{st?.label ?? p.intel?.status}</span>
+                              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                            </button>
+                            {canReplace && !pending && (
+                              <button
+                                type="button"
+                                data-testid={`attention-replace-${p.id}`}
+                                onClick={() => setReplacing(p)}
+                                style={{ minHeight: 40, padding: '0 12px', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 10, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', cursor: 'pointer', flexShrink: 0 }}
+                              >
+                                Replace
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={() => setSideMode('status')}
+                        style={{ alignSelf: 'flex-start', marginTop: 2, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}
+                      >
+                        {dangerPlayers.length > 4 ? `See all ${dangerPlayers.length} ›` : 'Player status ›'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <ChipsRow
+                  stacked
+                  leagueId={activeLeague}
+                  userId={user?.id}
+                  onOpen={() => { setJokerPick(false); setSideMode('chips'); }}
+                  onJoker={() => { setJokerPick(true); setSideMode('chips'); }}
+                />
+                {sideExtra}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { setJokerPick(false); setSideMode('overview'); }}
+                  className="hit-44"
+                  style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}
+                >
+                  ‹ Back
+                </button>
+                {sideMode === 'chips' ? (
+                  <ChipsPanel
+                    key={jokerPick ? 'joker' : 'chips'}
+                    leagueId={activeLeague}
+                    userId={user?.id}
+                    tournamentId={tournamentId}
+                    ownedIds={allSquadPlayers.map(p => p.id)}
+                    hasCaptain={!!captainId}
+                    setConfirm={setConfirm}
+                    showToast={showToast}
+                    startPicking={jokerPick}
+                  />
+                ) : (
+                  <div data-testid="side-status">
+                    <SectionHeader title="Player Status" accent="gold" />
+                    <DangerList />
+                    <div className="mt-4">
+                      <SectionHeader title="Captain" />
+                      {(() => {
+                        const cap = allSquadPlayers.find(p => p.id === captainId);
+                        if (!cap) return null;
+                        return (
+                          <div className="px-4 py-3 flex items-center gap-3">
+                            <div className="w-8 h-8 flex items-center justify-center text-[11px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold-text)' }}>C</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[13px] font-semibold text-[var(--paper)] truncate">{cap.name}</div>
+                              <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · €{cap.price}M</div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </aside>
+        )}
       </div>
 
       {/* â•â• PLAYER ACTION BOTTOM SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
@@ -2351,25 +2243,6 @@ export default function SquadScreen({ embedded = false, leagueId: leagueIdProp =
       )}
 
       {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {/* Mobile transfer-window action bar */}
-      {!embedded && isMobile && basket.length === 0 && (() => {
-        const isOpen     = transferWindow.status === 'open';
-        const isUpcoming = transferWindow.status === 'upcoming';
-        const barState   = isOpen ? 'action' : 'locked';
-        const barLabel   = isOpen ? 'Transfer window open' : isUpcoming ? 'Window closed' : 'Window closed';
-        const barCountdown = windowKpi.text
-          ? (isUpcoming ? 'Opens in ' : 'Closes in ') + windowKpi.text
-          : undefined;
-        return (
-          <PrimaryActionBar
-            label={barLabel}
-            countdown={barCountdown}
-            state={barState}
-            accent={isOpen ? windowKpi.color : undefined}
-            onPress={isOpen ? () => {} : undefined}
-          />
-        );
-      })()}
     </div>
   );
 }

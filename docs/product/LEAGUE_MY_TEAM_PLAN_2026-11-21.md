@@ -106,7 +106,9 @@ How to fold the Squad and Market pages into the football league. The owner appro
 
 **Test:** the design-lock checks; replace one player and then three, with confirm; over-budget and full-club cases are blocked as today; a closed window hides "Replace"; the "player market" tests point at the sheet; `npm run build`; `platform.spec.js`.
 
-### S32: Desktop, draft leagues, clean-up (row MD-13)
+### S32: Desktop, draft leagues, clean-up (row MD-13) (done 2026-11-21)
+
+**Done.** Screenshots: [s32-design-lock/](../design/s32-design-lock/). Notes: the desktop side column is in `SquadScreen` (`my-team-side`); the round's matches come from `MatchweekView` through SquadScreen's `sideExtra` prop; `ChipsRow` has a `stacked` card form. Replace is hidden in a draft league (`format = 'noduplicate'`) while the transfer window type starts with `wishlist`. The tour on My team now points at the pitch, budget, chips and the league tabs; the old Squad and Market tours, page headers, league tab rows, transfer banner, action bar and the market's own basket bar are gone.
 
 **Goal:** the desktop layout from the mocks, draft leagues covered, and the old pages gone.
 

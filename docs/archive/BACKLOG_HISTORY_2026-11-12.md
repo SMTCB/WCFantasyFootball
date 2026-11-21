@@ -6834,4 +6834,13 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - Tests: `platform.spec.js` covers replacing one and three players with confirm (sells before buys), a failed transfer, the club limit, a closed window, the Joker button, and the market sheet (redirect, filters, budget, Done, the Market tab, no sideways scroll), on the fixed test league.
 - Checked: `npm run lint`; `npm run build`; `npx madge --circular src/`; `platform.spec.js`.
 
+## S32 My team on desktop, draft leagues, clean-up (2026-11-21)
+
+- MD-13: on desktop (1024px and wider) My team has the pitch in the left column, with the Pitch / List switch, squad count and budget above it, and a 340px side column on the right with **Needs attention** (up to four flagged players, each with Replace while transfers are allowed, and a link to the full Player status), **Chips** (as a card; Chips and the Joker open in the side column with a Back link) and **This round's matches** (moved from under the pitch). The market still opens as the S31 right panel.
+- Draft leagues: My team works the same and Trading stays its own tab. Replace is hidden, in the player sheet and in Needs attention, while a draft league (`format = 'noduplicate'`) is in a wishlist transfer window.
+- Clean-up: `SquadScreen` and `MarketScreen` lost their standalone page chrome (page header, league tab row, transfer banner, the Squad and Market tours, the phone action bar, the 4-tab strip and the market's own basket bar). `/squad` and `/market` stay as redirects to My team. The My team tour now points at the pitch, budget, chips and the league tabs. The `market-filters`, `market-budget` and `market-player-list` tour markers are kept.
+- Design lock kept: no pitch, player icon, crest, bench or player-sheet file changed. The desktop pitch has the same size and look for the same area (1100x676 before and after); the phone view is pixel-identical to S31. Screenshots: `docs/design/s32-design-lock/`.
+- Tests: `platform.spec.js` adds the desktop side column, Replace from Needs attention, Player status in the side column, a draft league hiding Replace and a non-draft league showing it. The test mock now exposes `Content-Range` like the real API, so count queries work.
+- Checked: `npm run lint`; `npm run build`; `npx madge --circular src/`; `platform.spec.js` on both browsers.
+
 Last Updated: 2026-11-21

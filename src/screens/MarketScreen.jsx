@@ -1,18 +1,15 @@
 import { IconWarning } from '../components/UiIcons';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
 import { normalisePlayers, buildFixtureInfo, formatFixtureStatus, matchesPlayerSearch } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
-import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAutoFill } from '../hooks/useAutoFill';
 import { useToast } from '../hooks/useToast';
 import ScoringInfoModal  from '../components/ScoringInfoModal';
-import OnboardingTour  from '../components/OnboardingTour';
 import ConfirmModal    from '../components/ConfirmModal';
 import PositionChip    from '../components/PositionChip';
 import StatusDot       from '../components/StatusDot';
@@ -24,7 +21,6 @@ import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useRelaxationState } from '../hooks/useRelaxationState';
 import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
-import { LeagueRouteTabs } from '../components/league/HubShared';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import RelaxationBanner from '../components/RelaxationBanner';
 import WishlistDraftBanner from '../components/WishlistDraftBanner';
@@ -33,7 +29,6 @@ import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
-import { useIsMobile } from '../hooks/useViewport';
 import { useTransferBasket } from '../lib/transferBasket';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
@@ -45,35 +40,16 @@ const FLAG_MAP = {
   EGY: '🇪🇬', NED: '🇳🇱', CRO: '🇭🇷',
 };
 
-const MARKET_TOUR_STEPS = [
-  {
-    target: 'market-filters',
-    title:  'Filter by Position',
-    body:   'Tap GK, DEF, MID, or FWD to narrow the list. You need exactly 1 GK, 4 DEF, 4 MID, and 2 FWD in your starting XI.',
-  },
-  {
-    target: 'market-budget',
-    title:  'Your Budget',
-    body:   'Every player you buy deducts from your €100M budget. Sell players back to free up funds — but the window closes before each matchday.',
-  },
-  {
-    target: 'market-player-list',
-    title:  'Buy & Sell',
-    body:   'Tap a player to expand their card, then hit Buy or Sell. Prices update each matchday based on ownership and performance.',
-  },
-];
-
-// `embedded` (S31, MD-12): the market opens as a sheet over the My team tab. The league
-// comes in as a prop, the tab row, tour and pending-changes bar are left to the host, and
-// the pending changes live in the shared transfer basket so the pitch can show them.
-export default function MarketScreen({ embedded = false, leagueId: leagueIdProp = null, initialPos = null }) {
+// The market is a sheet over the My team tab (S31, MD-12): MarketPanel hosts it and
+// `/market` redirects there (S32, MD-13), so it has no page header, league tabs, tour or
+// pending-changes bar of its own. The league comes in as a prop, and the pending changes
+// live in the shared transfer basket so the pitch can show them.
+export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos = null }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
   const leagueId = leagueIdProp || searchParams.get('leagueId') || searchParams.get('league');
-  const { showMarketTour, completeMarketTour } = useOnboarding();
   const [players,       setPlayers]       = useState([]);
   const [mySquad,       setMySquad]       = useState(null);
   const [leagues,       setLeagues]       = useState(null);   // null = not yet loaded
@@ -93,7 +69,6 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
   const [filterHideTaken,      setFilterHideTaken]      = useState(false);
   const [filterMinScore,       setFilterMinScore]       = useState(0);
   const [budget,          setBudget]          = useState(0);      // loaded from league config
-  const [saving,          setSaving]          = useState(false);
   // Transfer quota
   const [transfersPerRound, setTransfersPerRound] = useState(3);  // free transfers allowed per round
   const [transferPenalty,   setTransferPenalty]   = useState(4);  // pts cost per extra buy (or array)
@@ -104,7 +79,9 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
   const [activeRoundFixtures, setActiveRoundFixtures] = useState([]);
   const [confirm,       setConfirm]       = useState(null);
   const [basket,        setBasket]        = useTransferBasket(activeLeague);  // pending [{type:'buy'|'sell', player}]
-  const [confirming,    setConfirming]    = useState(false);
+  // Transfers are confirmed on the My team tab (S31), never from here, so nothing is ever in flight.
+  const saving = false;
+  const confirming = false;
   const marketListRef   = useRef(null);
 
   // Competition-agnostic config from the selected league row
@@ -154,25 +131,6 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
   // mirrors the league_mode === 'draft' bypass in process-transfer's execute_transfer_atomic call.
   const isDraftLeague = leagueFormat === 'noduplicate';
 
-  const penaltyPointsCost = useMemo(() => {
-    if (!activeMatchdayId || basket.length === 0) return 0;
-    // No penalty when window is unlimited, squad is still building, competition hasn't started,
-    // or this is a draft league (unlimited transfers, no penalty mechanism applies)
-    if (transferWindow?.windowType === 'unlimited') return 0;
-    if (mySquad?.initial_build_complete === false)  return 0;
-    if (preCompetition)                             return 0;
-    if (isDraftLeague)                              return 0;
-    if (freeTransfers)                              return 0;
-    const freeUsed    = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
-    const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
-    const basketBuys  = basket.filter(b => b.type === 'buy').length;
-    const projFreeUsed = freeUsed + basketBuys;
-    const basketPenBuys = Math.max(0, projFreeUsed - Math.max(freeUsed, transfersPerRound));
-    const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
-    return [...Array(basketPenBuys)].reduce((sum, _, i) =>
-      sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
-  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow, preCompetition, isDraftLeague, freeTransfers]);
-
   // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
     if (cfg.loading || !user?.id || !activeLeague) return;
@@ -192,7 +150,7 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
   }, [cfg.loading, cfg.format, user?.id, activeLeague, navigate]);
 
   // League-scoped transfer state
-  const { buy, sell, isTaken, takenByAll, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
+  const { isTaken, takenByAll, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
 
   // No-repeat relaxation state — scoped to this specific league (pool pressure
   // varies per league, so this must never be treated as a global toggle).
@@ -611,46 +569,6 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
     }
   };
 
-  // Processes all pending basket items: sells first (free up budget), then buys.
-  const handleConfirmBasket = async () => {
-    if (basket.length === 0 || confirming) return;
-    setConfirming(true);
-    setSaving(true);
-
-    const sells = basket.filter(b => b.type === 'sell');
-    const buys  = basket.filter(b => b.type === 'buy');
-    const errors = [];
-    const succeeded = new Set();
-
-    for (const item of [...sells, ...buys]) {
-      const fn = item.type === 'sell' ? sell : buy;
-      const result = await fn(item.player);
-      if (!result.ok) {
-        errors.push(`${item.type === 'sell' ? 'SELL' : 'BUY'} ${item.player.name}: ${result.error}`);
-      } else {
-        succeeded.add(item.player.id);
-        setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
-        setBudget(result.budget_remaining);
-      }
-    }
-
-    // Remove succeeded items from basket; keep failed ones so user can retry or discard
-    setBasket(prev => prev.filter(b => !succeeded.has(b.player.id)));
-
-    if (errors.length === 0) {
-      const numTransfers = Math.max(sells.length, buys.length);
-      showToast(`${numTransfers} transfer${numTransfers !== 1 ? 's' : ''} confirmed ✓`, 'success', 3000);
-    } else if (succeeded.size > 0) {
-      showToast(`${succeeded.size} succeeded, ${errors.length} failed: ${errors[0]}`, 'warning', 6000);
-    } else {
-      showToast(`Transfer failed: ${errors[0]}`, 'error', 6000);
-    }
-
-    await fetchSquad(); // re-sync round_transfers + penalty_transfers counters
-    setConfirming(false);
-    setSaving(false);
-  };
-
   const availableTeams = useMemo(() => {
     const teams = new Set(players.map(p => p.club).filter(Boolean));
     return [...teams].sort((a, b) => a.localeCompare(b));
@@ -694,7 +612,7 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
   if (leagues && leagues.length >= 1 && !activeLeague) return null;
 
   return (
-    <div className={embedded ? 'bg-bg' : 'min-h-screen bg-bg'}>
+    <div className="bg-bg">
       {/* Team picker backdrop — closes dropdown on outside tap */}
       {showTeamPicker && (
         <div role="presentation"
@@ -710,15 +628,6 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
         />
       )}
 
-      {/* First-visit spotlight tour */}
-      {showMarketTour && !loading && !embedded && (
-        <OnboardingTour
-          steps={MARKET_TOUR_STEPS}
-          onComplete={completeMarketTour}
-          onSkip={completeMarketTour}
-        />
-      )}
-
       {/* â"€â"€ Squad data load error â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {takenMapError && (
         <div
@@ -730,7 +639,6 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
       )}
 
       {/* â"€â"€ Transfer Window Status Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-      {!embedded && <LeagueRouteTabs active="market" leagueId={activeLeague} />}
       <TransferWindowBanner
         {...transferWindow}
         isDraftLeague={isDraftLeague}
@@ -1520,148 +1428,6 @@ export default function MarketScreen({ embedded = false, leagueId: leagueIdProp 
         />
       )}
 
-      {/* ── Transfer Basket ─────────────────────────────────────────────────── */}
-      {/* Uses createPortal so position:fixed renders relative to the viewport,  */}
-      {/* not the AppLayout scroll container (which creates a stacking context). */}
-      {basket.length > 0 && !embedded && createPortal((() => {
-        const sells        = basket.filter(b => b.type === 'sell');
-        const buys         = basket.filter(b => b.type === 'buy');
-        const numTransfers = Math.max(sells.length, buys.length);
-        const netChange    = basket.reduce((n, b) => b.type === 'sell' ? n + b.player.price : n - b.player.price, 0);
-        const netLabel     = netChange > 0 ? `+€${netChange.toFixed(1)}M` : netChange < 0 ? `-€${Math.abs(netChange).toFixed(1)}M` : null;
-        const netColor     = netChange >= 0 ? 'rgba(24,201,107,0.95)' : 'var(--neg)';
-        return (
-          <div
-            style={{
-              position: 'fixed',
-              bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom))' : 0,
-              left: 0, right: 0, zIndex: 'var(--z-bar)',
-              background: 'var(--card)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              borderTop: '2px solid var(--gold)',
-              paddingBottom: isMobile ? '12px' : 'max(16px, env(safe-area-inset-bottom))',
-            }}
-          >
-            <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 16px 0' }}>
-              {/* Header row */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>
-                  Transfer Basket · {numTransfers} transfer{numTransfers !== 1 ? 's' : ''}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {netLabel && (
-                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: netColor, fontWeight: 700 }}>
-                      {netLabel}
-                    </span>
-                  )}
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
-                    €{effectiveBudget.toFixed(1)}M left
-                  </span>
-                  {penaltyPointsCost > 0 && (
-                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--neg)', fontWeight: 700 }}>
-                      −{penaltyPointsCost}pts
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Paired transfer rows: sell ↔ buy on the same line */}
-              <div style={{ marginBottom: 10, maxHeight: 140, overflowY: 'auto' }}>
-                {[...Array(numTransfers)].map((_, i) => {
-                  const sell = sells[i] ?? null;
-                  const buy  = buys[i]  ?? null;
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '5px 0',
-                        borderBottom: i < numTransfers - 1 ? '1px solid var(--rule)' : 'none',
-                      }}
-                    >
-                      {/* OUT side */}
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
-                        {sell ? (
-                          <>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--neg)', border: '1px solid var(--neg)', padding: '1px 4px', flexShrink: 0 }}>OUT</span>
-                            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sell.player.name}</span>
-                            <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{sell.player.price}M</span>
-                            <button
-                              onClick={() => setBasket(prev => prev.filter(b => b.player.id !== sell.player.id))}
-                              disabled={confirming}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute)', fontSize: 'var(--fs-body)', padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
-                              title="Remove from basket"
-                            >×</button>
-                          </>
-                        ) : (
-                          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>—</span>
-                        )}
-                      </div>
-                      {/* Divider */}
-                      <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-label)', flexShrink: 0 }}>⇄</span>
-                      {/* IN side */}
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
-                        {buy ? (
-                          <>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '1px 4px', flexShrink: 0 }}>IN</span>
-                            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{buy.player.name}</span>
-                            <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>€{buy.player.price}M</span>
-                            <button
-                              onClick={() => setBasket(prev => prev.filter(b => b.player.id !== buy.player.id))}
-                              disabled={confirming}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute)', fontSize: 'var(--fs-body)', padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
-                              title="Remove from basket"
-                            >×</button>
-                          </>
-                        ) : (
-                          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>—</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Action buttons */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={() => setBasket([])}
-                  disabled={confirming}
-                  style={{
-                    flex: 1, padding: '10px 8px',
-                    background: 'transparent',
-                    border: '1px solid var(--rule)',
-                    color: 'var(--mute)',
-                    fontFamily: 'Archivo Black, sans-serif',
-                    fontSize: 'var(--fs-micro)',
-                    cursor: confirming ? 'not-allowed' : 'pointer',
-                    opacity: confirming ? 0.4 : 1,
-                  }}
-                >
-                  Discard all
-                </button>
-                <button
-                  onClick={handleConfirmBasket}
-                  disabled={confirming}
-                  style={{
-                    flex: 3, padding: '10px 8px',
-                    background: confirming ? 'rgba(240,180,0,0.4)' : 'var(--gold)',
-                    border: 'none',
-                    color: 'var(--bg)',
-                    fontFamily: 'Archivo Black, sans-serif',
-                    fontSize: 'var(--fs-micro)',
-                    cursor: confirming ? 'wait' : 'pointer',
-                    fontWeight: 900,
-                  }}
-                >
-                  {confirming ? 'Processing…' : `Confirm ${numTransfers} Transfer${numTransfers !== 1 ? 's' : ''}`}
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })(), document.body)}
     </div>
   );
 }

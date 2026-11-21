@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLeagueMatchweek } from '../../hooks/useLeagueMatchweek';
 import { useRoomPulse } from '../../hooks/useRoomPulse';
-import { useIsMobile } from '../../hooks/useViewport';
+import { useIsMobile, useIsDesktop } from '../../hooks/useViewport';
 import { teamCode } from '../../lib/fixtures';
 
 // The league's matchweek pieces, split across two tabs since S30 (MD-11):
@@ -214,12 +214,12 @@ function LiveTable({ rows, meId, showWeek, onFullTable }) {
   );
 }
 
-function Fixtures({ fixtures, crest, compact }) {
+function Fixtures({ fixtures, crest, compact, title = "This week's fixtures", testId }) {
   const ClubCrest = crest;
   if (!fixtures.length) return null;
   return (
-    <div style={{ ...card, overflow: 'hidden' }}>
-      <SectionHead title="This week's fixtures" />
+    <div data-testid={testId} style={{ ...card, overflow: 'hidden' }}>
+      <SectionHead title={title} />
       <div style={{ padding: '4px 0 8px' }}>
         {fixtures.map(f => {
           const live = f.status === 'live';
@@ -285,6 +285,7 @@ export default function MatchweekView(props) {
 
 export function MatchweekBody({ mw, meId, circleId, members = [], h2hEnabled = false, ClubCrest, onTab, part = 'team', children = null }) {
   const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   // Before migration 313 is applied the table function is missing: season totals only.
   const rows = useMemo(() => {
@@ -318,6 +319,14 @@ export function MatchweekBody({ mw, meId, circleId, members = [], h2hEnabled = f
   // My team: the squad never waits on the matchweek queries; the race and fixtures
   // appear around it once there is a round on the calendar.
   const hasRound = Boolean(mw.matchdayId);
+  // S32 (MD-13): a function child takes the round's matches as a card for its
+  // own desktop side column; below desktop they stay under the squad.
+  const sideMatches = typeof children === 'function' && isDesktop;
+  const body = typeof children === 'function'
+    ? children(sideMatches && hasRound
+      ? <Fixtures fixtures={mw.fixtures} crest={ClubCrest} compact title="This round's matches" testId="side-matches" />
+      : null)
+    : children;
   return (
     <div data-testid="my-team-view" style={{ display: 'flex', flexDirection: 'column' }}>
       {hasRound && (
@@ -329,8 +338,8 @@ export function MatchweekBody({ mw, meId, circleId, members = [], h2hEnabled = f
           <RoomLine circleId={circleId} />
         </div>
       )}
-      <div style={{ marginTop: hasRound ? gap : 0 }}>{children}</div>
-      {hasRound && (
+      <div style={{ marginTop: hasRound ? gap : 0 }}>{body}</div>
+      {hasRound && !sideMatches && (
         <div style={{ ...column, paddingBottom: 32 }}>
           <Fixtures fixtures={mw.fixtures} crest={ClubCrest} compact={isMobile} />
         </div>

@@ -349,6 +349,66 @@ test.describe('My team — Replace and Confirm transfers', () => {
   });
 });
 
+// S32 (MD-13): desktop side column, and draft leagues hide Replace.
+test.describe('My team — desktop side column and draft leagues', () => {
+  test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
+  });
+
+  test('desktop — side column holds Needs attention, Chips and the round matches', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openMyTeam(page);
+    const side = page.getByTestId('my-team-side');
+    await expect(side).toBeVisible({ timeout: 15000 });
+    await expect(side.getByTestId('needs-attention-card')).toContainText('Saka');
+    await expect(side.getByTestId('chips-card')).toBeVisible();
+    await expect(side.getByTestId('side-matches')).toBeVisible();
+    await expect(page.getByTestId('pitch-view')).toBeVisible();
+    // The old page chrome is gone: no Squad header tabs, no CHIPS tab.
+    await expect(page.getByRole('button', { name: /^chips$/i })).toHaveCount(0);
+  });
+
+  test('desktop — Replace from Needs attention opens the replacements list', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openMyTeam(page);
+    await page.getByTestId('attention-replace-p8').click();
+    await expect(page.getByText('Replace Saka')).toBeVisible();
+  });
+
+  test('desktop — Player status opens in the side column', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openMyTeam(page);
+    await page.getByTestId('my-team-side').getByRole('button', { name: /player status/i }).click();
+    await expect(page.getByTestId('side-status')).toBeVisible();
+    await page.getByTestId('my-team-side').getByRole('button', { name: /back/i }).click();
+    await expect(page.getByTestId('needs-attention-card')).toBeVisible();
+  });
+
+  test('draft league in its wishlist window hides Replace', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openMyTeam(page, { draft: true });
+    await expect(page).toHaveURL(new RegExp(`/league/${MOCK_LEAGUE_ID}\\?tab=team`));
+    await expect(page.getByTestId('needs-attention-card')).toContainText('Saka', { timeout: 15000 });
+    await expect(page.getByTestId('attention-replace-p8')).toHaveCount(0);
+    await page.getByTestId('token-p8').first().click();
+    await expect(page.getByRole('button', { name: /make captain/i })).toBeVisible();
+    await expect(page.getByTestId('player-sheet-replace')).toHaveCount(0);
+  });
+
+  test('non-draft league shows Replace on desktop', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openMyTeam(page);
+    await expect(page.getByTestId('attention-replace-p8')).toBeVisible({ timeout: 15000 });
+    await page.getByTestId('token-p8').first().click();
+    await expect(page.getByTestId('player-sheet-replace')).toBeVisible();
+  });
+});
+
 // ── Fixture player data injected via route mock (avoids DB dependency) ────────
 
 // ── 5. Market (a sheet on the My team tab since S31 / MD-12) ──────────────────

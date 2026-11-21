@@ -68,8 +68,29 @@ const LEAGUE_TOUR_STEPS = [
   {
     target: 'league-tabs',
     title:  'League Tabs',
-    body:   'Switch between Standings, Recap, Bets, Trading, and Stats. Commissioners also see an Admin tab.',
+    body:   'Switch between My team, Table, Market, Recap, Bets and Stats. Draft leagues also have Trading, and commissioners see an Admin tab.',
   },
+];
+
+// My team (S32 / MD-13): the squad, transfers and chips live on this tab now,
+// so the old Squad and Market tours fold into the league tour here.
+const MY_TEAM_TOUR_STEPS = [
+  {
+    target: 'my-team-pitch',
+    title:  'Your team',
+    body:   'Tap a player to make them captain, sub them out, see their stats or replace them while the transfer window is open.',
+  },
+  {
+    target: 'squad-budget',
+    title:  'Squad and budget',
+    body:   'How many players you have and the money left to spend. Changes wait on the pitch until you tap Confirm transfers.',
+  },
+  {
+    target: 'my-team-chips',
+    title:  'Chips',
+    body:   'Each chip boosts one round. Tap one to see how it works and play it before the round locks.',
+  },
+  LEAGUE_TOUR_STEPS[1],
 ];
 
 const BETS_TOUR_STEPS = [
@@ -1306,7 +1327,8 @@ export default function LeagueScreen() {
         {/* â”€â”€ Guided tours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {showLeagueTour && !loading && (view === 'detail' || view === 'team') && (
           <OnboardingTour
-            steps={LEAGUE_TOUR_STEPS}
+            key={view === 'team' ? 'team' : 'detail'}
+            steps={view === 'team' ? MY_TEAM_TOUR_STEPS : LEAGUE_TOUR_STEPS}
             onComplete={completeLeagueTour}
             onSkip={completeLeagueTour}
           />
@@ -1486,9 +1508,11 @@ export default function LeagueScreen() {
              ClubCrest={ClubCrest}
              onTab={setTab}
            >
-             <Suspense fallback={<LoadingRows />}>
-               <SquadScreen embedded leagueId={activeLeague.league_id} />
-             </Suspense>
+             {(sideMatches) => (
+               <Suspense fallback={<LoadingRows />}>
+                 <SquadScreen leagueId={activeLeague.league_id} sideExtra={sideMatches} />
+               </Suspense>
+             )}
            </MatchweekView>
          )}
 

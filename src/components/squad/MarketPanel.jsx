@@ -1,5 +1,5 @@
 // The player market inside the My team tab (S31, MD-12): a tall sheet on phone, a right
-// panel on desktop. It hosts MarketScreen in `embedded` mode, so the filters, the list and
+// panel on desktop. It hosts MarketScreen, so the filters, the list and
 // auto-fill are the market's own. Picks go to the shared transfer basket and nothing is
 // sent until the manager confirms on the My team tab.
 //
@@ -70,7 +70,7 @@ export default function MarketPanel({ leagueId, initialPos = null, pendingCount 
         </div>
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <Suspense fallback={<div role="status" style={{ padding: 24, color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>Loading market…</div>}>
-            <MarketScreen embedded leagueId={leagueId} initialPos={initialPos} />
+            <MarketScreen leagueId={leagueId} initialPos={initialPos} />
           </Suspense>
         </div>
       </div>
