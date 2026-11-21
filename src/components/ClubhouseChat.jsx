@@ -1,6 +1,7 @@
 import { LoadingRows } from './Skeleton';
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { supabase } from '../lib/supabase';
+import { scrollInside } from '../lib/scrollInside';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
 import { useRoomReactions, REACTION_EMOJI } from '../hooks/useRoomReactions';
 import { IconCheckCircle, IconDice, IconClose } from './UiIcons';
@@ -198,7 +199,7 @@ function MessageBubble({ msg, prevMsg, canDelete, selected, onSelect, onDelete, 
 
 // The Room: one stream of chat, bets and activity.
 // layout 'rail' = desktop side panel on Home; 'full' = the whole Room view.
-export default function ClubhouseChat({ circleId, members, activeCircle, feed = [], onEnterLeague, layout = 'full', onExpand, focusMessageId = null, onFocusDone }) {
+export default function ClubhouseChat({ circleId, members, activeCircle, feed = [], onEnterLeague, layout = 'full', anchorRef = null, onExpand, focusMessageId = null, onFocusDone }) {
   const [channelId, setChannelId] = useState(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -260,6 +261,47 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
   }, [circleId]);
 
   const { messages, loading, sendMessage, deleteMessage, scrollEndRef } = useClubhouseChat(channelId);
+
+  // Full layout: the page lines up with the tabs (anchorRef) once, instantly, and the Room
+  // fills exactly the rest of the screen, so the composer sits on the bottom edge
+  // (owner 2026-11-21: it used to land mid-screen). Re-measured when anything above it
+  // changes height (the parent grows) or the viewport resizes.
+  const rootRef = useRef(null);
+  const [fillH, setFillH] = useState(null);
+  const alignTop = useRef(null);   // page offset that puts the tabs at the top
+  const userMoved = useRef(false); // stop lining up once the manager scrolls the page
+  useEffect(() => {
+    if (layout === 'rail') return;
+    const el = rootRef.current;
+    const main = document.getElementById('main-content');
+    if (!el || !main) return;
+    const yIn = (node) => node.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop;
+    const anchor = anchorRef?.current;
+    userMoved.current = false;
+    const moved = () => { userMoved.current = true; };
+    main.addEventListener('wheel', moved, { passive: true });
+    main.addEventListener('touchmove', moved, { passive: true });
+    const measure = () => {
+      // #main-content keeps room for the phone bottom nav; desktop (lg) has none
+      const padB = window.matchMedia('(min-width: 1024px)').matches ? 0 : (parseFloat(getComputedStyle(main).paddingBottom) || 0);
+      // Mobile top bar is sticky inside #main-content and covers the top of it
+      const bar = main.querySelector(':scope > .sticky');
+      const barH = bar && bar.offsetHeight && getComputedStyle(bar).display !== 'none' ? bar.offsetHeight : 0;
+      const top = anchor ? yIn(anchor) - barH : 0;
+      alignTop.current = anchor ? top : null;
+      setFillH(Math.max(360, Math.floor(main.clientHeight - padB - (yIn(el) - top) - 8)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (el.parentElement) ro.observe(el.parentElement);
+    ro.observe(main);
+    return () => { ro.disconnect(); main.removeEventListener('wheel', moved); main.removeEventListener('touchmove', moved); };
+  }, [layout, anchorRef]);
+  // After the new height is on screen the page is tall enough to line up (instant, no glide)
+  useEffect(() => {
+    if (fillH == null || alignTop.current == null || userMoved.current) return;
+    document.getElementById('main-content')?.scrollTo({ top: alignTop.current });
+  }, [fillH]);
   const { byMessage: reactionsByMessage, toggle: toggleReaction } = useRoomReactions(channelId, user?.id);
 
   async function react(messageId, emoji) {
@@ -283,7 +325,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
   // The hook only scrolls on new chat; also scroll when activity items arrive.
   useEffect(() => {
     if (focusMessageId) return;
-    scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollInside(scrollEndRef.current);
   }, [stream.length, scrollEndRef, focusMessageId]);
 
   // A notice opens the Room on the exact item: scroll to it and light it up briefly.
@@ -291,7 +333,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
     if (!focusMessageId || loading || !channelId) return;
     const found = stream.some(i => i.id === focusMessageId);
     if (found) {
-      document.getElementById(`msg-${focusMessageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      scrollInside(document.getElementById(`msg-${focusMessageId}`), { block: 'center' });
       setFlashId(focusMessageId);
     }
     onFocusDone?.();
@@ -338,8 +380,9 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
 
   return (
     <div
+      ref={rootRef}
       className={isRail ? undefined : 'room-full'}
-      style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', ...(isRail ? { height: '100%' } : {}) }}
+      style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', ...(isRail ? { height: '100%' } : fillH ? { height: fillH } : {}) }}
     >
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>The Room</div>

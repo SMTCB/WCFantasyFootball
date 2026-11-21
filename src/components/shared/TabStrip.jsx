@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import { scrollInside } from '../../lib/scrollInside';
 
 const MONO = "Archivo, sans-serif";
 
@@ -27,7 +28,7 @@ export default function TabStrip({
     const buttons = containerRef.current.querySelectorAll('button[data-tabkey]');
     for (const btn of buttons) {
       if (btn.dataset.tabkey === String(active)) {
-        btn.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        scrollInside(btn, { inline: 'center' });
         break;
       }
     }

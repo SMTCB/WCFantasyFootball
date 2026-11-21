@@ -3,7 +3,7 @@
 // tests would always skip. Every Supabase REST call is answered from here;
 // writes and unknown RPCs return empty, and `calls` records each RPC (and each
 // process-transfer request, as name 'process-transfer') so a test can check
-// what the tab sent. Options: `window` ('open' | 'upcoming'), `joker` (chip
+// what the tab sent. Options: `xi` (starting XI ids), `window` ('open' | 'upcoming'), `joker` (chip
 // status) and `failTransfer(body)` (true makes that transfer fail).
 
 export const MOCK_LEAGUE_ID = 'TEST_L1';
@@ -34,7 +34,7 @@ const league = {
 
 // `draft` (S32): a draft (no-duplicate) league whose lottery has run, with the
 // market locked for the wishlist window, so free buys are not allowed.
-function tables({ draft = false } = {}) {
+function tables({ draft = false, xi = XI } = {}) {
   const lg = draft ? { ...league, format: 'noduplicate', league_mode: 'draft' } : league;
   return {
     draft_allocations: draft ? [{ id: 'TEST_DA1', league_id: MOCK_LEAGUE_ID, user_id: DEMO, allocated_players: PLAYERS.map(p => p.id) }] : [],
@@ -46,7 +46,7 @@ function tables({ draft = false } = {}) {
     leagues: [lg],
     squads: [{
       id: 'TEST_S1', user_id: DEMO, league_id: MOCK_LEAGUE_ID, matchday_id: 'M1', players: PLAYERS.map(p => p.id),
-      starting_xi: XI, captain_id: 'p10', budget_remaining: 3.5, is_triple_captain: false, lineup_locks: {},
+      starting_xi: xi, captain_id: 'p10', budget_remaining: 3.5, is_triple_captain: false, lineup_locks: {},
       created_at: '2026-11-20T00:00:00Z',
     }],
     players: [...PLAYERS, ...MARKET],

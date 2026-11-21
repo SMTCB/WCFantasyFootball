@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { scrollInside } from '../lib/scrollInside';
 import { useAuth } from './useAuth';
 
 const devLog = import.meta.env.DEV ? console.log.bind(console) : () => {};
@@ -20,7 +21,7 @@ export function useChatMessages(leagueId) {
 
   // Scroll to latest message
   const scrollToBottom = useCallback(() => {
-    scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollInside(scrollEndRef.current);
   }, []);
 
   // Fetch unread message count

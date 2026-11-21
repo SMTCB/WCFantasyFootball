@@ -6849,4 +6849,14 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - UI-AUDIT-FBK-01: "Loading…" text in 20 screens and panels (chips, bets, league stats, recap, commissioner, Home, wallet, My bets, F1 and tennis screens) is now skeleton rows. Files under the league screen use the skeleton CSS classes directly, since LeagueScreen imports `Skeleton` itself (Rolldown TDZ rule). Kept as text on purpose: button labels, select options, input placeholders and the branded sign-in splash.
 - Checked: `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; the Joker picker seen at 375px and 1280px.
 
+## My team and Room fixes from the owner (2026-11-21)
+
+- Sell is gone from the player card. A Market button now sits next to the pitch: in the Pitch / List row on the phone, and in the tab bar on desktop. Both open the market sheet or panel. The Market link at the top stays.
+- Five players in one row no longer overlap. On the phone and the compact desktop tokens, each token and its name are limited to the width of its slot. On desktop, a 5-man row at 1280px switches to the existing compact tokens, and 4-man rows keep the full tokens. The pitch, icon and crest design is unchanged.
+- Desktop sub out: the bench strip scrolls into view when you pick a player to take off, and the page leaves room under it for the banner, so the goalkeeper and the bench are no longer cut off.
+- The phone My team no longer shows "This week's fixtures" under the squad. The desktop side card "This round's matches" stays.
+- The Room opens lined up under the clubhouse tabs, with its composer on the bottom edge (above the bottom bar on the phone). The chat no longer drags the whole page down when it jumps to the newest message. The new `src/lib/scrollInside.js` scrolls only inside the element's own scroll box, and the chats (Room, bet thread, league chat, direct messages) and the tab strip now use it, so opening those screens no longer jumps the page.
+- Tests: `platform.spec.js` adds no Sell, the Market button on phone and desktop, no fixtures under the phone pitch, no overlap with five midfielders at 1280px and 375px, the bench in view on desktop sub out, and The Room composer at the bottom edge on phone and desktop.
+- Checked: `npm run lint`; Rolldown TDZ check on the changed modules; `npm run build`; `platform.spec.js` on both browsers.
+
 Last Updated: 2026-11-21

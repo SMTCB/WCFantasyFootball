@@ -214,7 +214,7 @@ function LiveTable({ rows, meId, showWeek, onFullTable }) {
   );
 }
 
-function Fixtures({ fixtures, crest, compact, title = "This week's fixtures", testId }) {
+function Fixtures({ fixtures, crest, compact, title, testId }) {
   const ClubCrest = crest;
   if (!fixtures.length) return null;
   return (
@@ -316,11 +316,12 @@ export function MatchweekBody({ mw, meId, circleId, members = [], h2hEnabled = f
     );
   }
 
-  // My team: the squad never waits on the matchweek queries; the race and fixtures
-  // appear around it once there is a round on the calendar.
+  // My team: the squad never waits on the matchweek queries; the race appears
+  // above it once there is a round on the calendar.
   const hasRound = Boolean(mw.matchdayId);
   // S32 (MD-13): a function child takes the round's matches as a card for its
-  // own desktop side column; below desktop they stay under the squad.
+  // own desktop side column. Below desktop there is no fixtures list on My team
+  // (owner 2026-11-21: it doesn't belong there).
   const sideMatches = typeof children === 'function' && isDesktop;
   const body = typeof children === 'function'
     ? children(sideMatches && hasRound
@@ -339,11 +340,6 @@ export function MatchweekBody({ mw, meId, circleId, members = [], h2hEnabled = f
         </div>
       )}
       <div style={{ marginTop: hasRound ? gap : 0 }}>{body}</div>
-      {hasRound && !sideMatches && (
-        <div style={{ ...column, paddingBottom: 32 }}>
-          <Fixtures fixtures={mw.fixtures} crest={ClubCrest} compact={isMobile} />
-        </div>
-      )}
     </div>
   );
 }

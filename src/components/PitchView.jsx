@@ -21,7 +21,7 @@ import { xPositions, buildPitchTokens, STATUS_COLOR } from '../lib/pitchLayout';
  */
 
 // ── HybridToken — the only token style (spec §Token spec) ─────────────────────
-function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact, pending }) {
+function HybridToken({ player, no, x, y, slot = 100, isCaptain, onClick, isSelected, compact, pending }) {
   const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? player.name?.toUpperCase() ?? '?';
   const club    = (player.club ?? '').substring(0, 3).toUpperCase();
   const pts     = Math.round(player.points ?? 0);
@@ -42,6 +42,8 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           left:        `${x}%`,
           top:         `${y}%`,
           transform:   'translate(-50%, -50%)',
+          // never wider than its slot in the row, so a 5-man line can't overlap
+          maxWidth:    `calc(${slot}% - 6px)`,
           display:     'flex',
           flexDirection: 'column',
           alignItems:  'center',
@@ -62,6 +64,10 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           textTransform: 'uppercase',
           color:        'var(--paper)',
           whiteSpace:   'nowrap',
+          overflow:     'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth:     '100%',
+          boxSizing:    'border-box',
         }}>
           {surname}
         </div>
@@ -118,6 +124,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         border:         `1px solid ${isSelected ? 'var(--accent)' : 'var(--rule)'}`,
         borderRadius:   4,
         minWidth:       148,
+        maxWidth:       `calc(${slot}% - 6px)`,
         cursor:         'pointer',
         zIndex:         10,
         userSelect:     'none',
@@ -273,7 +280,9 @@ export default function PitchView({
         return Math.min(...xs.slice(1).map((v, i) => v - xs[i]));
       }))
     : null;
-  const TOKEN_FOOTPRINT = 160; // 148px token + a little breathing room
+  // The full token grows with its fixture line to ~185px (minWidth 148), so a 5-man
+  // row on a 1280 screen overlapped (owner 2026-11-21). Footprint = real width + a gap.
+  const TOKEN_FOOTPRINT = 190;
   const useCompactTokens = isCompact || (
     pitchWidth != null && minGapPercent != null && (pitchWidth * minGapPercent) / 100 < TOKEN_FOOTPRINT
   );
@@ -405,13 +414,14 @@ export default function PitchView({
         </div>
 
         {/* ── Player tokens ───────────────────────────────────────── */}
-        {tokens.map(({ player, no, x, y, isCaptain }) => (
+        {tokens.map(({ player, no, x, y, slot, isCaptain }) => (
           <HybridToken
             key={player.id}
             player={player}
             no={no}
             x={x}
             y={y}
+            slot={slot}
             isCaptain={isCaptain}
             onClick={() => (onPlayerClick ?? (() => {}))(player)}
             isSelected={selectedPlayerId === player.id}
