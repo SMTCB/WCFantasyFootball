@@ -29,7 +29,8 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned: "latest" asks the GitHub API and fails on its rate limit. Bump by hand.
+          version: 3.2.0
 
       - name: Link project
         env:
