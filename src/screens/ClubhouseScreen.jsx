@@ -839,7 +839,7 @@ export default function ClubhouseScreen() {
             onMarkAll={() => markAllRead(activeCircleId)}
             isDesktop={isDesktop}
             describe={describeNotice}
-            onNavigate={(n) => n.source_type === 'clubhouse' && n.payload?.message_id ? (setFocusMsg(n.payload.message_id), setTab('room')) : navigate((n.source_type === 'p2p_bet' || n.source_type === 'p2p_challenge') ? '/challenges' : `/league/${n.source_id}`)}
+            onNavigate={(n) => n.source_type === 'clubhouse' && n.payload?.message_id ? (setFocusMsg(n.payload.message_id), setTab('room')) : navigate((n.source_type === 'p2p_bet' || n.source_type === 'p2p_challenge') ? '/bets' : `/league/${n.source_id}`)}
           />
         );
         const invite = activeCircle?.invite_code && (

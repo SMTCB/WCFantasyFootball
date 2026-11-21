@@ -11,8 +11,8 @@ import { useChallenges } from '../hooks/useChallenges';
 import { useGroupBets } from '../hooks/useGroupBets';
 import { useClubhouseContext } from '../context/ClubhouseContext';
 
-// The create-a-bet sheet lives in ChallengeScreen; load it only when someone taps the dice.
-const NewBetModal = lazy(() => import('../screens/ChallengeScreen').then(m => ({ default: m.NewBetModal })));
+// The create-a-bet sheet lives in the shared bet kit; load it only when someone taps the dice.
+const NewBetModal = lazy(() => import('./bets/BetKit').then(m => ({ default: m.NewBetModal })));
 
 const BODY = { fontFamily: 'Archivo, sans-serif' };
 

@@ -24,8 +24,9 @@ export function useMyBets(userId) {
 
   useEffect(() => {
     if (!userId) return;
+    const suffix = Math.random().toString(36).slice(2); // unique per mount: two components may use this hook at once
     const channel = supabase
-      .channel(`my-bets-${userId}`)
+      .channel(`my-bets-${userId}:${suffix}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_bets' }, fetchBets)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_bet_participants', filter: `user_id=eq.${userId}` }, fetchBets)
       .subscribe();

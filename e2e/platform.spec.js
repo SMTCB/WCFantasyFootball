@@ -113,7 +113,7 @@ test.describe('Navigation', () => {
     await waitForContent(page);
 
     await topBar.getByText(/^bets$/i).click();
-    await expect(page).toHaveURL('/challenges');
+    await expect(page).toHaveURL('/bets');
   });
 
   test('mobile bottom nav navigation works', async ({ page }) => {
@@ -126,7 +126,7 @@ test.describe('Navigation', () => {
     // (Live/Squad/Market/etc.) live in CompetitionScreenNav at the top instead.
     const bottomNav = page.locator('[data-testid="mobile-nav"]');
     await bottomNav.getByText(/^bets$/i).click();
-    await expect(page).toHaveURL('/challenges');
+    await expect(page).toHaveURL('/bets');
     await waitForContent(page);
 
     await bottomNav.getByText(/^home$/i).click();

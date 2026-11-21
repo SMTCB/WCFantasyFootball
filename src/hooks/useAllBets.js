@@ -20,8 +20,10 @@ export function useAllBets(challengesData, groupBetsData, { isOwner, userId } = 
     () => cDisputed.filter(c => c.challenger_id === userId || c.opponent_id === userId),
     [cDisputed, userId],
   );
+  // isOwner is a boolean for one clubhouse, or a function of circle_id when several are shown.
   const ownerDisputed = useMemo(
-    () => (isOwner ? cDisputed.filter(c => c.challenger_id !== userId && c.opponent_id !== userId) : []),
+    () => cDisputed.filter(c => c.challenger_id !== userId && c.opponent_id !== userId
+      && (typeof isOwner === 'function' ? isOwner(c.circle_id) : isOwner)),
     [cDisputed, isOwner, userId],
   );
 

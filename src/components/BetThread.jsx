@@ -1,6 +1,10 @@
 /**
  * BetThread — one bet as its own conversation (C-19). Header shows the bet and
  * who is in; below it, a chat that only carries messages tied to this bet.
+ *
+ * channelId, or circleId to look up that clubhouse's Room. `header` and `actions`
+ * are optional slots (live totals, Take it / Pass). variant="panel" sits in a page
+ * column instead of covering the screen.
  */
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
@@ -8,7 +12,9 @@ import { IconClose } from './UiIcons';
 
 const BODY = { fontFamily: 'var(--font-body)' };
 
-export default function BetThread({ channelId, userId, betRef, onClose }) {
+export default function BetThread({ channelId: givenChannelId, circleId, userId, betRef, onClose, header, actions, variant = 'overlay' }) {
+  const [foundChannelId, setFoundChannelId] = useState(null);
+  const channelId = givenChannelId ?? foundChannelId;
   const [messages, setMessages] = useState([]);
   const [players, setPlayers] = useState([]);
   const [text, setText] = useState('');
@@ -57,7 +63,19 @@ export default function BetThread({ channelId, userId, betRef, onClose }) {
     return () => { alive = false; supabase.removeChannel(ch); };
   }, [kind, id]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
+  useEffect(() => {
+    if (givenChannelId || !circleId) return undefined;
+    let alive = true;
+    supabase.from('clubhouse_channels').select('id, is_default, created_at')
+      .eq('circle_id', circleId).order('created_at', { ascending: true })
+      .then(({ data }) => {
+        const rows = data ?? [];
+        if (alive) setFoundChannelId((rows.find(r => r.is_default) ?? rows[0])?.id ?? null);
+      });
+    return () => { alive = false; };
+  }, [givenChannelId, circleId]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages.length]);
 
   async function send(e) {
     e.preventDefault();
@@ -71,18 +89,24 @@ export default function BetThread({ channelId, userId, betRef, onClose }) {
   }
 
   return (
-    <div role="dialog" aria-label="Bet conversation" style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+    <div role={variant === 'panel' ? 'region' : 'dialog'} aria-label="Bet conversation"
+      style={variant === 'panel'
+        ? { background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }
+        : { position: 'fixed', inset: 0, zIndex: 60, background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ ...BODY, fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)' }}>{betRef.question}</div>
           <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
             {betRef.stake_coins} coins on the table{players.length ? ` · ${players.join(', ')}` : ''}
           </div>
+          {header}
         </div>
-        <button onClick={onClose} aria-label="Close" className="hit-44"
-          style={{ background: 'transparent', border: 'none', color: 'var(--mute)', cursor: 'pointer', display: 'flex' }}>
-          <IconClose size={18} />
-        </button>
+        {onClose && (
+          <button onClick={onClose} aria-label="Close" className="hit-44"
+            style={{ background: 'transparent', border: 'none', color: 'var(--mute)', cursor: 'pointer', display: 'flex' }}>
+            <IconClose size={18} />
+          </button>
+        )}
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '10px 16px' }}>
         {messages.length === 0 && (
@@ -98,6 +122,7 @@ export default function BetThread({ channelId, userId, betRef, onClose }) {
         ))}
         <div ref={endRef} />
       </div>
+      {actions && <div style={{ padding: '10px 16px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>{actions}</div>}
       {error && <div role="alert" style={{ padding: '6px 16px', ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{error}</div>}
       <form onSubmit={send} style={{ padding: '10px 16px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8 }}>
         <input value={text} onChange={e => setText(e.target.value)} placeholder="Say something about this bet…"

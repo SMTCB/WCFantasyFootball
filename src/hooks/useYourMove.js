@@ -63,7 +63,7 @@ export function useYourMove(circleId = null) {
       if (c.status === 'pending' && c.opponent_id === me) {
         items.push({ key: `ch-${c.id}`, kind: 'accept', circleId: c.circle_id, title: c.question ?? c.message ?? 'Head-to-head challenge', sub: `Take or pass · ${c.stake_coins} coins`, cta: 'Take or pass' });
       } else if (c.status === 'accepted' && c.proposed_by && c.proposed_by !== me) {
-        items.push({ key: `confirm-${c.id}`, kind: 'confirm', circleId: c.circle_id, title: c.question ?? c.message ?? 'Head-to-head challenge', sub: 'Confirm the result', cta: 'Confirm', to: '/challenges' });
+        items.push({ key: `confirm-${c.id}`, kind: 'confirm', circleId: c.circle_id, title: c.question ?? c.message ?? 'Head-to-head challenge', sub: 'Confirm the result', cta: 'Confirm', to: '/bets' });
       }
     }
     const finished = new Set(squads.filter(s => s.initial_build_complete).map(s => s.league_id));

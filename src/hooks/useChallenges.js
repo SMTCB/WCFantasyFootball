@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-export function useChallenges(userId, circleId = null) {
+export function useChallenges(userId, circleId = null, { openCircleIds = null } = {}) {
   const [challenges, setChallenges] = useState([]);
   const [openChallenges, setOpenChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,14 +18,15 @@ export function useChallenges(userId, circleId = null) {
     setLoading(false);
   }, [userId, circleId]);
 
+  // Open challenges are listed per clubhouse; openCircleIds lets the Bets screen ask for several.
+  const openKey = (openCircleIds ?? (circleId ? [circleId] : [])).join(',');
   const fetchOpenChallenges = useCallback(async () => {
-    if (!userId || !circleId) { setOpenChallenges([]); return; }
-    const { data, error: err } = await supabase.rpc('get_open_challenges', {
-      p_circle_id: circleId,
-    });
-    if (err) setError(err.message);
-    else setOpenChallenges(Array.isArray(data) ? data : []);
-  }, [userId, circleId]);
+    if (!userId || !openKey) { setOpenChallenges([]); return; }
+    const results = await Promise.all(openKey.split(',').map(id => supabase.rpc('get_open_challenges', { p_circle_id: id })));
+    const failed = results.find(r => r.error);
+    if (failed && results.length === 1) setError(failed.error.message);
+    else setOpenChallenges(results.flatMap(r => (Array.isArray(r.data) ? r.data : [])));
+  }, [userId, openKey]);
 
   useEffect(() => { fetchChallenges(); }, [fetchChallenges]);
   useEffect(() => { fetchOpenChallenges(); }, [fetchOpenChallenges]);
