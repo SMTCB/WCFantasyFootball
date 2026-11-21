@@ -133,19 +133,25 @@ export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '�
 }
 
 // League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5).
-// squad / market are separate routes; callers navigate when one is picked.
-export const ROUTE_TABS = ['squad', 'market'];
+// market is a separate route until S31 moves it into a sheet; callers navigate when it is picked.
+// Squad became the My team tab (S30), so 'squad' now resolves inside the league.
+export const ROUTE_TABS = ['market'];
 
-// One tab row (redesign). Matchweek (MD-6) replaced Standings and Live: the season table and
-// H2H fixtures sit under it, Market report under Recap, Betting under Bets.
+// One tab row (redesign). My team (S30, MD-11) holds your pitch, the race card and this
+// round's fixtures; it replaced Matchweek and the Squad page. Table holds the season table,
+// this week's live table and H2H fixtures. Market report sits under Recap, Betting under Bets.
 // Those views stay separate; HubSubSwitch moves between them.
-const HUB_GROUP = { table: 'matchweek', h2h: 'matchweek', leaderboard: 'matchweek', live: 'matchweek', market_report: 'recap', betting: 'bets' };
+const HUB_GROUP = {
+  matchweek: 'team', live: 'team', squad: 'team',
+  week: 'table', h2h: 'table', leaderboard: 'table',
+  market_report: 'recap', betting: 'bets',
+};
 export const hubGroupOf = (tab) => HUB_GROUP[tab] ?? tab;
 
 function hubTabList({ notifyBets, notifyTrading, isDraftLeague }) {
   return [
-    { id: 'matchweek',   label: 'Matchweek' },
-    { id: 'squad',       label: 'Squad' },
+    { id: 'team',        label: 'My team' },
+    { id: 'table',       label: 'Table' },
     { id: 'market',      label: 'Market' },
     { id: '|' },
     { id: 'recap',       label: 'Recap' },
@@ -157,7 +163,7 @@ function hubTabList({ notifyBets, notifyTrading, isDraftLeague }) {
   ];
 }
 
-export function HubTabs({ active = 'matchweek', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, isDraftLeague = false }) {
+export function HubTabs({ active = 'team', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, isDraftLeague = false }) {
   return <HubTabRow tabs={hubTabList({ isCommissioner, notifyBets, notifyTrading, isDraftLeague })} active={hubGroupOf(active)} onTab={onTab} />;
 }
 
@@ -165,7 +171,7 @@ export function HubTabs({ active = 'matchweek', onTab, isCommissioner = false, n
 export function HubSubSwitch({ active, onTab, h2hEnabled = false }) {
   const group = hubGroupOf(active);
   const options = {
-    matchweek: [{ id: 'matchweek', label: 'This week' }, { id: 'table', label: 'Season table' }, ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H fixtures' }] : [])],
+    table: [{ id: 'table', label: 'Season table' }, { id: 'week', label: 'This week' }, ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H fixtures' }] : [])],
     recap: [{ id: 'recap', label: 'Scores' }, { id: 'market_report', label: 'Transfers' }],
     bets: [{ id: 'bets', label: 'My bets' }, { id: 'betting', label: 'Leaderboard' }],
   }[group];

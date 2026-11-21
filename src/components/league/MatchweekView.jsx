@@ -1,16 +1,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PitchView from '../PitchView';
-import MobilePitchField from '../MobilePitchField';
 import { useLeagueMatchweek } from '../../hooks/useLeagueMatchweek';
 import { useRoomPulse } from '../../hooks/useRoomPulse';
 import { useIsMobile } from '../../hooks/useViewport';
 import { teamCode } from '../../lib/fixtures';
 
-// The Matchweek tab (MD-6): your race, your team with live points, the table as it
-// stands (MD-7), this round's fixtures and the latest Room line.
+// The league's matchweek pieces, split across two tabs since S30 (MD-11):
+//   part="team":  your race, the latest Room line, your squad (passed in as children,
+//                 the Squad screen's pitch unchanged) and this round's fixtures.
+//   part="table": the table as it stands this week (MD-7).
 // ClubCrest comes in as a prop: LeagueScreen imports it at depth 1 (TDZ rule, CLAUDE.md).
-// The pitches are the Squad screen's PitchView and MobilePitchField, unchanged.
 
 const DISPLAY = "'Archivo Black', 'Archivo', sans-serif";
 const NUM = { fontVariantNumeric: 'tabular-nums' };
@@ -31,8 +30,6 @@ function ago(iso) {
 
 const fmtPts = (n) => (n == null ? '—' : Math.round(Number(n)));
 const roundNo = (matchdayId) => (matchdayId ? (String(matchdayId).match(/-r(\d+)$/)?.[1] ?? null) : null);
-const posColor = (pos) => (pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)');
-const surnameOf = (name) => name?.split(' ').slice(-1)[0] ?? '?';
 
 const card = { background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 16 };
 const eyebrow = { fontSize: 'var(--fs-micro)', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mute)' };
@@ -153,57 +150,6 @@ function RaceCard({ rows, meId, duel, gwPoints, compact }) {
         {cell(below, 'below')}
       </div>
     </div>
-  );
-}
-
-// ── Bench, read-only copies of the Squad screen's bench strip and Substitutes rows ──
-function BenchStrip({ bench, crest }) {
-  const ClubCrest = crest;
-  if (!bench.length) return null;
-  return (
-    <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--card)', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-      <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', flexShrink: 0 }}>Bench</div>
-      <div style={{ flex: 1, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {bench.map(p => (
-          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px 6px 8px', background: 'var(--bg)', border: '1px solid var(--rule)', borderRadius: 8 }}>
-            <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${posColor(p.position)}`, color: posColor(p.position), fontFamily: DISPLAY, fontSize: 'var(--fs-micro)' }}>{p.position}</div>
-            <ClubCrest name={p.club} size={22} />
-            <div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-micro)', color: 'var(--paper)' }}>{surnameOf(p.name).toUpperCase()}</div>
-              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{Math.round(p.points ?? 0)} pts{p.fixtureStatus ? ` · ${p.fixtureStatus.label}` : ''}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function BenchRows({ bench, crest }) {
-  const ClubCrest = crest;
-  if (!bench.length) return null;
-  return (
-    <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 6px', borderTop: '1px solid var(--rule)', marginTop: 4 }}>
-        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Substitutes</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-        <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{bench.length}</div>
-      </div>
-      {bench.map((p, bi) => (
-        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 16px', borderBottom: '1px solid var(--rule)', opacity: 0.8 }}>
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', width: 28, textAlign: 'right' }}>S{bi + 1}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surnameOf(p.name).toUpperCase()}</span>
-              <span style={{ fontSize: 'var(--fs-micro)', color: posColor(p.position), border: `1px solid ${posColor(p.position)}`, padding: '1px 4px' }}>{p.position}</span>
-            </div>
-            {p.fixtureStatus && <div style={{ fontSize: 'var(--fs-micro)', color: p.fixtureStatus.color, marginTop: 1 }}>{p.fixtureStatus.label}</div>}
-          </div>
-          <ClubCrest name={p.club} size={16} />
-          <div className="num" style={{ ...NUM, fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)', minWidth: 24, textAlign: 'right' }}>{Math.round(p.points ?? 0)}</div>
-        </div>
-      ))}
-    </>
   );
 }
 
@@ -337,8 +283,7 @@ export default function MatchweekView(props) {
   return <MatchweekBody {...props} mw={mw} />;
 }
 
-export function MatchweekBody({ mw, leagueId, circleId, meId, members = [], h2hEnabled = false, ClubCrest, onTab }) {
-  const navigate = useNavigate();
+export function MatchweekBody({ mw, meId, circleId, members = [], h2hEnabled = false, ClubCrest, onTab, part = 'team', children = null }) {
   const isMobile = useIsMobile();
 
   // Before migration 313 is applied the table function is missing: season totals only.
@@ -352,69 +297,42 @@ export function MatchweekBody({ mw, leagueId, circleId, meId, members = [], h2hE
   const showWeek = Boolean(mw.table?.length) && mw.started;
   const meRow = rows.find(r => r.user_id === meId) ?? null;
   const liveCount = (mw.squad?.players ?? []).filter(p => p.live).length;
-  const label = roundNo(mw.matchdayId) ? `GW · ${roundNo(mw.matchdayId)}` : '';
-  const noop = () => {};
   const pad = isMobile ? 12 : 'max(16px, 3vw)';
+  const gap = isMobile ? 12 : 16;
+  const column = { padding: pad, display: 'flex', flexDirection: 'column', gap, maxWidth: 1240, width: '100%', margin: '0 auto', boxSizing: 'border-box' };
 
-  if (mw.loading && !mw.matchdayId) {
-    return <div style={{ padding: 32, textAlign: 'center', color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>Loading the matchweek…</div>;
-  }
-  if (!mw.matchdayId) {
+  if (part === 'table') {
+    if (mw.loading && !mw.matchdayId) {
+      return <div style={{ padding: 32, textAlign: 'center', color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>Loading the matchweek…</div>;
+    }
     return (
-      <div style={{ padding: pad, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ ...card, padding: '18px 20px', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>No matchweek on the calendar yet.</div>
-        <LiveTable rows={rows} meId={meId} showWeek={false} onFullTable={() => onTab('table')} />
+      <div data-testid="week-table-view" style={{ ...column, paddingBottom: 32 }}>
+        {!mw.matchdayId && (
+          <div style={{ ...card, padding: '18px 20px', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>No matchweek on the calendar yet.</div>
+        )}
+        <LiveTable rows={rows} meId={meId} showWeek={mw.matchdayId ? showWeek : false} onFullTable={() => onTab('table')} />
       </div>
     );
   }
 
-  const team = mw.squad && (
-    <div style={{ ...card, overflow: 'hidden' }}>
-      <SectionHead title="Your team" right={<button type="button" onClick={() => navigate(`/squad?leagueId=${leagueId}`)} style={linkBtn}>Edit in Squad →</button>} />
-      {isMobile ? (
-        <>
-          <div style={{ padding: '8px 12px 4px' }}>
-            <MobilePitchField
-              squad={{ players: mw.squad.players, captainId: mw.squad.captainId, isTripleCaptain: mw.squad.isTripleCaptain }}
-              onPlayerClick={noop}
-              matchdayLabel={label}
-              ClubCrest={ClubCrest}
-            />
-          </div>
-          <BenchRows bench={mw.squad.bench} crest={ClubCrest} />
-        </>
-      ) : (
-        <>
-          <div style={{ height: 'clamp(520px, 68vh, 680px)', display: 'flex', flexDirection: 'column', marginTop: 6 }}>
-            <PitchView
-              variant="desktop"
-              squad={{ players: mw.squad.players, captainId: mw.squad.captainId, isTripleCaptain: mw.squad.isTripleCaptain }}
-              onPlayerClick={noop}
-              matchdayLabel={label}
-            />
-          </div>
-          <BenchStrip bench={mw.squad.bench} crest={ClubCrest} />
-        </>
-      )}
-    </div>
-  );
-
-  const table = <LiveTable rows={rows} meId={meId} showWeek={showWeek} onFullTable={() => onTab('table')} />;
-  const fixtures = <Fixtures fixtures={mw.fixtures} crest={ClubCrest} compact={isMobile} />;
-
+  // My team: the squad never waits on the matchweek queries; the race and fixtures
+  // appear around it once there is a round on the calendar.
+  const hasRound = Boolean(mw.matchdayId);
   return (
-    <div data-testid="matchweek-view" style={{ padding: pad, paddingBottom: 32, display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 16, maxWidth: 1240, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) minmax(0,1fr)', gap: isMobile ? 12 : 16 }}>
-        <WeekHeader mw={mw} rankRow={meRow} size={rows.length} liveCount={liveCount} compact={isMobile} />
-        <RaceCard rows={rows} meId={meId} duel={h2hEnabled ? mw.duel : null} gwPoints={mw.gwPoints} compact={isMobile} />
-      </div>
-      <RoomLine circleId={circleId} />
-      {team}
-      {isMobile ? (
-        <>{table}{fixtures}</>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 16, alignItems: 'start' }}>
-          {table}{fixtures}
+    <div data-testid="my-team-view" style={{ display: 'flex', flexDirection: 'column' }}>
+      {hasRound && (
+        <div style={{ ...column, paddingBottom: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) minmax(0,1fr)', gap }}>
+            <WeekHeader mw={mw} rankRow={meRow} size={rows.length} liveCount={liveCount} compact={isMobile} />
+            <RaceCard rows={rows} meId={meId} duel={h2hEnabled ? mw.duel : null} gwPoints={mw.gwPoints} compact={isMobile} />
+          </div>
+          <RoomLine circleId={circleId} />
+        </div>
+      )}
+      <div style={{ marginTop: hasRound ? gap : 0 }}>{children}</div>
+      {hasRound && (
+        <div style={{ ...column, paddingBottom: 32 }}>
+          <Fixtures fixtures={mw.fixtures} crest={ClubCrest} compact={isMobile} />
         </div>
       )}
     </div>

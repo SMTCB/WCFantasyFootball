@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useLayoutEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { LoadingRows } from '../components/Skeleton';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -45,6 +45,9 @@ import RecapView             from '../components/league/RecapView';
 import MarketReportView      from '../components/league/MarketReportView';
 import H2HView               from '../components/league/H2HView';
 import MatchweekView         from '../components/league/MatchweekView';
+// Lazy so HubShared (also imported by SquadScreen) is only reached at one depth
+// in this chunk: the Rolldown TDZ rule in CLAUDE.md.
+const SquadScreen = lazy(() => import('./SquadScreen'));
 
 function timeAgoLabel(iso) {
   const seconds = Math.floor((Date.now() - new Date(iso)) / 1000);
@@ -400,9 +403,9 @@ export default function LeagueScreen() {
     return v;
   };
   const tabToView = (t) => {
-    if (t === 'table') return 'detail';
-    // Standings and Live were folded into Matchweek (MD-6); old links land there.
-    if (t === 'leaderboard' || t === 'live') return 'matchweek';
+    if (t === 'table' || t === 'leaderboard') return 'detail';
+    // Matchweek, Live and the old Squad page all became My team (S30, MD-11); old links land there.
+    if (t === 'matchweek' || t === 'live' || t === 'squad') return 'team';
     if (t === 'betting') return 'betting_leaderboard';
     if (t === 'admin') return 'commissioner';
     if (t === 'auctions') return 'trading'; // legacy deep-link compat
@@ -583,7 +586,7 @@ export default function LeagueScreen() {
     if (!id || !user?.id) return;
     try {
       setMembersLoading(true);
-      setView(v => v === 'list' ? 'matchweek' : v);
+      setView(v => v === 'list' ? 'team' : v);
       const uid = await resolveUserId(user?.id);
       const { data: lData } = await supabase.from('leagues').select('*').eq('id', id).single();
       if (!lData) {
@@ -1298,7 +1301,7 @@ export default function LeagueScreen() {
       <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
         {/* â”€â”€ Guided tours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {showLeagueTour && !loading && (view === 'detail' || view === 'matchweek') && (
+        {showLeagueTour && !loading && (view === 'detail' || view === 'team') && (
           <OnboardingTour
             steps={LEAGUE_TOUR_STEPS}
             onComplete={completeLeagueTour}
@@ -1404,9 +1407,10 @@ export default function LeagueScreen() {
         {(() => {
           const lg = activeLeague?.leagues;
           const isDraft = lg?.format === 'noduplicate';
-          const goSquad = () => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`);
+          const goSquad = () => setTab('team');
           const act = (label, fn) => <button className="hit-44" onClick={fn} style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label} →</button>;
-          const squadChecks = mySquadPlayerCount !== null && !draftOpen && (!isDraft || draftAllocated);
+          // My team already shows the squad count and its own warnings.
+          const squadChecks = view !== 'team' && mySquadPlayerCount !== null && !draftOpen && (!isDraft || draftAllocated);
           if (draftOpen) {
             const hoursLeft = draftDeadlineDate ? (draftDeadlineDate.getTime() - Date.now()) / 3_600_000 : Infinity;
             const tone = hoursLeft < 24 ? 'crit' : hoursLeft < 48 ? 'warn' : 'good';
@@ -1467,8 +1471,27 @@ export default function LeagueScreen() {
 
          {/* â”€â”€ VIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
-         {view === 'matchweek' && activeLeague?.league_id && (
+         {view === 'team' && activeLeague?.league_id && (
            <MatchweekView
+             part="team"
+             leagueId={activeLeague.league_id}
+             tournamentId={activeLeague?.leagues?.tournament_id}
+             circleId={activeLeague?.leagues?.circle_id}
+             meId={currentUser?.id ?? user?.id}
+             members={members}
+             h2hEnabled={h2hEnabled}
+             ClubCrest={ClubCrest}
+             onTab={setTab}
+           >
+             <Suspense fallback={<LoadingRows />}>
+               <SquadScreen embedded leagueId={activeLeague.league_id} />
+             </Suspense>
+           </MatchweekView>
+         )}
+
+         {view === 'week' && activeLeague?.league_id && (
+           <MatchweekView
+             part="table"
              leagueId={activeLeague.league_id}
              tournamentId={activeLeague?.leagues?.tournament_id}
              circleId={activeLeague?.leagues?.circle_id}

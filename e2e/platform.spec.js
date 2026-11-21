@@ -1,6 +1,7 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { mockMyTeam, MOCK_LEAGUE_ID } from './fixtures/myTeamMock.js';
 
 const ROUTES = ['/', '/squad', '/league', '/live', '/market', '/recap', '/bracket'];
 
@@ -44,6 +45,7 @@ async function skipOnboarding(page) {
     localStorage.setItem('forzakit_onboarding_done', 'true');
     localStorage.setItem('forzakit_tour_squad_done', 'true');
     localStorage.setItem('forzakit_tour_market_done', 'true');
+    localStorage.setItem('forzakit_tour_league_done', 'true');
   });
 }
 
@@ -179,71 +181,78 @@ test.describe('ClubhouseScreen', () => {
   });
 });
 
-// ── 4. Squad Screen ───────────────────────────────────────────────────────────
-test.describe('SquadScreen', () => {
+// ── 4. My team tab (the old Squad page, S30 / MD-11) ─────────────────────────
+// /squad now redirects into the league's My team tab. The demo user has no
+// league in the live database, so these tests answer Supabase from a fixed
+// test league and squad (e2e/fixtures/myTeamMock.js).
+async function openMyTeam(page) {
+  const calls = await mockMyTeam(page);
+  await page.goto(`/league/${MOCK_LEAGUE_ID}?tab=team`);
+  await waitForContent(page);
+  return calls;
+}
+
+test.describe('My team tab', () => {
   test.beforeEach(async ({ page }) => {
     await skipOnboarding(page);
+  });
+
+  test('/squad redirects instead of 404ing', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
     await page.goto('/squad');
     await waitForContent(page);
-    // Demo user has real league memberships → league picker appears before squad UI.
-    // Select the first league so squad content loads.
-    await selectFirstLeagueIfPicker(page);
+    await expect(page).not.toHaveURL(/\/squad/);
+    expect(errors, `redirect threw: ${errors.join(', ')}`).toHaveLength(0);
   });
 
-  test('shows My Squad heading', async ({ page }) => {
-    // Scope to main content to avoid matching hidden desktop sidebar "My Squad" nav label
-    const main = page.locator('[data-testid="main-content"]');
-    await expect(main.getByText(/my squad/i).first()).toBeVisible();
-  });
-
-  test('mobile — squad screen renders without crash', async ({ page }) => {
-    test.setTimeout(30000);
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/squad');
+  test('/squad?leagueId= lands on that league My team tab', async ({ page }) => {
+    await mockMyTeam(page);
+    await page.goto(`/squad?leagueId=${MOCK_LEAGUE_ID}`);
     await waitForContent(page);
-
-    // Should render without blank page or JS crash — shows either pitch or empty state
-    const bodyText = await page.locator('body').innerText();
-    expect(bodyText.trim().length).toBeGreaterThan(20);
+    await expect(page).toHaveURL(new RegExp(`/league/${MOCK_LEAGUE_ID}\\?tab=team`));
   });
 
-  test('shows budget in header', async ({ page }) => {
-    // B-11: the "Budget" label only renders once fetchSquad()'s Supabase round-trips
-    // resolve — unlike the loading-spinner state, which happens to also say "MY SQUAD"
-    // and so satisfies the sibling "shows My Squad heading" test even while still
-    // loading. Default expect.toBeVisible() poll is 5s; that's occasionally not enough
-    // margin for real network variance against the live pilot DB in CI, so this one
-    // assertion (only) gets a longer explicit window rather than a fixed extra sleep.
-    // Also raise the test's own timeout so that window has real headroom on top of
-    // beforeEach's own (league-picker click + squad load) network waits.
+  test('league opens on My team with the pitch, budget and chips', async ({ page }) => {
     test.setTimeout(45000);
-    await expect(page.getByText(/budget|\$\d+M/i).first()).toBeVisible({ timeout: 15000 });
+    await openMyTeam(page);
+    await expect(page.getByText(/^my team$/i).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('€3.5M').filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('[data-testid="mobile-pitch-field"]:visible, [data-testid="pitch-view"]:visible').first()).toBeVisible();
   });
 
-  test('chips tab is hidden (pilot mode)', async ({ page }) => {
+  test('mobile — needs-attention line, chips row, no CHIPS tab, no horizontal overflow', async ({ page }) => {
+    test.setTimeout(45000);
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/squad');
-    await waitForContent(page);
-    await selectFirstLeagueIfPicker(page);
-    // Chips are disabled for pilot — CHIPS tab must not exist
+    await openMyTeam(page);
+    await expect(page.getByTestId('needs-attention')).toContainText(/2 need attention/i, { timeout: 15000 });
+    await expect(page.getByTestId('mobile-pitch-field')).toBeVisible();
+    // The old 4-tab strip had a CHIPS tab; chips now sit in a row under the bench.
     await expect(page.getByRole('button', { name: /^chips$/i })).toHaveCount(0);
-  });
-
-  test('mobile — no horizontal overflow', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/squad');
-    await waitForContent(page);
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     expect(bodyWidth).toBeLessThanOrEqual(377);
   });
 
-  test('desktop — squad screen renders without crash', async ({ page }) => {
+  test('mobile — make a player captain from the tab', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 375, height: 812 });
+    const calls = await openMyTeam(page);
+    await page.getByTestId('mobile-pitch-token-p15').click();
+    await page.getByRole('button', { name: /make captain/i }).click();
+    // Palmer already scored as captain this round, so the switch asks to confirm.
+    const confirm = page.getByRole('button', { name: /^confirm/i });
+    if (await confirm.isVisible({ timeout: 2000 }).catch(() => false)) await confirm.click();
+    await expect.poll(() => calls.find(c => c.name === 'set_captain')?.args?.p_player_id).toBe('p15');
+  });
+
+  test('desktop — My team renders without crash', async ({ page }) => {
+    test.setTimeout(45000);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/squad');
-    await waitForContent(page);
-    // Should render without blank page or JS crash
-    const bodyText = await page.locator('body').innerText();
-    expect(bodyText.trim().length).toBeGreaterThan(20);
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
+    await openMyTeam(page);
+    await expect(page.getByTestId('pitch-view')).toBeVisible({ timeout: 15000 });
+    expect(errors, `My team threw: ${errors.join(', ')}`).toHaveLength(0);
   });
 });
 
