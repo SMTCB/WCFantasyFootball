@@ -32,14 +32,18 @@ const league = {
   commissioner_id: DEMO, invite_code: 'TEST01', circle_id: 'TEST_C1', sport: 'football', created_at: '2026-08-01T00:00:00Z',
 };
 
-function tables() {
+// `draft` (S32): a draft (no-duplicate) league whose lottery has run, with the
+// market locked for the wishlist window, so free buys are not allowed.
+function tables({ draft = false } = {}) {
+  const lg = draft ? { ...league, format: 'noduplicate', league_mode: 'draft' } : league;
   return {
+    draft_allocations: draft ? [{ id: 'TEST_DA1', league_id: MOCK_LEAGUE_ID, user_id: DEMO, allocated_players: PLAYERS.map(p => p.id) }] : [],
     league_members: [
-      { league_id: MOCK_LEAGUE_ID, user_id: DEMO, rank: 2, total_points: 412, leagues: league, users: { username: 'Demo Manager' } },
-      { league_id: MOCK_LEAGUE_ID, user_id: 'u2', rank: 1, total_points: 430, leagues: league, users: { username: 'Priya' } },
-      { league_id: MOCK_LEAGUE_ID, user_id: 'u3', rank: 3, total_points: 388, leagues: league, users: { username: 'Tom' } },
+      { league_id: MOCK_LEAGUE_ID, user_id: DEMO, rank: 2, total_points: 412, leagues: lg, users: { username: 'Demo Manager' } },
+      { league_id: MOCK_LEAGUE_ID, user_id: 'u2', rank: 1, total_points: 430, leagues: lg, users: { username: 'Priya' } },
+      { league_id: MOCK_LEAGUE_ID, user_id: 'u3', rank: 3, total_points: 388, leagues: lg, users: { username: 'Tom' } },
     ],
-    leagues: [league],
+    leagues: [lg],
     squads: [{
       id: 'TEST_S1', user_id: DEMO, league_id: MOCK_LEAGUE_ID, matchday_id: 'M1', players: PLAYERS.map(p => p.id),
       starting_xi: XI, captain_id: 'p10', budget_remaining: 3.5, is_triple_captain: false, lineup_locks: {},
@@ -62,12 +66,13 @@ function tables() {
   };
 }
 
-function rpcs({ window = 'open', joker = 'used' } = {}) {
+function rpcs({ window = 'open', joker = 'used', draft = false } = {}) {
+  const windowType = draft ? 'wishlist' : 'unlimited';
   return {
     get_my_chips: { round: 'M1', disabled: false, chips: { triple_captain: { status: 'available' }, joker: { status: joker }, max_cap: { status: 'available' } } },
     get_transfer_window_status: window === 'open'
-      ? { status: 'open', closes_at: future(2), opens_at: null, transfers_remaining: null, window_type: 'unlimited' }
-      : { status: window, closes_at: null, opens_at: future(1), transfers_remaining: null, window_type: 'unlimited' },
+      ? { status: 'open', closes_at: future(2), opens_at: null, transfers_remaining: null, window_type: windowType }
+      : { status: window, closes_at: null, opens_at: future(1), transfers_remaining: null, window_type: windowType },
     get_club_cap: 3,
     set_captain: { ok: true },
     set_lineup: { ok: true },
@@ -79,7 +84,7 @@ const inList = v => v.slice(4, -1).split(',').map(x => x.replace(/^"|"$/g, ''));
 
 export async function mockMyTeam(page, opts = {}) {
   const calls = [];
-  const TABLE = tables();
+  const TABLE = tables(opts);
   const RPC = rpcs(opts);
   await page.route('**/functions/v1/process-transfer', async route => {
     const body = route.request().postDataJSON();
@@ -117,7 +122,8 @@ export async function mockMyTeam(page, opts = {}) {
     const n = Array.isArray(body) ? body.length : 1;
     await route.fulfill({
       status: 200, contentType: 'application/json',
-      headers: { 'content-range': `0-${Math.max(n - 1, 0)}/${n}` },
+      // Real PostgREST exposes Content-Range cross-origin; counts (`head: true`) read it.
+      headers: { 'content-range': `0-${Math.max(n - 1, 0)}/${n}`, 'access-control-expose-headers': 'Content-Range' },
       body: JSON.stringify(body),
     });
   });
