@@ -6809,4 +6809,8 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - MD-9: `useChallengeLiveTotals` reads `get_live_league_table` for each squad-total bet's league and matchday (every 60s and on return to the tab), and the list rows and the thread show "You X vs Y Them", live or final. Freeform bets show no score; linking one to a real match needs a new column and an owner decision.
 - Checked with mock data at 375px and 800px (no sideways scroll); `npm run lint`; `npm run build`; `platform.spec.js` (84 passed).
 
+## Moving sport pictures (2026-11-21)
+
+- Home clubhouse cards: the sport picture in each league row now moves, as on the design board. Football: a ball passes between players. F1: two cars lap the track. Tennis: a ball crosses the net. Built with SVG `animateMotion` in `ClubhouseCard.jsx`; it pauses off screen and stays still when the device asks for reduced motion.
+
 Last Updated: 2026-11-21
