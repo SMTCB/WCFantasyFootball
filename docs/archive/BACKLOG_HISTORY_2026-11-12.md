@@ -6684,15 +6684,6 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - C-04: the three shortcut cards in the Clubhouse are replaced by one line at the top of the Room ("N waiting for you · N open bets · N coins on the table") from the same query, with a Wallet link. No database change.
 - CLUBHOUSE-CRASH-1 (PR #1169, 2026-11-14): opening any Clubhouse showed "Something went wrong" after S13. `useWallet`, `useChallenges` and `useGroupBets` each opened a live-update channel with a fixed name, and the Room now mounts them next to the same hooks in the Clubhouse screen; the second `.on()` on an already-subscribed channel throws. Each hook now adds a per-mount random suffix to its channel name. Not yet confirmed on a signed-in screen.
 
-## S26 Home, Matchday (2026-11-21)
-
-- MD-3: the live points rules moved out of `LiveScreen.jsx` into `src/lib/livePoints.js`, read by `LiveScreen` and the new `useLivePoints` hook (60s poll, refresh on return to the tab, realtime with a per-mount channel name). LiveScreen uses the same functions, so its numbers are unchanged.
-- MD-2: `useMyLeaguePositions` reads your rank, total and the people just above and below in every league of every clubhouse (football from `league_members`, F1 and tennis from their leaderboard functions). No migration was needed.
-- MD-1: new Home. Headline "You lead N of your M leagues" with the closest race and its clubhouse; live hero (your starters, league chips, race strip) only while one of your matches is on, else the next deadline card; score ticker only while something is live; Your move cards labelled with their clubhouse; "Where you stand" rail (right column on desktop, stacked on phone and tablet). Clubhouse cards and find or create are unchanged.
-- Left for S27 (MD-10): "friends here now" and the "Across your clubhouses" feed rail.
-
-Last Updated: 2026-11-21
-
 ## 2026-11-13 — Session S4 (welcome fixes)
 
 - J-04: the welcome now calls `join_circle_by_code` with the right parameter (`p_code`; it sent `p_invite_code`, so every join failed) and reads the `{data, error}` result the RPC returns instead of expecting a throw. A wrong code or failed create shows a message and keeps the user on the step; `ALREADY_MEMBER` counts as success.
@@ -6797,5 +6788,12 @@ Last Updated: 2026-11-21
 - MD-2: `useMyLeaguePositions` reads your rank, total and the people just above and below in every league of every clubhouse (football from `league_members`, F1 and tennis from their leaderboard functions). No migration was needed.
 - MD-1: new Home. Headline "You lead N of your M leagues" with the closest race and its clubhouse; live hero (your starters, league chips, race strip) only while one of your matches is on, else the next deadline card; score ticker only while something is live; Your move cards labelled with their clubhouse; "Where you stand" rail (right column on desktop, stacked on phone and tablet). Clubhouse cards and find or create are unchanged.
 - Left for S27 (MD-10): "friends here now" and the "Across your clubhouses" feed rail.
+
+## S27 Inside a clubhouse (2026-11-21)
+
+- MD-5: "here now" uses Supabase Realtime Presence on `clubhouse-presence:<id>` (`src/lib/presence.js`, `useHereNow`). One shared channel per clubhouse, counted by listeners, so the screen and Home never open it twice; you count as here while the clubhouse screen is open. No database change.
+- MD-4: the clubhouse header is now the members table (`src/components/clubhouse/MembersTable.jsx`): faces in seats around a C-shaped table, a green glow on whoever is here now, your seat in the gap, the newest Room line as a bubble, the member count in the middle, "+N" past 11 seats. Members display only: no bets, chips or felt. Your standing line sits under the name ("You lead 2 of 3 leagues · 6 pts ahead of Sam"); league cards show rank, total and the gap. Tabs and the Room are unchanged.
+- MD-10: Home's "Across your clubhouses" card (under "Where you stand" on desktop, stacked on phone): the latest Room lines from every clubhouse, each naming its clubhouse and opening that message, plus "Sam and Jo are in X now" from presence (`useRoomAcross`, `useHereNowAcross`).
+- Checked with mock data at 375px and desktop with 2, 12 and 14 members; `platform.spec.js`. Still to confirm on two real accounts: each sees the other glow, and the glow goes when one leaves.
 
 Last Updated: 2026-11-21

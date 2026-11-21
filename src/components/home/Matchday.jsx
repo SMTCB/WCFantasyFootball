@@ -349,3 +349,71 @@ export function WhereYouStand({ positions, liveLeagueIds, onOpen }) {
     </section>
   );
 }
+
+function ago(iso, now) {
+  const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
+  if (s < 60) return 'now';
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+}
+
+// MD-10: the latest Room lines from all your clubhouses, each naming its clubhouse,
+// with the friends who have a clubhouse open right now on top.
+// items: [{ id, username, content, kind, createdAt, circleId }]
+// here:  [{ circleId, circleName, names: [string] }]
+export function AcrossYourClubhouses({ items, here, circleNames, onOpen }) {
+  const now = useNow(60000);
+  if (!items.length && !here.length) return null;
+  return (
+    <section style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px 16px 8px' }}>
+      <h2 style={{ margin: '0 0 8px', ...BODY, fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>Across your clubhouses</h2>
+
+      {here.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 6 }}>
+          {here.map(h => (
+            <button
+              key={h.circleId}
+              onClick={() => onOpen(h.circleId)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 'var(--tap)', padding: '6px 2px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+            >
+              <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--positive)', boxShadow: '0 0 0 3px color-mix(in srgb, var(--positive) 22%, transparent)', flexShrink: 0 }} />
+              <span style={{ minWidth: 0, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <b style={{ color: 'var(--paper)' }}>{h.names.length > 2 ? `${h.names.slice(0, 2).join(', ')} +${h.names.length - 2}` : h.names.join(' and ')}</b>
+                {' '}{h.names.length === 1 ? 'is' : 'are'} in {h.circleName} now
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {items.map((m, i) => (
+            <li key={m.id} style={{ borderTop: i === 0 && !here.length ? 'none' : '1px solid var(--rule)' }}>
+              <button
+                onClick={() => onOpen(m.circleId, m.id)}
+                style={{ width: '100%', display: 'grid', gridTemplateColumns: '28px minmax(0, 1fr)', gap: 10, alignItems: 'start', minHeight: 'var(--tap)', padding: '10px 2px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span aria-hidden style={{ width: 28, height: 28, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'var(--elev)', color: 'var(--paper)', ...BODY, fontSize: 'var(--fs-micro)', fontWeight: 800 }}>
+                  {(m.username?.[0] ?? '?').toUpperCase()}
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: 'flex', gap: 6, ...MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>
+                    <b style={{ color: 'var(--paper)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0 }}>{m.username}</b>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>in {circleNames[m.circleId] ?? 'a clubhouse'}</span>
+                    <span style={{ marginLeft: 'auto', flexShrink: 0 }}>{ago(m.createdAt, now)}</span>
+                  </span>
+                  <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginTop: 2, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--text-2)', lineHeight: 1.35, overflowWrap: 'anywhere' }}>
+                    {m.kind === 'bet_activity' && <b style={{ color: 'var(--paper)' }}>New bet: </b>}
+                    {m.content}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
