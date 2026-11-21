@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { LoadingRows } from '../Skeleton';
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import BottomSheet from '../shared/BottomSheet';
 import { useNavigate } from 'react-router-dom';
 import PrimaryActionBar from '../shared/PrimaryActionBar';
 import { supabase } from '../../lib/supabase';
@@ -10,6 +10,16 @@ import { supabase } from '../../lib/supabase';
 export const MONO = { fontFamily: 'Archivo, sans-serif' };
 export const HEAD = { fontFamily: 'Archivo Black, sans-serif', letterSpacing: '-0.02em' };
 export const BODY = { fontFamily: 'Archivo, sans-serif' };
+
+// Every bet drawer (declare, arbitrate, create, answer, outcome, pick a kind) uses the
+// shared sheet so backdrop, focus, Escape and safe-area handling live in one place (S16, M0-BOTTOMSHEET).
+function BetSheet({ onClose, maxWidth = 480, padBottom = 18, children }) {
+  return (
+    <BottomSheet onClose={onClose} maxWidth={maxWidth} maxHeight="90vh" contentStyle={{ width: '100%', padding: `6px 24px ${padBottom}px` }}>
+      {children}
+    </BottomSheet>
+  );
+}
 
 // ── Coin icon ─────────────────────────────────────────────────────────────────
 export function Ci({ size = 'md' }) {
@@ -439,17 +449,8 @@ export function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
     catch (e) { setError(e.message); setSubmitting(false); }
   }
 
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 480, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={480} padBottom={18}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>Declare Result</div>
@@ -493,9 +494,7 @@ export function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
         >
           {submitting ? 'Submitting…' : 'Declare Result'}
         </button>
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 
@@ -514,17 +513,8 @@ export function ArbitrationModal({ challenge, onClose, onSubmit }) {
     catch (e) { setError(e.message); setSubmitting(false); }
   }
 
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 500, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={500} padBottom={18}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--purple)', marginBottom: 5 }}>⚖ Owner Arbitration</div>
@@ -567,9 +557,7 @@ export function ArbitrationModal({ challenge, onClose, onSubmit }) {
             style={{ minHeight: 'var(--tap)', padding: '11px', borderRadius: 'var(--radius)', border: '1.5px solid var(--mute)', background: 'transparent', color: 'var(--mute)', cursor: submitting ? 'not-allowed' : 'pointer', fontSize: 'var(--fs-label)', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
           >Void — return stakes</button>
         </div>
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 
@@ -763,17 +751,8 @@ export function CreateGroupBetModal({
     setSubmitting(false);
   }
 
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 520, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={520} padBottom={18}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>New Bet</div>
@@ -1022,9 +1001,7 @@ export function CreateGroupBetModal({
             </button>
           </>
         )}
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 
@@ -1070,17 +1047,8 @@ export function SubmitAnswerModal({ bet, onClose, onSubmit, fetchAnswers, userId
     }
   }
 
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 480, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={480} padBottom={18}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>Your Answer</div>
@@ -1122,9 +1090,7 @@ export function SubmitAnswerModal({ bet, onClose, onSubmit, fetchAnswers, userId
         >
           {submitting ? 'Submitting…' : 'Submit Answer'}
         </button>
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 
@@ -1188,17 +1154,8 @@ export function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipant
   const eyebrow = isArbitrate ? '⚖ Owner Arbitration' : 'Declare Outcome';
   const eyebrowColor = isArbitrate ? 'var(--purple)' : 'var(--mute)';
 
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 500, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={500} padBottom={18}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
             <div style={{ fontSize: 'var(--fs-label)', color: eyebrowColor, marginBottom: 5 }}>{eyebrow}</div>
@@ -1262,9 +1219,7 @@ export function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipant
         >
           {submitting ? 'Submitting…' : isArbitrate ? 'Arbitrate & Pay Out' : 'Declare Outcome'}
         </button>
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 
@@ -1780,17 +1735,8 @@ export function CreateChallengeModal({
     setSubmitting(false);
   }
 
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 520, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={520} padBottom={18}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 0 }}>
@@ -2012,9 +1958,7 @@ export function CreateChallengeModal({
             </button>
           </>
         )}
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 
@@ -2024,17 +1968,8 @@ export function CreateChallengeModal({
 // Football GW (only path with auto-resolve), CreateGroupBetModal for Freeform
 // (any target shape, including a single person via the new "One Person" mode).
 export function BetKindPicker({ onPick, onClose, hasCompetitions }) {
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 520, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 24px',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={520} padBottom={24}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 5 }}>New Bet</div>
@@ -2063,9 +1998,7 @@ export function BetKindPicker({ onPick, onClose, hasCompetitions }) {
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Bet on anything — one person, a few, or the whole Clubhouse</div>
           </button>
         </div>
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 
@@ -2074,17 +2007,8 @@ export function BetKindPicker({ onPick, onClose, hasCompetitions }) {
 export function NoClubhousePrompt({ onClose }) {
   const navigate = useNavigate();
   const go = () => { onClose(); navigate('/clubhouse'); };
-  return createPortal(
-    <div role="presentation"
-      style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-sheet)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
-      <div style={{
-        width: '100%', maxWidth: 520, background: 'var(--card)',
-        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
-        padding: '22px 24px 24px',
-      }}>
+  return (
+    <BetSheet onClose={onClose} maxWidth={520} padBottom={24}>
         <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', marginBottom: 8 }}>Bets live in a Clubhouse</div>
         <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)', lineHeight: 1.5, marginBottom: 18 }}>
           Create a Clubhouse for your friends, or join one with an invite code. Then you can start a bet.
@@ -2099,9 +2023,7 @@ export function NoClubhousePrompt({ onClose }) {
             style={{ minHeight: 'var(--tap)', padding: 12, borderRadius: 10, border: '1px solid var(--rule)', cursor: 'pointer', background: 'transparent', color: 'var(--mute)', fontSize: 'var(--fs-label)', ...HEAD }}
           >Not now</button>
         </div>
-      </div>
-    </div>,
-    document.body,
+    </BetSheet>
   );
 }
 

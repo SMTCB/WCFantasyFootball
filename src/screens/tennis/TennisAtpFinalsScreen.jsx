@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { IconTrophy } from '../../components/UiIcons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -237,7 +238,7 @@ function MatchPickRow({ match, label, current, locked, onChange }) {
 }
 
 function Loader() {
-  return <div style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>;
+  return <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: '48px 20px' }}><LoadingRows rows={5} /></div>;
 }
 
 function Err({ msg, onBack }) {

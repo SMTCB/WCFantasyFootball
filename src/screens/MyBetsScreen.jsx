@@ -1,3 +1,4 @@
+import { LoadingRows } from '../components/Skeleton';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -150,7 +151,7 @@ export default function MyBetsScreen() {
       {/* Content */}
       <div style={{ flex: 1, minHeight: 60, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 80 }}>
         {loading && (
-          <div style={{ padding: '48px 24px', textAlign: 'center', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
+          <div style={{ padding: '24px' }}><LoadingRows rows={4} /></div>
         )}
         {error && (
           <div style={{ padding: '24px', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>Failed to load: {error}</div>

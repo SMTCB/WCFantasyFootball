@@ -950,7 +950,7 @@ export default function LeagueScreen() {
             Link this league to a Clubhouse so all members can access it together
           </p>
           {circlesLoading ? (
-            <p style={{ fontFamily: 'monospace', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Loading…</p>
+            <LoadingRows rows={2} />
           ) : myCircles.length > 0 ? (
             <div className="flex flex-col gap-2">
               {myCircles.map(c => (

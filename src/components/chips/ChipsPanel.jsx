@@ -170,7 +170,7 @@ export default function ChipsPanel({ leagueId, userId, tournamentId, ownedIds, h
   });
 
   if (loading) {
-    return <div style={{ padding: 24, color: 'var(--mute)', fontSize: 'var(--fs-label)' }} role="status">Loading chips…</div>;
+    return <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: 24 }}>{[0, 1, 2].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>;
   }
   if (error || !state) {
     return <div style={{ padding: 24, color: 'var(--danger)', fontSize: 'var(--fs-label)' }} role="alert">{error ?? 'Chips are unavailable right now.'}</div>;

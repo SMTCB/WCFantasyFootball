@@ -503,7 +503,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 22px 22px', overflow: 'auto', flex: 1 }}>
         {resolutionBetsLoading ? (
-          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading bets…</div>
+          <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '18px' }}>{[0, 1, 2].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
         ) : allActionable.length === 0 ? (
           <div style={{ padding: '18px 14px', background: 'var(--card)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
             <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Nothing to resolve · all caught up</span>
@@ -852,7 +852,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', padding: isMobile ? '8px 14px 80px' : '12px 22px 32px', gap: 6 }}>
         {allBetsLoading && (
-          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
+          <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '18px' }}>{[0, 1, 2].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
         )}
         {!allBetsLoading && filtered.length === 0 && (
           <div style={{ padding: '18px 14px', background: 'var(--card)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
@@ -2511,7 +2511,7 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
             ))}
           </select>
         ) : (
-          <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flex: 1 }}>Loading matchdays…</span>
+          <span role="status" aria-label="Loading matchdays" aria-busy="true" className="ffl-skeleton ffl-skeleton--line" style={{ flex: 1 }} />
         )}
         <button
           onClick={generate}

@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { IconLock } from '../../components/UiIcons';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -85,7 +86,7 @@ export default function F1ReportScreen() {
   const isBetsLocked = yearResults?.is_bets_locked ?? false;
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', ...MONO, fontSize: 'var(--fs-label)' }}>Loading…</div>;
+    return <div style={{ padding: 40 }}><LoadingRows rows={5} /></div>;
   }
 
   return (

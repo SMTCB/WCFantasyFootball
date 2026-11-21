@@ -39,8 +39,11 @@ export default function BottomSheet({
     openSheets += 1;
     if (root) root.inert = true;
     const panel = panelRef.current;
-    const first = panel?.querySelector(FOCUSABLE);
-    (first ?? panel)?.focus({ preventScroll: true });
+    // A child with autoFocus (a search box) has already taken focus inside the panel: keep it there.
+    if (!panel?.contains(document.activeElement)) {
+      const first = panel?.querySelector(FOCUSABLE);
+      (first ?? panel)?.focus({ preventScroll: true });
+    }
     const onKey = (e) => {
       if (e.key !== 'Tab' || !panel) return;
       const items = [...panel.querySelectorAll(FOCUSABLE)];

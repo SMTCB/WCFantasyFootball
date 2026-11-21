@@ -827,9 +827,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
 
   // ── Early returns ────────────────────────────────────────────────────────────
   if (loadingMds) return (
-    <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading recap…</div>
-    </div>
+    <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '24px' }}>{[0, 1, 2, 3, 4].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
   );
 
   if (!allMatchdays.length) return (
@@ -859,9 +857,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           ))}
         </div>
         {loading ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</span>
-          </div>
+          <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ flex: 1, padding: '16px' }}>{[0, 1, 2].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
         ) : !hasScores ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 8 }}>
             <div style={{ fontSize: 'var(--fs-title)' }}><IconHourglass size={28} /></div>
@@ -893,9 +889,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       <MatchdayNav allMatchdays={allMatchdays} selected={selectedMatchday} onSelect={setSelectedMatchday} mobile />
 
       {loading ? (
-        <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-          <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</span>
-        </div>
+        <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '18px' }}>{[0, 1, 2].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
       ) : !hasScores ? (
         <div style={{ padding: '32px 18px', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--fs-title)', marginBottom: 8 }}><IconHourglass size={28} /></div>

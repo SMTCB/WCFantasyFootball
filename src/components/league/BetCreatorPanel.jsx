@@ -127,7 +127,7 @@ function TypeSelector({ onSelect, catExpanded, onToggleCat }) {
 
 function FixturePicker({ fixtures, selectedFixture, onSelect, loading, optional }) {
   if (loading) {
-    return <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>Loading fixtures…</div>;
+    return <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '16px 0' }}>{[0, 1, 2].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>;
   }
   if (!fixtures.length) {
     return <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>No scheduled matches available</div>;
@@ -815,7 +815,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 </div>
 
                 {loading && !players.length ? (
-                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>Loading players…</div>
+                  <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '16px 0' }}>{[0, 1, 2, 3].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
                 ) : filteredPlayers.length === 0 ? (
                   <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', padding: '16px 0', textAlign: 'center', }}>
                     {players.length === 0 ? 'No players found' : 'No results — try a different filter'}
