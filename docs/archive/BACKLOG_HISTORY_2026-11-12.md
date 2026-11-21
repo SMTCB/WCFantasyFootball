@@ -6812,5 +6812,6 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 ## Moving sport pictures (2026-11-21)
 
 - Home clubhouse cards: the sport picture in each league row now moves, as on the design board. Football: a ball passes between players. F1: two cars lap the track. Tennis: a ball crosses the net. Built with SVG `animateMotion` in `ClubhouseCard.jsx`; it pauses off screen and stays still when the device asks for reduced motion.
+- Inside a clubhouse: each league card now opens with a wide moving picture of its ground and the sport's name in the corner, as on the design board. This replaces the thin color bar and the sport pill. The small and wide pictures now live in `src/components/shared/SportGround.jsx` (`SportSwatch`, `SportBanner`).
 
 Last Updated: 2026-11-21

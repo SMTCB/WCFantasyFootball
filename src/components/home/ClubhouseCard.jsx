@@ -1,9 +1,10 @@
 // A clubhouse on Home (MD-1, design board): the members table with who is here
 // now, the clubhouse name, its newest Room line, and one row per league with your
 // rank. On a phone the table is small and the line and rows run full width.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import MembersTable from '../clubhouse/MembersTable';
 import { ArchivedBadge, FinishedBadge } from '../league/LeagueBadges';
+import { SportSwatch } from '../shared/SportGround';
 
 const BODY = { fontFamily: 'var(--font-body)' };
 const MONO = { fontFamily: 'var(--font-mono)' };
@@ -35,87 +36,6 @@ function useNow(ms) {
   return now;
 }
 
-// A small picture of the ground each sport is played on, with one thing moving
-// on it (design board): the ball passing on the pitch, two cars lapping the
-// track, the ball crossing the net. It stops while off screen, and stays still
-// for people who ask their phone for less motion.
-const TRACK = 'M8 28 C8 12 20 8 28 14 S44 10 44 20 S30 32 8 28Z';
-const BALL_PASS = 'M14 19 L26 12 L20 27 L34 25 L26 12 L40 19 L14 19';
-const BALL_RALLY = 'M14 25 Q26 1 39 13 Q26 5 14 25';
-
-function useSmilPause(ref) {
-  useEffect(() => {
-    const svg = ref.current;
-    if (!svg?.pauseAnimations) return undefined;
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (still) {
-      svg.pauseAnimations();
-      svg.setCurrentTime(1.2);
-      return undefined;
-    }
-    if (!('IntersectionObserver' in window)) return undefined;
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) svg.unpauseAnimations();
-      else svg.pauseAnimations();
-    });
-    io.observe(svg);
-    return () => io.disconnect();
-  }, [ref]);
-}
-
-function Swatch({ sport }) {
-  const ref = useRef(null);
-  useSmilPause(ref);
-  const line = 'color-mix(in srgb, var(--card) 70%, transparent)';
-  const dot = 'color-mix(in srgb, var(--card) 85%, transparent)';
-  return (
-    <span aria-hidden style={{ width: 52, height: 38, borderRadius: 8, overflow: 'hidden', flex: 'none', display: 'block' }}>
-      <svg ref={ref} viewBox="0 0 52 38" width="52" height="38" style={{ display: 'block' }}>
-        {sport === 'f1' ? (
-          <>
-            <rect width="52" height="38" fill="var(--paper)" />
-            <path d={TRACK} fill="none" stroke="var(--f1)" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M8 24 v8" stroke="var(--card)" strokeWidth="2" />
-            <rect x="-2.2" y="-1.1" width="4.4" height="2.2" rx=".9" fill="var(--card)">
-              <animateMotion dur="6s" begin="-0.7s" repeatCount="indefinite" rotate="auto" path={TRACK} />
-            </rect>
-            <rect x="-2.2" y="-1.1" width="4.4" height="2.2" rx=".9" fill="var(--gold)" stroke="var(--paper)" strokeWidth=".4">
-              <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" path={TRACK} />
-            </rect>
-          </>
-        ) : sport === 'tennis' ? (
-          <>
-            <rect width="52" height="38" fill="var(--ten)" />
-            <rect x="7" y="6" width="38" height="26" fill="none" stroke={line} strokeWidth="1.5" />
-            <path d="M7 19h38M14 6v26M38 6v26" stroke={line} strokeWidth="1" />
-            <path d="M26 4v30" stroke="var(--card)" strokeWidth="1.6" />
-            <circle cx="12" cy="26" r="1.8" fill={dot} />
-            <circle cx="40" cy="12" r="1.8" fill="var(--gold)" />
-            <circle r="1.3" fill="var(--gold)" stroke="var(--paper)" strokeWidth=".35">
-              <animateMotion dur="2.6s" repeatCount="indefinite" path={BALL_RALLY} />
-            </circle>
-          </>
-        ) : (
-          <>
-            <rect width="52" height="38" fill="var(--accent)" />
-            <rect x="4" y="4" width="44" height="30" fill="none" stroke={line} strokeWidth="1.5" />
-            <path d="M26 4v30" stroke={line} strokeWidth="1.2" />
-            <circle cx="26" cy="19" r="6" fill="none" stroke={line} strokeWidth="1.2" />
-            <rect x="4" y="12" width="6" height="14" fill="none" stroke={line} strokeWidth="1.2" />
-            <rect x="42" y="12" width="6" height="14" fill="none" stroke={line} strokeWidth="1.2" />
-            {[[14, 19], [26, 12], [20, 27], [34, 25], [40, 19]].map(([x, y]) => (
-              <circle key={`${x}-${y}`} cx={x} cy={y} r="1.6" fill={dot} />
-            ))}
-            <circle r="1.3" fill="var(--card)" stroke="var(--paper)" strokeWidth=".4">
-              <animateMotion dur="5.5s" repeatCount="indefinite" path={BALL_PASS} />
-            </circle>
-          </>
-        )}
-      </svg>
-    </span>
-  );
-}
-
 function detailFor(league, position, live) {
   if (live?.hasLive) return live.liveCount > 0 ? `Live · ${live.liveCount} of yours playing` : 'Live now';
   if (position && position.size > 1) {
@@ -141,7 +61,7 @@ function LeagueRow({ league, position, live, onOpen, first }) {
         background: 'transparent', border: 'none', borderTop: first ? 'none' : '1px solid var(--rule)', cursor: 'pointer', textAlign: 'left',
       }}
     >
-      <Swatch sport={league.sport} />
+      <SportSwatch sport={league.sport} />
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
           <b style={{ ...BODY, fontWeight: 800, fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{league.name}</b>

@@ -16,6 +16,7 @@ import NotificationBell from '../components/NotificationBell';
 import ClubhouseInviteModal from '../components/ClubhouseInviteModal';
 import useConfirmDialog from '../hooks/useConfirmDialog';
 import MembersTable from '../components/clubhouse/MembersTable';
+import { SportBanner } from '../components/shared/SportGround';
 import { useHereNow } from '../hooks/useHereNow';
 import { useRoomPulse } from '../hooks/useRoomPulse';
 import { useMyLeaguePositions, summarisePositions } from '../hooks/useMyLeaguePositions';
@@ -182,7 +183,6 @@ function AllCompetitions({ competitions, onEnter, positionFor }) {
       <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>Leagues</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
         {allComps.map(item => {
-          const meta = SPORT_META[item.sport] ?? SPORT_META.football;
           return (
             <button
               key={`${item.sport}-${item.id}`}
@@ -193,20 +193,10 @@ function AllCompetitions({ competitions, onEnter, positionFor }) {
                 overflow: 'hidden', cursor: 'pointer', textAlign: 'left', padding: 0,
               }}
             >
-              {/* Sport-coloured accent bar */}
-              <div style={{ height: 3, background: meta.color, flexShrink: 0 }} />
+              <SportBanner sport={item.sport} />
               <div style={{ padding: '13px 15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
                   <div style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--paper)', lineHeight: 1.25, minWidth: 0, flex: 1, overflowWrap: 'break-word' }}>{item.name}</div>
-                  <span style={{
-                    flexShrink: 0,
-                    fontSize: 'var(--fs-micro)', fontWeight: 700,
-                    color: meta.color,
-                    background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
-                    padding: '2px 8px', borderRadius: 100,
-                  }}>
-                    {meta.label}
-                  </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                   {item.format && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{item.format}</span>}
