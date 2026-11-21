@@ -18,19 +18,31 @@ function useGoTo() {
   };
 }
 
-// Home: a list, one small button per row. Renders nothing when nothing is waiting.
-export function YourMoveList({ move }) {
+// Home: a list, one small button per row, each labelled with its clubhouse
+// (circleNames: { [circleId]: name }). Renders nothing when nothing is waiting.
+export function YourMoveList({ move, circleNames = {}, style }) {
   const go = useGoTo();
   if (!move || move.loading || move.items.length === 0) return null;
+  const clubhouseCount = new Set(move.items.map(i => i.circleId).filter(Boolean)).size;
   return (
-    <div style={{ marginBottom: 28 }}>
-      <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)' }}>
+    <div style={{ marginBottom: 28, ...style }}>
+      <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--paper)', display: 'flex', alignItems: 'baseline', gap: 8 }}>
         Your move · {move.count}
+        {clubhouseCount > 1 && (
+          <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-micro)', fontWeight: 400, color: 'var(--mute)' }}>
+            from {clubhouseCount} clubhouses
+          </span>
+        )}
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {move.items.map(item => (
           <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
+              {circleNames[item.circleId] && (
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-micro)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--gold-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {circleNames[item.circleId]}
+                </div>
+              )}
               <div style={{ ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
               <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{item.sub}</div>
             </div>

@@ -6684,7 +6684,14 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - C-04: the three shortcut cards in the Clubhouse are replaced by one line at the top of the Room ("N waiting for you · N open bets · N coins on the table") from the same query, with a Wallet link. No database change.
 - CLUBHOUSE-CRASH-1 (PR #1169, 2026-11-14): opening any Clubhouse showed "Something went wrong" after S13. `useWallet`, `useChallenges` and `useGroupBets` each opened a live-update channel with a fixed name, and the Room now mounts them next to the same hooks in the Clubhouse screen; the second `.on()` on an already-subscribed channel throws. Each hook now adds a per-mount random suffix to its channel name. Not yet confirmed on a signed-in screen.
 
-Last Updated: 2026-11-19
+## S26 Home, Matchday (2026-11-21)
+
+- MD-3: the live points rules moved out of `LiveScreen.jsx` into `src/lib/livePoints.js`, read by `LiveScreen` and the new `useLivePoints` hook (60s poll, refresh on return to the tab, realtime with a per-mount channel name). LiveScreen uses the same functions, so its numbers are unchanged.
+- MD-2: `useMyLeaguePositions` reads your rank, total and the people just above and below in every league of every clubhouse (football from `league_members`, F1 and tennis from their leaderboard functions). No migration was needed.
+- MD-1: new Home. Headline "You lead N of your M leagues" with the closest race and its clubhouse; live hero (your starters, league chips, race strip) only while one of your matches is on, else the next deadline card; score ticker only while something is live; Your move cards labelled with their clubhouse; "Where you stand" rail (right column on desktop, stacked on phone and tablet). Clubhouse cards and find or create are unchanged.
+- Left for S27 (MD-10): "friends here now" and the "Across your clubhouses" feed rail.
+
+Last Updated: 2026-11-21
 
 ## 2026-11-13 — Session S4 (welcome fixes)
 
@@ -6784,4 +6791,11 @@ Last Updated: 2026-11-19
 - Migration 312 applied 2026-11-19 after a backup. The Room and bet-chat live channels now get a random per-mount name.
 - On hold at the user's request: PUSH-1, J-16.
 
-Last Updated: 2026-11-19
+## S26 Home, Matchday (2026-11-21)
+
+- MD-3: the live points rules moved out of `LiveScreen.jsx` into `src/lib/livePoints.js`, read by `LiveScreen` and the new `useLivePoints` hook (60s poll, refresh on return to the tab, realtime with a per-mount channel name). LiveScreen uses the same functions, so its numbers are unchanged.
+- MD-2: `useMyLeaguePositions` reads your rank, total and the people just above and below in every league of every clubhouse (football from `league_members`, F1 and tennis from their leaderboard functions). No migration was needed.
+- MD-1: new Home. Headline "You lead N of your M leagues" with the closest race and its clubhouse; live hero (your starters, league chips, race strip) only while one of your matches is on, else the next deadline card; score ticker only while something is live; Your move cards labelled with their clubhouse; "Where you stand" rail (right column on desktop, stacked on phone and tablet). Clubhouse cards and find or create are unchanged.
+- Left for S27 (MD-10): "friends here now" and the "Across your clubhouses" feed rail.
+
+Last Updated: 2026-11-21
