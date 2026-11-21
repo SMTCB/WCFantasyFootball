@@ -6796,4 +6796,11 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - MD-10: Home's "Across your clubhouses" card (under "Where you stand" on desktop, stacked on phone): the latest Room lines from every clubhouse, each naming its clubhouse and opening that message, plus "Sam and Jo are in X now" from presence (`useRoomAcross`, `useHereNowAcross`).
 - Checked with mock data at 375px and desktop with 2, 12 and 14 members; `platform.spec.js`. Still to confirm on two real accounts: each sees the other glow, and the glow goes when one leaves.
 
+## S28 Football league, Matchweek tab (2026-11-21)
+
+- MD-6: the league's first tab is now Matchweek (`src/components/league/MatchweekView.jsx`, data from `useLeagueMatchweek`). It holds the round's status and your points and rank, your race (the people just above and below you on season totals) or the H2H duel, the latest Room line, your team on the app's own pitches (`PitchView` on desktop with the bench strip, `MobilePitchField` on phone with the Substitutes rows; live points through `players[].points`), the table as it stands with rows that slide when ranks change, and this round's fixtures. "Season table" and "H2H fixtures" sit under it. Standings and Live left the tab row; `?tab=leaderboard`, `?tab=live` and `/live?leagueId=` all land on Matchweek, and `/live` with no league stays as the across-your-leagues live screen. The bench rows were copied read-only into the tab, so `SquadScreen.jsx` is untouched. Home's "Open matchweek" button opens the tab.
+- MD-7 (code): migration 313 adds `get_live_league_table(league, matchday)`, a read-only function returning each member's total, this round's points, live rank and rank before the round. The tab refetches 1.5s after match stats change, plus every 60s. Not applied yet; until it is, the tab shows season totals.
+- Home: each clubhouse card now shows the members table (faces around the table, who is here now, the newest Room line) on phone and desktop, as in the design.
+- Checked with mock data at 375px and 1280px (live reorder, H2H duel, no sideways scroll); `npm run build`; `platform.spec.js`.
+
 Last Updated: 2026-11-21

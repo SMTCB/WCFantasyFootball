@@ -44,6 +44,7 @@ import CommissionerPanel      from '../components/league/CommissionerPanel';
 import RecapView             from '../components/league/RecapView';
 import MarketReportView      from '../components/league/MarketReportView';
 import H2HView               from '../components/league/H2HView';
+import MatchweekView         from '../components/league/MatchweekView';
 
 function timeAgoLabel(iso) {
   const seconds = Math.floor((Date.now() - new Date(iso)) / 1000);
@@ -392,14 +393,16 @@ export default function LeagueScreen() {
   // setLeagueDraftDeadline, createBetInstance, autoGenerateBetOptions,
   // fetchOpenBets, fetchBetSubmissions, resolveBet — all from useCommissioner above.
   const viewToTab = (v) => {
-    if (v === 'detail') return 'leaderboard';
+    if (v === 'detail') return 'table';
     if (v === 'betting_leaderboard') return 'betting';
     if (v === 'commissioner') return 'admin';
     if (v === 'auctions') return 'trading'; // legacy deep-link compat
     return v;
   };
   const tabToView = (t) => {
-    if (t === 'leaderboard') return 'detail';
+    if (t === 'table') return 'detail';
+    // Standings and Live were folded into Matchweek (MD-6); old links land there.
+    if (t === 'leaderboard' || t === 'live') return 'matchweek';
     if (t === 'betting') return 'betting_leaderboard';
     if (t === 'admin') return 'commissioner';
     if (t === 'auctions') return 'trading'; // legacy deep-link compat
@@ -580,7 +583,7 @@ export default function LeagueScreen() {
     if (!id || !user?.id) return;
     try {
       setMembersLoading(true);
-      setView(v => v === 'list' ? 'detail' : v);
+      setView(v => v === 'list' ? 'matchweek' : v);
       const uid = await resolveUserId(user?.id);
       const { data: lData } = await supabase.from('leagues').select('*').eq('id', id).single();
       if (!lData) {
@@ -1295,7 +1298,7 @@ export default function LeagueScreen() {
       <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
         {/* â”€â”€ Guided tours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {showLeagueTour && !loading && view === 'detail' && (
+        {showLeagueTour && !loading && (view === 'detail' || view === 'matchweek') && (
           <OnboardingTour
             steps={LEAGUE_TOUR_STEPS}
             onComplete={completeLeagueTour}
@@ -1463,6 +1466,19 @@ export default function LeagueScreen() {
 
 
          {/* â”€â”€ VIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+
+         {view === 'matchweek' && activeLeague?.league_id && (
+           <MatchweekView
+             leagueId={activeLeague.league_id}
+             tournamentId={activeLeague?.leagues?.tournament_id}
+             circleId={activeLeague?.leagues?.circle_id}
+             meId={currentUser?.id ?? user?.id}
+             members={members}
+             h2hEnabled={h2hEnabled}
+             ClubCrest={ClubCrest}
+             onTab={setTab}
+           />
+         )}
 
          {view === 'detail' && (
            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>

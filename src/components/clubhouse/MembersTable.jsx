@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 const SEAT_COLORS = ['var(--accent)', 'var(--f1)', 'var(--ten)', 'var(--gold)', 'var(--positive)', 'var(--mute)'];
 const MAX_SEATS = 11;            // seats round the C besides yours
+const COMPACT_SEATS = 7;
 const ARC_FROM = 62;             // degrees, measured from the gap on the right
 const ARC_TO = 298;
 const RING_R = 166 / 400;        // seat ring radius as a share of the table width
@@ -44,8 +45,8 @@ function Face({ name, color, size, me, here, away }) {
           className="ch-here-dot"
           style={{
             position: 'absolute', right: -1, bottom: -1,
-            width: Math.max(10, Math.round(size * 0.28)), height: Math.max(10, Math.round(size * 0.28)),
-            borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--card)',
+            width: Math.max(size < 24 ? 7 : 10, Math.round(size * 0.28)), height: Math.max(size < 24 ? 7 : 10, Math.round(size * 0.28)),
+            borderRadius: '50%', background: 'var(--positive)', border: `${size < 24 ? 1.5 : 2}px solid var(--card)`,
           }}
         />
       )}
@@ -74,7 +75,10 @@ function Bubble({ text, align }) {
 
 // members: [{ user_id, username }], meId, hereIds: Set, latest: newest Room message
 // ({ id, userId, content, createdAt }) or null, size: table width in px.
-export default function MembersTable({ members, meId, hereIds, latest, size = 290, showNames = false }) {
+// compact: the small table on a phone's Home card, with fewer seats, only the
+// count in the middle and no bubble (the card shows the latest line itself).
+export default function MembersTable({ members, meId, hereIds, latest, size = 290, showNames = false, compact = false }) {
+  const maxSeats = compact ? COMPACT_SEATS : MAX_SEATS;
   const [picked, setPicked] = useState(null);
   const [bubble, setBubble] = useState(null);
   const pickTimer = useRef(null);
@@ -90,10 +94,10 @@ export default function MembersTable({ members, meId, hereIds, latest, size = 29
   // Keep seats where they are as people come and go; only a big clubhouse
   // (more than fits) puts the people here now into the seats first.
   const seats = useMemo(() => {
-    if (others.length <= MAX_SEATS) return { shown: others, extra: 0 };
+    if (others.length <= maxSeats) return { shown: others, extra: 0 };
     const sorted = [...others].sort((a, b) => Number(hereIds.has(b.user_id)) - Number(hereIds.has(a.user_id)));
-    return { shown: sorted.slice(0, MAX_SEATS - 1), extra: others.length - (MAX_SEATS - 1) };
-  }, [others, hereIds]);
+    return { shown: sorted.slice(0, maxSeats - 1), extra: others.length - (maxSeats - 1) };
+  }, [others, hereIds, maxSeats]);
 
   const hereCount = [...hereIds].filter(id => (members ?? []).some(m => m.user_id === id)).length;
   const total = (members ?? []).length;
@@ -101,14 +105,14 @@ export default function MembersTable({ members, meId, hereIds, latest, size = 29
   // A new Room line shows over its sender for a few seconds. On arrival, the newest
   // line shows once too, if it is recent.
   useEffect(() => {
-    if (!latest?.id || seen.current === latest.id) return undefined;
+    if (compact || !latest?.id || seen.current === latest.id) return undefined;
     const first = seen.current === null;
     seen.current = latest.id;
     if (first && Date.now() - new Date(latest.createdAt).getTime() > BUBBLE_RECENT_MS) return undefined;
     const show = setTimeout(() => setBubble({ id: latest.id, userId: latest.userId, text: clip(latest.content, size < 260 ? 22 : 30) }), first ? 700 : 0);
     const hide = setTimeout(() => setBubble(b => (b?.id === latest.id ? null : b)), (first ? 700 : 0) + BUBBLE_FRESH_MS);
     return () => { clearTimeout(show); clearTimeout(hide); };
-  }, [latest, size]);
+  }, [latest, size, compact]);
 
   useEffect(() => () => clearTimeout(pickTimer.current), []);
 
@@ -122,7 +126,9 @@ export default function MembersTable({ members, meId, hereIds, latest, size = 29
   // Seat size shrinks when the C gets crowded, so faces never touch.
   const ringPx = size * RING_R;
   const step = n > 1 ? ((ARC_TO - ARC_FROM) / (n - 1)) * Math.PI / 180 * ringPx : size;
-  const seat = Math.round(Math.max(24, Math.min(size * 0.14, step * 0.78)));
+  const seat = compact
+    ? Math.round(Math.max(16, Math.min(size * 0.18, step * 0.78)))
+    : Math.round(Math.max(24, Math.min(size * 0.14, step * 0.78)));
   const meSeat = Math.round(seat * 1.12);
   const nameMax = Math.max(40, Math.floor(step - 6));
   // Names go under the seats only when there is room between them; a tap still shows any name.
@@ -239,7 +245,17 @@ export default function MembersTable({ members, meId, hereIds, latest, size = 29
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center',
         }}
       >
-        {picked ? (
+        {compact ? (
+          picked ? (
+            <b style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 'var(--fs-micro)', lineHeight: 1.1, color: 'var(--paper)', overflowWrap: 'anywhere' }}>
+              {picked.user_id === meId ? 'You' : (picked.username ?? 'Member')}
+            </b>
+          ) : (
+            <b className="num" aria-label={`${total} ${total === 1 ? 'member' : 'members'}`} style={{ fontFamily: 'Archivo, sans-serif', fontWeight: 900, fontSize: Math.round(size * 0.26) + 'px', lineHeight: 0.9, letterSpacing: '-.03em', color: 'var(--paper)' }}>
+              {total}
+            </b>
+          )
+        ) : picked ? (
           <>
             <b style={{ fontFamily: 'Archivo, sans-serif', fontWeight: 900, fontSize: 'var(--fs-heading)', lineHeight: 1.05, color: 'var(--paper)', overflowWrap: 'anywhere' }}>
               {picked.user_id === meId ? 'You' : (picked.username ?? 'Member')}

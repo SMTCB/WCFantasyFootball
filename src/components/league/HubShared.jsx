@@ -133,20 +133,20 @@ export function HubTopbar({ leagueName = 'Loading…', memberCount = 0, gw = '�
 }
 
 // League hub navigation — Chat and Frontpage live in Clubhouse (CH-5); Bets restored at league level (DATA-5).
-// squad / market / live are separate routes; callers navigate when one is picked.
-export const ROUTE_TABS = ['squad', 'market', 'live'];
+// squad / market are separate routes; callers navigate when one is picked.
+export const ROUTE_TABS = ['squad', 'market'];
 
-// One tab row (redesign): H2H sits under Standings, Market report under Recap, Betting under Bets.
+// One tab row (redesign). Matchweek (MD-6) replaced Standings and Live: the season table and
+// H2H fixtures sit under it, Market report under Recap, Betting under Bets.
 // Those views stay separate; HubSubSwitch moves between them.
-const HUB_GROUP = { h2h: 'leaderboard', market_report: 'recap', betting: 'bets' };
+const HUB_GROUP = { table: 'matchweek', h2h: 'matchweek', leaderboard: 'matchweek', live: 'matchweek', market_report: 'recap', betting: 'bets' };
 export const hubGroupOf = (tab) => HUB_GROUP[tab] ?? tab;
 
 function hubTabList({ notifyBets, notifyTrading, isDraftLeague }) {
   return [
-    { id: 'leaderboard', label: 'Standings' },
+    { id: 'matchweek',   label: 'Matchweek' },
     { id: 'squad',       label: 'Squad' },
     { id: 'market',      label: 'Market' },
-    { id: 'live',        label: 'Live' },
     { id: '|' },
     { id: 'recap',       label: 'Recap' },
     { id: 'bets',        label: 'Bets',    notify: notifyBets },
@@ -157,7 +157,7 @@ function hubTabList({ notifyBets, notifyTrading, isDraftLeague }) {
   ];
 }
 
-export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, isDraftLeague = false }) {
+export function HubTabs({ active = 'matchweek', onTab, isCommissioner = false, notifyBets = false, notifyTrading = false, isDraftLeague = false }) {
   return <HubTabRow tabs={hubTabList({ isCommissioner, notifyBets, notifyTrading, isDraftLeague })} active={hubGroupOf(active)} onTab={onTab} />;
 }
 
@@ -165,7 +165,7 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
 export function HubSubSwitch({ active, onTab, h2hEnabled = false }) {
   const group = hubGroupOf(active);
   const options = {
-    leaderboard: [{ id: 'leaderboard', label: 'Table' }, ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H fixtures' }] : [])],
+    matchweek: [{ id: 'matchweek', label: 'This week' }, { id: 'table', label: 'Season table' }, ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H fixtures' }] : [])],
     recap: [{ id: 'recap', label: 'Scores' }, { id: 'market_report', label: 'Transfers' }],
     bets: [{ id: 'bets', label: 'My bets' }, { id: 'betting', label: 'Leaderboard' }],
   }[group];
@@ -187,7 +187,7 @@ export function HubSubSwitch({ active, onTab, h2hEnabled = false }) {
   );
 }
 
-// Same tab row for the Squad / Market / Live routes, scoped to one league.
+// Same tab row for the Squad / Market routes, scoped to one league.
 export function LeagueRouteTabs({ active, leagueId }) {
   const navigate = useNavigate();
   if (!leagueId) return null;
