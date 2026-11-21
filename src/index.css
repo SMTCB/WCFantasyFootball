@@ -635,6 +635,57 @@ button, a {
   .ffl-btn__spinner { animation: none; opacity: 0.7; }
 }
 
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+/* Used by <TextInput> and <Select> (src/components), and directly as a class
+   on raw <input>/<select>/<textarea> in files under LeagueScreen, which cannot
+   import those components (Rolldown TDZ rule in CLAUDE.md). Same corners and
+   44px touch target as .ffl-btn. */
+.ffl-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ffl-field__label {
+  display: block;
+  font-family: 'Archivo', sans-serif;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.ffl-field__label[data-error="true"] { color: var(--danger); }
+.ffl-field__hint { font-size: var(--fs-micro); color: var(--mute); }
+.ffl-field__error { font-size: var(--fs-micro); color: var(--danger); font-weight: 600; }
+
+.ffl-input {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  background: var(--elev);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-family: 'Archivo', sans-serif;
+  font-size: var(--fs-body);
+  color: var(--paper);
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+textarea.ffl-input { min-height: 88px; resize: vertical; line-height: var(--lh-body); }
+.ffl-input::placeholder { color: var(--mute); opacity: 1; }
+.ffl-input:hover:not(:disabled) { border-color: rgba(24, 32, 46, 0.25); }
+.ffl-input:focus { border-color: var(--accent); background: var(--card); }
+.ffl-input[aria-invalid="true"] { border-color: var(--danger); }
+.ffl-input:disabled { opacity: 0.6; cursor: not-allowed; }
+.ffl-input--sm { min-height: 36px; padding: 6px 10px; font-size: var(--fs-label); }
+
+select.ffl-input {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%235C6878' stroke-width='1.6' d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Skeleton — reusable loading placeholder */
 /* ─────────────────────────────────────────────────────────────────────────── */

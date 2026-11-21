@@ -13,7 +13,7 @@ function DriverSelect({ label, value, onChange, exclude = [], disabled }) {
         value={value ?? ''}
         onChange={e => onChange(e.target.value || null)}
         disabled={disabled}
-        style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: value ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1 }}
+        className="ffl-input" style={{ color: value ? 'var(--paper)' : 'var(--mute)', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1 }}
       >
         <option value="">Select driver…</option>
         {DRIVERS.filter(d => !exclude.includes(d) || d === value).map(d => (
@@ -189,7 +189,7 @@ export default function F1RacePickForm({ race, paddock }) {
               value={team ?? ''}
               onChange={e => { editedRef.current = true; setTeam(e.target.value || null); }}
               disabled={isLocked}
-              style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: team ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
+              className="ffl-input" style={{ color: team ? 'var(--paper)' : 'var(--mute)', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
             >
               <option value="">Select team…</option>
               {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -221,7 +221,7 @@ export default function F1RacePickForm({ race, paddock }) {
                   value={special ?? ''}
                   onChange={e => { editedRef.current = true; setSpecial(e.target.value || null); }}
                   disabled={isLocked}
-                  style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: special ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
+                  className="ffl-input" style={{ color: special ? 'var(--paper)' : 'var(--mute)', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
                 >
                   <option value="">Select team…</option>
                   {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}

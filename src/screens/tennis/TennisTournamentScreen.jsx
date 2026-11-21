@@ -204,7 +204,7 @@ export default function TennisTournamentScreen() {
                       <select
                         value={slots[slotKey] ?? ''}
                         onChange={e => setSlots(prev => ({ ...prev, [slotKey]: e.target.value || null }))}
-                        style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: slots[slotKey] ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none' }}
+                        className="ffl-input" style={{ color: slots[slotKey] ? 'var(--paper)' : 'var(--mute)' }}
                       >
                         <option value="">Select player…</option>
                         {tierPlayers(tier).map(p => (

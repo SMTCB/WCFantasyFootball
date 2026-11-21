@@ -68,12 +68,7 @@ function InlineOptions({ options, onSelect, submitting, selectedKey }) {
         placeholder="Search player or club…"
         value={search}
         onChange={e => setSearch(e.target.value)}
-        style={{
-          width: '100%', marginBottom: 6, background: 'var(--elev)',
-          border: '1px solid var(--rule)', borderRadius: 3,
-          color: 'var(--paper)', fontSize: 'var(--fs-label)', padding: '7px 10px', outline: 'none',
-          boxSizing: 'border-box',
-        }}
+        className="ffl-input ffl-input--sm" style={{ marginBottom: 6 }}
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 200, overflowY: 'auto' }}>
         {filtered.length === 0 && (

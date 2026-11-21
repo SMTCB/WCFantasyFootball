@@ -1,144 +1,57 @@
 /**
- * Select — unified dropdown input with label, error, and helper text.
+ * Select — the shared dropdown: label, select, hint and error.
+ * Looks come from `.ffl-field` / `select.ffl-input` in index.css.
  *
- * Replaces scattered inline select definitions across AuthScreen, LeagueScreen, AdminSeedScreen.
- * Handles: label positioning, error states, helper text, focus/blur styling, accessibility.
- *
- * Usage:
- *   <Select label="Position" value={pos} onChange={(e) => setPos(e.target.value)}>
+ *   <Select label="Position" value={pos} onChange={e => setPos(e.target.value)}>
  *     <option value="">All positions</option>
  *     <option value="GK">Goalkeeper</option>
- *     <option value="DEF">Defender</option>
  *   </Select>
  *
- *   <Select label="Competition" value={comp} onChange={...} error="Required field" required>
- *     <option value="">Select a competition...</option>
- *     {competitions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
- *   </Select>
+ * Other props go straight to the <select>. `size="sm"` gives the 36px compact
+ * field. Files under LeagueScreen cannot import this (Rolldown TDZ rule): they
+ * put className="ffl-input" on a raw <select> instead.
  */
-
-import { useState } from 'react';
+import { useId } from 'react';
 
 export default function Select({
   label,
-  value = '',
-  onChange,
-  onBlur,
-  onFocus,
   error,
   helperText,
-  disabled = false,
   required = false,
-  name,
   id,
+  name,
+  size,
+  className = '',
+  fieldClassName = '',
+  fieldStyle,
   children,
   ...rest
 }) {
-  const [isFocused, setIsFocused] = useState(false);
-  const selectId = id || name || label?.toLowerCase().replace(/\s+/g, '-');
+  const autoId = useId();
+  const selectId = id || (name ? `f-${name}` : autoId);
   const hasError = Boolean(error);
-
-  const handleFocus = (e) => {
-    setIsFocused(true);
-    onFocus?.(e);
-  };
-
-  const handleBlur = (e) => {
-    setIsFocused(false);
-    onBlur?.(e);
-  };
+  const describedBy = hasError ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div className={`ffl-field ${fieldClassName}`} style={fieldStyle}>
       {label && (
-        <label
-          htmlFor={selectId}
-          style={{
-            fontFamily: 'Archivo, sans-serif',
-            fontSize: 'var(--fs-micro)',
-            color: hasError ? 'var(--danger)' : 'var(--mute)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            display: 'block',
-          }}
-        >
+        <label htmlFor={selectId} className="ffl-field__label" data-error={hasError || undefined}>
           {label}
-          {required && <span style={{ color: 'var(--danger)' }}> *</span>}
         </label>
       )}
-
       <select
         id={selectId}
         name={name}
-        value={value}
-        onChange={onChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        disabled={disabled}
-        aria-invalid={hasError}
-        aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
-        style={{
-          width: '100%',
-          fontFamily: 'Archivo, sans-serif',
-          fontSize: 'var(--fs-label)',
-          color: disabled ? 'var(--mute)' : 'var(--paper)',
-          padding: '8px 12px',
-          background: disabled ? 'rgba(242, 238, 229, 0.02)' : 'rgba(242, 238, 229, 0.04)',
-          border: `1px solid ${hasError ? 'var(--danger)' : 'var(--rule)'}`,
-          borderRadius: 4,
-          outline: 'none',
-          transition: 'all 150ms',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.6 : 1,
-          appearance: 'none',
-          paddingRight: '28px',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23f2eee5' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 8px center',
-        }}
-        onMouseEnter={(e) => {
-          if (!disabled && !isFocused) {
-            e.currentTarget.style.borderColor = hasError ? 'var(--danger)' : 'rgba(242, 238, 229, 0.08)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!disabled && !isFocused) {
-            e.currentTarget.style.borderColor = hasError ? 'var(--danger)' : 'var(--rule)';
-          }
-        }}
+        required={required}
+        aria-invalid={hasError || undefined}
+        aria-describedby={describedBy}
+        className={`ffl-input ${size === 'sm' ? 'ffl-input--sm' : ''} ${className}`}
         {...rest}
       >
         {children}
       </select>
-
-      {error && (
-        <div
-          id={`${selectId}-error`}
-          style={{
-            fontFamily: 'Archivo, sans-serif',
-            fontSize: 'var(--fs-micro)',
-            color: 'var(--danger)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {helperText && !error && (
-        <div
-          id={`${selectId}-helper`}
-          style={{
-            fontFamily: 'Archivo, sans-serif',
-            fontSize: 'var(--fs-micro)',
-            color: 'var(--mute)',
-            letterSpacing: '0.05em',
-          }}
-        >
-          {helperText}
-        </div>
-      )}
+      {hasError && <div id={`${selectId}-error`} className="ffl-field__error" role="alert">{error}</div>}
+      {helperText && !hasError && <div id={`${selectId}-helper`} className="ffl-field__hint">{helperText}</div>}
     </div>
   );
 }

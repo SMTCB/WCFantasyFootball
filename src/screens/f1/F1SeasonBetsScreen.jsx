@@ -19,11 +19,11 @@ const SEASON_FIELDS = [
 ];
 
 function FieldInput({ field, value, onChange, disabled, races }) {
-  const style = { width: '100%', padding: '11px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: value ? 'var(--paper)' : 'var(--mute)', background: 'var(--card)', outline: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1, boxSizing: 'border-box' };
+  const style = { color: value ? 'var(--paper)' : 'var(--mute)' };
 
   if (field.type === 'driver') {
     return (
-      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} style={style}>
+      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} className="ffl-input" style={style}>
         <option value="">Select driver…</option>
         {DRIVERS.map(d => <option key={d} value={d}>{d}</option>)}
       </select>
@@ -31,7 +31,7 @@ function FieldInput({ field, value, onChange, disabled, races }) {
   }
   if (field.type === 'team') {
     return (
-      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} style={style}>
+      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} className="ffl-input" style={style}>
         <option value="">Select team…</option>
         {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
       </select>
@@ -39,7 +39,7 @@ function FieldInput({ field, value, onChange, disabled, races }) {
   }
   if (field.type === 'race') {
     return (
-      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} style={style}>
+      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} className="ffl-input" style={style}>
         <option value="">Select race…</option>
         {races.map(r => <option key={r.round_number} value={r.gp_name}>R{r.round_number} — {r.gp_name}</option>)}
       </select>

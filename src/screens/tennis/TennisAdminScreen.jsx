@@ -153,7 +153,7 @@ export default function TennisAdminScreen() {
             <select
               value={selected ?? ''}
               onChange={e => { setSelected(e.target.value || null); setMsg(''); setErr(''); setEliminatedIds([]); }}
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+              className="ffl-input"
             >
               <option value="">— Choose —</option>
               {tournaments.map(x => (
@@ -199,7 +199,7 @@ export default function TennisAdminScreen() {
                   onChange={e => setPlayersJson(e.target.value)}
                   rows={5}
                   placeholder='[{"player_name":"Djokovic","seed":1,"tier":1,"nationality":"SRB"}]'
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                  className="ffl-input ffl-input--sm"
                 />
                 <AdminBtn label="Seed Players" onClick={seedPlayers} disabled={busy || !playersJson.trim()} />
               </Section>
@@ -217,7 +217,7 @@ export default function TennisAdminScreen() {
                     <select
                       value={eliminatedRound}
                       onChange={e => setEliminatedRound(e.target.value)}
-                      style={{ padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                      className="ffl-input ffl-input--sm"
                     >
                       {ROUND_REACHED_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
@@ -229,7 +229,7 @@ export default function TennisAdminScreen() {
                       min={0}
                       value={eliminatedRoundsWon}
                       onChange={e => setEliminatedRoundsWon(e.target.value)}
-                      style={{ width: 80, padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                      className="ffl-input ffl-input--sm" style={{ width: 80 }}
                     />
                   </label>
                 </div>
@@ -252,14 +252,14 @@ export default function TennisAdminScreen() {
                     value={atpMatchNumber}
                     onChange={e => setAtpMatchNumber(e.target.value)}
                     placeholder="Match # (1–15)"
-                    style={{ flex: 1, minWidth: 100, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                    className="ffl-input" style={{ flex: 1, minWidth: 100 }}
                   />
                   <input
                     type="text"
                     value={atpWinnerId}
                     onChange={e => setAtpWinnerId(e.target.value)}
                     placeholder="Winner player UUID"
-                    style={{ flex: 2, minWidth: 180, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                    className="ffl-input ffl-input--sm" style={{ flex: 2, minWidth: 180 }}
                   />
                 </div>
                 <AdminBtn label="Enter Result" onClick={enterAtpResult} disabled={busy || !atpMatchNumber || !atpWinnerId} />

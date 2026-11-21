@@ -138,8 +138,8 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                 value={amount}
                 onChange={e => { setAmount(e.target.value); setErr(null); }}
                 placeholder={`€${minNext.toFixed(1)}M+`}
-                className="flex-1 bg-transparent outline-none text-white text-[12px] font-bold px-2 py-1.5"
-                style={{ border: '1px solid var(--rule)', minWidth: 0 }}
+                className="ffl-input ffl-input--sm"
+                style={{ flex: 1, minWidth: 0, fontWeight: 700 }}
               />
               <button
                 onClick={handleBid}

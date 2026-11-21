@@ -18,6 +18,7 @@
 
 import { Component } from 'react';
 import * as Sentry from '@sentry/react';
+import Button from './Button';
 
 // ── Crash reporter ─────────────────────────────────────────────────────────────
 // Dual-writes to: (1) Sentry (when DSN configured), (2) report_client_error RPC
@@ -163,22 +164,10 @@ export default class ErrorBoundary extends Component {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button
-            onClick={this.handleReload}
-            style={{
-              padding: '12px 28px',
-              background: 'var(--accent)',
-              color: 'var(--on-accent)',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: 'var(--fs-label)',
-              fontWeight: 800,
-              cursor: 'pointer',
-              fontFamily: 'Archivo Black, sans-serif',
-            }}
-          >
+          <Button
+            onClick={this.handleReload}>
             Reload
-          </button>
+          </Button>
           <button
             onClick={this.handleGoHome}
             style={{

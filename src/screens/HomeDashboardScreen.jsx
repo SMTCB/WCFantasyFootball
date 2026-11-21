@@ -18,6 +18,7 @@ import { useCircleMembersAcross } from '../hooks/useCircleMembersAcross';
 import ClubhouseCard from '../components/home/ClubhouseCard';
 import { useHereNowAcross } from '../hooks/useHereNow';
 import { useAuth } from '../hooks/useAuth';
+import Button from '../components/Button';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -94,24 +95,20 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
                 onChange={e => setNewName(e.target.value)}
                 placeholder="e.g. The Friday Night Crew"
                 maxLength={40}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--elev)', minHeight: 'var(--tap)', outline: 'none', boxSizing: 'border-box' }}
+                className="ffl-input"
               />
               {createErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{createErr}</div>}
-              <button
+              <Button fullWidth
                 type="submit"
-                disabled={createBusy || !newName.trim()}
-                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: createBusy || !newName.trim() ? 'default' : 'pointer', opacity: createBusy || !newName.trim() ? 0.6 : 1 }}
-              >
+                disabled={createBusy || !newName.trim()}>
                 {createBusy ? 'Creating…' : 'Create Clubhouse'}
-              </button>
+              </Button>
             </form>
           ) : (
-            <button
-              onClick={() => setCreating(true)}
-              style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: 'pointer' }}
-            >
+            <Button fullWidth
+              onClick={() => setCreating(true)}>
               Create a new Clubhouse
-            </button>
+            </Button>
           )}
         </div>
 
@@ -127,16 +124,14 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
               onChange={e => setCode(e.target.value.toUpperCase())}
               placeholder="FK-XXXXX"
               maxLength={8}
-              style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...MONO, fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
+              className="ffl-input" style={{ ...MONO, fontWeight: 600, letterSpacing: '0.1em' }}
             />
             {joinErr && <div style={{ ...BODY, fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{joinErr}</div>}
-            <button
+            <Button fullWidth
               type="submit"
-              disabled={joinBusy || code.trim().length < 6}
-              style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, minHeight: 'var(--tap)', cursor: joinBusy || code.trim().length < 6 ? 'default' : 'pointer', opacity: joinBusy || code.trim().length < 6 ? 0.6 : 1 }}
-            >
+              disabled={joinBusy || code.trim().length < 6}>
               {joinBusy ? 'Joining…' : 'Join Clubhouse'}
-            </button>
+            </Button>
           </form>
         </div>
       </div>
@@ -151,7 +146,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search by name…"
-            style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', minHeight: 'var(--tap)', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--elev)', outline: 'none' }}
+            className="ffl-input" style={{ flex: 1 }}
           />
           <button
             type="submit"
@@ -183,13 +178,11 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
                 {r.already_member ? (
                   <span style={{ fontSize: 'var(--fs-label)', color: 'var(--positive)', fontWeight: 700 }}>Joined ✓</span>
                 ) : (
-                  <button
+                  <Button size="sm"
                     onClick={() => handleSearchJoin(r.invite_code)}
-                    disabled={searchJoining === r.invite_code}
-                    style={{ minHeight: 'var(--tap)', padding: '8px 16px', background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', ...BODY, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                  >
+                    disabled={searchJoining === r.invite_code}>
                     {searchJoining === r.invite_code ? 'Joining…' : 'Join'}
-                  </button>
+                  </Button>
                 )}
               </div>
             ))}

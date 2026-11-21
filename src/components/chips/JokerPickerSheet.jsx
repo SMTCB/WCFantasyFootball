@@ -46,11 +46,7 @@ export default function JokerPickerSheet({ tournamentId, ownedIds, onPick, onClo
           <input
             type="search" value={query} onChange={e => setQuery(e.target.value)}
             placeholder="Search players" aria-label="Search players"
-            style={{
-              width: '100%', minHeight: 44, padding: '0 12px', marginBottom: 8,
-              background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 0,
-              color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)',
-            }}
+            className="ffl-input" style={{ marginBottom: 8 }}
           />
           <div role="group" aria-label="Filter by position" className="flex gap-2 mb-2" style={{ overflowX: 'auto' }}>
             {POSITIONS.map(p => (

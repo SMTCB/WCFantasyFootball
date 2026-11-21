@@ -6859,4 +6859,10 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - Tests: `platform.spec.js` adds no Sell, the Market button on phone and desktop, no fixtures under the phone pitch, no overlap with five midfielders at 1280px and 375px, the bench in view on desktop sub out, and The Room composer at the bottom edge on phone and desktop.
 - Checked: `npm run lint`; Rolldown TDZ check on the changed modules; `npm run build`; `platform.spec.js` on both browsers.
 
+## S16 part 2: one input look, shared form buttons (2026-11-21)
+
+- UI-AUDIT-FRM-04 (part): a shared `.ffl-input` style (44px, 36px small size, focus and error states, select chevron) replaces the hand-written styles on about 105 fields: sign-in, new competition, clubhouse create and join, the commissioner panel, the bet creator and bet forms, the auction bid, the Joker picker, onboarding, settings, F1 and tennis forms and admin screens. `TextInput` and `Select` were rebuilt on it, with label, hint, error and `aria-invalid`. The auction bid box had white text on the light theme; fixed. Over-budget stakes now set `aria-invalid`.
+- UI-AUDIT-SYS-02 (part): form and empty-state buttons now use the shared `Button` (new competition, error and not-found screens, tennis and Home empty states), or its `ffl-btn` classes where importing `Button` would break the Rolldown rule (Clubhouse screen, tennis home, `ErrorState`).
+- Checked: `npm run lint`; `npx madge --circular src/` and the TDZ import check; `npm run build`; `platform.spec.js` on both browsers; the forms seen at 375px and 1280px.
+
 Last Updated: 2026-11-21

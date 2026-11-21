@@ -42,11 +42,6 @@ const _HUES = ['#00B4D8','#E0A800','#A855F7','#22C55E','#F59E0B','#34D399','#7DD
 function mgrHue(str = '') { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff; return _HUES[h % _HUES.length]; }
 const mgrMono = (u = '') => u.substring(0, 3).toUpperCase() || '???';
 
-const inputStyle = {
-  background: 'var(--bg)', border: '1px solid var(--rule)', color: 'var(--paper)',
-  padding: '10px 12px', fontFamily: MONO, fontSize: 'var(--fs-label)',
-  outline: 'none', width: '100%', boxSizing: 'border-box',
-};
 const btnBase = {
   padding: '11px 16px', border: 0, cursor: 'pointer',
   fontFamily: DISPLAY, fontSize: 'var(--fs-label)', fontWeight: 400,
@@ -629,7 +624,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         placeholder="Type answer key manually…"
                         value={currentAnswers[0] ?? ''}
                         onChange={e => setBetResolutionAnswers(e.target.value ? [e.target.value] : [])}
-                        style={{ ...inputStyle, marginTop: 6, fontSize: 'var(--fs-label)' }}
+                        className="ffl-input" style={{ marginTop: 6 }}
                       />
                     )}
                     {/* Write-in input — only offered when predefined options exist */}
@@ -648,7 +643,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                             setCustomAnswerText('');
                             setCustomAnswerOpen(false);
                           }}
-                          style={{ ...inputStyle, fontSize: 'var(--fs-label)', flex: 1 }}
+                          className="ffl-input" style={{ flex: 1 }}
                         />
                         <button
                           disabled={!customAnswerText.trim()}
@@ -1421,17 +1416,6 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const inp = {
-    padding: '7px 10px',
-    borderRadius: 'var(--radius)',
-    border: '1px solid var(--rule)',
-    background: 'var(--bg)',
-    color: 'var(--paper)',
-    fontFamily: MONO,
-    fontSize: 'var(--fs-label)',
-    width: '100%',
-    boxSizing: 'border-box',
-  };
 
   const row = { display: 'flex', flexDirection: 'column', gap: 4 };
   const lbl = { fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' };
@@ -1440,17 +1424,17 @@ function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={row}>
         <span style={lbl}>COIN ENTRY FEE (0 = free)</span>
-        <input type="number" min={0} step={10} value={entryFee} onChange={e => setEntryFee(e.target.value)} placeholder="0" style={inp} />
+        <input type="number" min={0} step={10} value={entryFee} onChange={e => setEntryFee(e.target.value)} placeholder="0" className="ffl-input" />
         <span style={{ ...lbl, lineHeight: 1.5 }}>Charged to joiners via join_league_by_code. Leave blank or 0 to disable.</span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div style={row}>
           <span style={lbl}>Min stake</span>
-          <input type="number" min={1} value={minStake} onChange={e => setMinStake(e.target.value)} style={inp} />
+          <input type="number" min={1} value={minStake} onChange={e => setMinStake(e.target.value)} className="ffl-input" />
         </div>
         <div style={row}>
           <span style={lbl}>Max stake</span>
-          <input type="number" min={1} max={10000} value={maxStake} onChange={e => setMaxStake(e.target.value)} style={inp} />
+          <input type="number" min={1} max={10000} value={maxStake} onChange={e => setMaxStake(e.target.value)} className="ffl-input" />
         </div>
       </div>
       <ToggleSwitch
@@ -1705,7 +1689,7 @@ function NextDraftPicker({ leagueId, nextDraft, lock, setBusy, say, reload }) {
         min={minLocal}
         max={maxLocal}
         onChange={e => setAt(e.target.value)}
-        style={inputStyle}
+        className="ffl-input"
       />
       <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.7 }}>
         {nextDraft.first_kickoff_at
@@ -1928,7 +1912,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
                   min={minLocal}
                   max={maxLocal}
                   onChange={e => setAutoAt(e.target.value)}
-                  style={inputStyle}
+                  className="ffl-input"
                 />
               )}
             </div>
@@ -2134,16 +2118,16 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>OPENS</span>
-                        <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
+                        <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} className="ffl-input" />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>CLOSES</span>
-                        <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
+                        <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} className="ffl-input" />
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
-                      <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
+                      <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" className="ffl-input" />
                     </div>
                   </>
                 )}
@@ -2267,7 +2251,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   <div style={{ height: 1, background: 'var(--rule)', margin: '2px 0' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
-                    <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={inputStyle} />
+                    <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} className="ffl-input" />
                   </div>
                   <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-label)' }}>Set deadline</button>
                   <div style={{ height: 1, background: 'var(--rule)', margin: '4px 0' }} />
@@ -2361,7 +2345,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   Only if a specific match shows incorrect points (e.g. a data correction from the provider arrived after scoring ran). Enter the fixture ID and recalculate — safe to re-run, overwrites with latest data.
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
-                  <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="Fixture ID — e.g. f-1219435455" style={{ ...inputStyle, flex: 1 }} />
+                  <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="Fixture ID — e.g. f-1219435455" className="ffl-input" style={{ flex: 1 }} />
                   <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={compactBtn('var(--warn)', commLoading || !scoreFixtureId)}>RECALC ↯</button>
                 </div>
               </div>
@@ -2504,7 +2488,7 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
           <select
             value={startMatchday}
             onChange={e => setStartMatchday(e.target.value)}
-            style={{ ...inputStyle, cursor: 'pointer', flex: 1 }}
+            className="ffl-input" style={{ flex: 1 }}
           >
             {matchdays.map(md => (
               <option key={md} value={md}>{md}</option>
@@ -2767,7 +2751,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
               value={quoteText}
               onChange={e => setQuoteText(e.target.value)}
               maxLength={280}
-              style={{ ...inputStyle, colorScheme: 'dark' }}
+              className="ffl-input"
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -2778,7 +2762,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
               value={quoteAuthor}
               onChange={e => setQuoteAuthor(e.target.value)}
               maxLength={60}
-              style={{ ...inputStyle, colorScheme: 'dark' }}
+              className="ffl-input"
             />
           </div>
         </>
@@ -2796,7 +2780,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
               value={headline}
               onChange={e => setHeadline(e.target.value)}
               maxLength={200}
-              style={{ ...inputStyle, colorScheme: 'dark' }}
+              className="ffl-input"
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -2810,7 +2794,7 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
               value={bulletsText}
               onChange={e => setBulletsText(e.target.value)}
               rows={3}
-              style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, colorScheme: 'dark' }}
+              className="ffl-input"
             />
           </div>
         </>
@@ -2954,7 +2938,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       archiveLeague, unarchiveLeague,
     } = commissioner;
 
-    const mobInput = { ...inputStyle };
     const mobBtn = { ...btnBase, width: '100%', fontSize: 'var(--fs-label)' };
 
     // Allocation state (mobile)
@@ -3019,15 +3002,15 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>OPENS</span>
-                  <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
+                  <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} className="ffl-input" />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>CLOSES</span>
-                  <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 'var(--fs-label)' }} />
+                  <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} className="ffl-input" />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
-                  <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={mobInput} />
+                  <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" className="ffl-input" />
                 </div>
               </>
             )}
@@ -3114,7 +3097,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
-                  <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={mobInput} />
+                  <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} className="ffl-input" />
                 </div>
                 <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>Set deadline</button>
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · €100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
@@ -3184,7 +3167,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>Fixture id</span>
-              <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={mobInput} />
+              <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" className="ffl-input" />
             </div>
             <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: commLoading || !scoreFixtureId ? 'var(--elev)' : 'var(--warn)', color: commLoading || !scoreFixtureId ? 'var(--mute)' : 'var(--bg)', cursor: commLoading || !scoreFixtureId ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
           </MobLifecycleCard>

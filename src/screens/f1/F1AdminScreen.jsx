@@ -122,7 +122,6 @@ export default function F1AdminScreen() {
     opacity: busy ? 0.7 : 1,
   });
 
-  const selectStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' };
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
@@ -152,7 +151,7 @@ export default function F1AdminScreen() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Select race</label>
-              <select value={selectedId ?? ''} onChange={e => setSelectedId(e.target.value)} style={selectStyle}>
+              <select value={selectedId ?? ''} onChange={e => setSelectedId(e.target.value)} className="ffl-input">
                 {races.map(r => <option key={r.id} value={r.id}>R{r.round_number} — {r.gp_name} {r.is_scored ? '✓' : ''}</option>)}
               </select>
             </div>
@@ -168,7 +167,7 @@ export default function F1AdminScreen() {
                   return (
                     <div key={label}>
                       <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>{label}</label>
-                      <select value={vals[i]} onChange={e => setters[i](e.target.value)} style={selectStyle}>
+                      <select value={vals[i]} onChange={e => setters[i](e.target.value)} className="ffl-input">
                         <option value="">Select driver…</option>
                         {DRIVERS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
@@ -178,7 +177,7 @@ export default function F1AdminScreen() {
 
                 <div>
                   <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Team — most points</label>
-                  <select value={team} onChange={e => setTeam(e.target.value)} style={selectStyle}>
+                  <select value={team} onChange={e => setTeam(e.target.value)} className="ffl-input">
                     <option value="">Select team…</option>
                     {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -191,7 +190,7 @@ export default function F1AdminScreen() {
                       value={specialAns}
                       onChange={e => setSpecialAns(e.target.value)}
                       placeholder="Enter answer…"
-                      style={{ ...selectStyle, fontFamily: 'Archivo, sans-serif' }}
+                      className="ffl-input"
                     />
                   </div>
                 )}
@@ -235,7 +234,7 @@ export default function F1AdminScreen() {
                   value={yearFields[key] ?? ''}
                   onChange={e => setYearFields(f => ({ ...f, [key]: e.target.value || null }))}
                   placeholder="Enter result…"
-                  style={{ ...selectStyle, fontFamily: 'Archivo, sans-serif' }}
+                  className="ffl-input"
                 />
               </div>
             ))}

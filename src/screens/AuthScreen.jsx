@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import BrandMark from '../components/BrandMark';
 import Button from '../components/Button';
+import TextInput from '../components/TextInput';
 
 // ── Tab types ──────────────────────────────────────────────────────────────────
 const TAB_SIGNIN  = 'signin';
@@ -125,27 +126,6 @@ export default function AuthScreen() {
     setTimeout(() => navigate('/', { replace: true }), 1500);
   };
 
-  // ── Shared field style ───────────────────────────────────────────────────────
-  const fieldStyle = {
-    width: '100%',
-    minHeight: '44px',
-    background: 'var(--elev)',
-    border: '1px solid var(--rule)',
-    borderRadius: 'var(--radius-md)',
-    padding: '12px 16px',
-    fontSize: 'var(--fs-body)',
-    color: 'var(--paper)',
-    fontFamily: 'Archivo, sans-serif',
-  };
-
-  const labelStyle = {
-    display: 'block',
-    fontSize: 'var(--fs-label)',
-    fontWeight: 700,
-    color: 'var(--mute)',
-    marginBottom: '6px',
-    fontFamily: 'Archivo, sans-serif',
-  };
 
 
   // ── Recover password form (from email link) ──────────────────────────────────
@@ -156,12 +136,8 @@ export default function AuthScreen() {
           Set New Password
         </h2>
         <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="New Password" labelStyle={labelStyle} htmlFor="auth-recover-password">
-            <input id="auth-recover-password" type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Min. 8 characters" />
-          </Field>
-          <Field label="Confirm Password" labelStyle={labelStyle} htmlFor="auth-recover-confirm">
-            <input id="auth-recover-confirm" type="password" style={fieldStyle} value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" />
-          </Field>
+          <TextInput label="New Password" id="auth-recover-password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Min. 8 characters" />
+          <TextInput label="Confirm Password" id="auth-recover-confirm" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" />
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
           <Button type="submit" size="lg" fullWidth loading={loading}>
@@ -238,9 +214,7 @@ export default function AuthScreen() {
           Enter your email and we'll send a reset link.
         </p>
         <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="Email" labelStyle={labelStyle} htmlFor="auth-reset-email">
-            <input id="auth-reset-email" type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
-          </Field>
+          <TextInput label="Email" id="auth-reset-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
           <Button type="submit" size="lg" fullWidth loading={loading}>
@@ -288,12 +262,8 @@ export default function AuthScreen() {
       {/* Sign In */}
       {tab === TAB_SIGNIN && (
         <form role="tabpanel" id="auth-panel-signin" aria-labelledby="auth-tab-signin" onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="Email" labelStyle={labelStyle} htmlFor="auth-signin-email">
-            <input id="auth-signin-email" type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
-          </Field>
-          <Field label="Password" labelStyle={labelStyle} htmlFor="auth-signin-password">
-            <input id="auth-signin-password" type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" autoComplete="current-password" />
-          </Field>
+          <TextInput label="Email" id="auth-signin-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
+          <TextInput label="Password" id="auth-signin-password" type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" autoComplete="current-password" />
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
           <Button type="submit" size="lg" fullWidth loading={loading}>
@@ -313,18 +283,10 @@ export default function AuthScreen() {
       {/* Sign Up */}
       {tab === TAB_SIGNUP && (
         <form role="tabpanel" id="auth-panel-signup" aria-labelledby="auth-tab-signup" onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="Username" labelStyle={labelStyle} htmlFor="auth-signup-username">
-            <input id="auth-signup-username" type="text" style={fieldStyle} value={username} onChange={e => setUsername(e.target.value)} required placeholder="Your manager name" autoComplete="username" />
-          </Field>
-          <Field label="Email" labelStyle={labelStyle} htmlFor="auth-signup-email">
-            <input id="auth-signup-email" type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
-          </Field>
-          <Field label="Password" labelStyle={labelStyle} htmlFor="auth-signup-password">
-            <input id="auth-signup-password" type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters" autoComplete="new-password" minLength={8} />
-          </Field>
-          <Field label="Confirm Password" labelStyle={labelStyle} htmlFor="auth-signup-confirm">
-            <input id="auth-signup-confirm" type="password" style={fieldStyle} value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" autoComplete="new-password" />
-          </Field>
+          <TextInput label="Username" id="auth-signup-username" type="text" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Your manager name" autoComplete="username" />
+          <TextInput label="Email" id="auth-signup-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
+          <TextInput label="Password" id="auth-signup-password" type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters" autoComplete="new-password" minLength={8} />
+          <TextInput label="Confirm Password" id="auth-signup-confirm" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" autoComplete="new-password" />
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
           <Button type="submit" size="lg" fullWidth loading={loading}>
@@ -365,15 +327,6 @@ function AuthShell({ children, pitch = false, cta = null }) {
       <div style={{ width: '100%', maxWidth: '400px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '32px' }}>
         {children}
       </div>
-    </div>
-  );
-}
-
-function Field({ label, labelStyle, htmlFor, children }) {
-  return (
-    <div>
-      <label style={labelStyle} htmlFor={htmlFor}>{label}</label>
-      {children}
     </div>
   );
 }

@@ -5,14 +5,9 @@ export default function ErrorState({ title = "Couldn't load this", body = 'Check
       <div style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--crit)' }}>{title}</div>
       <p style={{ margin: '6px auto 0', maxWidth: 360, fontSize: 'var(--fs-body)', color: 'var(--ink-soft)' }}>{body}</p>
       {onRetry && (
-        <button
+        <button className="ffl-btn ffl-btn--primary ffl-btn--md"
           type="button"
-          onClick={onRetry}
-          style={{
-            marginTop: 16, minHeight: 'var(--tap)', padding: '0 20px', borderRadius: 'var(--radius)',
-            background: 'var(--accent)', color: 'var(--on-accent-solid)', fontWeight: 600, border: 0, cursor: 'pointer',
-          }}
-        >
+          onClick={onRetry} style={{ marginTop: 16 }}>
           Try again
         </button>
       )}

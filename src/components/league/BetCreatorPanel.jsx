@@ -654,7 +654,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     type="datetime-local"
                     value={windowFrom}
                     onChange={e => setWindowFrom(e.target.value)}
-                    style={{ width: '100%', boxSizing: 'border-box', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-body-lg)', padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark' }}
+                    className="ffl-input"
                   />
                 </div>
               )}
@@ -667,7 +667,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                   type="datetime-local"
                   value={deadline}
                   onChange={e => { setDeadline(e.target.value); deadlineEdited.current = true; }}
-                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--elev)', border: '1px solid var(--rule)', color: deadline ? 'var(--paper)' : 'var(--danger)', fontSize: 'var(--fs-body-lg)', padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark' }}
+                  className="ffl-input" style={{ color: deadline ? 'var(--paper)' : 'var(--danger)' }}
                 />
               </div>
               {/* Reward — own row below */}
@@ -679,12 +679,12 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     value={rewardValue}
                     onChange={e => setRewardValue(e.target.value)}
                     min="1"
-                    style={{ width: 80, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-body-lg)', padding: '7px 6px', borderRadius: 3, outline: 'none' }}
+                    className="ffl-input" style={{ width: 80 }}
                   />
                   <select
                     value={rewardType}
                     onChange={e => setRewardType(e.target.value)}
-                    style={{ background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-body-lg)', padding: '7px 6px', borderRadius: 3, outline: 'none' }}
+                    className="ffl-input"
                   >
                     <option value="points">pts</option>
                     <option value="budget">€M</option>
@@ -738,7 +738,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     onChange={e => setOuLine(e.target.value)}
                     step="0.5"
                     min="0"
-                    style={{ width: 90, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-label)', padding: '7px 10px', borderRadius: 3, outline: 'none', fontFamily: MONO, textAlign: 'center' }}
+                    className="ffl-input ffl-input--sm" style={{ width: 90, textAlign: 'center' }}
                   />
                   <div style={{ display: 'flex', gap: 4 }}>
                     {['0.5','1.5','2.5','3.5','4.5'].map(v => (
@@ -791,7 +791,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     placeholder="Search player or club…"
                     value={playerSearch}
                     onChange={e => setPlayerSearch(e.target.value)}
-                    style={{ flex: 1, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-label)', padding: '7px 10px', borderRadius: 3, outline: 'none' }}
+                    className="ffl-input ffl-input--sm" style={{ flex: 1 }}
                   />
                   {['ALL', 'FWD', 'MID', 'DEF', ...(template.allPositions ? ['GK'] : [])].map(pos => (
                     <button className="hit-44"
@@ -874,7 +874,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                         setFreeOptions(next);
                       }}
                       placeholder={`Option ${i + 1}…`}
-                      style={{ flex: 1, background: 'var(--elev)', border: `1px solid ${val.trim() ? 'var(--rule)' : 'var(--rule)'}`, color: 'var(--paper)', fontSize: 'var(--fs-label)', padding: '7px 9px', borderRadius: 3, outline: 'none' }}
+                      className="ffl-input ffl-input--sm" style={{ flex: 1 }}
                     />
                     {val.trim() && (
                       <button
@@ -902,14 +902,14 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 value={title}
                 onChange={e => { setTitle(e.target.value); titleEdited.current = true; }}
                 placeholder="Bet title (auto-filled)"
-                style={{ background: 'var(--elev)', border: '1px solid var(--rule)', color: title ? 'var(--paper)' : 'var(--danger)', fontSize: 'var(--fs-label)', padding: '8px 10px', borderRadius: 3, outline: 'none' }}
+                className="ffl-input ffl-input--sm" style={{ color: title ? 'var(--paper)' : 'var(--danger)' }}
               />
               <textarea
                 value={prompt}
                 onChange={e => { setPrompt(e.target.value); promptEdited.current = true; }}
                 placeholder="Question shown to players (auto-filled)"
                 rows={2}
-                style={{ background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 'var(--fs-label)', padding: '8px 10px', borderRadius: 3, outline: 'none', resize: 'none', fontFamily: "'Archivo', sans-serif" }}
+                className="ffl-input ffl-input--sm"
               />
             </div>
           </div>
