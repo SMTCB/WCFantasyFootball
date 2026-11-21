@@ -106,8 +106,8 @@ export default function WalletScreen() {
       <div
         role="button"
         tabIndex={0}
-        onClick={() => navigate('/challenges')}
-        onKeyDown={e => e.key === 'Enter' && navigate('/challenges')}
+        onClick={() => navigate('/bets')}
+        onKeyDown={e => e.key === 'Enter' && navigate('/bets')}
         style={{
           background: 'var(--card)',
           border: '1px solid var(--rule)',

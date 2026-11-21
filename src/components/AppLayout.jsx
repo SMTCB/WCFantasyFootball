@@ -23,7 +23,7 @@ import {
 // desktop, so the bottom bar no longer duplicates them per-sport.
 const CLUBHOUSE_NAV = [
   { key: 'home',       label: 'Home',   path: '/home',       Icon: NavIconHome },
-  { key: 'bets',       label: 'Bets',   path: '/challenges', also: ['/my-bets', '/wallet'], Icon: NavIconMyBets },
+  { key: 'bets',       label: 'Bets',   path: '/bets',       also: ['/challenges', '/my-bets', '/wallet'], Icon: NavIconMyBets },
   { key: 'you',        label: 'You',    path: '/settings',   Icon: NavIconYou },
 ];
 
@@ -113,6 +113,7 @@ export default function AppLayout({ children }) {
     /^\/f1\/[^/]+\/(picks|standings|report|season)$/.test(location.pathname) ||
     /^\/tennis(\/.*)?$/.test(location.pathname) ||
     location.pathname === '/trophy' ||
+    location.pathname === '/bets' ||
     location.pathname === '/challenges' ||
     location.pathname === '/wallet';
 
@@ -171,7 +172,7 @@ export default function AppLayout({ children }) {
           />
         )}
         <TopBarLink label="Trophies" path="/trophy" Icon={NavIconTrophy} active={location.pathname === '/trophy'} />
-        <TopBarLink label="Bets" path="/challenges" Icon={NavIconMyBets} active={['/challenges', '/my-bets', '/wallet'].includes(location.pathname)} />
+        <TopBarLink label="Bets" path="/bets" Icon={NavIconMyBets} active={['/bets', '/challenges', '/my-bets', '/wallet'].includes(location.pathname)} />
         <span style={{ flex: 1 }} />
         <Link to="/settings" aria-label={username ?? 'Account'} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-accent)', marginLeft: 8, textDecoration: 'none' }}>
           {username ? username[0].toUpperCase() : 'M'}

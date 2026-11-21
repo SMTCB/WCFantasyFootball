@@ -44,6 +44,7 @@ const WishlistDraftScreen   = lazy(() => import('./screens/WishlistDraftScreen')
 const SettingsScreen        = lazy(() => import('./screens/SettingsScreen'));
 const WalletScreen          = lazy(() => import('./screens/WalletScreen'));
 const ChallengeScreen       = lazy(() => import('./screens/ChallengeScreen'));
+const BetsScreen            = lazy(() => import('./screens/BetsScreen'));
 const MyBetsScreen          = lazy(() => import('./screens/MyBetsScreen'));
 const NotFoundScreen        = lazy(() => import('./screens/NotFoundScreen'));
 const ClubhouseScreen       = lazy(() => import('./screens/ClubhouseScreen'));
@@ -158,6 +159,7 @@ function AppRoutes() {
                   <Route path="/admin"            element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
                   <Route path="/settings"                   element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
                   <Route path="/wallet"                     element={<ErrorBoundary screen="Wallet"><WalletScreen /></ErrorBoundary>} />
+                  <Route path="/bets"                      element={<ErrorBoundary screen="Bets"><BetsScreen /></ErrorBoundary>} />
                   <Route path="/challenges"                element={<ErrorBoundary screen="Challenges"><ChallengeScreen /></ErrorBoundary>} />
                   <Route path="/my-bets"                    element={<ErrorBoundary screen="MyBets"><MyBetsScreen /></ErrorBoundary>} />
                   {/* F1 Module */}

@@ -1,21 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
+// circleId may be one clubhouse id or an array of them (the Bets screen reads every clubhouse).
 export function useGroupBets(userId, circleId = null) {
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const circleKey = Array.isArray(circleId) ? circleId.join(',') : (circleId ?? '');
+  const isList = Array.isArray(circleId);
 
   const fetchBets = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
     setLoading(true);
-    const { data, error: err } = await supabase.rpc('get_clubhouse_bets', {
-      p_circle_id: circleId ?? null,
-    });
-    if (err) setError(err.message);
-    else setBets(Array.isArray(data) ? data : []);
+    const ids = isList ? (circleKey ? circleKey.split(',') : []) : [circleKey || null];
+    const results = await Promise.all(ids.map(id => supabase.rpc('get_clubhouse_bets', { p_circle_id: id })));
+    const failed = results.find(r => r.error);
+    if (failed && results.length === 1) setError(failed.error.message);
+    else setBets(results.flatMap(r => (Array.isArray(r.data) ? r.data : [])));
     setLoading(false);
-  }, [userId, circleId]);
+  }, [userId, circleKey, isList]);
 
   useEffect(() => { fetchBets(); }, [fetchBets]);
 
