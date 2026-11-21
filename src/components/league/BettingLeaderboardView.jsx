@@ -146,7 +146,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
       </div>
 
       {betLoading ? (
-        <div style={{ padding: '48px', textAlign: 'center', fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</div>
+        <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '24px' }}>{[0, 1, 2, 3, 4].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
       ) : !leaderboard?.length ? (
         <div style={{ padding: '64px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>No resolved bets yet</div>

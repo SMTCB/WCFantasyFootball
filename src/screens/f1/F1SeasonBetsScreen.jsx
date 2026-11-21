@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -103,7 +104,7 @@ export default function F1SeasonBetsScreen() {
 
   const answered = SEASON_FIELDS.filter(f => bet[f.key]).length;
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)' }}>Loading…</div>;
+  if (loading) return <div style={{ padding: 40 }}><LoadingRows rows={5} /></div>;
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>

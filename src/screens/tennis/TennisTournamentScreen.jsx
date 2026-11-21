@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTennisTournament } from '../../hooks/tennis/useTennisTournament';
@@ -327,7 +328,7 @@ function ScorePill({ label, val, accent, gold }) {
 }
 
 function Loader() {
-  return <div style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>;
+  return <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: '48px 20px' }}><LoadingRows rows={5} /></div>;
 }
 
 function ErrorMsg({ msg, onBack }) {

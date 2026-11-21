@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import BottomSheet from '../shared/BottomSheet';
 import { supabase } from '../../lib/supabase';
 import PositionChip from '../PositionChip';
 
@@ -32,31 +32,12 @@ export default function JokerPickerSheet({ tournamentId, ownedIds, onPick, onClo
     return () => { cancelled = true; clearTimeout(t); };
   }, [tournamentId, pos, query]);
 
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const owned = new Set(ownedIds);
   const list = (rows ?? []).filter(p => !owned.has(p.id));
 
-  return createPortal(
-    <>
-      <div role="presentation" className="fixed inset-0 z-[59]" style={{ background: 'rgba(24,32,46,0.35)' }} onClick={onClose} />
-      <div
-        role="dialog" aria-modal="true" aria-label="Choose your Joker"
-        className="fixed bottom-0 left-0 right-0 z-[60] animate-slide-up"
-        style={{
-          background: 'var(--card)', borderTop: '1px solid var(--rule)',
-          boxShadow: '0 -8px 40px rgba(0,0,0,0.12)', paddingBottom: 'env(safe-area-inset-bottom)',
-          maxHeight: '85vh', display: 'flex', flexDirection: 'column',
-        }}
-      >
-        <div className="max-w-2xl mx-auto w-full px-5 pt-4" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-          <div className="flex justify-center mb-3">
-            <div className="w-10 h-1 rounded-full" style={{ background: 'var(--rule)' }} />
-          </div>
+  return (
+    <BottomSheet onClose={onClose} ariaLabel="Choose your Joker" contentStyle={{ overflowY: 'hidden' }}>
+        <div className="max-w-2xl mx-auto w-full px-5 pt-2" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Joker · ×2 points this round</div>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--paper)', letterSpacing: '-0.01em', marginBottom: 10 }}>
             Choose a player outside your squad
@@ -87,7 +68,11 @@ export default function JokerPickerSheet({ tournamentId, ownedIds, onPick, onClo
           </div>
 
           <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, marginInline: -20, paddingBottom: 16 }}>
-            {rows === null && <div style={{ padding: 20, color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>Loading players…</div>}
+            {rows === null && (
+              <div role="status" aria-label="Loading players" aria-busy="true" className="space-y-2" style={{ padding: '12px 20px' }}>
+                {[0, 1, 2, 3].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}
+              </div>
+            )}
             {rows !== null && list.length === 0 && (
               <div style={{ padding: 20, color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>No players match.</div>
             )}
@@ -107,8 +92,6 @@ export default function JokerPickerSheet({ tournamentId, ownedIds, onPick, onClo
             ))}
           </div>
         </div>
-      </div>
-    </>,
-    document.body
+    </BottomSheet>
   );
 }

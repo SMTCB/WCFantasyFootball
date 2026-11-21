@@ -738,7 +738,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
       </div>
 
       {statsLoading ? (
-        <div style={{ padding: '48px', textAlign: 'center', fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading…</div>
+        <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '24px' }}>{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
 

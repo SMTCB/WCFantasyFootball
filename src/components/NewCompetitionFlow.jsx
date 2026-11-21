@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import BottomSheet from './shared/BottomSheet';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useIsDesktop } from '../hooks/useViewport';
@@ -421,28 +422,10 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
     );
   }
 
-  // Mobile — bottom sheet
-  return createPortal(
-    <div role="presentation"
-      onClick={close}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 'var(--z-modal)',
-        background: 'rgba(24,32,46,0.55)',
-        display: 'flex', alignItems: 'flex-end',
-      }}
-    >
-      <div role="presentation"
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%', maxHeight: '90vh', overflowY: 'auto',
-          background: 'var(--card)', borderRadius: '18px 18px 0 0',
-          padding: '18px 20px 24px',
-        }}
-      >
-        <div style={{ width: 36, height: 4, background: 'var(--rule)', borderRadius: 100, margin: '0 auto 16px' }} />
-        {formContent}
-      </div>
-    </div>,
-    document.body
+  // Mobile: the shared bottom sheet (S16, M0-BOTTOMSHEET).
+  return (
+    <BottomSheet onClose={close} maxHeight="90vh" ariaLabel="New competition" contentStyle={{ padding: '6px 20px 24px' }}>
+      {formContent}
+    </BottomSheet>
   );
 }

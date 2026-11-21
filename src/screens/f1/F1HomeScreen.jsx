@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -122,7 +123,7 @@ export default function F1HomeScreen() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Loading…</div>
+        <div style={{ padding: '24px 20px' }}><LoadingRows rows={5} /></div>
       </div>
     );
   }

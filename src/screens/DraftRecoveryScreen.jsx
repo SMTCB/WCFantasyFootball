@@ -1,3 +1,4 @@
+import { LoadingRows } from '../components/Skeleton';
 import { IconCheckCircle } from '../components/UiIcons';
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -219,9 +220,7 @@ export default function DraftRecoveryScreen() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <div className="text-[var(--mute)] text-[12px] font-bold animate-pulse">
-          Loading...
-        </div>
+        <div style={{ padding: '48px 20px' }}><LoadingRows rows={5} /></div>
       </div>
     );
   }

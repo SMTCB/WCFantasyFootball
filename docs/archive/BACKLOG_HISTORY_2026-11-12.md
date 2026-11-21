@@ -6843,4 +6843,10 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - Tests: `platform.spec.js` adds the desktop side column, Replace from Needs attention, Player status in the side column, a draft league hiding Replace and a non-draft league showing it. The test mock now exposes `Content-Range` like the real API, so count queries work.
 - Checked: `npm run lint`; `npm run build`; `npx madge --circular src/`; `platform.spec.js` on both browsers.
 
+## S16 part 1: one shared sheet, loading skeletons (2026-11-21)
+
+- M0-BOTTOMSHEET: the eight bet drawers (declare a result, arbitrate, create a group bet, answer, declare or arbitrate an outcome, create a challenge, pick a bet kind, the no-clubhouse prompt), the Joker picker and the phone new-competition sheet now use the shared `BottomSheet`, so backdrop, focus trap, Escape, safe area and the slide-up live in one place. The bet drawers sat at the sheet z-index (200) under the bottom bar; the shared sheet sits above it. `BottomSheet` keeps focus on a child with `autoFocus` (the search boxes). The unused dark "Make your pick" picker in `BetWidget` was removed. Left: the two league-screen sheets, now LEAGUE-SHEET-1. Not touched: the player sheet (design lock) and the message `ActionSheet` (already uses the same classes).
+- UI-AUDIT-FBK-01: "Loading…" text in 20 screens and panels (chips, bets, league stats, recap, commissioner, Home, wallet, My bets, F1 and tennis screens) is now skeleton rows. Files under the league screen use the skeleton CSS classes directly, since LeagueScreen imports `Skeleton` itself (Rolldown TDZ rule). Kept as text on purpose: button labels, select options, input placeholders and the branded sign-in splash.
+- Checked: `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; the Joker picker seen at 375px and 1280px.
+
 Last Updated: 2026-11-21

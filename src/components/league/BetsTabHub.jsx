@@ -247,7 +247,7 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
       {/* Content */}
       <div data-tour="bets-list" style={{ flex: 1, minHeight: 60, overflow: 'auto', paddingBottom: 80 }}>
         {loading && (
-          <div style={{ padding: '48px 24px', textAlign: 'center', fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Loading bets…</div>
+          <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '24px' }}>{[0, 1, 2, 3].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
         )}
         {error && (
           <div style={{ padding: '24px', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--danger)', }}>FAILED TO LOAD: {error}</div>

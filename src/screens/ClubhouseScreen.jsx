@@ -937,9 +937,7 @@ export default function ClubhouseScreen() {
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, ...BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-          Loading…
-        </div>
+        <div role="status" aria-label="Loading" aria-busy="true" className="space-y-2" style={{ padding: '24px 0' }}>{[0, 1, 2, 3].map(i => <div key={i} className="ffl-skeleton ffl-skeleton--row" />)}</div>
       ) : myCircles.length === 0 ? (
         <ClubhouseLobby createCircle={createCircle} joinCircleByCode={joinCircleByCode} />
       ) : (

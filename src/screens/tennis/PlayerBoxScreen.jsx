@@ -1,3 +1,4 @@
+import { LoadingRows } from '../../components/Skeleton';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
@@ -118,9 +119,7 @@ export default function PlayerBoxScreen() {
         {tab === 'my' && (
           <div>
             {loading ? (
-              <div style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', textAlign: 'center', padding: 40 }}>
-                Loading…
-              </div>
+              <div style={{ padding: '24px 0' }}><LoadingRows rows={3} /></div>
             ) : myBoxes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: 'var(--fs-display)', marginBottom: 12 }}>🎾</div>

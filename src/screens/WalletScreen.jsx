@@ -170,9 +170,7 @@ export default function WalletScreen() {
         </div>
 
         {loading ? (
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: 24 }}>
-            Loading…
-          </div>
+          <div style={{ padding: '12px 0' }}><LoadingRows rows={4} /></div>
         ) : transactions.length === 0 ? (
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center', padding: 24 }}>
             No transactions yet
