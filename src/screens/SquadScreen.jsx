@@ -1,6 +1,5 @@
 import { IconWarning } from '../components/UiIcons';
 import { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 // Empty squad shown when user has no squad yet (instead of demo data)
@@ -42,18 +41,23 @@ import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 import FormStrip from '../components/FormStrip';
+import PlayerActionSheet from '../components/squad/PlayerActionSheet';
+import ChipsRow from '../components/squad/ChipsRow';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { useIsMobile } from '../hooks/useViewport';
 import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-export default function SquadScreen() {
+// `embedded` draws the squad inside the league's My team tab (S30): no page header,
+// no league tabs, no transfer banner (the league shows its own), and a compact
+// Pitch / List switch with a needs-attention line and a chips row on phone.
+export default function SquadScreen({ embedded = false, leagueId: leagueIdProp = null } = {}) {
   const { user } = useAuth();
   const { show: showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const leagueIdParam = searchParams.get('leagueId');
+  const leagueIdParam = leagueIdProp ?? searchParams.get('leagueId');
   const [activeLeague,       setActiveLeague]      = useState(leagueIdParam);
   const [leagues,            setLeagues]           = useState(null);   // null = not yet loaded
   const [squadData,          setSquadData]         = useState(null);
@@ -130,8 +134,8 @@ export default function SquadScreen() {
   // that the user should pick from an in-page list of all their leagues —
   // send them back to the Clubhouse to re-enter through the league itself.
   useEffect(() => {
-    if (leagues && leagues.length >= 1 && !activeLeague) navigate('/clubhouse', { replace: true });
-  }, [leagues, activeLeague, navigate]);
+    if (!embedded && leagues && leagues.length >= 1 && !activeLeague) navigate('/clubhouse', { replace: true });
+  }, [embedded, leagues, activeLeague, navigate]);
 
   // Resolve tournament_id whenever the active league is known or changes
   useEffect(() => {
@@ -867,7 +871,7 @@ export default function SquadScreen() {
   // â"€â"€ Loading â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   if (loading || !squadData) {
     return (
-      <div className="min-h-screen bg-bg" style={{ padding: '16px 20px' }}>
+      <div className={embedded ? '' : 'min-h-screen bg-bg'} style={{ padding: '16px 20px' }}>
         <div className="flex items-center justify-between mb-4">
           <Skeleton shape="line" variant="shimmer" className="w-32" style={{ height: 20, marginBottom: 0 }} />
           <Skeleton shape="line" variant="shimmer" className="w-16" style={{ height: 20, marginBottom: 0 }} />
@@ -991,6 +995,22 @@ export default function SquadScreen() {
   const allSquadPlayers = [...players, ...bench];
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
+  // Bench player straight onto the pitch when fewer than 11 start (no swap needed).
+  const addBenchToPitch = async () => {
+    try {
+      setSaving(true);
+      const benchP = selectedPlayer;
+      const newPlayers = [...squadData.players, benchP];
+      const formationError = validateFormation(newPlayers);
+      if (formationError) { showToast(formationError, 'warning'); return; }
+      const newBench = squadData.bench.filter(b => b.id !== benchP.id);
+      setSquadData({ ...squadData, players: newPlayers, bench: newBench });
+      setSelectedPlayer(null);
+      await supabase.from('squads').update({
+        players: [...newPlayers, ...newBench].map(p => p.id),
+      }).eq('id', squadData.squadId);
+    } finally { setSaving(false); }
+  };
   // budgetLeft / budgetLow declared earlier (before empty-state guard)
 
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
@@ -1265,11 +1285,11 @@ export default function SquadScreen() {
   // â"€â"€ RENDER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
-    <div className="min-h-screen bg-bg overflow-x-hidden">
-      <LeagueRouteTabs active="squad" leagueId={activeLeague} />
+    <div className={embedded ? 'overflow-x-hidden' : 'min-h-screen bg-bg overflow-x-hidden'}>
+      {!embedded && <LeagueRouteTabs active="squad" leagueId={activeLeague} />}
 
       {/* ── Transfer window status banner (U5) ──────────────────────────────── */}
-      <TransferWindowBanner
+      {!embedded && <TransferWindowBanner
         status={transferWindow.status}
         closesAt={transferWindow.closesAt}
         opensAt={transferWindow.opensAt}
@@ -1278,7 +1298,7 @@ export default function SquadScreen() {
         windowType={transferWindow.windowType}
         draftMode={transferWindow.draftMode}
         isDraftLeague={cfg.format === 'noduplicate'}
-      />
+      />}
 
       {/* ── Fetch error banner ──────────────────────────────────────────────── */}
       {fetchError && (
@@ -1317,7 +1337,7 @@ export default function SquadScreen() {
       {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
 
       {/* First-visit spotlight tour */}
-      {showSquadTour && !loading && (
+      {!embedded && showSquadTour && !loading && (
         <OnboardingTour
           steps={SQUAD_TOUR_STEPS}
           onComplete={completeSquadTour}
@@ -1326,6 +1346,7 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• STICKY HEADER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {!embedded && (
       <div
         className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
         style={{
@@ -1385,39 +1406,126 @@ export default function SquadScreen() {
           </div>
         </div>
       </div>
+      )}
 
       {/* â•â• MOBILE LAYOUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="lg:hidden">
 
-        {/* Tab strip — 4 tabs matching desktop */}
-        <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
-          {[
-            { id: 'pitch',  label: '⚽ PITCH'  },
-            { id: 'squad',  label: '📋 LIST'   },
-            { id: 'chips',  label: '⚡ CHIPS'  },
-            { id: 'status', label: '⚠️ STATUS' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setMobileTab(tab.id)}
-              className="flex-1 py-2.5 text-center transition-all relative"
-              style={{
-                fontFamily: 'Archivo Black, sans-serif',
-                fontSize: 'var(--fs-micro)',
-                color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)',
-                background: 'transparent',
-              }}
-            >
-              {tab.label}
-              {mobileTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />
-              )}
-              {tab.id === 'status' && dangerPlayers.length > 0 && (
-                <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Tab strip — 4 tabs matching desktop. In the league's My team tab a compact
+            Pitch / List switch, a needs-attention line and a back control replace it. */}
+        {embedded ? (
+          <>
+            {(mobileTab === 'pitch' || mobileTab === 'squad') ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
+                <div role="tablist" aria-label="Squad view" style={{ display: 'inline-flex', gap: 2, padding: 3, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 999 }}>
+                  {[{ id: 'pitch', label: 'Pitch' }, { id: 'squad', label: 'List' }].map(t => (
+                    <button
+                      key={t.id}
+                      role="tab"
+                      aria-selected={mobileTab === t.id}
+                      onClick={() => setMobileTab(t.id)}
+                      style={{
+                        padding: '6px 16px', minHeight: 32, borderRadius: 999, border: 'none', cursor: 'pointer',
+                        fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
+                        background: mobileTab === t.id ? 'var(--card)' : 'transparent',
+                        color: mobileTab === t.id ? 'var(--text)' : 'var(--mute)',
+                        boxShadow: mobileTab === t.id ? '0 1px 2px rgba(0,0,0,0.10)' : 'none',
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div className="text-right">
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Squad</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 1, justifyContent: 'flex-end' }}>
+                      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--text)', lineHeight: 1 }}>{allSquadPlayers.length}</span>
+                      <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>/15</span>
+                    </div>
+                  </div>
+                  <div className="text-right" data-tour="squad-budget">
+                    <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Budget</div>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: budgetLow ? 'var(--danger)' : 'var(--accent)', lineHeight: 1 }}>
+                      €{budgetLeft}M
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
+                <button
+                  onClick={() => setMobileTab('pitch')}
+                  className="hit-44"
+                  style={{ background: 'none', border: 'none', padding: '6px 4px', cursor: 'pointer', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--accent)' }}
+                >
+                  ‹ Back to pitch
+                </button>
+                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+                  {mobileTab === 'chips' ? 'Chips' : 'Player status'}
+                </div>
+              </div>
+            )}
+            {dangerPlayers.length > 0 && (mobileTab === 'pitch' || mobileTab === 'squad') && (() => {
+              const counts = {};
+              dangerPlayers.forEach(p => {
+                const label = (LINEUP_STATUS[p.intel?.status]?.label ?? p.intel?.status ?? 'unknown').toLowerCase();
+                counts[label] = (counts[label] || 0) + 1;
+              });
+              const breakdown = Object.entries(counts).map(([label, n]) => `${n} ${label}`).join(', ');
+              const severe = dangerPlayers.some(p => (p.intel?.risk ?? 0) >= 3);
+              return (
+                <button
+                  data-testid="needs-attention"
+                  onClick={() => setMobileTab('status')}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', minHeight: 44,
+                    background: severe ? 'rgba(240,58,58,0.08)' : 'rgba(240,180,0,0.08)',
+                    border: 'none', borderBottom: '1px solid var(--rule)', cursor: 'pointer', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: severe ? 'var(--danger)' : 'var(--gold)', flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
+                    <span style={{ fontFamily: 'Archivo Black, sans-serif', color: severe ? 'var(--danger)' : 'var(--gold-text)' }}>
+                      {dangerPlayers.length} need{dangerPlayers.length === 1 ? 's' : ''} attention
+                    </span>
+                    {`: ${breakdown}`}
+                  </span>
+                  <span aria-hidden="true" style={{ color: 'var(--mute)', fontSize: 'var(--fs-body)' }}>›</span>
+                </button>
+              );
+            })()}
+          </>
+        ) : (
+          <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--card)' }}>
+            {[
+              { id: 'pitch',  label: '⚽ PITCH'  },
+              { id: 'squad',  label: '📋 LIST'   },
+              { id: 'chips',  label: '⚡ CHIPS'  },
+              { id: 'status', label: '⚠️ STATUS' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setMobileTab(tab.id)}
+                className="flex-1 py-2.5 text-center transition-all relative"
+                style={{
+                  fontFamily: 'Archivo Black, sans-serif',
+                  fontSize: 'var(--fs-micro)',
+                  color: mobileTab === tab.id ? 'var(--accent)' : 'var(--mute)',
+                  background: 'transparent',
+                }}
+              >
+                {tab.label}
+                {mobileTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--accent)' }} />
+                )}
+                {tab.id === 'status' && dangerPlayers.length > 0 && (
+                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Incomplete squad banner — shown on all mobile tabs */}
         {allSquadPlayers.length < 11 ? (
@@ -1554,6 +1662,10 @@ export default function SquadScreen() {
                     );
                   })}
                 </>
+              )}
+
+              {embedded && (
+                <ChipsRow leagueId={activeLeague} userId={user?.id} onOpen={() => setMobileTab('chips')} />
               )}
             </div>
           );
@@ -1803,6 +1915,17 @@ export default function SquadScreen() {
               )}
             </button>
           ))}
+          {/* Embedded in the league, the page header that held these is hidden. */}
+          {embedded && (
+            <div data-testid="squad-budget-desktop" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'baseline', gap: 18, padding: '0 20px' }}>
+              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+                Squad <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text)' }}>{allSquadPlayers.length}</span>/15
+              </span>
+              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+                Budget <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: budgetLow ? 'var(--danger)' : 'var(--accent)' }}>€{budgetLeft}M</span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Incomplete squad banner — desktop */}
@@ -1952,165 +2075,24 @@ export default function SquadScreen() {
       </div>
 
       {/* â•â• PLAYER ACTION BOTTOM SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {selectedPlayer && !swapMode && createPortal(
-        <>
-          {/* Tap-outside dismiss — portaled to body so iOS WebKit stacking context doesn't trap z-index */}
-          <div role="presentation"
-            className="fixed inset-0 z-[59] lg:left-0"
-            onClick={() => setSelectedPlayer(null)}
-          />
-        <div
-          className="fixed bottom-0 left-0 right-0 lg:left-0 z-[60] animate-slide-up"
-          style={{
-            background: 'var(--card)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            borderTop: '1px solid var(--rule)',
-            boxShadow: '0 -8px 40px rgba(0,0,0,0.12)',
-            paddingBottom: 'env(safe-area-inset-bottom)',
-          }}
-        >
-          <div className="max-w-2xl mx-auto px-5 pt-4 pb-5">
-            {/* Handle */}
-            <div className="flex justify-center mb-3">
-              <div className="w-10 h-1 rounded-full" style={{ background: 'var(--rule)' }} />
-            </div>
-            {/* Player info */}
-            <div className="flex items-start justify-between mb-4 gap-3">
-              <div className="flex items-start gap-3">
-                {/* Position badge — matches player list row style */}
-                <div style={{
-                  width: 44,
-                  height: 44,
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'var(--elev)',
-                  border: `1.5px solid ${
-                    selectedPlayer.position === 'GK' ? 'var(--pos-gk)' :
-                    selectedPlayer.position === 'DEF' ? 'var(--pos-def)' :
-                    selectedPlayer.position === 'MID' ? 'var(--pos-mid)' :
-                    'var(--pos-fwd)'
-                  }`,
-                  color: selectedPlayer.position === 'GK' ? 'var(--pos-gk)' :
-                    selectedPlayer.position === 'DEF' ? 'var(--pos-def)' :
-                    selectedPlayer.position === 'MID' ? 'var(--pos-mid)' :
-                    'var(--pos-fwd)',
-                  fontFamily: 'Archivo Black, sans-serif',
-                  fontSize: 'var(--fs-micro)',
-                }}>
-                  {selectedPlayer.position}
-                </div>
-                <div>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--paper)', lineHeight: 1.1, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-                    {selectedPlayer.name}
-                    {selectedPlayer.price > 0 && (
-                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--paper)' }}>
-                        €{Number(selectedPlayer.price).toFixed(1)}M
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <ClubCrest name={selectedPlayer.club} size={16} />
-                    {selectedPlayer.club}
-                    {selectedPlayer.id === captainId && (
-                      <span style={{ color: 'var(--gold-text)', background: 'rgba(184,114,14,0.12)', border: '1px solid rgba(184,114,14,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedPlayer(null)}
-                style={{ width: 28, height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 'var(--fs-body-lg)', cursor: 'pointer' }}
-              >×</button>
-            </div>
-            {/* Form + next fixture + ownership context strip */}
-            <div className="flex items-stretch gap-3 mb-3" style={{ borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', padding: '10px 0' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>FORM</div>
-                <FormStrip rounds={squadStatsMap[selectedPlayer.id]} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid var(--rule)', paddingLeft: 12 }}>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Next fixture</div>
-                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: selectedPlayer.fixtureStatus?.color || 'var(--paper)', letterSpacing: '-0.01em' }}>
-                  {selectedPlayer.fixtureStatus?.label || 'No fixture'}
-                </div>
-              </div>
-            </div>
-            {/* View full stats dashboard */}
-            <button
-              onClick={() => setStatsDashboardPlayer(selectedPlayer)}
-              className="w-full mb-3 py-2 rounded-sm transition-all active:scale-95"
-              style={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid rgba(26,111,168,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
-            >
-              View full stats dashboard ↗
-            </button>
-            {/* Actions */}
-            <div className="flex gap-2 mb-3">
-              {!selectedIsBench && (
-                <button
-                  onClick={setCaptain}
-                  disabled={saving || captainId === selectedPlayer.id}
-                  className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-30"
-                  style={{
-                    background: captainId === selectedPlayer.id ? 'rgba(224,168,0,0.12)' : 'var(--gold)',
-                    color: captainId === selectedPlayer.id ? 'var(--gold)' : '#0A0A0A',
-                    border: captainId === selectedPlayer.id ? '1px solid rgba(224,168,0,0.35)' : '1px solid var(--gold)',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)',
-                  }}
-                >
-                  {captainId === selectedPlayer.id ? 'Current captain' : 'Make captain'}
-                </button>
-              )}
-              {selectedIsBench && squadData.players.length < 11 ? (
-                // Direct promotion: if starters < 11, just add bench player to pitch without swapping anyone out
-                <button
-                  onClick={async () => {
-                    try {
-                      setSaving(true);
-                      const benchP = selectedPlayer;
-                      const newPlayers = [...squadData.players, benchP];
-                      const formationError = validateFormation(newPlayers);
-                      if (formationError) { showToast(formationError, 'warning'); return; }
-                      const newBench = squadData.bench.filter(b => b.id !== benchP.id);
-                      setSquadData({ ...squadData, players: newPlayers, bench: newBench });
-                      setSelectedPlayer(null);
-                      await supabase.from('squads').update({
-                        players: [...newPlayers, ...newBench].map(p => p.id),
-                      }).eq('id', squadData.squadId);
-                    } finally { setSaving(false); }
-                  }}
-                  disabled={saving}
-                  className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: 'var(--accent)', color: '#0A0A0A', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
-                >
-                  Add to pitch
-                </button>
-              ) : (
-                // Swap mode: only if starters = 11 and user wants to swap
-                <button
-                  onClick={() => setSwapMode(true)}
-                  disabled={saving || (selectedIsBench && squadData.players.length >= 11 && squadData.bench.length === 1)}
-                  className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
-                >
-                  {selectedIsBench ? 'Sub in' : 'Sub out'}
-                </button>
-              )}
-              <button
-                onClick={handleSellPlayer}
-                disabled={saving}
-                className="px-5 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
-              >
-                SELL
-              </button>
-            </div>
-          </div>
-        </div>
-        </>,
-        document.body
+      {selectedPlayer && !swapMode && (
+        <PlayerActionSheet
+          selectedPlayer={selectedPlayer}
+          captainId={captainId}
+          selectedIsBench={selectedIsBench}
+          saving={saving}
+          squadStatsMap={squadStatsMap}
+          starterCount={squadData.players.length}
+          benchCount={squadData.bench.length}
+          onClose={() => setSelectedPlayer(null)}
+          onOpenStats={setStatsDashboardPlayer}
+          onMakeCaptain={setCaptain}
+          onAddToPitch={addBenchToPitch}
+          onSwap={() => setSwapMode(true)}
+          onSell={handleSellPlayer}
+          ClubCrest={ClubCrest}
+          FormStrip={FormStrip}
+        />
       )}
 
       {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
@@ -2168,7 +2150,7 @@ export default function SquadScreen() {
 
       {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {/* Mobile transfer-window action bar */}
-      {isMobile && (() => {
+      {!embedded && isMobile && (() => {
         const isOpen     = transferWindow.status === 'open';
         const isUpcoming = transferWindow.status === 'upcoming';
         const barState   = isOpen ? 'action' : 'locked';

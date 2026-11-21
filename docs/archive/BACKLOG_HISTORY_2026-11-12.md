@@ -6814,4 +6814,13 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - Home clubhouse cards: the sport picture in each league row now moves, as on the design board. Football: a ball passes between players. F1: two cars lap the track. Tennis: a ball crosses the net. Built with SVG `animateMotion` in `ClubhouseCard.jsx`; it pauses off screen and stays still when the device asks for reduced motion.
 - Inside a clubhouse: each league card now opens with a wide moving picture of its ground and the sport's name in the corner, as on the design board. This replaces the thin color bar and the sport pill. The small and wide pictures now live in `src/components/shared/SportGround.jsx` (`SportSwatch`, `SportBanner`).
 
+## S30 Football league, My team and Table tabs (2026-11-21)
+
+- MD-11: a football league now opens on **My team**. The tab keeps the round card, your race and the Room line from Matchweek, then shows the Squad screen's own pitch, bench and player sheet (`SquadScreen` with `embedded`, loaded lazily inside `LeagueScreen`), so you can set the lineup, captain and substitutes there. Around the pitch: a Pitch / List switch with squad size and budget, a "needs attention" line (injured, doubtful, suspended) that opens player status, and a chips row under the bench (`src/components/squad/ChipsRow.jsx`). The read-only live pitch from S28 is gone; this round's fixtures sit under the team.
+- **Table** is its own tab: Season table, This week (the live table) and H2H fixtures. Tabs are now My team, Table, Market, Recap, Bets. Old links (`?tab=matchweek`, `live`, `squad`) open My team; `leaderboard` opens Table. `/squad?leagueId=` redirects to the tab.
+- Design lock kept: `MobilePitchField`, `PitchView`, `pitchLayout`, `ClubCrest`, the bench rows and the player sheet are unchanged. Before-and-after screenshots at 375px and 1280px match (a few anti-aliased pixels differ).
+- On desktop the squad count and budget moved to the right of the Pitch / List / Chips / Status strip, since the old page header is hidden inside the league.
+- Tests: the My team tests in `platform.spec.js` now run on a fixed test league (`e2e/fixtures/myTeamMock.js`) instead of skipping when the demo account has no league; they cover the redirect, the pitch, budget, needs-attention line and making a captain from the tab.
+- Checked with mock data at 375px and 1280px; `npm run lint`; `npm run build`; `npx madge --circular src/`; `platform.spec.js`.
+
 Last Updated: 2026-11-21

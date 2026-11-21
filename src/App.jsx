@@ -30,7 +30,6 @@ const DesignKitScreen       = import.meta.env.DEV ? lazy(() => import('./screens
 const BetInviteScreen       = lazy(() => import('./screens/BetInviteScreen'));
 const TrophyCabinetScreen   = lazy(() => import('./screens/TrophyCabinetScreen'));
 const HomeScreen            = lazy(() => import('./screens/HomeScreen'));
-const SquadScreen           = lazy(() => import('./screens/SquadScreen'));
 const AuthScreen            = lazy(() => import('./screens/AuthScreen'));
 const LeagueScreen          = lazy(() => import('./screens/LeagueScreen'));
 const AdminSeedScreen       = lazy(() => import('./screens/AdminSeedScreen'));
@@ -93,6 +92,15 @@ function JoinClubhouseRoute() {
   return <Navigate to={`/clubhouse?circleCode=${code}`} replace />;
 }
 
+// SquadRedirect: the Squad page became the league's My team tab (S30, MD-11).
+// Old /squad?leagueId= links and bookmarks land on that tab; without a league
+// there is nothing to show, so they go to the Clubhouse list.
+function SquadRedirect() {
+  const [searchParams] = useSearchParams();
+  const leagueId = searchParams.get('leagueId');
+  return <Navigate to={leagueId ? `/league/${leagueId}?tab=team` : '/clubhouse'} replace />;
+}
+
 // F1PicksRedirect: the standalone PICKS screen was folded into CALENDAR
 // (race rows expand in place). Bounces old bookmarked/shared /picks links
 // to the paddock's CALENDAR screen instead of 404ing.
@@ -145,7 +153,7 @@ function AppRoutes() {
                 <Routes>
                   <Route path="/"                 element={<Navigate to="/home" replace />} />
                   <Route path="/scores"           element={<Navigate to="/live" replace />} />
-                  <Route path="/squad"            element={<ErrorBoundary screen="Squad"><SquadScreen /></ErrorBoundary>} />
+                  <Route path="/squad"            element={<SquadRedirect />} />
                   <Route path="/league"           element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId" element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId/draft" element={<ErrorBoundary screen="Draft"><DraftScreen /></ErrorBoundary>} />
