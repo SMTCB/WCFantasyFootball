@@ -51,3 +51,21 @@ export function getDangerZonePlayers(playersWithIntel) {
     .filter(p => p.intel && p.intel.status !== 'fit')
     .sort((a, b) => (b.intel.risk || 0) - (a.intel.risk || 0));
 }
+
+const SHORT_DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+
+/**
+ * The "why" line for an unavailable player: the reason from player_status plus the
+ * expected return date when the provider gave one, e.g. "Muscle injury · back 20 Dec".
+ * Returns null when there is nothing to say.
+ */
+export function statusDetail(intel) {
+  if (!intel || intel.status === 'fit') return null;
+  const parts = [];
+  if (intel.reason) parts.push(intel.reason);
+  if (intel.returnDate) {
+    const d = new Date(intel.returnDate);
+    if (!Number.isNaN(d.getTime())) parts.push(`back ${SHORT_DATE.format(d)}`);
+  }
+  return parts.length ? parts.join(' · ') : null;
+}
