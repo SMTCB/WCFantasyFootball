@@ -6907,4 +6907,6 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 
 - **F1-SYNC-1 (2026-11-22):** `sync-f1-race-results` rewritten and deployed. It finds the race session by date, maps OpenF1 surnames to the pick-list spelling, uses each driver's last position, and treats a 401 during a live session as "try later" (13 unit tests, `tests/unit/f1-openf1-logic.test.js`). A one-off `{"days": 120}` catch-up filled the podiums of rounds 14 to 22 (Dutch GP to Las Vegas GP) in `f1_races`; the Las Vegas GP result arrived hours after the race. Nothing was scored. Follow-ups: F1-SCORE-1, F1-SYNC-2. PR #1195.
 
+- **F1 rounds 14 to 22 scored (2026-11-22, approved):** `score-f1-race` called for each filled race. Round 14 scored 3 picks on the podium only (24, 14 and 9 points) and awarded its event_win trophy; rounds 15 to 22 have no picks, so they were only marked scored. Remaining part is F1-SCORE-1.
+
 Last Updated: 2026-11-22

@@ -42,7 +42,7 @@ A player joins one or more **Paddocks** (private groups with an invite code). Be
 |---|---|
 | Paddocks | 2 |
 | Races with a result and scored | Rounds 1, 2, 3, 6 to 13 (rounds 4 and 5 have no row) |
-| Races with a result but **not scored** | Rounds 14 to 22 (Dutch GP 23 Aug to Las Vegas GP 21 Nov). Podiums filled by the 2026-11-22 catch-up; scoring is F1-SCORE-1 |
+| Races scored | Rounds 14 to 22 were scored 2026-11-22 after the catch-up filled the podiums. Round 14 is podium-only until its DNF, team and special answers are entered (F1-SCORE-1) |
 | Picks per race | 5 in rounds 12 and 13, 3 in round 14, none after |
 | Race score rows / season score rows | 56 / 6 |
 | Season bets | Locked (`is_bets_locked` true), results entered, `is_final` false |
@@ -300,7 +300,7 @@ Not automated: scenarios 1.3 to 1.5, 2.2 to 2.6, 3.7 to 3.9, all of module 4, 5.
 
 | Backlog | Issue | Fix needs |
 |---|---|---|
-| F1-SYNC-1 | Results auto-fill never worked (OpenF1 404) | Fixed and deployed 2026-11-22; rounds 14 to 22 filled by catch-up. Still to do: score them (F1-SCORE-1), rate-limit handling (F1-SYNC-2) |
+| F1-SYNC-1 | Results auto-fill never worked (OpenF1 404) | Fixed and deployed 2026-11-22; rounds 14 to 22 filled by catch-up. Scored 2026-11-22; still to do: round 14 DNF, team and special answers (F1-SCORE-1), rate-limit handling (F1-SYNC-2) |
 | F1-LOCK-1 | The database does not stop a changed race pick after the deadline, or a changed season bet after the lock | Migration (approval) |
 | F1-YEAR-1 | Season bets are never scored by the app; production rows use 100/200 points per item against a promised 10 | Owner decides the points value, then code and a deploy (approval) |
 | DB-260 | `paddock_members` policy recursion; fix in migration 260 not applied | Migration (approval) |
@@ -313,7 +313,7 @@ Not automated: scenarios 1.3 to 1.5, 2.2 to 2.6, 3.7 to 3.9, all of module 4, 5.
 | Date | Who | Where | Result |
 |---|---|---|---|
 | 2026-11-22 | Claude | Code read + production read-only | Plan written. Found F1-SYNC-1 and F1-YEAR-1; confirmed F1-LOCK-1 from the policies |
-| 2026-11-22 | Claude | Production (approved deploy and catch-up) | Deployed `sync-f1-race-results`; `{"days":120}` catch-up filled rounds 14 to 22 (OpenF1 429s needed spaced repeats). No scores written |
+| 2026-11-22 | Claude | Production (approved deploy and catch-up) | Deployed `sync-f1-race-results`; `{"days":120}` catch-up filled rounds 14 to 22 (OpenF1 429s needed spaced repeats). Then scored rounds 14 to 22 with `score-f1-race` (approved): 3 scores for round 14, trophy awarded |
 
 ---
 
