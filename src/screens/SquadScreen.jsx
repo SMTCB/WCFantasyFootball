@@ -9,7 +9,7 @@ const EMPTY_SQUAD = {
   players: [],
   bench: [],
 };
-import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
+import { getDangerZonePlayers, normalizeIntelligence, statusDetail, LINEUP_STATUS } from '../lib/intelligence';
 import { normalisePlayer, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useTransferWindow } from '../hooks/useTransferWindow';
@@ -1106,6 +1106,9 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                 <div className="text-[11px] font-black uppercase tracking-wider mt-0.5" style={{ color: cfg.color }}>
                   {cfg.label}
                 </div>
+                {statusDetail(p.intel) && (
+                  <div data-testid={`status-reason-${p.id}`} className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>{statusDetail(p.intel)}</div>
+                )}
               </div>
               <div className="text-[11px] shrink-0" style={{ color: 'var(--mute)' }}>{p.intel?.confidence}%</div>
             </button>
@@ -2016,10 +2019,15 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                             <button
                               type="button"
                               onClick={() => handlePlayerClick(p)}
-                              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, minHeight: 40, padding: '6px 10px', textAlign: 'left', cursor: 'pointer', background: st?.bg ?? 'transparent', border: `1px solid ${st?.color ?? 'var(--rule)'}30`, borderRadius: 10 }}
+                              style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, minHeight: 40, padding: '6px 10px', textAlign: 'left', cursor: 'pointer', background: st?.bg ?? 'transparent', border: `1px solid ${st?.color ?? 'var(--rule)'}30`, borderRadius: 10 }}
                             >
-                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: st?.color ?? 'var(--mute)', flexShrink: 0 }}>{st?.label ?? p.intel?.status}</span>
-                              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: st?.color ?? 'var(--mute)', flexShrink: 0 }}>{st?.label ?? p.intel?.status}</span>
+                                <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                              </span>
+                              {statusDetail(p.intel) && (
+                                <span data-testid={`attention-reason-${p.id}`} style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{statusDetail(p.intel)}</span>
+                              )}
                             </button>
                             {canReplace && !pending && (
                               <button

@@ -362,6 +362,7 @@ test.describe('My team — desktop side column and draft leagues', () => {
     const side = page.getByTestId('my-team-side');
     await expect(side).toBeVisible({ timeout: 15000 });
     await expect(side.getByTestId('needs-attention-card')).toContainText('Saka');
+    await expect(side.getByTestId('attention-reason-p8')).toHaveText('Hamstring');
     await expect(side.getByTestId('chips-card')).toBeVisible();
     await expect(side.getByTestId('side-matches')).toBeVisible();
     await expect(page.getByTestId('pitch-view')).toBeVisible();
