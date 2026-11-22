@@ -346,7 +346,7 @@ npx cap open ios      # then Build + Run in Xcode
 npx cap open android  # then Run in Android Studio
 ```
 
-App ID: `com.fantasykit.forzaedition` (changeable until first store submission)  
+App ID: not settled. `capacitor.config.ts` and Android use `com.forza.fantasyleague`, the iOS bundle ID and the OAuth redirect use `com.fantasykit.forzaedition` (MOBILE-2; changeable until first store submission)  
 iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 
 `src/lib/capacitor.js` — all native plugin init (status bar, splash, app resume). Import `isNative` and `platform` from here for platform-detection anywhere in the app.
@@ -374,7 +374,7 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 - **Realtime**: PostgreSQL LISTEN/NOTIFY for live chat, score updates
 
 ### Mobile (Native)
-- **Framework**: Capacitor 6 (cross-platform wrapper)
+- **Framework**: Capacitor 8 (cross-platform wrapper)
 - **iOS**: Xcode 15+, deployment target 15.0, native Swift/Objective-C for plugins
 - **Android**: Android Studio, minSdk 26 (Android 8.0), targetSdk 36
 - **Native Plugins**: Status bar color, splash screen, app resume handling

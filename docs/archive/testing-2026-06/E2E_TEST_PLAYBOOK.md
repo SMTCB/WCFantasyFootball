@@ -1,5 +1,7 @@
 # E2E Test Playbook — Forza Fantasy League
 
+> **Archived 2026-11-22 (DOCS-3).** Written for the June 2026 World Cup pilot and the screens it had (`/squad`, league chat, channels). Many of those screens no longer exist. Kept as history only. The current approach is [docs/testing/TESTING_STRATEGY.md](../../testing/TESTING_STRATEGY.md).
+
 **Version**: 2.0 (2026-06-01)  
 **Audience**: Fresh test session — this document is self-contained. No prior context required.  
 **App URL**: `http://localhost:5173` (run `npm run dev` first)  

@@ -1,5 +1,7 @@
 # E2E Test Results
 
+> **Archived 2026-11-22 (DOCS-3).** Written for the June 2026 World Cup pilot and the screens it had (`/squad`, league chat, channels). Many of those screens no longer exist. Kept as history only. The current approach is [docs/testing/TESTING_STRATEGY.md](../../testing/TESTING_STRATEGY.md).
+
 > **Correction (2026-07-27)**: Sessions 70/72 below mark the F-2 "click-to-detail scoring breakdown" as not implemented / `ScoringBreakdown.jsx` missing. That gap is resolved — the breakdown now ships via `FormStrip.jsx`/`usePlayerStats.js` (PR #301) + `PlayerStatsPanel.jsx` (PR #533). Session entries left as-written for historical accuracy; see `E2E_TEST_PLAYBOOK.md`'s F-2 status note for the current state.
 
 ---
