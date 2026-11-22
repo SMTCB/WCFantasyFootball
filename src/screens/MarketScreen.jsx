@@ -30,6 +30,7 @@ import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 import { useTransferBasket } from '../lib/transferBasket';
+import { MARKET_SORTS, DEFAULT_MARKET_SORT, isMarketSort, sortMarketPlayers } from '../lib/marketSort';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -68,6 +69,9 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
   const [filterHideEliminated, setFilterHideEliminated] = useState(false);
   const [filterHideTaken,      setFilterHideTaken]      = useState(false);
   const [filterMinScore,       setFilterMinScore]       = useState(0);
+  const [sortKey, setSortKey] = useState(() => {
+    try { const v = localStorage.getItem('market_sort'); return isMarketSort(v) ? v : DEFAULT_MARKET_SORT; } catch { return DEFAULT_MARKET_SORT; }
+  });
   const [budget,          setBudget]          = useState(0);      // loaded from league config
   // Transfer quota
   const [transfersPerRound, setTransfersPerRound] = useState(3);  // free transfers allowed per round
@@ -158,7 +162,7 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
   const relaxationRepeatsAllowed = relaxation.repeatsAllowed; // null = unlimited
 
   // Form history — last 5 GW points per player for this tournament
-  const { statsMap } = usePlayerStats(tournamentId);
+  const { statsMap, minutesMap } = usePlayerStats(tournamentId);
 
   // Card warnings derived from player_match_stats (player_status table is unused)
   const cardMap = usePlayerCards(tournamentId);
@@ -479,6 +483,10 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
     localStorage.setItem('market_filterPos', filterPos);
   }, [filterPos]);
 
+  useEffect(() => {
+    try { localStorage.setItem('market_sort', sortKey); } catch { /* private mode: sort just isn't remembered */ }
+  }, [sortKey]);
+
   // Persist search query to localStorage
   useEffect(() => {
     localStorage.setItem('market_searchQuery', searchQuery);
@@ -593,16 +601,13 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
 
       return matchesPos && matchesSearch && matchesTeam && matchesPrice;
     });
-    // Own players always float to the top; within each group sort by price descending
-    return filtered.sort((a, b) => {
-      const aOwned = owned.includes(a.id) ? 1 : 0;
-      const bOwned = owned.includes(b.id) ? 1 : 0;
-      if (aOwned !== bOwned) return bOwned - aOwned;
-      return b.price - a.price;
-    });
+    // Own players always float to the top; within each group the chosen sort applies
+    const hasStats = Object.keys(statsMap).length > 0;
+    const key = !hasStats && MARKET_SORTS.find(s => s.id === sortKey)?.needsStats ? DEFAULT_MARKET_SORT : sortKey;
+    return sortMarketPlayers(filtered, { sortKey: key, ownedIds: owned, statsMap, minutesMap });
   }, [players, filterPos, searchQuery, selectedTeams, priceMin, priceMax, mySquad,
       filterHideEliminated, filterHideTaken, filterMinScore,
-      eliminatedClubs, isDraftLeague, isTaken, statsMap]);
+      eliminatedClubs, isDraftLeague, isTaken, statsMap, minutesMap, sortKey]);
   const squadCount  = effectiveSquadIds.length;
   const emptySlots  = Math.max(0, squadSize - squadCount);
   const [showScoringModal, setShowScoringModal] = useState(false);
@@ -1087,6 +1092,48 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
                   Reset
                 </button>
               )}
+            </div>
+          );
+        })()}
+
+        {/* Sort (FB-15) — the stats-based orders appear once a round has been played */}
+        {(() => {
+          const hasStats = Object.keys(statsMap).length > 0;
+          const options = MARKET_SORTS.filter(s => hasStats || !s.needsStats);
+          const current = options.some(s => s.id === sortKey) ? sortKey : DEFAULT_MARKET_SORT;
+          return (
+            <div
+              role="radiogroup"
+              aria-label="Sort players"
+              data-testid="market-sort"
+              className="px-4 py-2 flex items-center gap-2 overflow-x-auto"
+              style={{ borderTop: '1px solid var(--rule)' }}
+            >
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
+                Sort
+              </span>
+              {options.map(s => {
+                const active = s.id === current;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className="hit-44"
+                    onClick={() => setSortKey(s.id)}
+                    style={{
+                      padding: '4px 9px', borderRadius: 3, cursor: 'pointer', flexShrink: 0,
+                      fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', fontWeight: 700,
+                      background: active ? 'var(--accent-soft)' : 'var(--elev)',
+                      border: `1px solid ${active ? 'var(--accent)' : 'var(--rule)'}`,
+                      color: active ? 'var(--accent)' : 'var(--mute)',
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
           );
         })()}
