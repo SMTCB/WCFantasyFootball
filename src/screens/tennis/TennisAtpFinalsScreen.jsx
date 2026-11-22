@@ -3,6 +3,7 @@ import { IconTrophy } from '../../components/UiIcons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAtpFinalsPicks } from '../../hooks/tennis/useAtpFinalsPicks';
+import Card from '../../components/ui/Card';
 
 const TIER_TIERS = [
   { range: [1,5],  label: 'Unforced Error',     pts: 250 },
@@ -85,7 +86,7 @@ export default function TennisAtpFinalsScreen() {
       <div className="sport-col sport-split" style={{ padding: '16px' }}>
 
         {/* Scoring tiers reference */}
-        <div className="sport-aside" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', marginBottom: 20 }}>
+        <Card padded={false} className="sport-aside" style={{ padding: '14px 16px', marginBottom: 20 }}>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 10 }}>Scoring Tiers</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {TIER_TIERS.map(t => (
@@ -99,22 +100,22 @@ export default function TennisAtpFinalsScreen() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
         <div className="sport-main">
         {/* Upcoming */}
         {status === 'upcoming' && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '24px 20px', textAlign: 'center' }}>
+          <Card padded={false} style={{ padding: '24px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}><IconTrophy size={28} /></div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)' }}>
               Match draw not yet seeded. Check back closer to the ATP Finals.
             </p>
-          </div>
+          </Card>
         )}
 
         {/* Group Stage Picks */}
         {(isGroupOpen || isKnockoutOpen || isCompleted) && groupMatches.length > 0 && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20 }}>
+          <Card padded={false} style={{ padding: '16px', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
               Login 1 — Group Stage (12 matches)
             </div>
@@ -149,7 +150,7 @@ export default function TennisAtpFinalsScreen() {
                 </button>
               )}
             </form>
-          </div>
+          </Card>
         )}
 
         {/* Knockout Picks */}

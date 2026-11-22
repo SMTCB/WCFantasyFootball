@@ -1,4 +1,4 @@
-import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams, useParams, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { isNative } from './lib/capacitor';
 import { AuthProvider } from './context/AuthContext';
@@ -123,6 +123,7 @@ function F1PicksRedirect() {
 function AppRoutes() {
   const { user, authEnabled } = useAuth();
   const { showWizard, completeWizard, skipWizard } = useOnboarding();
+  const { pathname } = useLocation();
   const [showHelpModal, setShowHelpModal] = useState(false);
   useKeyboardShortcuts(() => setShowHelpModal(true));
   useEffect(() => { if (user) trackAppOpenOncePerDay(); }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -136,7 +137,7 @@ function AppRoutes() {
       <RecoveryRedirect />
 
       {/* One-time onboarding wizard — only shown after auth is confirmed (U2) */}
-      {showWizard && (!authEnabled || user) && (
+      {showWizard && (!authEnabled || user) && !pathname.startsWith('/dev/') && (
         <OnboardingWizard
           onComplete={completeWizard}
           onSkip={skipWizard}

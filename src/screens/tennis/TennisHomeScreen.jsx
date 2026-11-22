@@ -7,6 +7,7 @@ import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
 import { Icon, Glyph } from '../../components/UiIcons';
+import Card from '../../components/ui/Card';
 
 const STATUS_LABEL = {
   upcoming:         { label: 'Upcoming',        color: 'var(--mute)', bg: 'transparent', outline: true },
@@ -114,7 +115,7 @@ export default function TennisHomeScreen() {
 
         {/* No-box CTA */}
         {noBox && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '24px 20px', textAlign: 'center', marginBottom: 20 }}>
+          <Card padded={false} style={{ padding: '24px 20px', textAlign: 'center', marginBottom: 20 }}>
             <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🎾</div>
             <p style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--paper)', margin: '0 0 8px' }}>
               Join a Player's Box to start competing
@@ -127,7 +128,7 @@ export default function TennisHomeScreen() {
               onClick={() => navigate('/tennis/box')}>
               Create or join a box
             </button>
-          </div>
+          </Card>
         )}
 
         {/* Action banner — active tournament */}
@@ -153,7 +154,7 @@ export default function TennisHomeScreen() {
         <div className="sport-split">
         {/* Leaderboard snapshot */}
         {activeBox && !lbLoading && standings.length > 0 && (
-          <div className="sport-aside" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', marginBottom: 20 }}>
+          <Card padded={false} className="sport-aside" style={{ marginBottom: 20 }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Season Standings</span>
               <button
@@ -176,7 +177,7 @@ export default function TennisHomeScreen() {
                 </span>
               </div>
             ))}
-          </div>
+          </Card>
         )}
 
         {/* Tournament calendar */}
@@ -200,12 +201,10 @@ export default function TennisHomeScreen() {
               const tb = TYPE_BADGE[t.tournament_type] ?? TYPE_BADGE.masters_1000;
               const isClickable = t.status !== 'upcoming';
               return (
-                <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`))(e); } }}
+                <Card padded={false} role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`))(e); } }}
                   key={t.tournament_id ?? t.id}
                   onClick={() => isClickable && navigate(`/tennis/tournament/${t.tournament_id ?? t.id}`)}
-                  style={{
-                    background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)',
-                    padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                  style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
                     cursor: isClickable ? 'pointer' : 'default',
                     opacity: t.status === 'upcoming' ? 0.42 : 1,
                   }}
@@ -245,7 +244,7 @@ export default function TennisHomeScreen() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>

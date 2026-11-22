@@ -116,7 +116,7 @@ export default function ConfirmModal({
         <p style={{
           fontSize: 'var(--fs-body)',
           lineHeight:   1.6,
-          color:        'rgba(240,242,245,0.6)',
+          color:        'var(--ink-soft)',
           marginBottom: warning ? '12px' : '24px',
           whiteSpace:   'pre-line',
         }}>

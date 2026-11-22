@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTennisTournament } from '../../hooks/tennis/useTennisTournament';
 import { Icon } from '../../components/UiIcons';
+import Card from '../../components/ui/Card';
 
 const TIER_LABEL = { 1: 'Seeds 1–4', 2: 'Seeds 5–16', 3: 'Seeds 17–32', 4: 'Unseeded' };
 const TIER_SLOTS = [
@@ -106,7 +107,7 @@ export default function TennisTournamentScreen() {
         <div className="sport-cards sport-tight">
         {/* Score card (completed) */}
         {isCompleted && score && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20, textAlign: 'center' }}>
+          <Card padded={false} style={{ padding: '16px', marginBottom: 20, textAlign: 'center' }}>
             <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
               Your Score
             </div>
@@ -118,7 +119,7 @@ export default function TennisTournamentScreen() {
               {score.ace_card_bonus > 0 && <ScorePill label="Ace Card" val={`+${score.ace_card_bonus}`} accent />}
               {score.captain_bonus > 0 && <ScorePill label="Captain ×2" val={`+${score.captain_bonus}`} gold />}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* QF Captain picker */}
@@ -164,7 +165,7 @@ export default function TennisTournamentScreen() {
 
         {/* Existing roster display */}
         {roster && !isRosterOpen && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20 }}>
+          <Card padded={false} style={{ padding: '16px', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 12 }}>
               Your Squad
             </div>
@@ -188,7 +189,7 @@ export default function TennisTournamentScreen() {
                 {ACE_CARD_INFO[usedCard.card_type] && <Icon name={ACE_CARD_INFO[usedCard.card_type].icon} />} Ace Card played: <strong>{ACE_CARD_INFO[usedCard.card_type]?.label}</strong>
               </div>
             )}
-          </div>
+          </Card>
         )}
 
         </div>
@@ -196,7 +197,7 @@ export default function TennisTournamentScreen() {
         {/* Roster picker form */}
         {isRosterOpen && !isAtp && (
           <form onSubmit={handleSubmit} className="sport-split" style={{ gap: 20 }}>
-            <div className="sport-main" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px' }}>
+            <Card padded={false} className="sport-main" style={{ padding: '16px' }}>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 16 }}>
                 Pick your 7-player squad
               </div>
@@ -223,12 +224,12 @@ export default function TennisTournamentScreen() {
                   ))}
                 </div>
               ))}
-            </div>
+            </Card>
 
             <div className="sport-aside" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Ace Card selector */}
             {availableAceCards.length > 0 && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px' }}>
+              <Card padded={false} style={{ padding: '16px' }}>
                 <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
                   Ace Card (optional)
                 </div>
@@ -260,7 +261,7 @@ export default function TennisTournamentScreen() {
                     );
                   })}
                 </div>
-              </div>
+              </Card>
             )}
 
             {submitErr && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--neg)' }}>{submitErr}</div>}
@@ -277,26 +278,26 @@ export default function TennisTournamentScreen() {
 
         {/* Upcoming / not-open state */}
         {tournament.status === 'upcoming' && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '24px 20px', textAlign: 'center' }}>
+          <Card padded={false} style={{ padding: '24px 20px', textAlign: 'center' }}>
             <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
               Roster not yet open
             </div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '10px 0 0' }}>
               The player list hasn't been seeded yet. Check back closer to the tournament start.
             </p>
-          </div>
+          </Card>
         )}
 
         {/* In progress (no QF window) */}
         {tournament.status === 'in_progress' && !isQfOpen && roster && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center' }}>
+          <Card padded={false} style={{ padding: '16px', textAlign: 'center' }}>
             <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--accent)' }}>
               Tournament in progress
             </div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '8px 0 0' }}>
               Your squad is locked. The QF captain window will open when 8 players remain.
             </p>
-          </div>
+          </Card>
         )}
       </div>
     </div>

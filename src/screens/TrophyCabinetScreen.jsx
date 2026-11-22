@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useIsMobile } from '../hooks/useViewport';
 import { supabase } from '../lib/supabase';
 import { Icon } from '../components/UiIcons';
+import Card from '../components/ui/Card';
 
 const HEAD = { fontFamily: 'Archivo Black, sans-serif', letterSpacing: '-0.02em' };
 
@@ -29,13 +30,13 @@ const TIER_ICONS = { gold: 'trophy', silver: 'medal-silver', bronze: 'medal-bron
 function TrophyCard({ trophy }) {
   const icon = TIER_ICONS[trophy.tier] ?? 'medal';
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '11px 13px', minWidth: 108 }}>
+    <Card padded={false} style={{ padding: '11px 13px', minWidth: 108 }}>
       <div style={{ fontSize: 'var(--fs-heading)', marginBottom: 5, color: trophy.tier === 'gold' ? 'var(--gold)' : 'var(--mute)' }}><Icon name={icon} /></div>
       <div style={{ ...HEAD, fontSize: 'var(--fs-micro)', lineHeight: 1.25 }}>{trophy.label ?? trophy.reason ?? 'Trophy'}</div>
       <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3 }}>
         {trophy.league_name ? `${trophy.league_name} · ` : ''}{timeAgoShort(trophy.awarded_at)}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -45,7 +46,7 @@ function SportBreakdownCard({ sport, competitions }) {
   if (!cfg) return null;
   const items = competitions[sport] ?? [];
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 15px' }}>
+    <Card padded={false} style={{ padding: '14px 15px' }}>
       <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 7 }}>{cfg.label}</div>
       <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-title)', lineHeight: 1, color: cfg.color }}>
         {items.length > 0 ? `${items.length} ✓` : '—'}
@@ -53,7 +54,7 @@ function SportBreakdownCard({ sport, competitions }) {
       <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--text2)', marginTop: 5 }}>
         {items.length > 0 ? items.slice(0, 2).map(i => i.name).join(', ') : 'No competitions'}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -307,13 +308,13 @@ export default function TrophyCabinetScreen() {
               })}
             </div>
           ) : (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '40px 32px', textAlign: 'center' }}>
+            <Card padded={false} style={{ padding: '40px 32px', textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--fs-display)', marginBottom: 16, color: 'var(--mute)' }}><Icon name="medal" /></div>
               <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', marginBottom: 8 }}>No trophies yet</div>
               <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}>
                 Win a gameweek, top a leaderboard, or be awarded a trophy by a commissioner to see them here.
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Mobile: export card inline below trophies */}
@@ -326,7 +327,7 @@ export default function TrophyCabinetScreen() {
 
             {/* Activity history */}
             {feed.length > 0 && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
+              <Card padded={false}>
                 <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)' }}>
                   <div style={{ ...HEAD, fontSize: 'var(--fs-body)' }}>Activity history</div>
                 </div>
@@ -335,7 +336,7 @@ export default function TrophyCabinetScreen() {
                     <ActivityItem key={item.id ?? i} item={item} />
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
 
             {shareableCard}

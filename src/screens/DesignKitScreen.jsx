@@ -1,52 +1,68 @@
-// Dev-only preview of the redesign kit (route /dev/kit, stripped from production builds).
-import { Card, StatPill, StatusBar, PageHeader, EmptyState, ErrorState } from '../components/ui';
-import ClubCrest from '../components/ClubCrest';
+// Dev-only component catalogue (route /dev/kit, stripped from production builds).
+// Every shared component in its variants and states, without a login or live data.
+// The width picker loads the same page in an iframe at phone, tablet or desktop width,
+// so media queries (bottom nav, .sport-split) behave as they do on a real device.
+// ?frame=1 renders the sections only (the iframe view); &section=<id> narrows to one.
+import { useSearchParams } from 'react-router-dom';
 import Button from '../components/Button';
-import { applyTheme } from '../lib/theme';
+import KitSections from './devkit/KitSections';
+import { KIT_SECTIONS } from './devkit/kitSectionList';
 
-const SWATCHES = ['bg', 'card', 'raised', 'rule', 'accent', 'gold', 'good', 'crit', 'navy'];
+const WIDTHS = [
+  ['full', 'Full width'],
+  ['375', 'Phone 375'],
+  ['768', 'Tablet 768'],
+  ['1280', 'Desktop 1280'],
+];
 
 export default function DesignKitScreen() {
+  const [params, setParams] = useSearchParams();
+  const only = params.get('section') || '';
+  const width = params.get('w') || 'full';
+  const page = { background: 'var(--bg)', color: 'var(--paper)', minHeight: '100vh' };
+
+  if (params.get('frame') === '1') {
+    return <div style={page}><KitSections only={only} /></div>;
+  }
+
+  const set = (key, value) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value); else next.delete(key);
+    setParams(next, { replace: true });
+  };
+  const frameSrc = `/dev/kit?frame=1${only ? `&section=${only}` : ''}`;
+
   return (
-    <div style={{ background: 'var(--bg)', color: 'var(--paper)', minHeight: '100vh' }}>
-      <PageHeader
-        title="Clubhouse design kit"
-        meta={<><StatPill>Wave 0</StatPill><StatPill tone="accent">Dev only</StatPill></>}
-        stats={<div><b style={{ fontSize: 24 }}>12</b><div style={{ fontSize: 12, color: 'var(--mute)' }}>tokens</div></div>}
-      >
-        <div style={{ display: 'flex', gap: 8, paddingBottom: 12 }}>
-          <Button size="sm" variant="secondary" onClick={() => applyTheme('light')}>Light</Button>
-          <Button size="sm" variant="secondary" onClick={() => applyTheme('dark')}>Dark</Button>
+    <div style={page}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '12px 16px', display: 'grid', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+          <h1 style={{ margin: 0, fontFamily: "'Archivo Black', sans-serif", fontWeight: 400, fontSize: 'var(--fs-title)' }}>Clubhouse components</h1>
+          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Dev only · not in the live app</span>
         </div>
-      </PageHeader>
-      <StatusBar tone="good">Transfer window open · closes in <span className="num">2d 4h</span></StatusBar>
-      <div style={{ padding: 16, display: 'grid', gap: 16, maxWidth: 720, margin: '0 auto' }}>
-        <Card>
-          <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-heading)' }}>Colour tokens</h2>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {SWATCHES.map((n) => (
-              <div key={n} style={{ textAlign: 'center', fontSize: 12 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 'var(--radius)', background: `var(--${n})`, border: '1px solid var(--rule)' }} />
-                {n}
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card>
-          <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-heading)' }}>Pills and buttons</h2>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <StatPill>Draft · H2H</StatPill><StatPill tone="accent">Gameweek 3</StatPill>
-            <StatPill tone="good">Free agent</StatPill><StatPill tone="warn">Doubt</StatPill><StatPill tone="crit">Out</StatPill>
-            <Button>Confirm transfer</Button><Button variant="secondary">Stats</Button><Button variant="danger">Sell</Button>
-          </div>
-        </Card>
-        <Card>
-          <h2 style={{ margin: '0 0 12px', fontSize: 'var(--fs-heading)' }}>Crest</h2>
-          <ClubCrest name="Arsenal" size={32} />
-        </Card>
-        <Card padded={false}><EmptyState title="No transfers yet" body="Players you buy or sell will show here." /></Card>
-        <Card padded={false}><ErrorState onRetry={() => {}} /></Card>
-      </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} role="group" aria-label="Width">
+          {WIDTHS.map(([w, text]) => (
+            <Button key={w} size="sm" variant={width === w ? 'primary' : 'secondary'} aria-pressed={width === w} onClick={() => set('w', w === 'full' ? '' : w)}>{text}</Button>
+          ))}
+        </div>
+        <nav style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }} aria-label="Sections">
+          <Button size="sm" variant={!only ? 'primary' : 'ghost'} onClick={() => set('section', '')}>All</Button>
+          {KIT_SECTIONS.map((s) => (
+            <Button key={s.id} size="sm" variant={only === s.id ? 'primary' : 'ghost'} style={{ whiteSpace: 'nowrap' }} onClick={() => set('section', s.id)}>{s.title}</Button>
+          ))}
+        </nav>
+      </header>
+      {width === 'full' ? (
+        <KitSections only={only} />
+      ) : (
+        <div style={{ overflowX: 'auto', padding: 16 }}>
+          <iframe
+            key={frameSrc + width}
+            title={`Components at ${width}px`}
+            src={frameSrc}
+            style={{ display: 'block', margin: '0 auto', width: Number(width), height: 'calc(100vh - 170px)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', background: 'var(--bg)' }}
+          />
+        </div>
+      )}
     </div>
   );
 }

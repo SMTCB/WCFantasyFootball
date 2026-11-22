@@ -19,6 +19,7 @@ import ClubhouseCard from '../components/home/ClubhouseCard';
 import { useHereNowAcross } from '../hooks/useHereNow';
 import { useAuth } from '../hooks/useAuth';
 import Button from '../components/Button';
+import Card from '../components/ui/Card';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -137,7 +138,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
       </div>
 
       {/* Search public clubhouses */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '18px 18px' }}>
+      <Card padded={false} style={{ padding: '18px 18px' }}>
         <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
           Search public Clubhouses
         </div>
@@ -195,7 +196,7 @@ function FindOrCreatePanel({ searchClubhouses, joinCircleByCode, createCircle, c
             Private Clubhouses are invite-code only.
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

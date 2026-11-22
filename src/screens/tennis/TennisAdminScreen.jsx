@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTennisCalendar } from '../../hooks/tennis/useTennisCalendar';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import Card from '../../components/ui/Card';
 
 const STATUS_ORDER = ['upcoming', 'roster_open', 'in_progress', 'qf_captain_open', 'completed'];
 const ROUND_REACHED_OPTIONS = ['r128', 'r64', 'r32', 'r16', 'qf', 'sf', 'runner_up', 'champion'];
@@ -145,7 +146,7 @@ export default function TennisAdminScreen() {
       <div className="sport-col" style={{ padding: '16px' }}>
 
         {/* Tournament selector */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 16 }}>
+        <Card padded={false} style={{ padding: '16px', marginBottom: 16 }}>
           <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
             Select Tournament
           </label>
@@ -165,7 +166,7 @@ export default function TennisAdminScreen() {
               ))}
             </select>
           )}
-        </div>
+        </Card>
 
         {selected && t && (
           <>
@@ -283,10 +284,10 @@ export default function TennisAdminScreen() {
 
 function Section({ title, children }) {
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 14 }}>
+    <Card padded={false} style={{ padding: '16px', marginBottom: 14 }}>
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 12 }}>{title}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{children}</div>
-    </div>
+    </Card>
   );
 }
 

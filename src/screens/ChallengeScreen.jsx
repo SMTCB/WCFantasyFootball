@@ -13,6 +13,7 @@ import { useClubhouseContext } from '../context/ClubhouseContext';
 import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
+import Card from '../components/ui/Card';
 import {
   HEAD,
   Icon,
@@ -386,9 +387,9 @@ export default function ChallengeScreen() {
               {(loading || (betsEnabled && betsLoading)) ? (
                 <LoadingRows rows={3} />
               ) : allBets.incoming.length === 0 ? (
-                <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '20px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
+                <Card padded={false} style={{ padding: '20px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
                   Nothing waiting on you.
-                </div>
+                </Card>
               ) : (
                 <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 'var(--radius)', padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {allBets.incoming.map(item => item.kind === 'challenge' ? (
@@ -411,9 +412,9 @@ export default function ChallengeScreen() {
               <div>
                 <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 9 }}>Sent · awaiting</div>
                 {allBets.sent.length === 0 ? (
-                  <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
+                  <Card padded={false} style={{ padding: '16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
                     No sent challenges.
-                  </div>
+                  </Card>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {allBets.sent.map(c => <OutgoingCard key={c.id} challenge={c} userId={user?.id} onCancel={handleCancel} loading={actionLoading} />)}
@@ -433,9 +434,9 @@ export default function ChallengeScreen() {
                   <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Active</span>
                 </div>
                 {allBets.live.length === 0 ? (
-                  <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
+                  <Card padded={false} style={{ padding: '16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
                     Nothing live right now.
-                  </div>
+                  </Card>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {allBets.live.map(item => item.kind === 'challenge' ? (
