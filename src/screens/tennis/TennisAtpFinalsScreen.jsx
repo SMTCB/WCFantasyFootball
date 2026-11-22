@@ -66,6 +66,7 @@ export default function TennisAtpFinalsScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '20px 16px' }}>
+        <div className="sport-col">
         <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Tennis
         </button>
@@ -78,12 +79,13 @@ export default function TennisAtpFinalsScreen() {
         <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '4px 0 0' }}>
           Pick the winner of all 15 matches across 2 login windows.
         </p>
+        </div>
       </div>
 
-      <div style={{ padding: '16px', maxWidth: 600, margin: '0 auto' }}>
+      <div className="sport-col sport-split" style={{ padding: '16px' }}>
 
         {/* Scoring tiers reference */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', marginBottom: 20 }}>
+        <div className="sport-aside" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', marginBottom: 20 }}>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 10 }}>Scoring Tiers</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {TIER_TIERS.map(t => (
@@ -99,6 +101,7 @@ export default function TennisAtpFinalsScreen() {
           </div>
         </div>
 
+        <div className="sport-main">
         {/* Upcoming */}
         {status === 'upcoming' && (
           <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '24px 20px', textAlign: 'center' }}>
@@ -119,7 +122,7 @@ export default function TennisAtpFinalsScreen() {
               {isGroupOpen ? 'Pick the winner of each group match before the first ball is struck.' : 'Group stage picks locked.'}
             </p>
             <form onSubmit={handleGroupSubmit}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="sport-cards" style={{ gap: 10 }}>
                 {groupMatches.map(m => {
                   const existing = myPickMap[m.match_number];
                   const draft = groupDraft[m.match_number];
@@ -189,6 +192,7 @@ export default function TennisAtpFinalsScreen() {
             </form>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

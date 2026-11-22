@@ -92,12 +92,15 @@ export default function F1ReportScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
+        <div className="sport-col">
         <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
           Paddock report · 2026
         </div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>REPORT</h1>
+        </div>
       </div>
 
+      <div className="sport-col sport-pad">
       {/* Tab switcher */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
         {[['race', 'Race bets'], ['year', 'Year bets']].map(([key, label]) => (
@@ -118,7 +121,7 @@ export default function F1ReportScreen() {
             <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)' }}>No races have been scored yet.</p>
           </div>
         ) : (
-          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="sport-cards" style={{ padding: '12px 16px' }}>
             {races.map(race => {
               const myBet = betMap[`${user?.id}_${race.round_number}`];
               const myScore = scoreMap[`${user?.id}_${race.round_number}`];
@@ -253,7 +256,7 @@ export default function F1ReportScreen() {
             </p>
           </div>
         ) : (
-          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="sport-cards" style={{ padding: '12px 16px' }}>
             {sortedMembers.map(member => {
               const bet = yearBetMap[member.user_id];
               const isMe = member.user_id === user?.id;
@@ -293,6 +296,7 @@ export default function F1ReportScreen() {
           </div>
         )
       )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
 import { CompetitionResultsHeader } from '../../components/competition/CompetitionResultsHeader';
 import Button from '../../components/Button';
+import { Icon } from '../../components/UiIcons';
 
 export default function TennisLeaderboardScreen() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function TennisLeaderboardScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '20px 16px' }}>
+        <div className="sport-col">
         <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Tennis
         </button>
@@ -36,15 +38,16 @@ export default function TennisLeaderboardScreen() {
         <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '4px 0 0' }}>
           Grand Slams (all) + Best 4 Masters 1000s + ATP Finals
         </p>
+        </div>
       </div>
 
       {activeBox?.archived && (
         <div style={{ padding: '8px 16px', background: 'var(--elev)', borderBottom: '1px solid var(--rule)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-          ARCHIVED — this player's box is inactive.
+          <div className="sport-col">ARCHIVED — this player's box is inactive.</div>
         </div>
       )}
 
-      <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto' }}>
+      <div className="sport-col" style={{ padding: '16px' }}>
 
         {boxLoading || loading ? (
           <LoadingRows rows={3} />
@@ -63,16 +66,17 @@ export default function TennisLeaderboardScreen() {
           </div>
         ) : (
           <>
+            <div className="sport-split">
             {/* Masters Drop Rule note */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ fontSize: 'var(--fs-body-lg)' }}>ℹ️</span>
-              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text2)', margin: 0 }}>
+            <div className="sport-aside" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 'var(--fs-body-lg)', color: 'var(--ten)', lineHeight: 1 }}><Icon name="info" /></span>
+              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text-2)', margin: 0 }}>
                 <strong>Masters Drop Rule:</strong> Only your best 4 Masters 1000 scores count. The worst score is dropped once 5 or more Masters are complete.
               </p>
             </div>
 
             {/* Standings table */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 20 }}>
+            <div className="sport-main" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 20 }}>
               <CompetitionResultsHeader
                 rows={standings}
                 columns={[
@@ -102,6 +106,7 @@ export default function TennisLeaderboardScreen() {
                 gap={8}
               />
             </div>
+            </div>
 
             {/* Per-tournament breakdown */}
             {seasonSummary.length > 0 && (
@@ -117,8 +122,8 @@ export default function TennisLeaderboardScreen() {
                       <tr style={{ background: 'var(--elev)' }}>
                         <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', fontWeight: 400 }}>Manager</th>
                         {seasonSummary[0]?.tournament_scores?.map(ts => (
-                          <th key={ts.tournament_id} style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', fontWeight: 400, whiteSpace: 'nowrap', maxWidth: 80 }}>
-                            {ts.tournament_name?.split(' ').slice(0, 1).join(' ')}
+                          <th key={ts.tournament_id} style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', fontWeight: 400, maxWidth: 96, lineHeight: 1.25, verticalAlign: 'bottom' }} title={ts.tournament_name}>
+                            {ts.tournament_name}
                           </th>
                         ))}
                       </tr>

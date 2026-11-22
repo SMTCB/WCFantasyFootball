@@ -51,6 +51,7 @@ const PATHS = {
   gear:      [c(12, 12, 3), c(12, 12, 6.5), 'M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1'],
   hourglass: ['M7 4h10M7 20h10', 'M8 4c0 5 8 5 8 8s-8 3-8 8M16 4c0 5-8 5-8 8'],
   image:     ['M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z', c(9, 9, 1.6), 'm4 17 5-5 4 4 2.5-2.5L20 18'],
+  info:      [c(12, 12, 9), 'M12 11v5', 'M12 7.8v.1'],
   leaf:      ['M5 19C5 11 10 6 19 5c0 9-5 14-13 14H5Z', 'M5 19l8-8'],
   link:      ['M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1', 'M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],
   list:      ['M9 6h11M9 12h11M9 18h11', 'M4.5 6v.1M4.5 12v.1M4.5 18v.1'],
@@ -103,7 +104,7 @@ export function Icon({ name, size = '1em', label, color, style }) {
     <svg {...base(size)}
       {...(filled ? { fill: 'currentColor', stroke: 'none' } : {})}
       {...(label ? { 'aria-hidden': undefined, role: 'img', 'aria-label': label } : {})}
-      style={{ verticalAlign: '-0.125em', flexShrink: 0, ...(color ? { color } : {}), ...style }}>
+      style={{ display: 'inline-block', verticalAlign: '-0.125em', flexShrink: 0, ...(color ? { color } : {}), ...style }}>
       {d.map((p, i) => <path key={i} d={p} />)}
     </svg>
   );

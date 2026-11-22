@@ -111,6 +111,7 @@ export default function F1SeasonBetsScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
+        <div className="sport-col">
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
           Season predictions · 2026
         </div>
@@ -118,15 +119,19 @@ export default function F1SeasonBetsScreen() {
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 4 }}>
           10 pts per correct prediction · {answered}/{SEASON_FIELDS.length} answered
         </div>
+        </div>
       </div>
 
       {isLocked && (
-        <div style={{ margin: '12px 16px', padding: '10px 14px', background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>
+        <div className="sport-col" style={{ padding: '12px 16px 0' }}>
+        <div style={{ padding: '10px 14px', background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>
           <Icon name="lock" /> Season bets are locked
+        </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <form onSubmit={handleSubmit} className="sport-col" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="sport-cards" style={{ gap: 10 }}>
         {SEASON_FIELDS.map(field => {
           const isCorrect = yearResults?.[field.key] && bet[field.key] === yearResults[field.key];
           return (
@@ -155,12 +160,14 @@ export default function F1SeasonBetsScreen() {
             </div>
           );
         })}
+        </div>
 
         {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)', padding: '8px 12px', background: 'rgba(185,28,28,0.06)', borderRadius: 'var(--radius)' }}>{err}</div>}
 
         {!isLocked && (
           <button
             type="submit"
+            className="sport-submit"
             disabled={saving}
             style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
           >
