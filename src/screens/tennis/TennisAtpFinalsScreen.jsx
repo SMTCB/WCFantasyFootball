@@ -9,7 +9,7 @@ const TIER_TIERS = [
   { range: [6,9],  label: 'Deuce',              pts: 750 },
   { range: [10,12],label: 'Match Point',        pts: 1800 },
   { range: [13,14],label: 'Championship Point', pts: 3500 },
-  { range: [15,15],label: '🏆 The Perfect Slate', pts: 7500 },
+  { range: [15,15],label: 'The Perfect Slate', pts: 7500 },
 ];
 
 export default function TennisAtpFinalsScreen() {
@@ -70,7 +70,7 @@ export default function TennisAtpFinalsScreen() {
           ← Tennis
         </button>
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
-          🏆 ATP Finals · 2026
+          🎾 ATP Finals · 2026
         </div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>
           ATP Finals Predictions

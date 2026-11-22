@@ -13,7 +13,7 @@
  *   onDone   () => void  — called when user clicks "Go to my league"
  */
 
-import { IconTrophy } from './UiIcons';
+import { IconTrophy, Icon } from './UiIcons';
 import { useState, useRef, useEffect } from 'react';
 import { domToPng } from 'modern-screenshot';
 import { supabase } from '../lib/supabase';
@@ -189,7 +189,7 @@ export default function LeagueInviteCard({ league, onDone }) {
               {league.join_code}
             </span>
             <span style={{ fontSize: 'var(--fs-heading)', opacity: 0.6 }}>
-              {copied ? '✓' : '📋'}
+              {copied ? '✓' : <Icon name="copy" />}
             </span>
           </button>
           <div style={{ fontSize: 'var(--fs-label)', color: 'rgba(240,242,245,0.3)', fontFamily: 'Archivo Black, sans-serif', textAlign: 'center' }}>
@@ -239,7 +239,7 @@ export default function LeagueInviteCard({ league, onDone }) {
             onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
             onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            <span style={{ fontSize: 'var(--fs-heading)' }}>💬</span>
+            <span style={{ fontSize: 'var(--fs-heading)', display: 'inline-flex' }}><Icon name="chat" /></span>
             Share on WhatsApp
           </a>
 
@@ -261,7 +261,7 @@ export default function LeagueInviteCard({ league, onDone }) {
                 transition:    'all 0.15s',
               }}
             >
-              {linkCopied ? '✓ Copied!' : '🔗 Copy Link'}
+              {linkCopied ? '✓ Copied!' : <><Icon name="link" /> Copy Link</>}
             </button>
 
             <button
@@ -282,7 +282,7 @@ export default function LeagueInviteCard({ league, onDone }) {
                 transition:    'all 0.15s',
               }}
             >
-              {exporting ? 'Saving…' : '🖼️ Save Card'}
+              {exporting ? 'Saving…' : <><Icon name="image" /> Save Card</>}
             </button>
           </div>
 

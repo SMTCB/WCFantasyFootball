@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useClubhouseFrontpage, FT_EMOJIS } from '../hooks/useClubhouseFrontpage';
 import { ReactionStrip, LettersPanel } from './league/FrontpageInteractive';
+import { Icon } from './UiIcons';
 
 // Clubhouse Newspaper palette — intentional broadsheet design, NOT Kit Light tokens.
 // FT_INK (#1A1A18) and FT_PAPER (#F2EEE5) are warm editorial colours that differ from
@@ -82,7 +83,7 @@ function ClassificationSection({ leagues }) {
   return (
     <div style={{ marginBottom: 20, borderTop: `1px solid ${FT_RULE}`, paddingTop: 18 }}>
       <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_MUTE, marginBottom: 10 }}>
-        📊 Classification
+        <Icon name="chart" /> Classification
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
         {withStandings.map((l, i) => (
@@ -153,7 +154,7 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
       {(edition.raw_input?.announcements ?? []).map((a, i) => (
         <div key={i} style={{ background: FT_INK, color: FT_PAPER, padding: '12px 14px', marginBottom: 16 }}>
           <div style={{ fontFamily: FT_BODY, fontSize: 'var(--fs-label)', color: FT_GOLD, marginBottom: 6 }}>
-            📣 Commissioner's notice{a.league ? ` · ${a.league}` : ''}
+            <Icon name="megaphone" /> Commissioner's notice{a.league ? ` · ${a.league}` : ''}
           </div>
           <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 'var(--fs-body)', lineHeight: 1.3 }}>{a.headline}</div>
           {(a.bullets ?? []).map((b, j) => (
@@ -203,13 +204,13 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
       {/* Hot Take / Wooden Spoon / Transfer Desk — 3-column grid on wide, stacked on narrow */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, borderTop: `1px solid ${FT_RULE}`, paddingTop: 18 }}>
         {edition.hot_take && (
-          <FtSection label="🔥 Hot Take" content={edition.hot_take} sectionKey="hot_take" ft={ft} />
+          <FtSection label={<><Icon name="flame" /> Hot Take</>} content={edition.hot_take} sectionKey="hot_take" ft={ft} />
         )}
         {edition.wooden_spoon && (
-          <FtSection label="🥄 Wooden Spoon" content={edition.wooden_spoon} sectionKey="scores" ft={ft} />
+          <FtSection label={<><Icon name="spoon" /> Wooden Spoon</>} content={edition.wooden_spoon} sectionKey="scores" ft={ft} />
         )}
         {edition.transfer_rumour && (
-          <FtSection label="📰 Transfer Desk" content={edition.transfer_rumour} sectionKey="transfers" ft={ft} />
+          <FtSection label={<><Icon name="newspaper" /> Transfer Desk</>} content={edition.transfer_rumour} sectionKey="transfers" ft={ft} />
         )}
       </div>
     </div>

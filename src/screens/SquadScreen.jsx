@@ -1,4 +1,4 @@
-import { IconWarning } from '../components/UiIcons';
+import { IconWarning, Icon } from '../components/UiIcons';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -742,8 +742,8 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
   if (leagues !== null && leagues.length === 0 && !activeLeague) {
     const NO_LEAGUE_TABS_MOBILE  = [
       { id: 'pitch',  label: '⚽ PITCH'  },
-      { id: 'squad',  label: '📋 LIST'   },
-      { id: 'status', label: '⚠️ STATUS' },
+      { id: 'squad',  label: <><Icon name="clipboard" /> LIST</>   },
+      { id: 'status', label: <><Icon name="warning" /> STATUS</> },
     ];
     const NO_LEAGUE_TABS_DESKTOP = [
       { id: 'pitch', label: 'Pitch'  },
@@ -836,8 +836,8 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
   if (!players.length && !bench.length) {
     const EMPTY_TABS_MOBILE  = [
       { id: 'pitch',  label: '⚽ PITCH'  },
-      { id: 'squad',  label: '📋 LIST'   },
-      { id: 'status', label: '⚠️ STATUS' },
+      { id: 'squad',  label: <><Icon name="clipboard" /> LIST</>   },
+      { id: 'status', label: <><Icon name="warning" /> STATUS</> },
     ];
     const EMPTY_TABS_DESKTOP = [
       { id: 'pitch', label: 'Pitch'  },
@@ -1573,7 +1573,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                           cursor: isLocked ? 'not-allowed' : 'pointer', textAlign: 'left',
                         }}
                       >
-                        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>{isLocked ? '🔒' : `S${bi + 1}`}</div>
+                        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>{isLocked ? <Icon name="lock" /> : `S${bi + 1}`}</div>
                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(player), flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

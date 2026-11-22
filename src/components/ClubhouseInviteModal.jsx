@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PLATFORM_NAME } from '../lib/brand';
+import { Icon } from './UiIcons';
 
 const MONO = { fontFamily: 'Archivo, sans-serif' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -116,7 +117,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
               fontSize: 'var(--fs-body)', ...HEAD, fontWeight: 800, textDecoration: 'none',
             }}
           >
-            <span style={{ fontSize: 'var(--fs-heading)' }}>💬</span>
+            <span style={{ fontSize: 'var(--fs-heading)', display: 'inline-flex' }}><Icon name="chat" /></span>
             Share on WhatsApp
           </a>
 
@@ -141,7 +142,7 @@ export default function ClubhouseInviteModal({ circle, onClose }) {
               fontSize: 'var(--fs-label)', ...HEAD, fontWeight: 700, cursor: 'pointer',
             }}
           >
-            {linkCopied ? '✓ Link copied' : '🔗 Copy invite link'}
+            {linkCopied ? '✓ Link copied' : <><Icon name="link" /> Copy invite link</>}
           </button>
 
           <button

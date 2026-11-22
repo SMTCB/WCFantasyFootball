@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { Icon } from '../components/UiIcons';
 
 // ── Design tokens — mirror the league hub exactly ─────────────────────────────
 const MONO    = "Archivo, sans-serif";
@@ -593,7 +594,7 @@ export default function RecapScreen() {
             alignItems: 'center', justifyContent: 'center',
             padding: '48px 24px', textAlign: 'center',
           }}>
-            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 14 }}>📋</div>
+            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 14, color: 'var(--mute)' }}><Icon name="clipboard" /></div>
             <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: 'var(--paper)', marginBottom: 8 }}>
               ALL QUIET
             </div>

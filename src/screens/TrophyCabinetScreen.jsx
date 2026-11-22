@@ -3,6 +3,7 @@ import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useAuth } from '../hooks/useAuth';
 import { useIsMobile } from '../hooks/useViewport';
 import { supabase } from '../lib/supabase';
+import { Icon } from '../components/UiIcons';
 
 const HEAD = { fontFamily: 'Archivo Black, sans-serif', letterSpacing: '-0.02em' };
 
@@ -22,14 +23,14 @@ function timeAgoShort(iso) {
   return `${months[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
 }
 
-const TIER_ICONS = { gold: '🏆', silver: '🥈', bronze: '🥉', participation: '⭐' };
+const TIER_ICONS = { gold: 'trophy', silver: 'medal-silver', bronze: 'medal-bronze', participation: 'star' };
 
 // ── Trophy card ────────────────────────────────────────────────────────────────
 function TrophyCard({ trophy }) {
-  const icon = TIER_ICONS[trophy.tier] ?? '🏅';
+  const icon = TIER_ICONS[trophy.tier] ?? 'medal';
   return (
     <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '11px 13px', minWidth: 108 }}>
-      <div style={{ fontSize: 'var(--fs-heading)', marginBottom: 5 }}>{icon}</div>
+      <div style={{ fontSize: 'var(--fs-heading)', marginBottom: 5, color: trophy.tier === 'gold' ? 'var(--gold)' : 'var(--mute)' }}><Icon name={icon} /></div>
       <div style={{ ...HEAD, fontSize: 'var(--fs-micro)', lineHeight: 1.25 }}>{trophy.label ?? trophy.reason ?? 'Trophy'}</div>
       <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 3 }}>
         {trophy.league_name ? `${trophy.league_name} · ` : ''}{timeAgoShort(trophy.awarded_at)}
@@ -307,7 +308,7 @@ export default function TrophyCabinetScreen() {
             </div>
           ) : (
             <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '40px 32px', textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--fs-display)', marginBottom: 16 }}>🏅</div>
+              <div style={{ fontSize: 'var(--fs-display)', marginBottom: 16, color: 'var(--mute)' }}><Icon name="medal" /></div>
               <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', marginBottom: 8 }}>No trophies yet</div>
               <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text2)' }}>
                 Win a gameweek, top a leaderboard, or be awarded a trophy by a commissioner to see them here.

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
+import { Glyph } from '../UiIcons';
 // Inline font constants — avoids importing HubShared here. LeagueScreen imports HubShared
 // directly, and CommissionerPanel→BetCreatorPanel also importing it creates a competing
 // module-evaluation path that causes a TDZ crash in Vite/Rolldown's production bundle.
@@ -10,9 +11,9 @@ const DISPLAY = "'Archivo Black', sans-serif";
 
 const CATEGORIES = [
   { key: 'match',   label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
-  { key: 'stats',   label: 'STATS',   color: 'var(--gold-text)',  icon: '📊' },
-  { key: 'players', label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
-  { key: 'custom',  label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏' },
+  { key: 'stats',   label: 'STATS',   color: 'var(--gold-text)',  icon: 'chart' },
+  { key: 'players', label: 'PLAYERS', color: 'var(--accent)',  icon: 'target' },
+  { key: 'custom',  label: 'CUSTOM',  color: 'var(--mute)',  icon: 'pencil' },
 ];
 
 // configPanel values:
@@ -28,14 +29,14 @@ const CATEGORIES = [
 const TEMPLATES = [
   // MATCH (12)
   { slug: 'match_result',       label: 'Match Result',               icon: '◈', category: 'match',   configPanel: 'fixture_3way',   promptHint: 'Predict the result of this match.', needsFixture: true,  scopeType: 'match'    },
-  { slug: 'first_team_score',   label: 'First Team to Score',        icon: '⚡', category: 'match',   configPanel: 'fixture_2way',   promptHint: 'Which team scores first?', needsFixture: true, scopeType: 'match'                     },
-  { slug: 'clean_sheet',        label: 'Clean Sheet',                icon: '🧤', category: 'match',   configPanel: 'fixture_2way',   promptHint: 'Pick a team to keep a clean sheet.', needsFixture: true, withNone: true, scopeType: 'match' },
-  { slug: 'lead_at_halftime',   label: 'Lead at Half-time',          icon: '⏱', category: 'match',   configPanel: 'fixture_3way',   promptHint: 'Who leads at half-time?', needsFixture: true, scopeType: 'match'                        },
+  { slug: 'first_team_score',   label: 'First Team to Score',        icon: 'bolt', category: 'match',   configPanel: 'fixture_2way',   promptHint: 'Which team scores first?', needsFixture: true, scopeType: 'match'                     },
+  { slug: 'clean_sheet',        label: 'Clean Sheet',                icon: 'shield', category: 'match',   configPanel: 'fixture_2way',   promptHint: 'Pick a team to keep a clean sheet.', needsFixture: true, withNone: true, scopeType: 'match' },
+  { slug: 'lead_at_halftime',   label: 'Lead at Half-time',          icon: 'clock', category: 'match',   configPanel: 'fixture_3way',   promptHint: 'Who leads at half-time?', needsFixture: true, scopeType: 'match'                        },
   { slug: 'second_half_winner', label: 'Second Half Winner',         icon: '▶', category: 'match',   configPanel: 'fixture_3way',   promptHint: 'Who wins the second half?', needsFixture: true, scopeType: 'match'                       },
-  { slug: 'winning_margin',     label: 'Winning Margin',             icon: '📏', category: 'match',   configPanel: 'winning_margin', promptHint: 'What will the winning margin be?', needsFixture: true, scopeType: 'match'                 },
+  { slug: 'winning_margin',     label: 'Winning Margin',             icon: 'ruler', category: 'match',   configPanel: 'winning_margin', promptHint: 'What will the winning margin be?', needsFixture: true, scopeType: 'match'                 },
   { slug: 'most_corners_team',  label: 'Most Corners — Team',        icon: '⌒', category: 'match',   configPanel: 'fixture_2way',   promptHint: 'Which team wins the corner count?', needsFixture: true, scopeType: 'match'                },
-  { slug: 'penalty_in_match',   label: 'Penalty in the Match',       icon: '✋', category: 'match',   configPanel: 'binary_yn',      promptHint: 'Will there be a penalty in this match?', scopeType: 'match'                             },
-  { slug: 'red_card_in_match',  label: 'Red Card in the Match',      icon: '🟥', category: 'match',   configPanel: 'binary_yn',      promptHint: 'Will there be a red card in this match?', scopeType: 'match'                           },
+  { slug: 'penalty_in_match',   label: 'Penalty in the Match',       icon: 'whistle', category: 'match',   configPanel: 'binary_yn',      promptHint: 'Will there be a penalty in this match?', scopeType: 'match'                             },
+  { slug: 'red_card_in_match',  label: 'Red Card in the Match',      icon: 'card-red', category: 'match',   configPanel: 'binary_yn',      promptHint: 'Will there be a red card in this match?', scopeType: 'match'                           },
   { slug: 'btts',               label: 'Both Teams to Score',        icon: '◉', category: 'match',   configPanel: 'binary_yn',      promptHint: 'Will both teams score?', scopeType: 'match'                                             },
   { slug: 'btts_first_half',    label: 'BTTS — 1st Half',            icon: '◉', category: 'match',   configPanel: 'binary_yn',      promptHint: 'Will both teams score in the first half?', scopeType: 'match'                          },
   { slug: 'comeback_win',       label: 'Comeback Win',               icon: '↩', category: 'match',   configPanel: 'binary_yn',      promptHint: 'Will a team win after going behind?', scopeType: 'match'                               },
@@ -47,14 +48,14 @@ const TEMPLATES = [
   { slug: 'card_count_ou',      label: 'Card Count O/U',             icon: '≷', category: 'stats',   configPanel: 'over_under',     promptHint: 'Over or under {line} total cards?', scopeType: 'match'                                  },
   { slug: 'total_offsides_ou',  label: 'Total Offsides O/U',         icon: '≷', category: 'stats',   configPanel: 'over_under',     promptHint: 'Over or under {line} offsides?', scopeType: 'match'                                     },
   { slug: 'total_subs_ou',      label: 'Total Substitutions O/U',    icon: '≷', category: 'stats',   configPanel: 'over_under',     promptHint: 'Over or under {line} substitutions?', scopeType: 'match'                                },
-  { slug: 'goal_interval',      label: 'Goal Interval',              icon: '⏰', category: 'stats',   configPanel: 'goal_interval',  promptHint: 'In which 15-minute window will the first goal be scored?', scopeType: 'match'            },
+  { slug: 'goal_interval',      label: 'Goal Interval',              icon: 'alarm', category: 'stats',   configPanel: 'goal_interval',  promptHint: 'In which 15-minute window will the first goal be scored?', scopeType: 'match'            },
   // PLAYERS (4)
-  { slug: 'top_scorer',         label: 'Top Scorer',                 icon: '🎯', category: 'players', configPanel: 'player_pick',    promptHint: 'Who will score the most goals this matchday?', defaultPos: 'FWD', scopeType: 'matchday' },
+  { slug: 'top_scorer',         label: 'Top Scorer',                 icon: 'target', category: 'players', configPanel: 'player_pick',    promptHint: 'Who will score the most goals this matchday?', defaultPos: 'FWD', scopeType: 'matchday' },
   { slug: 'anytime_goalscorer', label: 'Anytime Goalscorer',         icon: '⚽', category: 'players', configPanel: 'player_pick',    promptHint: 'Pick a player to score in this match.', defaultPos: 'FWD', scopeType: 'match'           },
-  { slug: 'yellow_card',        label: 'Player — Yellow Card',       icon: '🟨', category: 'players', configPanel: 'player_pick',    promptHint: 'Pick a player to receive a yellow card.', defaultPos: 'ALL', allPositions: true, scopeType: 'match' },
+  { slug: 'yellow_card',        label: 'Player — Yellow Card',       icon: 'card-yellow', category: 'players', configPanel: 'player_pick',    promptHint: 'Pick a player to receive a yellow card.', defaultPos: 'ALL', allPositions: true, scopeType: 'match' },
   { slug: 'man_of_match',       label: 'Man of the Match',           icon: '★', category: 'players', configPanel: 'player_pick',    promptHint: 'Who will be the standout player?', defaultPos: 'ALL', allPositions: true, scopeType: 'match'  },
   // CUSTOM (1)
-  { slug: 'free_bet',           label: 'Free Bet',                   icon: '✏', category: 'custom',  configPanel: 'free_text',      promptHint: 'Custom question — write your own options.', scopeType: 'tournament'                      },
+  { slug: 'free_bet',           label: 'Free Bet',                   icon: 'pencil', category: 'custom',  configPanel: 'free_text',      promptHint: 'Custom question — write your own options.', scopeType: 'tournament'                      },
 ];
 
 const TMAP = Object.fromEntries(TEMPLATES.map(t => [t.slug, t]));
@@ -85,7 +86,7 @@ function TypeSelector({ onSelect, catExpanded, onToggleCat }) {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <span style={{ fontSize: 'var(--fs-label)' }}>{cat.icon}</span>
+                  <span style={{ fontSize: 'var(--fs-label)' }}><Glyph g={cat.icon} /></span>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: cat.color, }}>{cat.label}</span>
                   <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', }}>{catTemplates.length} types</span>
                 </div>
@@ -111,7 +112,7 @@ function TypeSelector({ onSelect, catExpanded, onToggleCat }) {
                       onMouseEnter={e => { e.currentTarget.style.background = 'var(--elev)'; e.currentTarget.style.borderColor = 'var(--rule)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'var(--elev)'; e.currentTarget.style.borderColor = 'var(--rule)'; }}
                     >
-                      <div style={{ fontSize: 'var(--fs-body)', marginBottom: 3 }}>{t.icon}</div>
+                      <div style={{ fontSize: 'var(--fs-body)', marginBottom: 3 }}><Glyph g={t.icon} /></div>
                       <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: 'var(--paper)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>{t.label}</div>
                     </button>
                   ))}
@@ -622,7 +623,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             border: `1px solid ${catColor}44`, borderLeft: `3px solid ${catColor}`,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 'var(--fs-body-lg)' }}>{template.icon}</span>
+              <span style={{ fontSize: 'var(--fs-body-lg)' }}><Glyph g={template.icon} /></span>
               <div>
                 <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: catColor, letterSpacing: '-0.01em' }}>{template.label}</div>
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>{template.category}</div>

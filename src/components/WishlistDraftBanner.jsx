@@ -5,7 +5,9 @@ import { fmtDraftTime } from '../lib/wishlistDraft';
 // Entry point for the recurring Wishlist Draft — only renders in draft-mode
 // leagues (get_wishlist_draft_status available). Copy follows the round's
 // mode/phase (migration 294) so managers always know when the draft runs.
-export default function WishlistDraftBanner({ leagueId }) {
+// The icon component comes in as a prop: MarketScreen imports UiIcons directly
+// (Rolldown TDZ rule, CLAUDE.md).
+export default function WishlistDraftBanner({ leagueId, icon: IconCmp }) {
   const navigate = useNavigate();
   const { shouldShow, roundNumber, submissionStatus, draft, loading } = useWishlistDraft(leagueId);
 
@@ -14,16 +16,16 @@ export default function WishlistDraftBanner({ leagueId }) {
   const hasSubmission = submissionStatus === 'pending';
   const { phase, mode, scheduledAt, hardDeadlineAt } = draft;
 
-  let icon = hasSubmission ? '✅' : '📋';
+  let icon = hasSubmission ? 'check' : 'clipboard';
   let tone = hasSubmission ? 'var(--positive)' : 'var(--accent)';
   let bg   = hasSubmission ? 'var(--pos-bg)' : 'var(--accent-soft)';
   let msg;
 
   if (phase === 'running') {
-    icon = '⏳'; tone = 'var(--gold)'; bg = 'var(--accent-soft)';
+    icon = 'hourglass'; tone = 'var(--gold)'; bg = 'var(--accent-soft)';
     msg = `Round ${roundNumber} wishlist draft running — market opens in a moment`;
   } else if (phase === 'free_market') {
-    icon = '🛒'; tone = 'var(--mute)'; bg = 'var(--card)';
+    icon = 'cart'; tone = 'var(--mute)'; bg = 'var(--card)';
     msg = `No draft for round ${roundNumber} — free market, first come first served. Your wishlist is kept.`;
   } else if (phase === 'pre_draft') {
     const when = mode === 'auto'
@@ -44,7 +46,7 @@ export default function WishlistDraftBanner({ leagueId }) {
       style={{ background: bg, borderBottom: '1px solid var(--rule)' }}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <span style={{ fontSize: 'var(--fs-body)' }}>{icon}</span>
+        <span style={{ fontSize: 'var(--fs-body)', color: tone, display: 'inline-flex' }}>{IconCmp && <IconCmp name={icon} />}</span>
         <span className="text-[length:var(--fs-micro)] font-bold" style={{ color: tone }}>{msg}</span>
       </div>
       <span className="text-[length:var(--fs-micro)] font-black shrink-0" style={{ color: 'var(--mute)' }}>

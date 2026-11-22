@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AuctionCard from '../AuctionCard';
 import { MONO, DISPLAY } from './HubConstants';
+import { Icon } from '../UiIcons';
 
 const POS_COLOR = { GK: 'var(--gold)', DEF: 'var(--accent)', MID: 'var(--positive)', FWD: 'var(--danger)' };
 
@@ -64,7 +65,7 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
         background: isWinner ? 'rgba(255,196,0,0.06)' : 'transparent',
       }}>
         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: isWinner ? 'var(--gold)' : 'var(--mute)' }}>
-          {isWinner ? '🏆 YOU WON' : isSeller ? '⏳ AWAITING BUYER' : '⏳ PENDING'}
+          {isWinner ? <><Icon name="trophy" /> YOU WON</> : isSeller ? <><Icon name="hourglass" /> AWAITING BUYER</> : <><Icon name="hourglass" /> PENDING</>}
         </span>
       </div>
 
@@ -108,7 +109,7 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
               background: 'rgba(120,120,120,0.08)', border: '1px solid var(--rule)',
               fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', lineHeight: 1.6,
             }}>
-              ⏳ TRANSFER WINDOW CLOSED — your confirmation will be available when it reopens.
+              <Icon name="hourglass" /> TRANSFER WINDOW CLOSED — your confirmation will be available when it reopens.
               The purchase will be void if you miss the next window.
             </div>
           ) : (
@@ -235,7 +236,7 @@ function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCan
               fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)',
               padding: '5px 10px', border: '1px solid var(--rule)', background: 'var(--elev)',
             }}>
-              ⏳ WINDOW CLOSED — accept when transfer window reopens
+              <Icon name="hourglass" /> WINDOW CLOSED — accept when transfer window reopens
             </div>
             <button className="hit-44" disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
               style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', fontWeight: 900, padding: '5px 10px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1, flexShrink: 0 }}>
@@ -294,7 +295,7 @@ export default function TradingView({
             <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--mute)', fontSize: 'var(--fs-heading)', cursor: 'pointer' }}>✕</button>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', marginBottom: 16 }}>Trading floor · how it works</div>
 
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', marginBottom: 8 }}>🔨 AUCTIONS</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', marginBottom: 8 }}><Icon name="gavel" /> AUCTIONS</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
               List any player from your squad for auction. A 48-hour bidding window opens — managers bid above the starting price in increments. When the deadline passes the highest bidder is notified. They must <strong style={{ color: 'var(--paper)' }}>Confirm purchase</strong> during the next open transfer window to complete the deal. Sellers can hit <strong style={{ color: 'var(--paper)' }}>Sell now</strong> at any point to close the auction immediately at the current bid.
             </div>
@@ -306,7 +307,7 @@ export default function TradingView({
             </div>
             <div style={{ height: 1, background: 'var(--rule)', margin: '0 0 16px' }} />
 
-            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', marginBottom: 8 }}>📊 THE COUNTERS</div>
+            <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', marginBottom: 8 }}><Icon name="chart" /> THE COUNTERS</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.6 }}>
               <strong style={{ color: 'var(--paper)' }}>Auctions</strong> — all live auctions in the league.<br/>
               <strong style={{ color: 'var(--paper)' }}>My bids</strong> — auctions where you currently hold the highest bid.<br/>
@@ -512,7 +513,7 @@ export default function TradingView({
         {/* Empty state */}
         {totalActive === 0 && !auctionsLoading && (
           <div style={{ padding: '40px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 'var(--fs-title)' }}>🤝</div>
+            <div style={{ fontSize: 'var(--fs-title)', color: 'var(--mute)' }}><Icon name="swap" /></div>
             <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>No activity yet</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, maxWidth: 300, textAlign: 'center' }}>
               List a player for auction from your Squad screen, or propose a trade from the league leaderboard.

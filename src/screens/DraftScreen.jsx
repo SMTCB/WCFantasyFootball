@@ -1,4 +1,4 @@
-import { IconCheckCircle } from '../components/UiIcons';
+import { IconCheckCircle, Icon, Dot } from '../components/UiIcons';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -535,7 +535,7 @@ export default function DraftScreen() {
                    : relaxation.pressure >= 0.7 ? 'var(--warn)'
                    : 'var(--positive)',
             }}>
-              {relaxation.pressure >= 0.9 ? '🔴' : relaxation.pressure >= 0.7 ? '🟡' : '🟢'}
+              <Dot color={relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? 'var(--warn)' : 'var(--positive)'} />
             </span>
             <span style={{ color: 'var(--mute)' }}>
               Pool pressure{' '}
@@ -582,7 +582,7 @@ export default function DraftScreen() {
                 disabled={list.length >= DRAFT_LIST_SIZE}
                 className="hit-44 text-[length:var(--fs-micro)] font-black px-2.5 py-1 border border-[var(--rule)] text-[var(--mute)] bg-[var(--elev)] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
               >
-                ⚡ Auto-Fill
+                <Icon name="bolt" /> Auto-Fill
               </button>
               <button
                 onClick={handleSubmit}

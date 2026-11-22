@@ -1,4 +1,4 @@
-import { IconLock } from '../../components/UiIcons';
+import { IconLock, Icon } from '../../components/UiIcons';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -126,7 +126,7 @@ export default function F1AdminScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
-        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>⚡ ADMIN PANEL</div>
+        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}><Icon name="bolt" /> ADMIN PANEL</div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>F1 admin</h1>
       </div>
 
@@ -218,7 +218,7 @@ export default function F1AdminScreen() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: yearResults?.is_bets_locked ? 'var(--danger)' : 'var(--positive)' }}>
-                {yearResults?.is_bets_locked ? '🔒 Locked' : '🔓 Open'}
+                {yearResults?.is_bets_locked ? <><Icon name="lock" /> Locked</> : <><Icon name="unlock" /> Open</>}
               </span>
               <button onClick={toggleYearLock} disabled={busy} style={btnStyle('elev')}>
                 {yearResults?.is_bets_locked ? 'Unlock bets' : 'Lock bets'}

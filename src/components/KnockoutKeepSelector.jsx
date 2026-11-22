@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useKnockoutKeep } from '../hooks/useKnockoutKeep';
+import { Icon } from './UiIcons';
 
 const MONO    = "Archivo, sans-serif";
 const DISPLAY = "'Archivo Black', sans-serif";
@@ -157,7 +158,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
                   >
                     {/* Shield toggle */}
                     <span style={{ fontSize: 'var(--fs-body)', lineHeight: 1, flexShrink: 0, opacity: isKept ? 1 : 0.25 }}>
-                      🛡️
+                      <Icon name="shield" />
                     </span>
 
                     {/* Position badge */}

@@ -6,8 +6,8 @@ import { supabase } from '../../lib/supabase';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
+import { Icon } from '../../components/UiIcons';
 
-const SURFACE_ICON = { hard: '🎾', clay: '🟫', grass: '🌿', hard_indoor: '🏟️' };
 
 export default function PlayerBoxScreen() {
   const navigate = useNavigate();
@@ -158,7 +158,7 @@ export default function PlayerBoxScreen() {
                             aria-label="Player's Box settings"
                             style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
                           >
-                            ⚙
+                            <Icon name="gear" />
                           </button>
                         )}
                         <button

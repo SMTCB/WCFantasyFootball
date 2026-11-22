@@ -2,6 +2,7 @@ import { LoadingRows } from '../../components/Skeleton';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTennisTournament } from '../../hooks/tennis/useTennisTournament';
+import { Icon } from '../../components/UiIcons';
 
 const TIER_LABEL = { 1: 'Seeds 1–4', 2: 'Seeds 5–16', 3: 'Seeds 17–32', 4: 'Unseeded' };
 const TIER_SLOTS = [
@@ -11,12 +12,12 @@ const TIER_SLOTS = [
   { tier: 4, keys: ['tier4a','tier4b'], label: 'Tier 4 — Dark Horses', slots: 2 },
 ];
 const ACE_CARD_INFO = {
-  underdog_boost:        { icon: '🚀', label: 'Underdog Boost',       desc: 'Double all points from your 2 Dark Horse (Tier 4) players.' },
-  safety_net:            { icon: '🛡️', label: 'Safety Net',           desc: '+200 pts consolation if your Tier 1 pick exits in round 1 or 2.' },
-  surface_specialist:    { icon: '⚡', label: 'Surface Specialist',   desc: 'Double your entire 7-player roster total for this tournament.' },
-  dark_horse_insurance:  { icon: '🎯', label: 'Dark Horse Insurance', desc: '+50 pts per round your unseeded picks advance past the Round of 32.' },
+  underdog_boost:        { icon: 'rocket', label: 'Underdog Boost',       desc: 'Double all points from your 2 Dark Horse (Tier 4) players.' },
+  safety_net:            { icon: 'shield', label: 'Safety Net',           desc: '+200 pts consolation if your Tier 1 pick exits in round 1 or 2.' },
+  surface_specialist:    { icon: 'bolt', label: 'Surface Specialist',   desc: 'Double your entire 7-player roster total for this tournament.' },
+  dark_horse_insurance:  { icon: 'target', label: 'Dark Horse Insurance', desc: '+50 pts per round your unseeded picks advance past the Round of 32.' },
 };
-const ROUND_LABEL = { r128: 'R128', r64: 'R64', r32: 'R32', r16: 'R16', qf: 'QF', sf: 'SF', runner_up: 'Runner-up', champion: '🏆 Champion' };
+const ROUND_LABEL = { r128: 'R128', r64: 'R64', r32: 'R32', r16: 'R16', qf: 'QF', sf: 'SF', runner_up: 'Runner-up', champion: 'Champion' };
 
 export default function TennisTournamentScreen() {
   const { id } = useParams();
@@ -121,7 +122,7 @@ export default function TennisTournamentScreen() {
         {isQfOpen && !isAtp && (
           <div style={{ background: 'var(--card)', border: `2px solid var(--gold)`, borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
-              ⚡ QF Captain Window Open
+              <Icon name="bolt" /> QF Captain Window Open
             </div>
             <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text2)', margin: '0 0 14px' }}>
               Select one of your surviving players as captain. They earn 2× points for the rest of the tournament.
@@ -149,7 +150,7 @@ export default function TennisTournamentScreen() {
                 >
                   <span>{p.player_name}</span>
                   <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-                    {TIER_LABEL[p.tier]} {captain?.captain_player_id === p.id ? '· ⭐ Captain' : ''}
+                    {TIER_LABEL[p.tier]} {captain?.captain_player_id === p.id ? <>· <Icon name="star" /> Captain</> : ''}
                   </span>
                 </button>
               ))}
@@ -181,7 +182,7 @@ export default function TennisTournamentScreen() {
             ))}
             {usedCard && (
               <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text2)' }}>
-                {ACE_CARD_INFO[usedCard.card_type]?.icon} Ace Card played: <strong>{ACE_CARD_INFO[usedCard.card_type]?.label}</strong>
+                {ACE_CARD_INFO[usedCard.card_type] && <Icon name={ACE_CARD_INFO[usedCard.card_type].icon} />} Ace Card played: <strong>{ACE_CARD_INFO[usedCard.card_type]?.label}</strong>
               </div>
             )}
           </div>
@@ -246,7 +247,7 @@ export default function TennisTournamentScreen() {
                         style={{ padding: '10px 14px', border: `1px solid ${selectedAce === c.card_type ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', background: selectedAce === c.card_type ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer' }}
                       >
                         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', marginBottom: 2 }}>
-                          {info.icon} {info.label}
+                          <Icon name={info.icon} /> {info.label}
                         </div>
                         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{info.desc}</div>
                       </button>
@@ -303,7 +304,7 @@ function RosterRow({ player, isCaptain }) {
         T{player.tier}
       </span>
       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1, fontWeight: 500 }}>
-        {player.player_name} {isCaptain && '⭐'}
+        {player.player_name} {isCaptain && <span style={{ color: 'var(--gold)' }}><Icon name="star" /></span>}
       </span>
       {player.eliminated ? (
         <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>

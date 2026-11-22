@@ -3,19 +3,20 @@ import { useBets } from '../../hooks/useBets';
 import BetWidget from '../BetWidget';
 import { HubSectionLabel, MobSection } from './HubShared';
 import { MONO, DISPLAY } from './HubConstants';
+import { Glyph, Icon } from '../UiIcons';
 
 // ── Visual styling per slug / category ───────────────────────────────────────
 
 const SLUG_STYLE = {
   match_result:       { g: '◈', tone: 'var(--paper)'    },
-  first_team_score:   { g: '⚡', tone: 'var(--paper)'    },
-  clean_sheet:        { g: '🧤', tone: 'var(--positive)' },
-  lead_at_halftime:   { g: '⏱', tone: 'var(--paper)'    },
+  first_team_score:   { g: 'bolt', tone: 'var(--paper)'    },
+  clean_sheet:        { g: 'shield', tone: 'var(--positive)' },
+  lead_at_halftime:   { g: 'clock', tone: 'var(--paper)'    },
   second_half_winner: { g: '▶', tone: 'var(--paper)'    },
-  winning_margin:     { g: '📏', tone: 'var(--paper)'    },
+  winning_margin:     { g: 'ruler', tone: 'var(--paper)'    },
   most_corners_team:  { g: '⌒', tone: 'var(--paper)'    },
-  penalty_in_match:   { g: '✋', tone: 'var(--paper)'    },
-  red_card_in_match:  { g: '🟥', tone: 'var(--paper)'    },
+  penalty_in_match:   { g: 'whistle', tone: 'var(--paper)'    },
+  red_card_in_match:  { g: 'card-red', tone: 'var(--paper)'    },
   btts:               { g: '◉', tone: 'var(--paper)'    },
   btts_first_half:    { g: '◉', tone: 'var(--paper)'    },
   comeback_win:       { g: '↩', tone: 'var(--paper)'    },
@@ -26,20 +27,20 @@ const SLUG_STYLE = {
   card_count_ou:      { g: '≷', tone: 'var(--gold)'     },
   total_offsides_ou:  { g: '≷', tone: 'var(--gold)'     },
   total_subs_ou:      { g: '≷', tone: 'var(--gold)'     },
-  goal_interval:      { g: '⏰', tone: 'var(--gold)'     },
-  top_scorer:         { g: '🎯', tone: 'var(--accent)'     },
+  goal_interval:      { g: 'alarm', tone: 'var(--gold)'     },
+  top_scorer:         { g: 'target', tone: 'var(--accent)'     },
   anytime_goalscorer: { g: '⚽', tone: 'var(--accent)'     },
-  yellow_card:        { g: '🟨', tone: 'var(--accent)'     },
+  yellow_card:        { g: 'card-yellow', tone: 'var(--accent)'     },
   man_of_match:       { g: '★', tone: 'var(--accent)'      },
-  free_bet:           { g: '✏', tone: 'var(--mute)'     },
+  free_bet:           { g: 'pencil', tone: 'var(--mute)'     },
   player_block:       { g: '◈', tone: 'var(--mute)'     },
 };
 
 const CAT_META = {
   match:   { label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
-  stats:   { label: 'STATS',   color: 'var(--gold-text)',  icon: '📊' },
-  players: { label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
-  custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏' },
+  stats:   { label: 'STATS',   color: 'var(--gold-text)',  icon: 'chart' },
+  players: { label: 'PLAYERS', color: 'var(--accent)',  icon: 'target' },
+  custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: 'pencil' },
 };
 
 function kindOf(bet) {
@@ -65,7 +66,7 @@ function BetCard({ bet, squadId, onSubmitted }) {
       <div style={{ padding: 'clamp(10px, 2vw, 14px) clamp(12px, 3vw, 18px)', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Title row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: k.tone, fontFamily: DISPLAY, fontSize: 'var(--fs-body)', background: `${k.tone}15`, border: `1px solid ${k.tone}55`, flexShrink: 0 }}>{k.g}</span>
+          <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: k.tone, fontFamily: DISPLAY, fontSize: 'var(--fs-body)', background: `${k.tone}15`, border: `1px solid ${k.tone}55`, flexShrink: 0 }}><Glyph g={k.g} /></span>
           <span style={{ fontFamily: DISPLAY, fontSize: 'clamp(12px, 3vw, 14px)', color: k.tone, letterSpacing: '-0.01em', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{bet.title?.toUpperCase()}</span>
           {bet.scope_ref && <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>· MD{bet.scope_ref}</span>}
           {bet.status !== 'resolved' && (
@@ -108,7 +109,7 @@ function CategoryStrip({ category, bets, squadId, onSubmitted, collapsible }) {
           cursor: collapsible ? 'pointer' : 'default',
         }}
       >
-        <span style={{ fontSize: 'var(--fs-micro)' }}>{meta.icon}</span>
+        <span style={{ fontSize: 'var(--fs-micro)' }}><Glyph g={meta.icon} /></span>
         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: meta.color, flex: 1 }}>{meta.label}</span>
         <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{bets.length}</span>
         {collapsible && (
@@ -254,7 +255,7 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
         )}
         {!loading && !error && bets.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
-            <div style={{ fontSize: 'var(--fs-title)' }}>🎯</div>
+            <div style={{ fontSize: 'var(--fs-title)', color: 'var(--mute)' }}><Icon name="target" /></div>
             <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>No bets yet</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>
               The commissioner can create prediction widgets from the Admin tab.

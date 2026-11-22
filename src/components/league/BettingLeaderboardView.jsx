@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { MgrTag, HubSectionLabel } from './HubShared';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
+import { Glyph } from '../UiIcons';
 
 const CAT_META = {
   match:   { label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
-  stats:   { label: 'STATS',   color: 'var(--gold-text)',  icon: '📊' },
-  players: { label: 'PLAYERS', color: 'var(--accent)',  icon: '🎯' },
-  custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: '✏'  },
+  stats:   { label: 'STATS',   color: 'var(--gold-text)',  icon: 'chart' },
+  players: { label: 'PLAYERS', color: 'var(--accent)',  icon: 'target' },
+  custom:  { label: 'CUSTOM',  color: 'var(--mute)',  icon: 'pencil'  },
 };
 const CAT_ORDER = ['match', 'stats', 'players', 'custom'];
 
@@ -94,7 +95,7 @@ function PerformanceByType({ myBetsByType }) {
                 border: 'none', cursor: 'pointer', textAlign: 'left',
               }}
             >
-              <span style={{ fontSize: 'var(--fs-micro)' }}>{meta.icon}</span>
+              <span style={{ fontSize: 'var(--fs-micro)' }}><Glyph g={meta.icon} /></span>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: meta.color, flex: 1 }}>{meta.label}</span>
               <span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>
                 {withData.length}/{bets.length}

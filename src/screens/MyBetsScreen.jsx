@@ -6,6 +6,7 @@ import { useMyBets } from '../hooks/useMyBets';
 import { HubSectionLabel, MobSection } from '../components/league/HubShared';
 import { DISPLAY } from '../components/league/HubConstants';
 import TabStrip from '../components/shared/TabStrip';
+import { Icon } from '../components/UiIcons';
 
 const STATUS_META = {
   open:      { label: 'Open',      tone: 'var(--accent)' },
@@ -158,7 +159,7 @@ export default function MyBetsScreen() {
         )}
         {!loading && !error && sections.every(s => !s.bets.length) && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
-            <div style={{ fontSize: 'var(--fs-title)' }}>🎲</div>
+            <div style={{ fontSize: 'var(--fs-title)', color: 'var(--mute)' }}><Icon name="swords" /></div>
             <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>No bets yet</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', maxWidth: 320, textAlign: 'center' }}>
               Join or create a bet in any Clubhouse and it'll show up here.

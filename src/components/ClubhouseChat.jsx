@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { scrollInside } from '../lib/scrollInside';
 import { useClubhouseChat } from '../hooks/useClubhouseChat';
 import { useRoomReactions, REACTION_EMOJI } from '../hooks/useRoomReactions';
-import { IconCheckCircle, IconDice, IconClose } from './UiIcons';
+import { IconCheckCircle, IconClose, Icon } from './UiIcons';
 import BetThread from './BetThread';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
@@ -41,7 +41,7 @@ function BetActivityCard({ msg, actionable, onTake, onPass, busy, onOpen }) {
       }}
     >
       <span style={{ flexShrink: 0, display: 'flex', color: isResolved ? 'var(--positive)' : 'var(--accent)' }}>
-        {isResolved ? <IconCheckCircle size={18} /> : <IconDice size={18} />}
+        {isResolved ? <IconCheckCircle size={18} /> : <Icon name="swords" size={18} />}
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', ...BODY, fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -469,7 +469,7 @@ export default function ClubhouseChat({ circleId, members, activeCircle, feed = 
           aria-label="Make a bet"
           style={{ flexShrink: 0, minWidth: 'var(--tap)', minHeight: 'var(--tap)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, color: 'var(--accent)', cursor: 'pointer' }}
         >
-          <IconDice size={20} />
+          <Icon name="swords" size={20} />
         </button>
         <input
           value={text}

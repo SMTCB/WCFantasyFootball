@@ -16,6 +16,7 @@ import { useAuth } from '../hooks/useAuth';
 import BrandMark from '../components/BrandMark';
 import Button from '../components/Button';
 import TextInput from '../components/TextInput';
+import { Icon } from '../components/UiIcons';
 
 // ── Tab types ──────────────────────────────────────────────────────────────────
 const TAB_SIGNIN  = 'signin';
@@ -153,7 +154,7 @@ export default function AuthScreen() {
     return (
       <AuthShell>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ fontSize: 'var(--fs-display)', marginBottom: '16px' }}>✉️</div>
+          <div style={{ fontSize: 'var(--fs-display)', marginBottom: '16px', color: 'var(--accent)' }}><Icon name="mail" /></div>
           <h2 style={{ fontSize: 'var(--fs-heading)', fontWeight: 900, color: 'var(--paper)', marginBottom: '10px', fontFamily: 'Archivo Black, sans-serif' }}>
             Check Your Inbox
           </h2>

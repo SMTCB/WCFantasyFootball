@@ -15,6 +15,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
 import {
   HEAD,
+  Icon,
   Ci,
   CoinAmt,
   IncomingCard,
@@ -459,7 +460,7 @@ export default function ChallengeScreen() {
             {isOwner && allBets.ownerArbitration.length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--purple)' }}>⚖ Arbitration needed</div>
+                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--purple)' }}><Icon name="scales" /> Arbitration needed</div>
                   <span style={{
                     background: 'rgba(140,73,201,.12)', color: 'var(--purple)',
                     fontSize: 'var(--fs-label)', padding: '1px 8px',
@@ -540,10 +541,11 @@ export default function ChallengeScreen() {
         <WalletTabContent wallet={wallet} walletLoading={walletLoading} />
       )}
 
-      {/* Mobile: PrimaryActionBar for 🎲 New Bet */}
+      {/* Mobile: PrimaryActionBar for New Bet */}
       {isMobile && outerTab === 'bets' && (
         <PrimaryActionBar
-          label="🎲 New Bet"
+          icon="swords"
+          label="New Bet"
           state="action"
           onPress={() => setShowCreate(true)}
           accent="var(--gold)"

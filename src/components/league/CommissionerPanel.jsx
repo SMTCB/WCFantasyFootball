@@ -7,6 +7,7 @@ import { CHIPS } from '../../lib/chips';
 import {
   MODE_LABEL, MODE_HELP, MODE_HELP_LONG, MIN_NOTICE_MS, KICKOFF_BUFFER_MS, fmtDraftTime, toLocalInput, suggestDraftTime, draftErrorMessage,
 } from '../../lib/wishlistDraft';
+import { Glyph, Icon } from '../UiIcons';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
 // the production bundle. All four exports are inlined below instead.
@@ -525,7 +526,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                 onClick={() => toggleCard(b.id)}
                 style={{ width: '100%', background: 'transparent', border: 0, color: 'var(--paper)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left' }}
               >
-                <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${tone}15`, border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: tone }}>{glyph}</span>
+                <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${tone}15`, border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: tone }}><Glyph g={glyph} /></span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isResolved ? 'var(--text-2)' : 'var(--paper)' }}>{b.title}</span>
                   {b.prompt && b.prompt !== b.title && (
@@ -868,7 +869,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                 const t = (bet.title || '').toLowerCase();
                 if (t.includes('scorer') || t.includes('top'))  return '◉';
                 if (t.includes('result') || t.includes('match')) return '◈';
-                if (t.includes('clean'))                         return '🧤';
+                if (t.includes('clean'))                         return 'shield';
                 return '◈';
               })()
             : '◈';
@@ -901,7 +902,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                   justifyContent: 'center', background: `${tone}15`,
                   border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 'var(--fs-label)',
                   color: tone, flexShrink: 0,
-                }}>{glyph}</span>
+                }}><Glyph g={glyph} /></span>
 
                 {/* Title */}
                 <span style={{
@@ -1830,7 +1831,7 @@ function WishlistDraftControls({ leagueId, status, members, submitted, reload, c
       <span style={wlLabel}>ROUND {round} · THIS ROUND</span>
 
       {phase === 'running' && (
-        <div style={wlNote('var(--gold)')}>⏳ The draft is running — the market opens as soon as it finishes.</div>
+        <div style={wlNote('var(--gold)')}><Icon name="hourglass" /> The draft is running — the market opens as soon as it finishes.</div>
       )}
 
       {phase === 'awaiting_round' && (

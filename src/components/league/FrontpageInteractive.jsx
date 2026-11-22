@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon } from '../UiIcons';
 
 function timeAgoFT(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -86,7 +87,7 @@ export function LettersPanel({
           fontFamily: ftMono, fontSize: 'var(--fs-micro)', letterSpacing: '.16em', color: ftMute,
         }}
       >
-        <span>✉</span>
+        <span><Icon name="mail" /></span>
         <span>
           {letters.length > 0
             ? `${letters.length} LETTER${letters.length !== 1 ? 'S' : ''}`

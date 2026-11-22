@@ -40,7 +40,9 @@ async function resolveUserId(fallbackId) {
   }
 }
 
-export default function F1RacePickForm({ race, paddock }) {
+// Icon comes in as a prop: F1HomeScreen imports UiIcons directly (Rolldown TDZ rule).
+export default function F1RacePickForm({ race, paddock, icon }) {
+  const Icon = icon;
   const { user } = useAuth();
 
   const [existing, setExisting] = useState(null);
@@ -138,7 +140,7 @@ export default function F1RacePickForm({ race, paddock }) {
         </div>
       ) : isLocked ? (
         <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(185,28,28,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(185,28,28,0.2)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>
-          🔒 Picks locked — qualifying has started
+          <Icon name="lock" /> Picks locked — qualifying has started
         </div>
       ) : existing ? (
         <div style={{ marginBottom: 12, fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>
@@ -154,8 +156,8 @@ export default function F1RacePickForm({ race, paddock }) {
         <div style={{ background: 'rgba(22,101,52,0.06)', border: '1px solid rgba(22,101,52,0.2)', marginBottom: 12, borderRadius: 8, padding: '12px 14px' }}>
           <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--positive)', marginBottom: 8 }}>Race result</div>
           <div style={{ display: 'flex', gap: 16 }}>
-            {[['🥇', race.result_p1], ['🥈', race.result_p2], ['🥉', race.result_p3]].map(([m, d]) => (
-              <div key={m} style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{m} {d?.split(' ').pop()}</div>
+            {[['medal-gold', race.result_p1], ['medal-silver', race.result_p2], ['medal-bronze', race.result_p3]].map(([m, d]) => (
+              <div key={m} style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}><Icon name={m} /> {d?.split(' ').pop()}</div>
             ))}
           </div>
         </div>
@@ -166,7 +168,7 @@ export default function F1RacePickForm({ race, paddock }) {
 
           {/* Podium */}
           <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}>🏆 PODIUM PREDICTIONS</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}><Icon name="trophy" /> PODIUM PREDICTIONS</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ borderLeft: '3px solid var(--f1)', paddingLeft: 10, marginLeft: -13 }}>
                 <DriverSelect label="P1 — Race Winner" value={p1} onChange={edited(setP1)} exclude={[p2, p3].filter(Boolean)} disabled={isLocked} />
@@ -178,13 +180,13 @@ export default function F1RacePickForm({ race, paddock }) {
 
           {/* DNF */}
           <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}>💥 DNF DRIVER <span style={{ color: 'var(--mute)', fontWeight: 400 }}>(optional)</span></div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}><Icon name="burst" /> DNF DRIVER <span style={{ color: 'var(--mute)', fontWeight: 400 }}>(optional)</span></div>
             <DriverSelect label="Driver who retires" value={dnf} onChange={edited(setDnf)} disabled={isLocked} />
           </div>
 
           {/* Team */}
           <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}>🏎 TEAM — MOST POINTS</div>
+            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 12 }}><Icon name="car" /> TEAM — MOST POINTS</div>
             <select
               value={team ?? ''}
               onChange={e => { editedRef.current = true; setTeam(e.target.value || null); }}
@@ -199,7 +201,7 @@ export default function F1RacePickForm({ race, paddock }) {
           {/* Special category */}
           {race.special_category_question && (
             <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
-              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>⭐ SPECIAL CATEGORY</div>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}><Icon name="star" /> SPECIAL CATEGORY</div>
               <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 12, lineHeight: 1.4 }}>{race.special_category_question}</div>
               {race.special_category_type === 'options' && specialOpts ? (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
