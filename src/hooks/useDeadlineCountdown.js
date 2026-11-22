@@ -13,6 +13,7 @@
  *     deadlineAt: Date|null
  *     color:      string   — hex accent colour for current urgency level
  *     label:      string   — short human label e.g. "Closes in 23h 14m"
+ *     icon:       string|null — UiIcons name for the label (lock / warning / alarm)
  *     loading:    boolean
  *   }
  *
@@ -116,12 +117,13 @@ export function useDeadlineCountdown({ matchdayId, tournamentId } = {}) {
 
           // Human label
           let label = '';
+          let icon  = null;
           if (isLocked) {
-            label = '🔒 Window closed';
+            label = 'Window closed'; icon = 'lock';
           } else if (msLeft <= 30 * 60 * 1000) {
-            label = `⚠️ Closes in ${timeLeft}`;
+            label = `Closes in ${timeLeft}`; icon = 'warning';
           } else if (msLeft <= 2 * 3600 * 1000) {
-            label = `⏰ Closes in ${timeLeft}`;
+            label = `Closes in ${timeLeft}`; icon = 'alarm';
           } else {
             // Show formatted deadline in local time
             label = `Closes ${deadlineAt.toLocaleString(undefined, {
@@ -130,7 +132,7 @@ export function useDeadlineCountdown({ matchdayId, tournamentId } = {}) {
             })}`;
           }
 
-          if (!cancelled) setState({ timeLeft, isLocked, deadlineAt, color, label, loading: false });
+          if (!cancelled) setState({ timeLeft, isLocked, deadlineAt, color, label, icon, loading: false });
 
           // Stop ticking once locked (saves battery/CPU)
           if (isLocked && intervalRef.current) {

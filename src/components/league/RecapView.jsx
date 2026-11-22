@@ -1,4 +1,4 @@
-import { IconHourglass } from '../UiIcons';
+import { IconHourglass, Icon } from '../UiIcons';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
@@ -124,8 +124,8 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
         if (p.shootoutMissed > 0) badges.push({ s: `PK✗×${p.shootoutMissed}`, c: 'var(--danger)' });
         if (p.shootoutSaved > 0)  badges.push({ s: `${p.shootoutSaved}PK SV`,  c: 'var(--accent)' });
         if (p.goalsConceded > 1)  badges.push({ s: `GA×${p.goalsConceded}`,    c: 'var(--danger)' });
-        if (p.yellow)        badges.push({ s: '🟨',                c: 'var(--warn)' });
-        if (p.red)           badges.push({ s: '🟥',                c: 'var(--danger)' });
+        if (p.yellow)        badges.push({ s: <Icon name="card" />,                c: 'var(--warn)' });
+        if (p.red)           badges.push({ s: <Icon name="card" />,                c: 'var(--danger)' });
         const isExpanded = expandedPid === p.id;
         const mult = p.triple ? 3 : p.captain ? 2 : 1;
         const items = isExpanded ? buildBreakdownItems({ breakdown: p.breakdown, bonusPts: p.bonusPts }) : [];
@@ -832,7 +832,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
 
   if (!allMatchdays.length) return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>📋</div>
+      <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12, color: 'var(--mute)' }}><Icon name="clipboard" /></div>
       <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>No completed matchday</div>
       <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.7, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
         The recap will appear once the first matchday deadline passes and scores are calculated.

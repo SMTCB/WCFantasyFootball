@@ -1,4 +1,5 @@
 import { LINEUP_STATUS } from '../lib/intelligence';
+import { Dot } from './UiIcons';
 
 /**
  * DangerZone — Horizontal alert rail showing at-risk squad players.
@@ -60,7 +61,7 @@ export default function DangerZone({ players = [], onSelectPlayer }) {
               className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-sm border transition-all hover:brightness-110 active:scale-95"
               style={{ borderColor: cfg.color + '40', backgroundColor: cfg.bg }}
             >
-              <span className="text-base leading-none">{cfg.emoji}</span>
+              <Dot color={cfg.color} size={12} />
               <div className="text-left">
                 <div
                   className="text-[11px] font-bold text-white leading-tight"

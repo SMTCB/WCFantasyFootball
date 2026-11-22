@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { Icon } from '../UiIcons';
 
 // Inlined to avoid Rolldown TDZ — do NOT import from HubShared or HubConstants here
 const MONO    = "Archivo, sans-serif";
@@ -102,7 +103,7 @@ export default function H2HView({ leagueId, currentUser, members }) {
   if (!hasCalendar) {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '40px 24px', textAlign: 'center' }}>
-        <span style={{ fontSize: 'var(--fs-title)' }}>⚔️</span>
+        <span style={{ fontSize: 'var(--fs-title)', color: 'var(--mute)' }}><Icon name="swords" /></span>
         <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-heading)', color: 'var(--paper)' }}>Calendar not yet available</div>
         <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', maxWidth: 280, lineHeight: 1.6 }}>
           THE COMMISSIONER WILL SET UP THE H2H SCHEDULE — CHECK BACK SOON.

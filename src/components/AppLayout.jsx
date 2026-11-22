@@ -16,6 +16,7 @@ import {
   NavIconMyBets,
   NavIconYou,
 } from './NavIcons';
+import { Icon } from './UiIcons';
 
 // ── Mobile bottom-bar nav — clubhouse-level, mirrors the desktop sidebar's
 // "This Clubhouse" section. Sport/competition screens (Live/Squad/Market/etc.)
@@ -227,7 +228,7 @@ export default function AppLayout({ children }) {
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'var(--mute)'}
           >
-            ⚙
+            <Icon name="gear" />
           </Link>
         </div>
 

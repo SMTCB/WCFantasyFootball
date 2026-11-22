@@ -19,6 +19,7 @@
 import { Component } from 'react';
 import * as Sentry from '@sentry/react';
 import Button from './Button';
+import { Icon } from './UiIcons';
 
 // ── Crash reporter ─────────────────────────────────────────────────────────────
 // Dual-writes to: (1) Sentry (when DSN configured), (2) report_client_error RPC
@@ -91,7 +92,7 @@ export default class ErrorBoundary extends Component {
         }}
       >
         {/* Icon */}
-        <div style={{ fontSize: 'var(--fs-display)', marginBottom: '20px', opacity: 0.5 }}>⚡</div>
+        <div style={{ fontSize: 'var(--fs-display)', marginBottom: '20px', opacity: 0.5 }}><Icon name="bolt" /></div>
 
         {/* Heading */}
         <div

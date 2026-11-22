@@ -6,6 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import PrimaryActionBar from '../shared/PrimaryActionBar';
 import { supabase } from '../../lib/supabase';
 import Button from '../Button';
+import { Icon } from '../UiIcons';
+// Re-exported for ChallengeScreen, which reaches UiIcons through this file and so
+// must not import it directly (Rolldown TDZ rule, CLAUDE.md).
+export { Icon };
 
 // Shared bet cards, forms and helpers, used by the Challenges screen and the Bets screen (MD-8).
 export const MONO = { fontFamily: 'Archivo, sans-serif' };
@@ -105,7 +109,7 @@ export function IncomingCard({ challenge, onAccept, onDecline, loading }) {
         </span>
         <TypeBadge betType={challenge.bet_type} />
         <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
-          ⏱ {timeUntil(challenge.expires_at)}
+          <Icon name="clock" /> {timeUntil(challenge.expires_at)}
         </span>
       </div>
 
@@ -176,13 +180,13 @@ export function OpenChallengeCard({ challenge, onClaim, loading }) {
       gap: 9,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>🎲 Open</span>
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}><Icon name="megaphone" /> Open</span>
         <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
           {challenge.challenger_username ?? 'Someone'}&rsquo;s challenge
         </span>
         <TypeBadge betType={challenge.bet_type} />
         <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
-          ⏱ {timeUntil(challenge.expires_at)}
+          <Icon name="clock" /> {timeUntil(challenge.expires_at)}
         </span>
       </div>
 
@@ -239,7 +243,7 @@ export function OutgoingCard({ challenge, onCancel, loading }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
         <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: 'var(--text)', letterSpacing: '-0.01em' }}>
-          {challenge.opponent_id ? `→ ${challenge.opponent_username ?? 'Opponent'}` : '🎲 Open — awaiting claim'}
+          {challenge.opponent_id ? `→ ${challenge.opponent_username ?? 'Opponent'}` : <><Icon name="megaphone" /> Open — awaiting claim</>}
         </span>
         <TypeBadge betType={challenge.bet_type} />
         <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
@@ -360,7 +364,7 @@ export function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDi
         </div>
         <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
         <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
-          ⚖ Disputed — the Clubhouse owner will review and decide.
+          <Icon name="scales" /> Disputed — the Clubhouse owner will review and decide.
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
           <CoinAmt amount={challenge.stake_coins} size="sm" />
@@ -479,7 +483,7 @@ export function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
         </div>
 
         <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 'var(--radius)', padding: '10px 12px', fontSize: 'var(--fs-label)', color: 'var(--gold-text)', lineHeight: 1.5, marginBottom: 14 }}>
-          ⚠ Real coins move once {oppName} confirms — choose carefully. If they disagree, the Clubhouse owner will settle it.
+          <Icon name="warning" /> Real coins move once {oppName} confirms — choose carefully. If they disagree, the Clubhouse owner will settle it.
         </div>
 
         {error && <div style={{ fontSize: 'var(--fs-label)', color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
@@ -518,7 +522,7 @@ export function ArbitrationModal({ challenge, onClose, onSubmit }) {
     <BetSheet onClose={onClose} maxWidth={500} padBottom={18}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--purple)', marginBottom: 5 }}>⚖ Owner Arbitration</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--purple)', marginBottom: 5 }}><Icon name="scales" /> Owner Arbitration</div>
             <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1.3 }}>{challenge.question}</div>
           </div>
           <button
@@ -839,7 +843,7 @@ export function CreateGroupBetModal({
                     border: `2px solid ${!isMC ? 'var(--accent)' : 'var(--rule)'}`,
                   }}
                 >
-                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
+                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}><Icon name="chat" /> Freeform</div>
                   <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Type any answer</div>
                 </button>
                 <button
@@ -850,7 +854,7 @@ export function CreateGroupBetModal({
                     border: `2px solid ${isMC ? 'var(--gold)' : 'var(--rule)'}`,
                   }}
                 >
-                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>☑ Multi Choice</div>
+                  <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}><Icon name="list" /> Multi Choice</div>
                   <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Pick from a list</div>
                 </button>
               </div>
@@ -994,7 +998,7 @@ export function CreateGroupBetModal({
                 opacity: submitting ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Creating…' : '🎲 Create bet'}
+              {submitting ? 'Creating…' : <><Icon name="swords" /> Create bet</>}
             </button>
           </>
         )}
@@ -1148,7 +1152,7 @@ export function BetOutcomeModal({ bet, mode, onClose, onSubmit, fetchParticipant
     }
   }
 
-  const eyebrow = isArbitrate ? '⚖ Owner Arbitration' : 'Declare Outcome';
+  const eyebrow = isArbitrate ? <><Icon name="scales" /> Owner Arbitration</> : 'Declare Outcome';
   const eyebrowColor = isArbitrate ? 'var(--purple)' : 'var(--mute)';
 
   return (
@@ -1333,7 +1337,7 @@ export function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAn
       {section === 'disputed' && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', flexBasis: '100%' }}>
-            ⚖ Disputed — the Clubhouse owner will review and decide.
+            <Icon name="scales" /> Disputed — the Clubhouse owner will review and decide.
           </div>
           {!isOwner && (
             <button
@@ -1824,7 +1828,7 @@ export function CreateChallengeModal({
                       border: `2px solid ${isFreeform ? 'var(--accent)' : 'var(--rule)'}`,
                     }}
                   >
-                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
+                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}><Icon name="chat" /> Freeform</div>
                     <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Settle by agreement</div>
                   </button>
                 </div>
@@ -1840,7 +1844,7 @@ export function CreateChallengeModal({
                     width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
                     background: 'var(--elev)', border: '1.5px dashed var(--rule)',
                     display: 'grid', placeItems: 'center', fontSize: 14,
-                  }}>🎲</div>
+                  }}><Icon name="megaphone" /></div>
                   <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)', fontWeight: 600 }}>Open — first to accept</span>
                   <RadioDot selected={isOpenChallenge} />
                 </PickerRow>
@@ -1947,7 +1951,7 @@ export function CreateChallengeModal({
                 opacity: submitting ? 0.7 : 1,
               }}
             >
-              {submitting ? 'Sending…' : isOpenChallenge ? '🎲 Post open bet' : '⚔ Send bet'}
+              {submitting ? 'Sending…' : isOpenChallenge ? <><Icon name="megaphone" /> Post open bet</> : <><Icon name="swords" /> Send bet</>}
             </button>
           </>
         )}
@@ -1987,7 +1991,7 @@ export function BetKindPicker({ onPick, onClose, hasCompetitions }) {
             onClick={() => onPick('freeform')}
             style={{ textAlign: 'left', padding: '14px 16px', borderRadius: 10, cursor: 'pointer', background: 'var(--elev)', border: '2px solid var(--rule)' }}
           >
-            <div style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>💬 Freeform</div>
+            <div style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}><Icon name="chat" /> Freeform</div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Bet on anything — one person, a few, or the whole Clubhouse</div>
           </button>
         </div>
@@ -2077,7 +2081,7 @@ export function StreakPill({ streak }) {
         fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--gold-text)', background: 'rgba(184,114,14,.14)',
         border: '1px solid rgba(184,114,14,.4)', borderRadius: 4, padding: '3px 7px',
       }}
-    >🔥 {streak.count}-win streak</span>
+    ><Icon name="flame" /> {streak.count}-win streak</span>
   );
 }
 
@@ -2101,7 +2105,7 @@ export function SidebarContent({ balance, escrow, netWL, history, userId, streak
             fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
           }}
-        >🎲 New Bet</button>
+        ><Icon name="swords" /> New Bet</button>
       )}
 
       {/* Wallet mini-card */}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useBetSubmit } from '../hooks/useBetSubmit';
 import { useToast } from '../hooks/useToast';
+import { Icon } from './UiIcons';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -211,7 +212,7 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
         {!isPastDeadline && !!squadId && options.length > 0 && (
           <>
             <div className="flex items-center justify-between mt-1">
-              <span style={{ color: deadline.color, fontSize: 'var(--fs-label)', fontWeight: 600 }}>{deadline.label}</span>
+              <span style={{ color: deadline.color, fontSize: 'var(--fs-label)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{deadline.icon && <Icon name={deadline.icon} />}{deadline.label}</span>
               {submitting && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Saving…</span>}
             </div>
             <InlineOptions

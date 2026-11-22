@@ -21,6 +21,7 @@ import ClubCrest from '../components/ClubCrest';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import PullToRefreshIndicator from '../components/motion/PullToRefreshIndicator';
 import NumberFlow from '../components/motion/NumberFlow';
+import { Icon } from '../components/UiIcons';
 
 // ── Shared primitives ────────────────────────────────────────────────────────
 
@@ -782,7 +783,7 @@ function LiveAcrossLeagues() {
       {/* Live data error banner */}
       {liveError && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,58,58,0.12)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}>
-          <span style={{ color: 'var(--danger)', fontSize: 'var(--fs-label)' }}>⚠ {liveError}</span>
+          <span style={{ color: 'var(--danger)', fontSize: 'var(--fs-label)' }}><Icon name="warning" /> {liveError}</span>
           <button className="hit-44"
             onClick={() => { setLiveError(null); fetchAll(); }}
             style={{ marginLeft: 'auto', fontSize: 'var(--fs-micro)', color: 'var(--danger)', background: 'rgba(240,58,58,0.18)', border: '1px solid rgba(240,58,58,0.35)', borderRadius: 4, padding: '3px 10px', cursor: 'pointer', letterSpacing: '.1em' }}

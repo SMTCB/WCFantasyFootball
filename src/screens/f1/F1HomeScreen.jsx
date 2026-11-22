@@ -11,6 +11,7 @@ import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
 import CompetitionRankBadge from '../../components/CompetitionRankBadge';
 import F1RacePickForm from './F1RacePickForm';
+import { Icon, Dot } from '../../components/UiIcons';
 
 // Checkered-flag motif — pure CSS checkerboard, no image asset. Recurs sparingly
 // as a decorative divider under the F1 Home header (and above Report's podium viz).
@@ -53,7 +54,7 @@ function useCountdown(targetDate) {
 function RaceStatusBadge({ race, isNext, isPast }) {
   let bg, color, label;
   if (race.status === 'race') {
-    bg = 'var(--gold)'; color = '#fff'; label = '🔴 LIVE';
+    bg = 'var(--gold)'; color = '#fff'; label = <><Dot color="#fff" size={7} /> LIVE</>;
   } else if (race.status === 'qualifying') {
     bg = 'rgba(26,111,168,0.12)'; color = 'var(--accent)'; label = 'QUALIFYING';
   } else if (isNext) {
@@ -132,9 +133,9 @@ export default function F1HomeScreen() {
   const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
 
   const PADDOCK_CARDS = [
-    { label: 'Championship\nStandings', icon: '🏆', path: `/f1/${paddockId}/standings` },
-    { label: 'Year\nBets',              icon: '📅', path: `/f1/${paddockId}/season` },
-    { label: 'Report',                  icon: '📊', path: `/f1/${paddockId}/report` },
+    { label: 'Championship\nStandings', icon: 'trophy', path: `/f1/${paddockId}/standings` },
+    { label: 'Year\nBets',              icon: 'calendar', path: `/f1/${paddockId}/season` },
+    { label: 'Report',                  icon: 'chart', path: `/f1/${paddockId}/report` },
   ];
 
   function goToPicks(round) {
@@ -152,7 +153,7 @@ export default function F1HomeScreen() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
-              🏎 Formula 1 · 2026
+              🏁 Formula 1 · 2026
             </div>
             <button
               onClick={() => setShowSelector(s => !s)}
@@ -175,7 +176,7 @@ export default function F1HomeScreen() {
                 aria-label="League settings"
                 style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--text)' }}
               >
-                ⚙
+                <Icon name="gear" />
               </button>
             )}
             {/* Admin button — always visible; AdminScreen handles access control */}
@@ -332,13 +333,13 @@ export default function F1HomeScreen() {
                     </div>
                     {race.status === 'finished' && race.result_p1 && !isExpanded ? (
                       <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'right' }}>
-                        🏆 {race.result_p1.split(' ').pop()}
+                        <Icon name="trophy" /> {race.result_p1.split(' ').pop()}
                       </span>
                     ) : race.status === 'finished' && race.result_p1 ? null : (
                       <RaceStatusBadge race={race} isNext={isNext} isPast={isPast} />
                     )}
                   </button>
-                  {isExpanded && <F1RacePickForm race={race} paddock={activePaddock} />}
+                  {isExpanded && <F1RacePickForm race={race} paddock={activePaddock} icon={Icon} />}
                 </div>
               );
             })}
@@ -355,7 +356,7 @@ export default function F1HomeScreen() {
                 onClick={() => navigate(card.path)}
                 style={{ padding: '18px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}
               >
-                <span style={{ fontSize: 'var(--fs-title)' }}>{card.icon}</span>
+                <span style={{ fontSize: 'var(--fs-title)', color: 'var(--f1)' }}><Icon name={card.icon} /></span>
                 <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)', whiteSpace: 'pre-line' }}>
                   {card.label}
                 </span>

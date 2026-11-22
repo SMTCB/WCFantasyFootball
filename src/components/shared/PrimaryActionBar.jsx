@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { Icon } from '../UiIcons';
 
 const MONO = 'Archivo, sans-serif';
 const DISP = 'Archivo Black, sans-serif';
@@ -11,6 +12,7 @@ const DISP = 'Archivo Black, sans-serif';
  * Props:
  *   label     - the exact action to take, e.g. "Set your GW13 squad"
  *   countdown - optional deadline string, e.g. "2d 4h left"
+ *   icon      - optional UiIcons name shown before the label
  *   state     - 'action' (filled, urgent) | 'done' (muted, green check) | 'locked' (muted, lock)
  *   onPress   - callback when tapped (no-op in done/locked state)
  *   accent    - sport color for the action state, e.g. "var(--accent)"
@@ -19,6 +21,7 @@ const DISP = 'Archivo Black, sans-serif';
  */
 export default function PrimaryActionBar({
   label,
+  icon,
   countdown,
   state = 'action',
   onPress,
@@ -34,7 +37,7 @@ export default function PrimaryActionBar({
 
   const textColor = isAction ? 'var(--on-accent)' : 'var(--mute)';
 
-  const stateIcon = isDone ? '✓' : isLocked ? '🔒' : null;
+  const stateIcon = isDone ? '✓' : isLocked ? <Icon name="lock" /> : null;
 
   const bar = (
     <div
@@ -86,7 +89,7 @@ export default function PrimaryActionBar({
               textOverflow: 'ellipsis',
             }}
           >
-            {label}
+            {icon && <><Icon name={icon} />{' '}</>}{label}
           </span>
         </div>
 

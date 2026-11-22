@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import ClubCrest from './ClubCrest';
+import { Icon } from './UiIcons';
 
 // Renders the draft audit trail for a league: the most recent season-draft
 // report (entry_type='draft_report') plus every wishlist-draft round report
@@ -555,7 +556,7 @@ function WishlistRoundReport({ entry, members, players }) {
       {hasSafetyNet && (
         <div className="mx-3 mb-3 border border-amber-600/30 bg-amber-50 rounded p-2">
           <div className="text-[11px] font-black uppercase tracking-widest text-amber-800 mb-1">
-            ⚠ Formation Safety Net
+            <Icon name="warning" /> Formation Safety Net
           </div>
           <p className="text-[11px] text-amber-900/80 italic mb-1.5">
             One or more managers' wishlists would have left their squad short of a fielding-legal formation. The system auto-corrected it — full swap below.

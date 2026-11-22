@@ -1,4 +1,4 @@
-import { IconWarning } from '../components/UiIcons';
+import { IconWarning, Icon } from '../components/UiIcons';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -634,7 +634,7 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
           className="flex items-center gap-3 px-5 py-3"
           style={{ background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}
         >
-          <span style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)' }}>⚠  {takenMapError}</span>
+          <span style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)' }}><Icon name="warning" /> {takenMapError}</span>
         </div>
       )}
 
@@ -656,7 +656,7 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
       />
 
       {/* Wishlist Draft Banner — recurring opt-in allocation, draft-mode leagues only */}
-      {activeLeague && <WishlistDraftBanner leagueId={activeLeague} />}
+      {activeLeague && <WishlistDraftBanner leagueId={activeLeague} icon={Icon} />}
 
       {/* â"€â"€ Sticky Header â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       <div
@@ -801,7 +801,7 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
                 whiteSpace: 'nowrap',
               }}
             >
-              {autoFilling ? 'Filling…' : isLocked ? '🔒 Window closed' : '⚡ Fill'}
+              {autoFilling ? 'Filling…' : isLocked ? <><Icon name="lock" /> Window closed</> : <><Icon name="bolt" /> Fill</>}
             </button>
           </div>
         </div>
@@ -1217,7 +1217,7 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
                         {p.name.toUpperCase()}
                       </span>
                       {intel?.status !== 'fit' && (
-                        <span title={`${intel?.reason ?? intel?.status} — check ⚠️ STATUS tab on My Squad`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
+                        <span title={`${intel?.reason ?? intel?.status} — check the STATUS tab on My Squad`} style={{ fontSize: 'var(--fs-micro)', flexShrink: 0, cursor: 'help' }}><IconWarning size={12} /></span>
                       )}
                       {isOwned && p.id === mySquad?.captain_id && (
                         <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 900 }}>C</div>

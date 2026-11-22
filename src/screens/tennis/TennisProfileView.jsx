@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/Button';
+import { Glyph } from '../../components/UiIcons';
 
 const TYPE_LABEL = { grand_slam: 'Grand Slam', masters_1000: 'M1000', atp_finals: 'ATP Finals' };
-const SURFACE_ICON = { hard: '🎾', clay: '🟤', grass: '🌿', hard_indoor: '🏟️' };
+const SURFACE_ICON = { hard: '🎾', clay: 'surface-clay', grass: 'surface-grass', hard_indoor: 'building' };
 
 export default function TennisProfileView({ userId, seasonYear = 2026 }) {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ export default function TennisProfileView({ userId, seasonYear = 2026 }) {
             onClick={() => s.tournament?.id && navigate(`/tennis/tournament/${s.tournament.id}`)}
             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer' }}
           >
-            <span style={{ fontSize: 'var(--fs-heading)' }}>{SURFACE_ICON[s.tournament?.surface] ?? '🎾'}</span>
+            <span style={{ fontSize: 'var(--fs-heading)' }}><Glyph g={SURFACE_ICON[s.tournament?.surface] ?? '🎾'} /></span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {s.tournament?.name ?? '—'}

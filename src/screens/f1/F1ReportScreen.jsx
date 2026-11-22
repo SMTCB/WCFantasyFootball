@@ -1,5 +1,5 @@
 import { LoadingRows } from '../../components/Skeleton';
-import { IconLock } from '../../components/UiIcons';
+import { IconLock, Icon } from '../../components/UiIcons';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -163,14 +163,14 @@ export default function F1ReportScreen() {
                         <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Race result</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, alignItems: 'end' }}>
                           {[
-                            ['🥇 P1', race.result_p1, 'var(--f1)', 44],
-                            ['🥈 P2', race.result_p2, '#4A4A52', 32],
-                            ['🥉 P3', race.result_p3, '#B08D57', 22],
-                          ].map(([label, val, barColor, barHeight]) => (
+                            ['P1', race.result_p1, 'var(--f1)', 44, 'medal-gold'],
+                            ['P2', race.result_p2, '#4A4A52', 32, 'medal-silver'],
+                            ['P3', race.result_p3, '#B08D57', 22, 'medal-bronze'],
+                          ].map(([label, val, barColor, barHeight, medal]) => (
                             <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
                               <div style={{ height: barHeight, background: barColor, borderRadius: '4px 4px 0 0' }} />
                               <div style={{ padding: '8px 10px', background: 'var(--elev)', borderRadius: '0 0 6px 6px' }}>
-                                <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 3 }}>{label}</div>
+                                <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 3 }}><Icon name={medal} /> {label}</div>
                                 <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)' }}>{val ?? '—'}</div>
                               </div>
                             </div>
@@ -201,15 +201,15 @@ export default function F1ReportScreen() {
                               {bet ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                   {[
-                                    { key: 'p1', label: '🥇 P1', pick: bet.p1, pts: breakdown.p1 },
-                                    { key: 'p2', label: '🥈 P2', pick: bet.p2, pts: breakdown.p2 },
-                                    { key: 'p3', label: '🥉 P3', pick: bet.p3, pts: breakdown.p3 },
-                                    { key: 'dnf', label: '💥 DNF', pick: bet.dnf_driver, pts: breakdown.dnf },
-                                    { key: 'team', label: '🏎 Team', pick: bet.team_most_points, pts: breakdown.team },
-                                    { key: 'special', label: '⭐ Special', pick: bet.special_category_answer, pts: breakdown.special },
+                                    { key: 'p1', icon: 'medal-gold', label: 'P1', pick: bet.p1, pts: breakdown.p1 },
+                                    { key: 'p2', icon: 'medal-silver', label: 'P2', pick: bet.p2, pts: breakdown.p2 },
+                                    { key: 'p3', icon: 'medal-bronze', label: 'P3', pick: bet.p3, pts: breakdown.p3 },
+                                    { key: 'dnf', icon: 'burst', label: 'DNF', pick: bet.dnf_driver, pts: breakdown.dnf },
+                                    { key: 'team', icon: 'car', label: 'Team', pick: bet.team_most_points, pts: breakdown.team },
+                                    { key: 'special', icon: 'star', label: 'Special', pick: bet.special_category_answer, pts: breakdown.special },
                                   ].filter(row => row.pick).map(row => (
                                     <div key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: row.pts > 0 ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 'var(--radius)', border: `1px solid ${row.pts > 0 ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 52 }}>{row.label}</span>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 52 }}><Icon name={row.icon} /> {row.label}</span>
                                       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1 }}>{row.pick}</span>
                                       <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: row.pts > 0 ? 'var(--positive)' : 'var(--danger)' }}>
                                         {row.pts > 0 ? `+${row.pts}` : '+0'}
@@ -218,13 +218,13 @@ export default function F1ReportScreen() {
                                   ))}
                                   {breakdown.wrongSpot > 0 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)' }}>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)', flex: 1 }}>🎯 Podium (right driver, wrong spot)</span>
+                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)', flex: 1 }}><Icon name="target" /> Podium (right driver, wrong spot)</span>
                                       <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold-text)' }}>+{breakdown.wrongSpot}</span>
                                     </div>
                                   )}
                                   {breakdown.bonus > 0 && (
                                     <div style={{ padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
-                                      ⭐ All Correct Bonus +{breakdown.bonus}
+                                      <Icon name="star" /> All Correct Bonus +{breakdown.bonus}
                                     </div>
                                   )}
                                 </div>

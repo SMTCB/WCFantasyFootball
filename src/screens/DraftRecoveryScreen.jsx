@@ -1,5 +1,5 @@
 import { LoadingRows } from '../components/Skeleton';
-import { IconCheckCircle } from '../components/UiIcons';
+import { IconCheckCircle, Icon, Dot } from '../components/UiIcons';
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -313,7 +313,7 @@ export default function DraftRecoveryScreen() {
         >
           <div className="flex items-center gap-2">
             <span style={{ color: relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? 'var(--warn)' : 'var(--positive)' }}>
-              {relaxation.pressure >= 0.9 ? '🔴' : relaxation.pressure >= 0.7 ? '🟡' : '🟢'}
+              <Dot color={relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? 'var(--warn)' : 'var(--positive)'} />
             </span>
             <span style={{ color: 'var(--mute)' }}>
               Pool pressure{' '}
@@ -341,7 +341,7 @@ export default function DraftRecoveryScreen() {
       {allocation ? (
         <div className="border-b px-4 py-2.5" style={{ background: 'rgba(184,114,14,0.08)', borderColor: 'rgba(184,114,14,0.25)' }}>
           <div className="text-[length:var(--fs-micro)] font-bold" style={{ color: 'var(--warn)' }}>
-            ⚠ {displaySlots} player{displaySlots !== 1 ? 's' : ''} couldn't be auto-allocated during the draft — pick them now, first come first served.
+            <Icon name="warning" /> {displaySlots} player{displaySlots !== 1 ? 's' : ''} couldn't be auto-allocated during the draft — pick them now, first come first served.
           </div>
         </div>
       ) : (

@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect, useLayoutEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { LoadingRows } from '../components/Skeleton';
-import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -45,6 +44,8 @@ import RecapView             from '../components/league/RecapView';
 import MarketReportView      from '../components/league/MarketReportView';
 import H2HView               from '../components/league/H2HView';
 import MatchweekView         from '../components/league/MatchweekView';
+import TradeBuilderSheet     from '../components/league/TradeBuilderSheet';
+import ManagerTeamSheet      from '../components/league/ManagerTeamSheet';
 // Lazy so HubShared (also imported by SquadScreen) is only reached at one depth
 // in this chunk: the Rolldown TDZ rule in CLAUDE.md.
 const SquadScreen = lazy(() => import('./SquadScreen'));
@@ -1204,7 +1205,7 @@ export default function LeagueScreen() {
               >
                 <div className="flex items-center gap-2 w-full">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Draft + H2H</span>
-                  <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>⚔️ H2H</span>
+                  <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>{/* inline: LeagueScreen must not import UiIcons (TDZ rule) */}<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ verticalAlign: '-0.125em' }}><path d="M4 4l10.5 10.5M4 4h3.5M4 4v3.5M13 16l3-3M16.5 16.5 20 20M20 4 9.5 14.5M20 4h-3.5M20 4v3.5M11 16l-3-3M7.5 16.5 4 20" /></svg> H2H</span>
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Draft league with a parallel head-to-head competition each matchday.</span>
                 <ul className="flex flex-col gap-[3px]">
@@ -1505,7 +1506,7 @@ export default function LeagueScreen() {
              meId={currentUser?.id ?? user?.id}
              members={members}
              h2hEnabled={h2hEnabled}
-             ClubCrest={ClubCrest}
+             Clubcrest={ClubCrest}
              onTab={setTab}
            >
              {(sideMatches) => (
@@ -1525,7 +1526,7 @@ export default function LeagueScreen() {
              meId={currentUser?.id ?? user?.id}
              members={members}
              h2hEnabled={h2hEnabled}
-             ClubCrest={ClubCrest}
+             Clubcrest={ClubCrest}
              onTab={setTab}
            />
          )}
@@ -1664,289 +1665,58 @@ export default function LeagueScreen() {
            />
          )}
          {showTradeBuilder && tradeTarget && (
-            <div role="presentation" className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
-               <div role="presentation" className="w-full h-[90vh] bg-[var(--bg)] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[var(--rule)] relative" onClick={e => e.stopPropagation()}>
-                  <div className="w-full flex justify-center py-3"><div className="w-12 h-1.5 bg-[var(--rule)] rounded-full" /></div>
-                  <div className="px-6 py-4 border-b border-[var(--rule)] flex justify-between items-center">
-                    <div>
-                      <div className="text-[11px] text-[#1E88E5] font-black uppercase tracking-[.14em] mb-1">Negotiation table</div>
-                      <h2 className="text-xl font-bold text-[var(--paper)]">Trade with {tradeTarget.name}</h2>
-                    </div>
-                    <button onClick={() => setShowTradeBuilder(false)} className="text-[var(--mute)] hover:text-[var(--paper)] transition-colors">✕</button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-8 no-scrollbar">
-                    {/* Incoming trade proposals */}
-                    {incomingTrades.length > 0 && (
-                      <div>
-                        <h3 style={{ color: 'var(--gold-text)', fontSize: 'var(--fs-label)', fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
-                          INCOMING OFFERS ({incomingTrades.length})
-                        </h3>
-                        {incomingTrades.map(p => (
-                          <div key={p.id} style={{
-                            background: 'var(--card)', border: '1px solid var(--rule)',
-                            borderRadius: 4, padding: '12px 16px', marginBottom: 8,
-                          }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <span style={{ color: 'var(--paper)', fontSize: 'var(--fs-label)', fontWeight: 700 }}>
-                                {p.proposer_player?.name} <span style={{ color: 'var(--mute)' }}>for</span> {p.target_player?.name}
-                              </span>
-                              <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>
-                                {new Date(p.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                            {(p.cash_sweetener !== 0 || p.points_sweetener > 0) && (
-                              <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-                                {p.cash_sweetener !== 0 && (
-                                  <span style={{ color: p.cash_sweetener > 0 ? 'var(--positive)' : 'var(--danger)', fontSize: 'var(--fs-micro)', fontWeight: 700 }}>
-                                    {p.cash_sweetener > 0 ? `+€${p.cash_sweetener}M (you receive)` : `-€${Math.abs(p.cash_sweetener)}M (you pay)`}
-                                  </span>
-                                )}
-                                {p.points_sweetener > 0 && (
-                                  <span style={{ color: 'var(--gold-text)', fontSize: 'var(--fs-micro)', fontWeight: 700 }}>
-                                    +{p.points_sweetener} pts sweetener
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button className="hit-44"
-                                onClick={async () => {
-                                  try {
-                                    await acceptProposal(p.id);
-                                    showToast('Trade accepted! Squads updated.', 'success');
-                                  } catch (err) {
-                                    showToast(err.message, 'error');
-                                  }
-                                }}
-                                style={{
-                                  background: 'var(--positive)', color: 'var(--on-accent)', fontSize: 'var(--fs-micro)',
-                                  fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
-                                }}
-                              >
-                                ACCEPT
-                              </button>
-                              <button className="hit-44"
-                                onClick={async () => {
-                                  try {
-                                    await rejectProposal(p.id);
-                                    showToast('Trade rejected.', 'info');
-                                  } catch (err) {
-                                    showToast(err.message, 'error');
-                                  }
-                                }}
-                                style={{
-                                  background: 'var(--elev)', color: 'var(--mute)', fontSize: 'var(--fs-micro)',
-                                  fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
-                                }}
-                              >
-                                DECLINE
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Outgoing proposals I've sent */}
-                    {outgoingTrades.length > 0 && (
-                      <div>
-                        <h3 style={{ color: 'var(--mute)', fontSize: 'var(--fs-label)', fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
-                          SENT OFFERS ({outgoingTrades.length})
-                        </h3>
-                        {outgoingTrades.map(p => (
-                          <div key={p.id} style={{
-                            background: 'var(--card)', border: '1px solid var(--rule)',
-                            borderRadius: 4, padding: '12px 16px', marginBottom: 8,
-                          }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <span style={{ color: 'var(--paper)', fontSize: 'var(--fs-label)', fontWeight: 700 }}>
-                                {p.proposer_player?.name} <span style={{ color: 'var(--mute)' }}>for</span> {p.target_player?.name}
-                              </span>
-                              <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>awaiting response</span>
-                            </div>
-                            <button className="hit-44"
-                              onClick={async () => {
-                                try {
-                                  await cancelProposal(p.id);
-                                  showToast('Offer cancelled.', 'info');
-                                } catch (err) {
-                                  showToast(err.message, 'error');
-                                }
-                              }}
-                              style={{
-                                background: 'transparent', color: 'var(--danger)', fontSize: 'var(--fs-micro)',
-                                fontWeight: 700, padding: '4px 10px', borderRadius: 2,
-                                border: '1px solid var(--danger)', cursor: 'pointer',
-                              }}
-                            >
-                              Cancel offer
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-[var(--mute)] uppercase tracking-widest text-center">My player</label>
-                        <select value={tradeMyPlayer?.id || ''} onChange={(e) => {
-                           const picked = mySquadPlayers.find(p => p.id === e.target.value);
-                           setTradeMyPlayer(picked);
-                           // tradeTheirPlayer is NOT cleared — mismatch warning + submit block handle it
-                         }} className="bg-[var(--elev)] border border-[var(--rule)] p-3 rounded-sm text-[var(--paper)] text-[12px] font-bold outline-none text-center">
-                           <option value="">{mySquadPlayers.length ? '(None)' : 'Loading…'}</option>
-                           {[...mySquadPlayers].sort((a, b) => {
-                             if (!tradeTheirPlayer) return 0;
-                             const aMatch = normalizePos(a.position) === normalizePos(tradeTheirPlayer.position);
-                             const bMatch = normalizePos(b.position) === normalizePos(tradeTheirPlayer.position);
-                             return aMatch === bMatch ? 0 : aMatch ? -1 : 1;
-                           }).map(p => {
-                             const posMatch = !tradeTheirPlayer || normalizePos(p.position) === normalizePos(tradeTheirPlayer.position);
-                             return <option key={p.id} value={p.id} disabled={!posMatch}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>;
-                           })}
-                        </select>
-                        {tradeMyPlayer && (
-                          <button
-                            onClick={() => toggleListing(tradeMyPlayer.id)}
-                            className={`text-[11px] font-black uppercase tracking-widest px-2 py-1 rounded border transition-all ${
-                              myListings.has(tradeMyPlayer.id)
-                                ? 'border-[var(--pos)]/40 text-[var(--pos)] bg-[var(--pos-bg)]'
-                                : 'border-[var(--rule)] text-[#555]'
-                            }`}
-                          >
-                            {myListings.has(tradeMyPlayer.id) ? '✓ Listed for trade' : '+ List for trade'}
-                          </button>
-                        )}
-                      </div>
-                      <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">↔</div>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-[var(--mute)] uppercase tracking-widest text-center">Their player</label>
-                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(theirSquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--elev)] border border-[var(--rule)] p-3 rounded-sm text-[var(--paper)] text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
-                           <option value="">{theirSquadPlayers.length ? '(None)' : 'Loading…'}</option>
-                           {[...theirSquadPlayers].sort((a, b) => {
-                             if (!tradeMyPlayer) return 0;
-                             const aMatch = normalizePos(a.position) === normalizePos(tradeMyPlayer.position);
-                             const bMatch = normalizePos(b.position) === normalizePos(tradeMyPlayer.position);
-                             return aMatch === bMatch ? 0 : aMatch ? -1 : 1;
-                           }).map(p => {
-                             const posMatch = !tradeMyPlayer || normalizePos(p.position) === normalizePos(tradeMyPlayer.position);
-                             return <option key={p.id} value={p.id} disabled={!posMatch}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>;
-                           })}
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4 pt-6 border-t border-[var(--rule)]">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-[12px] font-bold text-[var(--paper)]">Add Cash Sweetener</span>
-                        <span className="text-[14px] font-black text-positive">€{tradeCash.toFixed(1)}M</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-[11px] text-[var(--mute)]">€0M</span>
-                        <input type="range" min="-10" max="10" step="0.5" value={tradeCash} onChange={e => setTradeCash(parseFloat(e.target.value))} className="flex-1 accent-cyan" />
-                        <span className="text-[11px] text-[var(--mute)]">€10M</span>
-                      </div>
-                      <p className="text-[11px] text-[var(--mute)] italic text-center">Shift budget caps to balance unequal player values.</p>
-                    </div>
-
-                    <div className="space-y-4 pt-6 border-t border-[var(--rule)]">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-[12px] font-bold text-[var(--paper)]">Add Points Penalty</span>
-                        <span className="text-[14px] font-black text-[#E53935]">{tradePoints} pts</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-[11px] text-[var(--mute)]">0</span>
-                        <input type="range" min="0" max="50" step="1" value={tradePoints} onChange={e => setTradePoints(parseInt(e.target.value))} className="flex-1 accent-[#E53935]" />
-                        <span className="text-[11px] text-[var(--mute)]">50</span>
-                      </div>
-                      <p className="text-[11px] text-[var(--mute)] italic text-center">Give up raw ranking points to secure a star player.</p>
-                    </div>
-                  </div>
-                  <div className="p-6 border-t border-[var(--rule)] bg-[var(--bg)] space-y-3">
-                    {/* Position mismatch hint */}
-                    {tradeMyPlayer && tradeTheirPlayer &&
-                      normalizePos(tradeMyPlayer.position) !== normalizePos(tradeTheirPlayer.position) && (
-                      <div className="text-[#E53935] text-[11px] font-bold text-center">
-                        ⚠ Position mismatch — trades must swap same-position players ({normalizePos(tradeMyPlayer.position)} ↔ {normalizePos(tradeTheirPlayer.position)})
-                      </div>
-                    )}
-                    {tradeError && (
-                      <div className="text-[#E53935] text-[11px] font-bold text-center">{tradeError}</div>
-                    )}
-                    <button
-                      disabled={isSendingProposal}
-                      onClick={validateAndSendProposal}
-                      className="w-full py-4 bg-cyan text-white text-[13px] font-black uppercase tracking-widest rounded active:scale-95 shadow-[0_0_15px_rgba(26,111,168,0.3)]"
-                      style={{ backgroundColor: 'var(--accent)' }}
-                    >
-                      Broadcast Proposal
-                    </button>
-                  </div>
-               </div>
-            </div>
+           <TradeBuilderSheet
+             target={tradeTarget}
+             onClose={() => setShowTradeBuilder(false)}
+             showToast={showToast}
+             incomingTrades={incomingTrades}
+             outgoingTrades={outgoingTrades}
+             acceptProposal={acceptProposal}
+             rejectProposal={rejectProposal}
+             cancelProposal={cancelProposal}
+             mySquadPlayers={mySquadPlayers}
+             theirSquadPlayers={theirSquadPlayers}
+             myPlayer={tradeMyPlayer}
+             setMyPlayer={setTradeMyPlayer}
+             theirPlayer={tradeTheirPlayer}
+             setTheirPlayer={setTradeTheirPlayer}
+             myListings={myListings}
+             toggleListing={toggleListing}
+             cash={tradeCash}
+             setCash={setTradeCash}
+             points={tradePoints}
+             setPoints={setTradePoints}
+             error={tradeError}
+             sending={isSendingProposal}
+             onSend={validateAndSendProposal}
+           />
          )}
 
-         {managerTeamView && createPortal((() => {
+         {managerTeamView && (() => {
            const mv = members.find(m => m.user_id === managerTeamView.user_id);
            const isMeView = managerTeamView.user_id === currentUser?.id;
            const ord = (n) => { const v = n % 100; return n + (['th', 'st', 'nd', 'rd'][(v - 20) % 10] || ['th', 'st', 'nd', 'rd'][v] || 'th'); };
-           const hue = mgrHue(managerTeamView.name || '');
            const w = (managerTeamView.name || '?').trim().split(/\s+/);
            const ini = (w.length > 1 ? w[0][0] + w[1][0] : (managerTeamView.name || '?').slice(0, 2)).toUpperCase();
            const sub = [mv?.rank ? ord(mv.rank) : null, mv?.total_points != null ? `${Math.round(mv.total_points)} pts` : null].filter(Boolean).join(' · ');
            const isDraft = activeLeague?.leagues?.format === 'noduplicate';
            return (
-           <div role="presentation" className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center sm:p-6 bg-black/60" onClick={() => setManagerTeamView(null)}>
-             <div role="dialog" aria-label={`${managerTeamView.name}'s squad`} className="w-full h-[85vh] sm:h-auto sm:max-h-[80vh] sm:max-w-[600px] bg-[var(--bg)] rounded-t-2xl sm:rounded-2xl flex flex-col overflow-hidden" style={{ boxShadow: '0 20px 60px rgba(0,0,0,.25)' }} onClick={e => e.stopPropagation()}>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 14px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-                 <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: '50%', background: `${hue}26`, color: hue, display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 'var(--fs-body)', flexShrink: 0 }}>{ini}</span>
-                 <div style={{ minWidth: 0, flex: 1 }}>
-                   <h2 style={{ margin: 0, fontFamily: "'Archivo Black', sans-serif", fontSize: 'var(--fs-heading)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{managerTeamView.name}</h2>
-                   {sub && <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{sub}</div>}
-                 </div>
-                 <button onClick={() => setManagerTeamView(null)} aria-label="Close" className="hit-44" style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--elev)', color: 'var(--mute)', cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-                 </button>
-               </div>
-               {h2hEnabled && !isMeView && (
-                 <div style={{ padding: '14px 20px 0' }}>
-                   <button
-                     onClick={() => { setH2hTarget({ user_id: managerTeamView.user_id, name: managerTeamView.name, rank: mv?.rank, total_points: mv?.total_points }); setManagerTeamView(null); }}
-                     style={{ width: '100%', minHeight: 'var(--tap)', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', background: 'var(--card)', color: 'var(--paper)', fontFamily: 'inherit', fontSize: 'var(--fs-body)', fontWeight: 600, cursor: 'pointer' }}
-                   >Compare with me</button>
-                 </div>
-               )}
-               <div className="flex-1 overflow-y-auto no-scrollbar" style={{ padding: '16px 20px 20px' }}>
-                 {!managerRoster.length && <LoadingRows rows={3} />}
-                 {managerRoster.length > 0 && (
-                   <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                     {managerRoster.map((p, i) => {
-                       const posColor = p.position === 'GK' ? 'var(--purple)' : p.position === 'DEF' ? 'var(--accent)' : p.position === 'MID' ? 'var(--gold-text)' : 'var(--danger)';
-                       return (
-                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '8px 14px', borderBottom: i < managerRoster.length - 1 ? '1px solid var(--rule)' : 'none' }}>
-                           <span style={{ width: 36, textAlign: 'center', padding: '3px 0', borderRadius: 6, fontSize: 'var(--fs-micro)', fontWeight: 700, color: posColor, background: 'var(--elev)', flexShrink: 0 }}>{p.position}</span>
-                           <ClubCrest name={p.club} size={26} />
-                           <div style={{ minWidth: 0, flex: 1 }}>
-                             <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                             <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{p.club}</div>
-                           </div>
-                           <div className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)', flexShrink: 0 }}>€{p.price}M</div>
-                           {isDraft && !isMeView && (
-                             <button className="hit-44"
-                               onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
-                               style={{ fontFamily: 'inherit', fontSize: 'var(--fs-micro)', fontWeight: 600, color: 'var(--accent)', background: 'transparent', border: '1px solid var(--accent)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', flexShrink: 0 }}
-                             >Trade</button>
-                           )}
-                         </div>
-                       );
-                     })}
-                   </div>
-                 )}
-               </div>
-             </div>
-           </div>
+             <ManagerTeamSheet
+               name={managerTeamView.name}
+               initials={ini}
+               hue={mgrHue(managerTeamView.name || '')}
+               subtitle={sub}
+               roster={managerRoster}
+               canCompare={h2hEnabled && !isMeView}
+               onCompare={() => { setH2hTarget({ user_id: managerTeamView.user_id, name: managerTeamView.name, rank: mv?.rank, total_points: mv?.total_points }); setManagerTeamView(null); }}
+               canTrade={isDraft && !isMeView}
+               onTrade={(p) => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
+               onClose={() => setManagerTeamView(null)}
+               crest={ClubCrest}
+               loading={LoadingRows}
+             />
            );
-         })(), document.body)}
+         })()}
 
          {h2hTarget && (
            <H2HSheet

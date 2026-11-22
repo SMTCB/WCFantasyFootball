@@ -6,6 +6,7 @@ import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
+import { Icon, Glyph } from '../../components/UiIcons';
 
 const STATUS_LABEL = {
   upcoming:         { label: 'Upcoming',        color: 'var(--mute)', bg: 'transparent', outline: true },
@@ -21,7 +22,7 @@ const TYPE_BADGE = {
   atp_finals:  { label: 'Season Finale', color: 'var(--ten)', bg: 'var(--tenbg)' },
 };
 
-const SURFACE_ICON = { hard: '🎾', clay: '🟤', grass: '🌿', hard_indoor: '🏟️' };
+const SURFACE_ICON = { hard: '🎾', clay: 'surface-clay', grass: 'surface-grass', hard_indoor: 'building' };
 
 function formatDate(d) {
   if (!d) return '';
@@ -59,7 +60,7 @@ export default function TennisHomeScreen() {
                 aria-label="Player's Box settings"
                 style={{ padding: '6px 9px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-accent)' }}
               >
-                ⚙
+                <Icon name="gear" />
               </button>
             )}
             {myBoxes.length > 1 && (
@@ -205,7 +206,7 @@ export default function TennisHomeScreen() {
                     opacity: t.status === 'upcoming' ? 0.42 : 1,
                   }}
                 >
-                  <span style={{ fontSize: 'var(--fs-heading)' }}>{SURFACE_ICON[t.surface] ?? '🎾'}</span>
+                  <span style={{ fontSize: 'var(--fs-heading)' }}><Glyph g={SURFACE_ICON[t.surface] ?? '🎾'} /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                       <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>

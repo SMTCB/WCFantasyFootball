@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { DRIVERS, TEAMS } from '../../lib/f1/f1-data';
+import { Icon } from '../../components/UiIcons';
 
 const SEASON_FIELDS = [
   { key: 'driver_champion',       label: 'Drivers\' Champion',              type: 'driver' },
@@ -121,7 +122,7 @@ export default function F1SeasonBetsScreen() {
 
       {isLocked && (
         <div style={{ margin: '12px 16px', padding: '10px 14px', background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>
-          🔒 Season bets are locked
+          <Icon name="lock" /> Season bets are locked
         </div>
       )}
 

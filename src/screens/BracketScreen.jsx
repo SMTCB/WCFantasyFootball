@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Button from '../components/Button';
+import { Icon } from '../components/UiIcons';
 
 /* ── Fallback fixtures — generic placeholders, no competition branding ──────── */
 const FALLBACK_FIXTURES = [
@@ -343,7 +344,7 @@ export default function BracketScreen() {
 
           {fixtures.length === 0 && (
             <div className="text-center py-16">
-              <div className="text-3xl mb-3">📅</div>
+              <div className="text-3xl mb-3" style={{ color: 'var(--mute)' }}><Icon name="calendar" /></div>
               <div
                 className="text-[13px] font-bold"
                 style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}

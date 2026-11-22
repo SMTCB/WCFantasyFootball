@@ -6865,4 +6865,10 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - UI-AUDIT-SYS-02 (part): form and empty-state buttons now use the shared `Button` (new competition, error and not-found screens, tennis and Home empty states), or its `ffl-btn` classes where importing `Button` would break the Rolldown rule (Clubhouse screen, tennis home, `ErrorState`).
 - Checked: `npm run lint`; `npx madge --circular src/` and the TDZ import check; `npm run build`; `platform.spec.js` on both browsers; the forms seen at 375px and 1280px.
 
-Last Updated: 2026-11-21
+## S16 part 3: icons instead of emoji, league sheets (2026-11-22)
+
+- UI-AUDIT-ICN-01: about 280 inline emoji are now the shared line icons in `UiIcons.jsx` (new `Icon`, `Glyph` and `Dot` helpers and about 40 shapes, plus fixed-colour medals, cards and tennis surfaces). Covered: bet catalogues and bet screens, the commissioner panel, trading, auctions, recap, H2H, the Frontpage, invites, My team tabs, market, draft, F1 and tennis screens, the trophy cabinet, admin screens. Dice (🎲) became swords or a megaphone, never dice (no gambling visuals), including the bet card in The Room. Kept on purpose: the sport glyphs ⚽🎾🏁, reaction emoji in The Room and the Frontpage, emoji inside share text, and typographic marks such as ✓ ✕ → ★. Files that sit under a screen importing `UiIcons` get the icon as a prop or re-export (Rolldown TDZ rule); LeagueScreen's H2H badge is an inline SVG.
+- LEAGUE-SHEET-1: the trade builder and the manager squad view moved out of `LeagueScreen.jsx` into `league/TradeBuilderSheet.jsx` and `league/ManagerTeamSheet.jsx`, both on the shared `BottomSheet` (focus trap, Escape, light theme instead of the dark overlay).
+- Checked: `npm run lint`; `npx madge --circular src/` and the TDZ import check; `npm run build`; `platform.spec.js` on both browsers; F1, tennis and trophy screens seen at 375px.
+
+Last Updated: 2026-11-22

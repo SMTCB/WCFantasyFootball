@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
+import { Icon } from '../../components/UiIcons';
 
 export default function PaddockLobbyScreen() {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ export default function PaddockLobbyScreen() {
       {/* Header */}
       <div style={{ background: 'var(--card)', padding: '24px 20px 20px' }}>
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
-          🏎 Formula 1 · 2026
+          🏁 Formula 1 · 2026
         </div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.1 }}>
           PADDOCK
@@ -165,7 +166,7 @@ export default function PaddockLobbyScreen() {
                             aria-label="League settings"
                             style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
                           >
-                            ⚙
+                            <Icon name="gear" />
                           </button>
                         )}
                         <button

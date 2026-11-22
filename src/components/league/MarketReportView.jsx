@@ -4,6 +4,7 @@ import { MONO, DISPLAY, BODY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection, miniBtnStyle } from './HubShared';
 import GazetteDraftReport from '../GazetteDraftReport';
 import ClubCrest from '../ClubCrest';
+import { Icon } from '../UiIcons';
 
 // League-wide transfer log grouped by matchday, plus the draft allocation
 // report (overlaps/ties resolved by lottery) when one exists for this league.
@@ -373,7 +374,7 @@ export default function MarketReportView({ leagueId, members, currentUser }) {
 
       {grouped.length === 0 ? (
         <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>📰</div>
+          <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12, color: 'var(--mute)' }}><Icon name="newspaper" /></div>
           <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginBottom: 8 }}>No transfers yet</div>
           <div style={{ fontFamily: BODY, fontSize: 'var(--fs-label)', color: 'var(--mute)', opacity: 0.7, lineHeight: 1.5, maxWidth: 320, margin: '0 auto' }}>
             Transfer activity will appear here once managers start making moves.

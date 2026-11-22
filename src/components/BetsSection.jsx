@@ -1,5 +1,6 @@
 import { useBets } from '../hooks/useBets';
 import BetWidget from './BetWidget';
+import { Icon } from './UiIcons';
 
 function BetGroup({ title, items, squadId, onSubmitted }) {
   if (!items.length) return null;
@@ -54,7 +55,7 @@ export default function BetsSection({ leagueId, squadId }) {
   if (bets.length === 0) {
     return (
       <div className="px-4 py-12 text-center">
-        <div className="text-3xl mb-3">🎯</div>
+        <div className="text-3xl mb-3" style={{ color: 'var(--mute)' }}><Icon name="target" /></div>
         <div className="text-[15px] font-black uppercase tracking-tight mb-2" style={{ color: 'var(--paper)' }}>No bets yet</div>
         <div className="text-[13px] leading-relaxed" style={{ color: 'var(--mute)' }}>
           The league commissioner can create prediction widgets here. They'll appear when a matchday is active.

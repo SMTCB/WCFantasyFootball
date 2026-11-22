@@ -19,6 +19,7 @@ import { LoadingRows } from '../components/Skeleton';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { Icon } from '../components/UiIcons';
 
 // ─── Edge Function caller ─────────────────────────────────────────────────────
 // FUNCTIONS_BASE is derived from VITE_SUPABASE_URL in src/lib/supabase.js.
@@ -268,7 +269,7 @@ function LeagueControls({ league, tournament, onRefresh }) {
                   disabled={lotteryRunning}
                   className="w-full py-2.5 text-[11px] font-black uppercase tracking-widest bg-[#FFC107] text-black disabled:opacity-40"
                 >
-                  {lotteryRunning ? 'Running…' : '⚡ Run Draft Lottery'}
+                  {lotteryRunning ? 'Running…' : <><Icon name="bolt" /> Run Draft Lottery</>}
                 </button>
               </>
             )}
@@ -300,7 +301,7 @@ function LeagueControls({ league, tournament, onRefresh }) {
                   disabled={wishlistRunning || !wishlistStatus.available}
                   className="w-full py-2.5 text-[11px] font-black uppercase tracking-widest bg-[#FFC107] text-black disabled:opacity-40"
                 >
-                  {wishlistRunning ? 'Running…' : wishlistStatus.available ? '⚡ Run Wishlist Draft Allocation' : 'Already Allocated'}
+                  {wishlistRunning ? 'Running…' : wishlistStatus.available ? <><Icon name="bolt" /> Run Wishlist Draft Allocation</> : 'Already Allocated'}
                 </button>
               </>
             )}
@@ -374,7 +375,7 @@ function MatchdayDeadlines({ tournamentId }) {
         style={{ background: overrideMode ? 'rgba(240,180,0,0.07)' : 'var(--elev)' }}>
         <div>
           <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: overrideMode ? 'var(--gold)' : 'var(--mute)' }}>
-            {overrideMode ? '✏ Override mode — editing enabled' : '⚙ Auto-managed by fixture sync'}
+            {overrideMode ? <><Icon name="pencil" /> Override mode — editing enabled</> : <><Icon name="gear" /> Auto-managed by fixture sync</>}
           </p>
           <p className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>
             {overrideMode ? 'Changes you save here will persist until the next sync overwrites them.' : 'Deadlines are set automatically. Toggle to override a specific round.'}
@@ -482,7 +483,7 @@ function DataSync({ forzaId }) {
               <p className="text-[11px] text-text-secondary mt-0.5">{a.sub}</p>
             </div>
             <span className="text-text-secondary text-xs shrink-0 ml-4">
-              {busy === a.fn ? '⏳' : '→'}
+              {busy === a.fn ? <Icon name="hourglass" /> : '→'}
             </span>
           </button>
         ))}

@@ -1,5 +1,6 @@
 import AuctionCard from '../AuctionCard';
 import { MONO, DISPLAY } from './HubConstants';
+import { Icon } from '../UiIcons';
 
 export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, myUserId, myBudget, placeBid, cancelListing, sellNow, onToast }) {
   return (
@@ -32,7 +33,7 @@ export default function AuctionsView({ auctions, auctionsLoading, name, mySquadI
         )}
         {!auctionsLoading && auctions.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
-            <div style={{ fontSize: 'var(--fs-title)' }}>🔨</div>
+            <div style={{ fontSize: 'var(--fs-title)', color: 'var(--mute)' }}><Icon name="gavel" /></div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVE AUCTIONS</div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>
               List a player for auction from your Squad screen to start bidding.
