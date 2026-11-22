@@ -7,6 +7,7 @@ import { useShowArchived } from '../../hooks/useShowArchived';
 import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
 import { Icon } from '../../components/UiIcons';
+import Card from '../../components/ui/Card';
 
 
 export default function PlayerBoxScreen() {
@@ -140,7 +141,7 @@ export default function PlayerBoxScreen() {
             ) : (
               <div className="sport-cards" style={{ gap: 10 }}>
                 {visibleBoxes.map(b => (
-                  <div key={b.player_box_id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', opacity: b.archived ? 0.7 : 1 }}>
+                  <Card padded={false} key={b.player_box_id} style={{ padding: '14px 16px', opacity: b.archived ? 0.7 : 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -184,7 +185,7 @@ export default function PlayerBoxScreen() {
                         {copied === b.invite_code ? 'Copied ✓' : 'Copy code'}
                       </span>
                     </div>
-                  </div>
+                  </Card>
                 ))}
                 {archivedCount > 0 && (
                   <button

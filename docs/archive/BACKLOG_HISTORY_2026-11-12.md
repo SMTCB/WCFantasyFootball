@@ -6877,4 +6877,11 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - Fixed on the way: the tennis leaderboard crashed on season data (`useTennisLeaderboard` now shapes rows through `shapeTennisSeason`); icons inside text broke onto their own line (Tailwind makes svg a block, so `Icon` is now inline-block); the tennis home banner text was low contrast on green; desktop leaderboard columns show full tournament names; `var(--text2)` typos in the touched tennis files now `var(--text-2)`.
 - Checked: `npm run lint` (no new warnings); `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; every F1 and tennis screen seen at 1280px and 375px against the local stack, no page errors, no sideways scroll.
 
+## S16 part 5: component catalogue and shared cards (2026-11-22)
+
+- LOW-2: the dev-only route `/dev/kit` (in `DesignKitScreen.jsx` and `src/screens/devkit/`, left out of the production build) shows every shared component in its variants and states without a login: colours, type scale, buttons, inputs, pills, cards and headers, empty, error and loading states, all icons, the sheet, confirm dialogs and toasts, tabs and the action bar, and the F1 and tennis desktop layouts. A width picker loads it at 375, 768 or 1280 pixels in a frame, so phone and desktop rules apply as on a real device. Ladle was not used: it needs Vite 6 and the app runs Vite 8.
+- CODE-6 (part): 39 inline card boxes in 13 files (bets, challenges, trophy cabinet, Home, league detail, tennis screens) now use the shared `Card`. Screens compared pixel by pixel before and after: no visible change.
+- Fixed on the way: the body text of every confirm dialog and of the onboarding tour was light grey on white and nearly invisible, now `var(--ink-soft)`; width classes on `Skeleton` were ignored (its CSS now sits in the components layer, so `w-32` and similar apply, as on My team); the first-visit wizard no longer covers `/dev/` pages.
+- Checked: `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; the catalogue at 1280px and 375px with no page errors and no sideways scroll.
+
 Last Updated: 2026-11-22

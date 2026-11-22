@@ -7,6 +7,7 @@ import PrimaryActionBar from '../shared/PrimaryActionBar';
 import { supabase } from '../../lib/supabase';
 import Button from '../Button';
 import { Icon } from '../UiIcons';
+import Card from '../ui/Card';
 // Re-exported for ChallengeScreen, which reaches UiIcons through this file and so
 // must not import it directly (Rolldown TDZ rule, CLAUDE.md).
 export { Icon };
@@ -1252,9 +1253,7 @@ export function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAn
   const isCreator = bet.creator_id === userId;
 
   return (
-    <div style={{
-      background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)',
-      padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 9,
+    <Card padded={false} style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 9,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
         <AnswerModeBadge mode={bet.answer_mode} />
@@ -1367,7 +1366,7 @@ export function BetCard({ bet, userId, section, isOwner, onJoin, onDecline, onAn
           )}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -1376,9 +1375,9 @@ export function BetSection({ title, bets, emptyLabel, ...cardProps }) {
     return (
       <div>
         <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 9 }}>{title}</div>
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
+        <Card padded={false} style={{ padding: '16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'center' }}>
           {emptyLabel}
-        </div>
+        </Card>
       </div>
     );
   }
@@ -1413,9 +1412,7 @@ export function HistoryItem({ challenge, userId, onRematch }) {
   else { label = `${oppName ?? 'Opponent'} won`; amtColor = 'var(--neg)'; amtStr = `−${challenge.stake_coins.toLocaleString()} C`; }
 
   return (
-    <div style={{
-      background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)',
-      padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 12,
+    <Card padded={false} style={{ padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 12,
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
@@ -1446,7 +1443,7 @@ export function HistoryItem({ challenge, userId, onRematch }) {
           style={{ flexShrink: 0, width: 'var(--tap)', height: 'var(--tap)', borderRadius: 'var(--radius)', border: '1px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 'var(--fs-body)', color: 'var(--text2)' }}
         >↻</button>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -1478,7 +1475,7 @@ export function WalletTabContent({ wallet, walletLoading }) {
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* Balance card */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
+        <Card padded={false}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Coin wallet</div>
           </div>
@@ -1500,16 +1497,16 @@ export function WalletTabContent({ wallet, walletLoading }) {
               </>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Pilot coins are free credits; there is nothing to buy. */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
+        <Card padded={false} style={{ padding: '14px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)', lineHeight: 1.5 }}>
           Coins are free play credits. They have no cash value and nothing here costs real money.
-        </div>
+        </Card>
 
         {/* Economy stats */}
         {econStats && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
+          <Card padded={false}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
               <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Platform economy</div>
             </div>
@@ -1526,11 +1523,11 @@ export function WalletTabContent({ wallet, walletLoading }) {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Transaction history */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
+        <Card padded={false}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
             <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Transaction history</div>
           </div>
@@ -1561,7 +1558,7 @@ export function WalletTabContent({ wallet, walletLoading }) {
               );
             })}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
@@ -2109,7 +2106,7 @@ export function SidebarContent({ balance, escrow, netWL, history, userId, streak
       )}
 
       {/* Wallet mini-card */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
+      <Card padded={false}>
         <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Coin wallet</div>
         </div>
@@ -2125,10 +2122,10 @@ export function SidebarContent({ balance, escrow, netWL, history, userId, streak
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Season record */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>
+      <Card padded={false}>
         <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ ...HEAD, fontSize: 'var(--fs-body)', letterSpacing: '-0.01em' }}>Season record</div>
           <StreakPill streak={streak} />
@@ -2159,7 +2156,7 @@ export function SidebarContent({ balance, escrow, netWL, history, userId, streak
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* How it works info */}
       <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)' }}>

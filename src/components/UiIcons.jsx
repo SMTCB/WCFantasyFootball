@@ -90,6 +90,10 @@ const TONED = {
   'surface-grass': ['leaf', '#3F8F3A'],
 };
 
+// Every name <Icon> accepts; the dev catalogue (/dev/kit) lists them.
+// eslint-disable-next-line react-refresh/only-export-components
+export const ICON_NAMES = [...Object.keys(PATHS), ...Object.keys(TONED)];
+
 /**
  * <Icon name="chat" /> — sized to the surrounding text by default (1em) and
  * nudged onto the text baseline, so it drops in where an emoji used to be.

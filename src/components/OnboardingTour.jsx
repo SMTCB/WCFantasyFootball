@@ -222,7 +222,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
         <p style={{
           fontSize: 'var(--fs-body)',
           lineHeight:   1.6,
-          color:        'rgba(240,242,245,0.6)',
+          color:        'var(--ink-soft)',
           marginBottom: '16px',
         }}>
           {current.body}

@@ -3,6 +3,7 @@ import { HubSectionLabel, MobSection } from './HubShared';
 import { MONO, DISPLAY, mgrHue } from './HubConstants';
 import { supabase } from '../../lib/supabase';
 import CompetitionRankBadge from '../CompetitionRankBadge';
+import Card from '../ui/Card';
 
 // Maps gazette entry_type (DB enum) to a filter category and display label.
 // Current enum values: draft_report, breaking_news, activity, auction_result, trade_result, p2p_challenge, p2p_result, wishlist_draft_report
@@ -148,7 +149,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           })}
         </div>
       )}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+      <Card padded={false} style={{ overflow: 'hidden' }}>
         <div role="row" style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, alignItems: 'center', padding: '8px 14px', borderBottom: '1px solid var(--rule)', fontSize: 'var(--fs-micro)', fontWeight: 600, color: 'var(--mute)' }}>
           <span className="num" style={{ textAlign: 'center' }}>#</span>
           <span />
@@ -175,7 +176,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             </div>
           );
         })}
-      </div>
+      </Card>
       <div className="num" style={{ marginTop: 8, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Gameweek {currentGW} · tap a manager to see their squad</div>
     </div>
   );

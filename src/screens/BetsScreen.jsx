@@ -13,6 +13,7 @@ import { LoadingRows } from '../components/Skeleton';
 import ConfirmModal from '../components/ConfirmModal';
 import BetThread from '../components/BetThread';
 import { supabase } from '../lib/supabase';
+import Card from '../components/ui/Card';
 import {
   HEAD, Ci, CoinAmt, MemberAvatar, gwLabel, timeAgo, timeUntil, TX_META,
   friendlyBetError, DeclareResultModal, ArbitrationModal, CreateGroupBetModal,
@@ -90,9 +91,9 @@ function SectionHead({ title, count, tone }) {
 
 function Empty({ children }) {
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+    <Card padded={false} style={{ padding: '14px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
       {children}
-    </div>
+    </Card>
   );
 }
 
@@ -616,14 +617,14 @@ export default function BetsScreen() {
     : null;
 
   const list = (entries, empty) => (entries.length === 0 ? <Empty>{empty}</Empty> : (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+    <Card padded={false} style={{ overflow: 'hidden' }}>
       <div style={{ marginTop: -1 }}>
         {entries.map(e => (
           <BetRow key={e.key} entry={e} circleName={circleById.get(e.circleId)?.name} showCircle={showCircle}
             selected={!isMobile && e.key === activeKey} onOpen={() => openThread(e)} />
         ))}
       </div>
-    </div>
+    </Card>
   ));
 
   return (

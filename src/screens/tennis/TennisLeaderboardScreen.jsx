@@ -5,6 +5,7 @@ import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
 import { CompetitionResultsHeader } from '../../components/competition/CompetitionResultsHeader';
 import Button from '../../components/Button';
 import { Icon } from '../../components/UiIcons';
+import Card from '../../components/ui/Card';
 
 export default function TennisLeaderboardScreen() {
   const navigate = useNavigate();
@@ -68,15 +69,15 @@ export default function TennisLeaderboardScreen() {
           <>
             <div className="sport-split">
             {/* Masters Drop Rule note */}
-            <div className="sport-aside" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <Card padded={false} className="sport-aside" style={{ padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 'var(--fs-body-lg)', color: 'var(--ten)', lineHeight: 1 }}><Icon name="info" /></span>
               <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text-2)', margin: 0 }}>
                 <strong>Masters Drop Rule:</strong> Only your best 4 Masters 1000 scores count. The worst score is dropped once 5 or more Masters are complete.
               </p>
-            </div>
+            </Card>
 
             {/* Standings table */}
-            <div className="sport-main" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 20 }}>
+            <Card padded={false} className="sport-main" style={{ overflow: 'hidden', marginBottom: 20 }}>
               <CompetitionResultsHeader
                 rows={standings}
                 columns={[
@@ -105,12 +106,12 @@ export default function TennisLeaderboardScreen() {
                 rowPadding="12px 16px"
                 gap={8}
               />
-            </div>
+            </Card>
             </div>
 
             {/* Per-tournament breakdown */}
             {seasonSummary.length > 0 && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+              <Card padded={false} style={{ overflow: 'hidden' }}>
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
                   <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Per-Tournament Breakdown</span>
                 </div>
@@ -189,7 +190,7 @@ export default function TennisLeaderboardScreen() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
           </>
         )}
