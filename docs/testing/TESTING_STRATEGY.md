@@ -62,6 +62,7 @@ Real `pg` client against a real (but empty-then-seeded) Postgres — not mocked.
 | `coins.test.js` | 9 | coin wallet credits and debits |
 | `cup-elimination.test.js` | 10 | `eliminate_cup_club`, `sync_cup_eliminations` |
 | `f1-scoring-logic.test.js` | 14 | `scoreRaceBet` |
+| `f1-openf1-logic.test.js` | 13 | `sync-f1-race-results/openf1-logic.js`: race session by date, OpenF1 surname to pick name, final top 3 (F1-SYNC-1) |
 | `lineup.test.js` | 3 | lineup locking |
 | `p2p-challenges.test.js` | 55 | the whole P2P challenge and escrow lifecycle |
 | `scoring-logic.test.js` | 41 | football points calculation |

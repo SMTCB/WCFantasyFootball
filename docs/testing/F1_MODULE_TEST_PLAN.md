@@ -181,20 +181,23 @@ Result special `Safety Car`, pick ` safety car `.
 
 ## Module 4 — Results auto-fill from OpenF1
 
-`sync-f1-race-results` runs every 30 minutes. It looks at races that started more than 2 hours and less than 14 days ago with no P1, asks OpenF1 for the race session, then the top 3 positions and driver names, fills P1 to P3, and sets the status to `finished`. It never scores; DNF, team and special stay manual (SAVE RESULT, then SCORE RACE in `/f1/:id/admin`). Each race comes back as `NO_SESSION_YET`, `RESULT_INCOMPLETE`, `FILLED` or `ERROR`.
+`sync-f1-race-results` runs every 30 minutes. It looks at races that started more than 2 hours and less than 14 days ago with no P1 (a one-off call can pass `{"days": N}` to look further back). It finds the OpenF1 race session by date, takes each driver's final position, maps the top 3 to the pick-list spelling, fills P1 to P3, and sets the status to `finished`. It never scores; DNF, team and special stay manual (SAVE RESULT, then SCORE RACE in `/f1/:id/admin`). Each race comes back as `NO_SESSION_YET`, `RESULT_INCOMPLETE`, `NAME_UNMATCHED`, `FILLED`, `OPENF1_LIVE_LOCK` or `ERROR`. The matching rules live in `openf1-logic.js` and are covered by `tests/unit/f1-openf1-logic.test.js`.
 
-### Scenario 4.1: A finished race fills in ✅ **fails today** (F1-SYNC-1)
+### Scenario 4.1: A finished race fills in ⏳ deployed 2026-11-22, waiting for a real race to confirm (F1-SYNC-1)
 1. After a race, wait for the next run (or call it with the service role).
 
-**Expected:** status `FILLED`, P1 to P3 set with the same spelling as `f1-data.js`. **Today:** every run returns `ERROR: OpenF1 404` for `/sessions?year=2026&session_name=Race&round_number=21` (seen in `net._http_response` on 2026-11-22). OpenF1 sessions are not filtered by `round_number`, so the request never matches. Rounds 14 to 21 never filled, and after 14 days they drop out of the window for good.
+**Expected:** status `FILLED`, P1 to P3 set with the same spelling as `f1-data.js`. **Before the fix:** every run returned `ERROR: OpenF1 404` for `/sessions?year=2026&session_name=Race&round_number=21` (seen in `net._http_response` on 2026-11-22), because OpenF1 sessions have no round number. Rounds 14 to 21 never filled. The fix finds the session by date instead (the Race session whose start is closest to `race_at`, within 36 hours). Check with the next finished race, or with a one-off `{"days": 120}` call for rounds 14 to 21.
 
-### Scenario 4.2: Driver names match the pick list ❌ needs checking with F1-SYNC-1
-OpenF1's `full_name` is written with the surname in capitals (for example `Max VERSTAPPEN`), while picks use `Max Verstappen`. Scoring compares strings exactly, so an auto-filled result would score every podium pick 0 unless the names are mapped. Rounds 1 to 13 in production use the pick-list spelling, so they were entered by hand.
+### Scenario 4.2: Driver names match the pick list ⏳ deployed 2026-11-22, waiting for a real race to confirm (F1-SYNC-1)
+OpenF1's `full_name` is written with the surname in capitals (for example `Max VERSTAPPEN`), and first names differ (`Andrea Kimi`, `Alexander`), while picks use `Max Verstappen`, `Kimi Antonelli`, `Alex Albon`. Scoring compares strings exactly. The fix matches OpenF1's `last_name` (accents ignored) against the pick list and leaves the race untouched with `NAME_UNMATCHED` when a top-3 driver is not on the list, so a wrong name is never saved. Rounds 1 to 13 in production use the pick-list spelling, so they were entered by hand.
 
-### Scenario 4.3: Race in progress ✅
-**Expected:** during a live session OpenF1 now answers 401 to callers without a key (seen 2026-11-22, Las Vegas weekend). The function must treat that as "try again later", not fill anything.
+### Scenario 4.3: Race in progress ⏳ deployed 2026-11-22, waiting for a real race to confirm
+**Expected:** during a live session OpenF1 answers 401 to callers without a key (seen 2026-11-22, Las Vegas weekend). The function returns `OPENF1_LIVE_LOCK`, fills nothing, and tries again on the next run.
 
-### Scenario 4.4: Nothing to do ✅
+### Scenario 4.4: A driver who fell back from third ⏳ deployed 2026-11-22, waiting for a real race to confirm
+**Expected:** the podium uses each driver's last recorded position. The old code asked OpenF1 only for rows with position 3 or better, so a driver who ran third and later dropped back could keep a stale third place.
+
+### Scenario 4.5: Nothing to do ✅
 **Expected:** with no candidate races the function makes one database query and no OpenF1 call.
 
 ---
@@ -285,6 +288,7 @@ At 375 px: no sideways scroll, the pick form fits, sheets close with the back ge
 | What | Where |
 |---|---|
 | Points table, 14 cases | `tests/unit/f1-scoring-logic.test.js` |
+| OpenF1 matching (race by date, surname to pick name, final top 3), 13 cases | `tests/unit/f1-openf1-logic.test.js` |
 | 7 routes load, pick submit, join by code, save result + score + trophy | `e2e/f1-screens.spec.js` (local stack, CI job `e2e-tier3`) |
 | Screens render in demo mode | `e2e/platform.spec.js` |
 
@@ -296,7 +300,7 @@ Not automated: scenarios 1.3 to 1.5, 2.2 to 2.6, 3.7 to 3.9, all of module 4, 5.
 
 | Backlog | Issue | Fix needs |
 |---|---|---|
-| F1-SYNC-1 | Results auto-fill has never worked (OpenF1 404); rounds 14 to 21 have no results or scores | Code change, then a function deploy (approval) |
+| F1-SYNC-1 | Results auto-fill has never worked (OpenF1 404); rounds 14 to 21 have no results or scores | Fixed in code (session by date, surname mapping, 401 handling); deployed 2026-11-22, waiting for the first real race to confirm |
 | F1-LOCK-1 | The database does not stop a changed race pick after the deadline, or a changed season bet after the lock | Migration (approval) |
 | F1-YEAR-1 | Season bets are never scored by the app; production rows use 100/200 points per item against a promised 10 | Owner decides the points value, then code and a deploy (approval) |
 | DB-260 | `paddock_members` policy recursion; fix in migration 260 not applied | Migration (approval) |
