@@ -1506,7 +1506,7 @@ export default function LeagueScreen() {
              meId={currentUser?.id ?? user?.id}
              members={members}
              h2hEnabled={h2hEnabled}
-             Clubcrest={ClubCrest}
+             ClubCrest={ClubCrest}
              onTab={setTab}
            >
              {(sideMatches) => (
@@ -1526,7 +1526,7 @@ export default function LeagueScreen() {
              meId={currentUser?.id ?? user?.id}
              members={members}
              h2hEnabled={h2hEnabled}
-             Clubcrest={ClubCrest}
+             ClubCrest={ClubCrest}
              onTab={setTab}
            />
          )}
