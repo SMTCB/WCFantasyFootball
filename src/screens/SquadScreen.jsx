@@ -1868,7 +1868,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
               </button>
             );
           })}
-          <div data-testid="squad-budget-desktop" data-tour="squad-budget" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'baseline', gap: 18, padding: '0 20px' }}>
+          <div data-testid="squad-budget-desktop" data-tour="squad-budget" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 18, padding: '0 20px' }}>
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
               Squad <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text)' }}>{allSquadPlayers.length}</span>/15
             </span>
