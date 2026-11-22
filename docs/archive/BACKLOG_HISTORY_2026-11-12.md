@@ -6884,4 +6884,10 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - Fixed on the way: the body text of every confirm dialog and of the onboarding tour was light grey on white and nearly invisible, now `var(--ink-soft)`; width classes on `Skeleton` were ignored (its CSS now sits in the components layer, so `w-32` and similar apply, as on My team); the first-visit wizard no longer covers `/dev/` pages.
 - Checked: `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; the catalogue at 1280px and 375px with no page errors and no sideways scroll.
 
+## S17: component tests (2026-11-22)
+
+- CODE-4 (part): Vitest and React Testing Library run component tests in jsdom (`vitest.config.js`, `tests/components/`, `npm run test:components`), as a step in the CI Lint job. 26 tests: the starting-XI formation rule, now `validateFormation` in `src/lib/formations.js` instead of inline in `SquadScreen`; the chips strip under the pitch (`ChipsRow`); the confirm dialog used by every destructive action (`useConfirmDialog`, `ConfirmModal`); and the Clubhouse lobby, now its own file `src/components/clubhouse/ClubhouseLobby.jsx`.
+- TEST-E2E-1: closed. The six screens it still listed already had smoke specs (`wallet-screen`, `challenge-screen`, `trophy-cabinet-screen`, `settings-screen`, `auth-screen` from 2026-08-28; the draft has `draft-mode-complete` and others), all run by Tier 3 (`npm run test:e2e:local`).
+- Checked: each covered behaviour was broken on purpose and a test failed every time; `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers.
+
 Last Updated: 2026-11-22

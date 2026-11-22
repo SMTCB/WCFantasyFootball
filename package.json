@@ -20,7 +20,8 @@
     "check:drift": "node scripts/check-function-drift.js",
     "update:checksums": "node scripts/update-function-checksums.js",
     "test:unit": "node --test --test-concurrency=1 tests/unit/*.test.js",
-    "test:unit:watch": "node --test --watch --test-concurrency=1 tests/unit/*.test.js"
+    "test:unit:watch": "node --test --watch --test-concurrency=1 tests/unit/*.test.js",
+    "test:components": "vitest run"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
@@ -51,6 +52,10 @@
     "@capacitor/cli": "^8.3.1",
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.59.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -59,10 +64,12 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "jsdom": "^29.1.1",
     "madge": "^8.0.0",
     "pg": "^8.13.3",
     "sharp": "^0.35.3",
     "typescript": "^6.0.3",
-    "vite": "^8.0.4"
+    "vite": "^8.0.4",
+    "vitest": "^5.1.1"
   }
 }

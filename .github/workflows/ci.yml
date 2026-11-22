@@ -84,6 +84,10 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      # CODE-4: Vitest + React Testing Library in jsdom (tests/components). No DB, ~15s.
+      - name: Component tests
+        run: npm run test:components
+
   # ── 3. Build ───────────────────────────────────────────────────────────────
   build:
     name: Build
