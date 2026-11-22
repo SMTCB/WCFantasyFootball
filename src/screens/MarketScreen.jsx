@@ -45,6 +45,8 @@ const FLAG_MAP = {
 // `/market` redirects there (S32, MD-13), so it has no page header, league tabs, tour or
 // pending-changes bar of its own. The league comes in as a prop, and the pending changes
 // live in the shared transfer basket so the pitch can show them.
+const PRICE_CEILING = 15;   // the price slider runs €0M to €15M in €0.5M steps
+
 export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos = null }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -65,7 +67,11 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
   const [showTeamPicker, setShowTeamPicker] = useState(false);
   const [teamSearch,    setTeamSearch]    = useState('');
   const [priceMin,      setPriceMin]      = useState(0);
-  const [priceMax,      setPriceMax]      = useState(15);
+  const [priceMax,      setPriceMax]      = useState(PRICE_CEILING);
+  // "Only players I can sign": hides anyone the budget or the club cap rules out.
+  const [filterAffordable, setFilterAffordable] = useState(() => {
+    try { return localStorage.getItem('market_affordable') === '1'; } catch { return false; }
+  });
   const [filterHideEliminated, setFilterHideEliminated] = useState(false);
   const [filterHideTaken,      setFilterHideTaken]      = useState(false);
   const [filterMinScore,       setFilterMinScore]       = useState(0);
@@ -591,6 +597,10 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
       const price         = p.price ?? 0;
       const matchesPrice  = price >= priceMin && price <= priceMax;
 
+      if (filterAffordable && !owned.includes(p.id) && !effectiveSquadIds.includes(p.id)) {
+        const clubIsFull = p.id !== todayJokerId && (stats.countryCounts[p.club] ?? 0) >= clubCap;
+        if (price > effectiveBudget || clubIsFull) return false;
+      }
       if (filterHideEliminated && eliminatedClubs.has(p.club) && !owned.includes(p.id)) return false;
       if (filterHideTaken && isDraftLeague && isTaken(p.id) && !owned.includes(p.id)) return false;
       if (filterMinScore > 0) {
@@ -606,7 +616,8 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
     const key = !hasStats && MARKET_SORTS.find(s => s.id === sortKey)?.needsStats ? DEFAULT_MARKET_SORT : sortKey;
     return sortMarketPlayers(filtered, { sortKey: key, ownedIds: owned, statsMap, minutesMap });
   }, [players, filterPos, searchQuery, selectedTeams, priceMin, priceMax, mySquad,
-      filterHideEliminated, filterHideTaken, filterMinScore,
+      filterHideEliminated, filterHideTaken, filterMinScore, filterAffordable,
+      effectiveBudget, effectiveSquadIds, stats, clubCap, todayJokerId,
       eliminatedClubs, isDraftLeague, isTaken, statsMap, minutesMap, sortKey]);
   const squadCount  = effectiveSquadIds.length;
   const emptySlots  = Math.max(0, squadSize - squadCount);
@@ -973,55 +984,59 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
           </div>
         )}
 
-        {/* Price range filter */}
-        <div className="px-5 pb-2 flex items-center gap-3" style={{ borderTop: 'none' }}>
-          <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)', flexShrink: 0 }}>
-            Price
-          </span>
-          <div className="flex items-center gap-2 flex-1">
-            <div className="flex items-center gap-1.5 flex-1">
-              <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>€</span>
-              <input
-                type="number"
-                min={0} max={priceMax} step={0.5}
-                value={priceMin}
-                onChange={e => setPriceMin(Math.min(Number(e.target.value), priceMax))}
-                style={{
-                  width: 44, padding: '4px 6px', textAlign: 'center',
-                  background: 'var(--card)', border: '1px solid var(--rule)',
-                  borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)',
-                  outline: 'none',
-                }}
-              />
-            </div>
-            <span style={{ color: 'var(--mute)', fontSize: 'var(--fs-micro)' }}>–</span>
-            <div className="flex items-center gap-1.5 flex-1">
-              <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>€</span>
-              <input
-                type="number"
-                min={priceMin} max={20} step={0.5}
-                value={priceMax}
-                onChange={e => setPriceMax(Math.max(Number(e.target.value), priceMin))}
-                style={{
-                  width: 44, padding: '4px 6px', textAlign: 'center',
-                  background: 'var(--card)', border: '1px solid var(--rule)',
-                  borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-micro)',
-                  outline: 'none',
-                }}
-              />
-            </div>
+        {/* Price range: one two-handle slider that always fits the panel, plus the affordability switch */}
+        <div className="px-5 pb-3" data-testid="market-price-filter" style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Price</span>
+            <span data-testid="market-price-value" style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: priceMin > 0 || priceMax < PRICE_CEILING ? 'var(--accent)' : 'var(--paper)' }}>
+              €{priceMin.toFixed(1)}M – €{priceMax.toFixed(1)}M
+              {(priceMin > 0 || priceMax < PRICE_CEILING) && (
+                <button
+                  type="button"
+                  onClick={() => { setPriceMin(0); setPriceMax(PRICE_CEILING); }}
+                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--mute)', cursor: 'pointer', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)' }}
+                >
+                  Reset
+                </button>
+              )}
+            </span>
           </div>
-          {(priceMin > 0 || priceMax < 15) && (
-            <button
-              onClick={() => { setPriceMin(0); setPriceMax(15); }}
-              style={{
-                background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer',
-                fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-micro)', flexShrink: 0,
-              }}
-            >
-              Reset
-            </button>
-          )}
+          <div className="ffl-range" style={{ '--lo': `${(priceMin / PRICE_CEILING) * 100}%`, '--hi': `${(priceMax / PRICE_CEILING) * 100}%` }}>
+            <div className="ffl-range__track" aria-hidden="true"><div className="ffl-range__fill" /></div>
+            <input
+              type="range" aria-label="Minimum price"
+              min={0} max={PRICE_CEILING} step={0.5} value={priceMin}
+              style={{ zIndex: priceMin >= PRICE_CEILING - 1 ? 3 : 2 }}
+              onChange={e => setPriceMin(Math.min(Number(e.target.value), priceMax))}
+            />
+            <input
+              type="range" aria-label="Maximum price"
+              min={0} max={PRICE_CEILING} step={0.5} value={priceMax}
+              style={{ zIndex: 2 }}
+              onChange={e => setPriceMax(Math.max(Number(e.target.value), priceMin))}
+            />
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={filterAffordable}
+            data-testid="market-affordable-toggle"
+            onClick={() => setFilterAffordable(v => {
+              const next = !v;
+              try { localStorage.setItem('market_affordable', next ? '1' : '0'); } catch { /* storage blocked: the switch still works for this visit */ }
+              return next;
+            })}
+            className="hit-44"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, padding: '6px 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <span aria-hidden="true" style={{ position: 'relative', width: 36, height: 20, flexShrink: 0, borderRadius: 999, background: filterAffordable ? 'var(--accent)' : 'var(--rule)', transition: 'background .15s' }}>
+              <span style={{ position: 'absolute', top: 2, left: filterAffordable ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,.25)', transition: 'left .15s' }} />
+            </span>
+            <span style={{ minWidth: 0 }}>
+              <span style={{ display: 'block', fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-label)', color: filterAffordable ? 'var(--accent)' : 'var(--paper)' }}>Only players I can sign</span>
+              <span style={{ display: 'block', fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>Hides players over budget and from full clubs</span>
+            </span>
+          </button>
         </div>
 
         {/* Smart filter toggles — hide eliminated / hide taken / min score */}
