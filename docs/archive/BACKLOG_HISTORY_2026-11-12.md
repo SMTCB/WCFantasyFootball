@@ -6890,4 +6890,11 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - TEST-E2E-1: closed. The six screens it still listed already had smoke specs (`wallet-screen`, `challenge-screen`, `trophy-cabinet-screen`, `settings-screen`, `auth-screen` from 2026-08-28; the draft has `draft-mode-complete` and others), all run by Tier 3 (`npm run test:e2e:local`).
 - Checked: each covered behaviour was broken on purpose and a test failed every time; `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers.
 
+## FB-15: market sort (2026-11-22)
+
+- FB-15: a Sort row in the player market, above the position tabs: Price (highest first, the old order and still the default), Cheapest, Points (this season), Form (the last 5 rounds, the same window as the form strip) and Minutes (this season). Points, Form and Minutes appear once player stats have loaded. Players you own stay at the top whatever the sort. The choice is remembered on the device. The order logic is `sortMarketPlayers` in `src/lib/marketSort.js`, with 9 component tests in `tests/components/marketSort.test.js`.
+- Minutes were not fetched before, as the backlog row assumed: `usePlayerStats` now also reads `minutes_played` from the same `player_match_stats` query and returns `minutesMap`. No schema or RPC change.
+- S21 part done; PCARD-2 (flags and photos on player cards) is still open.
+- Checked: `npm run test:components` (35 tests); `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; the market on the local stack at 1280px and 375px.
+
 Last Updated: 2026-11-22

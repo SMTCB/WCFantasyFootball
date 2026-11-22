@@ -8,8 +8,10 @@ import { supabase } from '../lib/supabase';
 // the front themselves; consumers that need a season total (e.g. the
 // Market points filter) reduce() the full array.
 // null = player had no stats that GW (didn't play / not in DB).
+// minutesMap: { [playerId]: total minutes played this season } (Market sort, FB-15).
 export function usePlayerStats(tournamentId) {
   const [statsMap, setStatsMap] = useState({});
+  const [minutesMap, setMinutesMap] = useState({});
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -48,7 +50,7 @@ export function usePlayerStats(tournamentId) {
         // Step 2: all stats for those fixtures
         const { data: stats } = await supabase
           .from('player_match_stats')
-          .select('player_id, fantasy_points, fixture_id')
+          .select('player_id, fantasy_points, fixture_id, minutes_played')
           .in('fixture_id', relevantFixtureIds)
           .limit(20000);
 
@@ -56,7 +58,9 @@ export function usePlayerStats(tournamentId) {
 
         // Group: { playerId: { matchdayId: totalPts } }
         const byPlayer = {};
+        const minutes = {};
         for (const s of stats) {
+          minutes[s.player_id] = (minutes[s.player_id] || 0) + (Number(s.minutes_played) || 0);
           const md = fixtureToMD[s.fixture_id];
           if (!md) continue;
           if (!byPlayer[s.player_id]) byPlayer[s.player_id] = {};
@@ -71,6 +75,7 @@ export function usePlayerStats(tournamentId) {
         }
 
         setStatsMap(result);
+        setMinutesMap(minutes);
       } catch (err) {
         console.error('usePlayerStats: failed to load form data', err);
       }
@@ -80,5 +85,5 @@ export function usePlayerStats(tournamentId) {
     return () => { cancelled = true; };
   }, [tournamentId]);
 
-  return { statsMap };
+  return { statsMap, minutesMap };
 }
