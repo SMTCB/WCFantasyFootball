@@ -29,7 +29,7 @@ import PlayerPickerSheet from '../components/PlayerPickerSheet';
 import SectionHeader from '../components/SectionHeader';
 import ChipsPanel from '../components/chips/ChipsPanel';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
-import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
+import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR, validateFormation as checkFormation } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
@@ -534,16 +534,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
   };
 
   // â"€â"€ FB-022: formation validation â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
-  const validateFormation = (pitchPlayers) => {
-    const MIN_FORMATION = cfg.minFormation;
-    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-    pitchPlayers.forEach(p => { if (counts[p.position] !== undefined) counts[p.position]++; });
-    if (counts['GK'] > 1) return 'Only 1 GK allowed in the starting XI.';
-    for (const [pos, min] of Object.entries(MIN_FORMATION)) {
-      if (counts[pos] < min) return `This swap leaves you with only ${counts[pos]} ${pos} on the pitch (minimum ${min}).`;
-    }
-    return null;
-  };
+  const validateFormation = (pitchPlayers) => checkFormation(pitchPlayers, cfg.minFormation);
 
 
   const handleSwap = (p1, p2) => {

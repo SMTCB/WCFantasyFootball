@@ -40,3 +40,16 @@ export const POS_BADGE_COLOR = {
 
 // Filter tab order for the market (includes 'ALL' sentinel)
 export const POS_FILTER_ORDER = ['ALL', ...POS_ORDER];
+
+// Starting-XI rule (FB-022): at most one goalkeeper, and at least the league's
+// minimum per position (`minFormation`, e.g. { GK: 1, DEF: 3, MID: 2, FWD: 1 }).
+// Returns the message to show, or null when the XI is valid.
+export function validateFormation(pitchPlayers, minFormation) {
+  const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+  pitchPlayers.forEach(p => { if (counts[p.position] !== undefined) counts[p.position]++; });
+  if (counts.GK > 1) return 'Only 1 GK allowed in the starting XI.';
+  for (const [pos, min] of Object.entries(minFormation)) {
+    if (counts[pos] < min) return `This swap leaves you with only ${counts[pos]} ${pos} on the pitch (minimum ${min}).`;
+  }
+  return null;
+}

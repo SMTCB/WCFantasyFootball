@@ -23,7 +23,7 @@ Finished work (shipped PRs, session logs, audits) is in [docs/archive/BACKLOG_HI
 | `src/` | React app: screens, components, hooks, lib |
 | `supabase/migrations/` | SQL migrations (append-only, numbered; `ls` is the source of truth for the next number) |
 | `supabase/functions/` | Deno Edge Functions (not auto-deployed; `_shared/` is helper code) |
-| `e2e/`, `tests/` | Playwright end-to-end tests and unit tests |
+| `e2e/`, `tests/` | Playwright end-to-end tests (`e2e/`), database unit tests (`tests/unit/`, `npm run test:unit`) and React component tests (`tests/components/`, Vitest, `npm run test:components`) |
 | `ios/`, `android/` | Capacitor native projects |
 | `scripts/` | Developer utilities (backlog HTML generator, function-drift check, simulators) |
 | `infra/` | nginx config |
@@ -67,4 +67,4 @@ Finished work (shipped PRs, session logs, audits) is in [docs/archive/BACKLOG_HI
 4. Superseded docs move to `docs/archive/`, they are not left in place.
 5. Link with relative paths.
 
-Last Updated: **2026-11-21**
+Last Updated: **2026-11-22**
