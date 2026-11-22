@@ -1133,3 +1133,34 @@ select.ffl-input {
     margin-bottom: 0 !important;
   }
 }
+
+/* ── Two-handle range (market price filter) ─────────────────────────────────
+   Two range inputs stacked on one track; only the thumbs take pointer events,
+   so the lower and upper handle can both be dragged. Width is 100% of the
+   container, so it never overflows the market panel on a 375px phone. */
+.ffl-range { position: relative; height: 32px; margin-top: 4px; }
+.ffl-range__track {
+  position: absolute; left: 10px; right: 10px; top: 50%; height: 4px; margin-top: -2px;
+  background: var(--rule); border-radius: 999px;
+}
+.ffl-range__fill {
+  position: absolute; top: 0; bottom: 0; border-radius: 999px; background: var(--accent);
+  left: var(--lo); right: calc(100% - var(--hi));
+}
+.ffl-range input[type="range"] {
+  position: absolute; left: 0; top: 0; width: 100%; height: 32px; margin: 0;
+  background: none; pointer-events: none; -webkit-appearance: none; appearance: none;
+}
+.ffl-range input[type="range"]::-webkit-slider-runnable-track { background: none; height: 32px; }
+.ffl-range input[type="range"]::-moz-range-track { background: none; height: 32px; }
+.ffl-range input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; pointer-events: auto; cursor: pointer;
+  width: 20px; height: 20px; margin-top: 6px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.ffl-range input[type="range"]::-moz-range-thumb {
+  pointer-events: auto; cursor: pointer; width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.ffl-range input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ffl-range input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }

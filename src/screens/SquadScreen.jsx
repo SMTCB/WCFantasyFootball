@@ -42,7 +42,8 @@ import ChipsRow from '../components/squad/ChipsRow';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { useIsMobile, useIsDesktop } from '../hooks/useViewport';
 import MarketPanel from '../components/squad/MarketPanel';
-import TransferReviewBar from '../components/squad/TransferReviewBar';
+import TransferBasket from '../components/squad/TransferBasket';
+import MarketButton from '../components/squad/MarketButton';
 import { useTransferBasket, runBasket, pairBasket } from '../lib/transferBasket';
 
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
@@ -949,6 +950,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
 
   const removeFromBasket = (ids) => setBasket(prev => prev.filter(i => !ids.includes(i.player.id)));
 
+
   // Tapping an incoming player offers to undo that change; everyone else opens the usual sheet.
   const handlePitchTap = (p) => {
     if (p.pendingFor) {
@@ -1039,6 +1041,19 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
       setConfirmingBasket(false);
     }
   };
+  // The pending-transfers card on My team: one per layout (the phone and desktop trees are
+  // both in the DOM), hidden while the market sheet shows the same basket in its footer.
+  const pendingCard = (!marketOpen && !swapMode) ? (
+    <TransferBasket
+      basket={basket}
+      moneyLeft={moneyLeft}
+      busy={confirmingBasket}
+      onConfirm={confirmBasket}
+      onRemove={removeFromBasket}
+      onClear={() => setBasket([])}
+      onOpenMarket={(pos) => setMarketOpen({ pos })}
+    />
+  ) : null;
   // Bench player straight onto the pitch when fewer than 11 start (no swap needed).
   const addBenchToPitch = async () => {
     try {
@@ -1392,7 +1407,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                     </button>
                   ))}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div className="text-right">
                     <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>Squad</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 1, justifyContent: 'flex-end' }}>
@@ -1407,9 +1422,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                     </div>
                   </div>
                   {/* Owner 2026-11-21: buying happens in the market, so it sits next to the pitch (Sell left the player card) */}
-                  <button type="button" data-testid="squad-market-btn" onClick={() => setMarketOpen({ pos: null })} className="ffl-btn ffl-btn--primary ffl-btn--sm" style={{ paddingInline: 12 }}>
-                    Market
-                  </button>
+                  <MarketButton compact testId="squad-market-btn" pendingCount={pendingPairs.length} onClick={() => setMarketOpen({ pos: null })} />
                 </div>
               </div>
             ) : (
@@ -1455,6 +1468,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                 </button>
               );
             })()}
+            {isMobile && (mobileTab === 'pitch' || mobileTab === 'squad') && pendingCard}
           </>
 
         {/* Incomplete squad banner — shown on all mobile tabs */}
@@ -1861,11 +1875,11 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
               Budget <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: budgetLow ? 'var(--danger)' : 'var(--accent)' }}>€{budgetLeft}M</span>
             </span>
-            <button type="button" data-testid="squad-market-btn-desktop" onClick={() => setMarketOpen({ pos: null })} className="ffl-btn ffl-btn--primary ffl-btn--sm" style={{ alignSelf: 'center' }}>
-              Market
-            </button>
+            <MarketButton testId="squad-market-btn-desktop" pendingCount={pendingPairs.length} onClick={() => setMarketOpen({ pos: null })} style={{ alignSelf: 'center', margin: '8px 0 6px', minHeight: 38 }} />
           </div>
         </div>
+
+        {!isMobile && pendingCard}
 
         {/* Incomplete squad banner — desktop */}
         {allSquadPlayers.length < 11 ? (
@@ -2161,19 +2175,18 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
           pendingCount={pendingPairs.length}
           isMobile={isMobile}
           onClose={closeMarket}
-        />
-      )}
-
-      {!marketOpen && !swapMode && (
-        <TransferReviewBar
-          basket={basket}
-          moneyLeft={moneyLeft}
-          busy={confirmingBasket}
-          isMobile={isMobile}
-          onConfirm={confirmBasket}
-          onRemove={removeFromBasket}
-          onClear={() => setBasket([])}
-          onOpenMarket={(pos) => setMarketOpen({ pos })}
+          footer={(
+            <TransferBasket
+              variant="footer"
+              defaultOpen
+              basket={basket}
+              moneyLeft={moneyLeft}
+              busy={confirmingBasket}
+              onConfirm={confirmBasket}
+              onRemove={removeFromBasket}
+              onClear={() => setBasket([])}
+            />
+          )}
         />
       )}
 

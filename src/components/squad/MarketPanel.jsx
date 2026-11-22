@@ -12,7 +12,9 @@ import { createPortal } from 'react-dom';
 // at a second depth — Rolldown TDZ rule in CLAUDE.md.
 const MarketScreen = lazy(() => import('../../screens/MarketScreen'));
 
-export default function MarketPanel({ leagueId, initialPos = null, pendingCount = 0, isMobile, onClose }) {
+// `footer` is the pending-transfers basket, handed in by SquadScreen so this file never
+// imports a module SquadScreen also imports at another depth.
+export default function MarketPanel({ leagueId, initialPos = null, pendingCount = 0, isMobile, onClose, footer = null }) {
   const panelRef = useRef(null);
 
   useEffect(() => {
@@ -73,6 +75,7 @@ export default function MarketPanel({ leagueId, initialPos = null, pendingCount 
             <MarketScreen leagueId={leagueId} initialPos={initialPos} />
           </Suspense>
         </div>
+        {footer}
       </div>
     </>,
     document.body

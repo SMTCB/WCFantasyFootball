@@ -588,6 +588,65 @@ test.describe('Market sheet', () => {
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     expect(bodyWidth).toBeLessThanOrEqual(377);
   });
+
+  for (const [name, vp] of [['mobile', { width: 375, height: 812 }], ['desktop', { width: 1280, height: 800 }]]) {
+    test(`${name} — the price range fits inside the panel and filters the list`, async ({ page }) => {
+      test.setTimeout(45000);
+      await page.setViewportSize(vp);
+      const panel = await openMarketSheet(page);
+      const filter = panel.getByTestId('market-price-filter');
+      await expect(filter).toBeVisible({ timeout: 15000 });
+      const [f, p] = [await filter.boundingBox(), await panel.boundingBox()];
+      expect(f.x + f.width).toBeLessThanOrEqual(p.x + p.width);
+      for (const label of ['Minimum price', 'Maximum price']) {
+        const r = await panel.getByLabel(label).boundingBox();
+        expect(r.x + r.width).toBeLessThanOrEqual(p.x + p.width);
+      }
+      await expect(panel.getByTestId('market-price-value')).toContainText('€0.0M – €15.0M');
+      // Drag the top handle down to €8M: Watkins (€9.0M) drops out, Wharton (€5.0M) stays.
+      await panel.getByLabel('Maximum price').fill('8');
+      await expect(panel.getByTestId('market-price-value')).toContainText('€8.0M');
+      await expect(panel.locator('[data-tour="market-player-list"]')).not.toContainText(/watkins/i);
+      await expect(panel.locator('[data-tour="market-player-list"]')).toContainText(/wharton/i);
+    });
+
+    test(`${name} — "Only players I can sign" hides players over budget`, async ({ page }) => {
+      test.setTimeout(45000);
+      await page.setViewportSize(vp);
+      const panel = await openMarketSheet(page);
+      const list = panel.locator('[data-tour="market-player-list"]');
+      await expect(list).toContainText(/watkins/i, { timeout: 15000 });
+      const toggle = panel.getByTestId('market-affordable-toggle');
+      await expect(toggle).toHaveAttribute('aria-checked', 'false');
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-checked', 'true');
+      // €3.5M in the bank: every free agent costs more, so none is listed; the squad still is.
+      await expect(list).not.toContainText(/watkins/i);
+      await expect(list).not.toContainText(/odegaard/i);
+      await expect(list).toContainText(/raya/i);
+      await toggle.click();
+      await expect(list).toContainText(/watkins/i);
+    });
+  }
+
+  test('the basket with players in and out shows inside the market', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await openMyTeam(page);
+    await page.getByTestId('mobile-pitch-token-p15').click();
+    await page.getByTestId('player-sheet-replace').click();
+    await page.getByTestId('picker-browse-market').click();
+    const panel = page.getByTestId('market-panel');
+    await expect(panel).toBeVisible();
+    await expect(panel.getByTestId('transfer-review-count')).toHaveText('1');
+    await expect(panel.getByTestId('transfer-review-list')).toContainText(/OUT\s+Wissa/);
+    await expect(panel.getByTestId('transfer-review-confirm')).toBeVisible();
+    // The market button on My team carries the pending count.
+    await panel.getByTestId('market-panel-done').click();
+    await expect(page.getByTestId('squad-market-btn').getByTestId('market-btn-badge')).toHaveText('1');
+    // No fixed bar at the bottom any more: the basket is a card under the header.
+    await expect(page.getByTestId('transfer-review-bar')).toHaveCount(1);
+  });
 });
 
 // ── 6. League Screen ──────────────────────────────────────────────────────────

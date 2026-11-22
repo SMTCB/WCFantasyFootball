@@ -91,7 +91,7 @@ How to fold the Squad and Market pages into the football league. The owner appro
 
 ### S31: Replace, the market sheet and one confirm (row MD-12) (done 2026-11-21)
 
-**Done.** Screenshots: [s31-design-lock/](../design/s31-design-lock/). Notes: the pending basket lives in `SquadScreen` (`src/lib/transferBasket.js`), the market sheet is `src/components/squad/MarketPanel.jsx` (it loads `MarketScreen` with `embedded`), and the review bar is `src/components/squad/TransferReviewBar.jsx`. On desktop the market already opens as a right panel; S32 does the rest of the desktop layout.
+**Done.** Screenshots: [s31-design-lock/](../design/s31-design-lock/). Notes: the pending basket lives in `SquadScreen` (`src/lib/transferBasket.js`), the market sheet is `src/components/squad/MarketPanel.jsx` (it loads `MarketScreen` with `embedded`), and the pending-transfers basket is `src/components/squad/TransferBasket.jsx` (it replaced the fixed review bar `TransferReviewBar.jsx`) and the Market entry is `MarketButton.jsx`. On desktop the market already opens as a right panel; S32 does the rest of the desktop layout.
 
 **Goal:** you swap players from the pitch and confirm all your changes at once.
 
