@@ -6909,4 +6909,6 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 
 - **F1 rounds 14 to 22 scored (2026-11-22, approved):** `score-f1-race` called for each filled race. Round 14 scored 3 picks on the podium only (24, 14 and 9 points) and awarded its event_win trophy; rounds 15 to 22 have no picks, so they were only marked scored. Remaining part is F1-SCORE-1.
 
+- **Market redesign (2026-11-22, owner request, PR #1198):** the Market button on My team is a pill with a swap icon and a gold badge for pending changes (compact on phones); the price filter is one two-handle slider with a live label (the old inputs were cut off); a new "Only players I can sign" switch hides players over budget and from full clubs; the players in / players out basket is back inside the market sheet and as a card on My team (`TransferBasket.jsx`), and the fixed "Review changes" bottom bar is gone. Pitch, icons, crests and player sheet untouched. `platform.spec.js` 128 passed on both browsers.
+
 Last Updated: 2026-11-22
