@@ -6897,4 +6897,12 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - S21 part done; PCARD-2 (flags and photos on player cards) is still open.
 - Checked: `npm run test:components` (35 tests); `npm run lint`; `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; the market on the local stack at 1280px and 375px.
 
+## DOCS-3: test and API docs refreshed (2026-11-22)
+
+- `docs/testing/README.md` is now the index of test docs and test files (every runner, command and local full-stack spec); `TESTING_STRATEGY.md` matches today's CI jobs. The June 2026 playbook and results moved to `docs/archive/testing-2026-06/`.
+- New `docs/testing/F1_MODULE_TEST_PLAN.md`: 8 modules (Paddocks, picks and the deadline, race scoring with worked points, results auto-fill, race-win trophies, season bets, leaderboard, UI), checked against the code and production (read-only).
+- `API_INTEGRATION_REFERENCE.md` has a section on what the code calls from Forza today; the Forza token was removed from four docs (still in git history, so SEC-6 asks for a new token). `MOBILE_DEVELOPMENT.md` rewritten for Capacitor 8 and the current identifiers.
+- Found and logged: F1-SYNC-1 (results auto-fill has never worked, rounds 14 to 21 unscored), F1-LOCK-1 (picks changeable after the deadline in the database), F1-YEAR-1 (season bets never scored by the app), F1-SEASON-1 (2026 hard-coded), MOBILE-2 (app IDs disagree, OAuth return address), SEC-6.
+- Checked: links in the changed docs; `npm run lint`; `npm run build`.
+
 Last Updated: 2026-11-22

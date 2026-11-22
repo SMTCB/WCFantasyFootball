@@ -3,9 +3,33 @@
 > **Purpose:** Complete field-by-field reference for building the data integration layer. Every field available from the API is listed, mapped to its endpoint and fetch logic, and cross-referenced against the scoring engine requirements. Intended as the single source of truth before development starts.
 
 **Base URL:** `https://api.forzafootball.com/`  
-**Auth:** append `?access_token=DoRy9PNpYN4Ubg3FQkwEqxXQu2MytxzG` to all requests  
+**Auth:** append `?access_token=<FORZA_ACCESS_TOKEN>` to all requests. The token is the `FORZA_ACCESS_TOKEN` Supabase Edge Function secret; it never goes in a doc or a commit  
 **EPL Tournament ID:** `426`  
-**Last updated:** 2026-04-23 (after live API testing)
+**Written:** 2026-04-23 (after live API testing). Sections 1 to 8 are the original field study; section 0 says what the code uses today.
+
+---
+
+## 0. Status 2026-11-22: what the code calls today
+
+Only these endpoints are called. Everything else in the map below was studied but is not used.
+
+| Endpoint | Called by | Why |
+|---|---|---|
+| `/v1/tournaments/:id` (E1) | `discover-tournament`, the adapter health check | Tournament and season lookup when a competition is added |
+| `/v1/tournaments/:id/matches` (E2) | `sync-fixtures` (with `match-filter.js`), the adapter | Fixtures and kick-off times |
+| `/v1/teams/:id/squad` (E15) | `sync-players` | Player list per team. Never writes `price`, so our valuations survive a resync |
+| `/v2/teams/:id/unavailable_players` | `sync-player-status` | Injuries and suspensions (team-level, not the per-match E8) |
+| `/v1/matches/:id` (E4) | `ingest-match-events` | Score and status |
+| `/v1/matches/:id/lineups` (E5) | `ingest-match-events`, the adapter | Starters, subs, minutes |
+| `/v2/matches/:id/periods` (E9) | `ingest-match-events` | Goals, cards, own goals, penalties |
+| `/v2/matches/:id/player_statistics` (E10) | `ingest-match-events`, the adapter | Per-player stats for scoring |
+
+- **Adapter:** `supabase/functions/_shared/providers/` (`forza.ts`, plus `manual.ts` and `opta.ts` stubs behind the same `types.ts` interface). Some functions still call Forza directly with their own `FORZA_BASE`.
+- **Polling:** pg_cron calls `sync-fixtures`, `sync-players-daily`, `sync-player-status` and `ingest-match-events-live` on schedules. There are no webhooks.
+- **Not used:** E11 ratings, predicted lineups (E6), matchday squads (E7), player endpoints (E12, E13).
+- **Prices:** Forza has none. Prices come from our own tiers (migration `94_pilot04_player_price_tiers.sql`) and the commissioner tools.
+- **Other sports use other providers:** F1 results come from OpenF1 (`api.openf1.org`, in `sync-f1-race-results`), tennis from the RapidAPI tennis API (`sync-tennis-players`, `sync-tennis-results`, `lookup-tennis-tournament`).
+- Running notes on API behaviour and quirks: [FORZA_API_KNOWLEDGE.md](FORZA_API_KNOWLEDGE.md).
 
 ---
 
@@ -449,3 +473,13 @@ These fields exist in the API and are relevant to a fantasy platform, but are no
 | **Fantasy points calculation** | ❌ Not applicable | Intentionally our logic — implement in Supabase SQL functions (see `FANTASY_POINTS_SCORING_LAYER.md`). |
 | **Player predictions / form scores** | ❌ Not available | Derive from xG/xA fields in E10 + season averages when available. |
 | **Penalty shootout granularity** | ⚠️ Partial | Shootout goals appear in event stream but scoring rules for them are not yet defined. |
+
+---
+
+## Related
+
+- [FORZA_API_KNOWLEDGE.md](FORZA_API_KNOWLEDGE.md) — behaviour notes and quirks
+- [FIT_GAP_ANALYSIS.md](FIT_GAP_ANALYSIS.md), [FORZA_API_ASSESSMENT.md](FORZA_API_ASSESSMENT.md)
+- [../deployment/DATA_PIPELINE_RUNBOOK.md](../deployment/DATA_PIPELINE_RUNBOOK.md) — running the sync and scoring pipeline
+
+Last Updated: 2026-11-22

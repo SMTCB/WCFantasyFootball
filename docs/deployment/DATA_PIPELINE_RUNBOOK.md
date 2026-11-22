@@ -64,7 +64,7 @@ Both use the **same Supabase project and codebase**. Leagues in the dry run use 
 ### Must resolve before dry run
 - [x] **Scoring rule discrepancy** — Resolved. `PIPELINE.md` Appendix A was a superseded draft. `FANTASY_POINTS_SCORING_LAYER.md` is the settled spec. `calculate-scores/index.js` POINTS constants now match it exactly, including three previously missing rules (tackle +0.5, interception +0.25 for DEF/MID; penalty_scored +1 for FWD). See `API/FIT_GAP_ANALYSIS.md` for the full breakdown.
 - [x] **Player valuations** — `17_epl_player_valuations.sql` created. Also adds `penalty_scored` column to `player_match_stats`. Covers ~40 named EPL players with tiered pricing (4.0–14.0M) plus position-based defaults for the rest. World Cup valuations will be seeded at WC data load time.
-- [ ] **`FORZA_ACCESS_TOKEN` env var** — Add to Supabase Edge Function secrets in the Supabase Dashboard (Settings → Edge Functions → Secrets). Value: `DoRy9PNpYN4Ubg3FQkwEqxXQu2MytxzG`.
+- [ ] **`FORZA_ACCESS_TOKEN` env var** — Add to Supabase Edge Function secrets in the Supabase Dashboard (Settings → Edge Functions → Secrets). Value: the token (ask the owner; it is not kept in docs).
 
 ### Must resolve before World Cup launch
 - [ ] **World Cup tournament ID** — Confirm with Forza provider. Insert the row (see migration 16 commented block) before running any WC sync.
@@ -91,7 +91,7 @@ Run these steps in order. Each is a one-time setup task.
 ### Step 1 — Add Forza token to Edge Function secrets
 ```
 Supabase Dashboard → Settings → Edge Functions → Secrets
-Add: FORZA_ACCESS_TOKEN = DoRy9PNpYN4Ubg3FQkwEqxXQu2MytxzG
+Add: FORZA_ACCESS_TOKEN = <the token; ask the owner, it is not kept in docs>
 ```
 
 ### Step 2 — Deploy the four new Edge Functions

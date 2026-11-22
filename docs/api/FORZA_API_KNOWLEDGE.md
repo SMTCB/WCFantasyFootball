@@ -1,7 +1,7 @@
 # Forza Football API — Integration Knowledge Base
 
 **Base URL:** `https://api.forzafootball.com/`  
-**Auth:** `?access_token=DoRy9PNpYN4Ubg3FQkwEqxXQu2MytxzG`  
+**Auth:** `?access_token=<FORZA_ACCESS_TOKEN>`  
 **EPL Tournament ID:** `426`  
 **Docs version:** 1.0.3
 
