@@ -126,10 +126,13 @@ export default function F1AdminScreen() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
+        <div className="sport-col">
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}><Icon name="bolt" /> ADMIN PANEL</div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>F1 admin</h1>
+        </div>
       </div>
 
+      <div className="sport-col sport-pad">
       {/* Section tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)' }}>
         {[['race', 'Race results'], ['season', 'Season bets']].map(([k, l]) => (
@@ -241,6 +244,7 @@ export default function F1AdminScreen() {
             <button onClick={saveYearResults} disabled={busy} style={btnStyle('primary')}>Save season results</button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

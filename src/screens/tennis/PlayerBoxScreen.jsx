@@ -81,6 +81,7 @@ export default function PlayerBoxScreen() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', paddingBottom: 32 }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '24px 20px 20px' }}>
+        <div className="sport-col">
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
           🎾 Tennis · 2026
         </div>
@@ -90,10 +91,12 @@ export default function PlayerBoxScreen() {
         <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--mute)', margin: '6px 0 0' }}>
           Your private prediction group — create one or join a friend's.
         </p>
+        </div>
       </div>
 
       {/* Tabs */}
       <div style={{ borderBottom: '1px solid var(--rule)', display: 'flex', background: 'var(--card)' }}>
+        <div className="sport-col" style={{ display: 'flex' }}>
         {TABS.map(t => (
           <button
             key={t.key}
@@ -111,9 +114,10 @@ export default function PlayerBoxScreen() {
             {t.label}
           </button>
         ))}
+        </div>
       </div>
 
-      <div style={{ padding: '20px 16px', maxWidth: 480, margin: '0 auto' }}>
+      <div className="sport-col" style={{ padding: '20px 16px' }}>
 
         {/* MY BOXES */}
         {tab === 'my' && (
@@ -134,7 +138,7 @@ export default function PlayerBoxScreen() {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="sport-cards" style={{ gap: 10 }}>
                 {visibleBoxes.map(b => (
                   <div key={b.player_box_id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '14px 16px', opacity: b.archived ? 0.7 : 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
@@ -221,7 +225,7 @@ export default function PlayerBoxScreen() {
               </p>
             </div>
           ) : (
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
             <div>
               <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
                 Clubhouse
@@ -262,7 +266,7 @@ export default function PlayerBoxScreen() {
 
         {/* JOIN */}
         {tab === 'join' && (
-          <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
             <div>
               <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
                 Invite Code

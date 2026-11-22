@@ -85,6 +85,7 @@ export default function TennisTournamentScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '20px 16px' }}>
+        <div className="sport-col">
         <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Back
         </button>
@@ -97,10 +98,12 @@ export default function TennisTournamentScreen() {
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
           {new Date(tournament.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {new Date(tournament.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
+        </div>
       </div>
 
-      <div style={{ padding: '16px', maxWidth: 600, margin: '0 auto' }}>
+      <div className="sport-col" style={{ padding: '16px' }}>
 
+        <div className="sport-cards sport-tight">
         {/* Score card (completed) */}
         {isCompleted && score && (
           <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20, textAlign: 'center' }}>
@@ -124,7 +127,7 @@ export default function TennisTournamentScreen() {
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 4 }}>
               <Icon name="bolt" /> QF Captain Window Open
             </div>
-            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text2)', margin: '0 0 14px' }}>
+            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text-2)', margin: '0 0 14px' }}>
               Select one of your surviving players as captain. They earn 2× points for the rest of the tournament.
             </p>
             {captain && (
@@ -181,17 +184,19 @@ export default function TennisTournamentScreen() {
               </div>
             ))}
             {usedCard && (
-              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text2)' }}>
+              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--text-2)' }}>
                 {ACE_CARD_INFO[usedCard.card_type] && <Icon name={ACE_CARD_INFO[usedCard.card_type].icon} />} Ace Card played: <strong>{ACE_CARD_INFO[usedCard.card_type]?.label}</strong>
               </div>
             )}
           </div>
         )}
 
+        </div>
+
         {/* Roster picker form */}
         {isRosterOpen && !isAtp && (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px' }}>
+          <form onSubmit={handleSubmit} className="sport-split" style={{ gap: 20 }}>
+            <div className="sport-main" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px' }}>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', marginBottom: 16 }}>
                 Pick your 7-player squad
               </div>
@@ -220,6 +225,7 @@ export default function TennisTournamentScreen() {
               ))}
             </div>
 
+            <div className="sport-aside" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Ace Card selector */}
             {availableAceCards.length > 0 && (
               <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px' }}>
@@ -233,7 +239,7 @@ export default function TennisTournamentScreen() {
                   <button
                     type="button"
                     onClick={() => setSelectedAce(null)}
-                    style={{ padding: '10px 14px', border: `1px solid ${!selectedAce ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', background: !selectedAce ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text2)' }}
+                    style={{ padding: '10px 14px', border: `1px solid ${!selectedAce ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', background: !selectedAce ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text-2)' }}
                   >
                     No card this tournament
                   </button>
@@ -265,6 +271,7 @@ export default function TennisTournamentScreen() {
             >
               {busy ? 'Locking squad…' : roster ? 'Update squad →' : 'Lock squad →'}
             </button>
+            </div>
           </form>
         )}
 
@@ -297,7 +304,7 @@ export default function TennisTournamentScreen() {
 }
 
 function RosterRow({ player, isCaptain }) {
-  const tierColor = { 1: 'var(--gold)', 2: 'var(--accent)', 3: 'var(--text2)', 4: 'var(--neg)' };
+  const tierColor = { 1: 'var(--gold)', 2: 'var(--accent)', 3: 'var(--text-2)', 4: 'var(--neg)' };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--rule)' }}>
       <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: tierColor[player.tier] ?? 'var(--mute)', minWidth: 16 }}>

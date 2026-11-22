@@ -150,6 +150,7 @@ export default function F1HomeScreen() {
 
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '20px 16px 16px' }}>
+        <div className="sport-col">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
@@ -221,6 +222,7 @@ export default function F1HomeScreen() {
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {showSettings && activePaddock && (
@@ -237,7 +239,7 @@ export default function F1HomeScreen() {
 
       <CheckeredStrip />
 
-      <div style={{ padding: '16px 16px 0' }}>
+      <div className="sport-col" style={{ padding: '16px 16px 0' }}>
           {/* Next Race countdown — solid f1-red fill, the module's single highest-priority element */}
           {nextRace && nextRace.status !== 'finished' && (
             <div style={{ background: 'var(--f1)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
@@ -271,9 +273,11 @@ export default function F1HomeScreen() {
             </div>
           )}
 
+          {/* Desktop: calendar on the left, standings and shortcuts on the right */}
+          <div className="sport-split">
           {/* Leaderboard preview */}
           {leaderboard.length > 0 && (
-            <>
+            <div className="sport-aside">
               <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
                 Top of the Paddock
               </div>
@@ -298,9 +302,10 @@ export default function F1HomeScreen() {
               >
                 Full standings →
               </button>
-            </>
+            </div>
           )}
 
+          <div className="sport-main">
           {/* Full calendar */}
           <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
             2026 Season Calendar
@@ -344,7 +349,9 @@ export default function F1HomeScreen() {
               );
             })}
           </div>
+          </div>
 
+          <div className="sport-aside">
           {/* Shortcuts */}
           <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '20px 0 10px' }}>
             Paddock Shortcuts
@@ -363,6 +370,8 @@ export default function F1HomeScreen() {
                 <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--f1)' }}>View →</span>
               </button>
             ))}
+          </div>
+          </div>
           </div>
         </div>
     </div>

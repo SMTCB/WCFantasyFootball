@@ -129,6 +129,7 @@ export default function TennisAdminScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '20px 16px' }}>
+        <div className="sport-col">
         <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
           ← Tennis
         </button>
@@ -138,9 +139,10 @@ export default function TennisAdminScreen() {
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>
           Tennis Admin Panel
         </h1>
+        </div>
       </div>
 
-      <div style={{ padding: '16px', maxWidth: 600, margin: '0 auto' }}>
+      <div className="sport-col" style={{ padding: '16px' }}>
 
         {/* Tournament selector */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 16 }}>
@@ -167,6 +169,7 @@ export default function TennisAdminScreen() {
 
         {selected && t && (
           <>
+            <div className="sport-cards sport-tight">
             {/* Status + phase controls */}
             <Section title="Phase Controls">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -265,6 +268,8 @@ export default function TennisAdminScreen() {
                 <AdminBtn label="Enter Result" onClick={enterAtpResult} disabled={busy || !atpMatchNumber || !atpWinnerId} />
               </Section>
             )}
+
+            </div>
 
             {/* Feedback */}
             {msg && <div style={{ padding: '10px 14px', background: 'rgba(22,101,52,0.08)', border: '1px solid var(--pos)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--pos)', marginTop: 12 }}>{msg}</div>}

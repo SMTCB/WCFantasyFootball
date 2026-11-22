@@ -1205,7 +1205,7 @@ export default function LeagueScreen() {
               >
                 <div className="flex items-center gap-2 w-full">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Draft + H2H</span>
-                  <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>{/* inline: LeagueScreen must not import UiIcons (TDZ rule) */}<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ verticalAlign: '-0.125em' }}><path d="M4 4l10.5 10.5M4 4h3.5M4 4v3.5M13 16l3-3M16.5 16.5 20 20M20 4 9.5 14.5M20 4h-3.5M20 4v3.5M11 16l-3-3M7.5 16.5 4 20" /></svg> H2H</span>
+                  <span style={{ fontFamily: "Archivo, sans-serif", fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px' }}>{/* inline: LeagueScreen must not import UiIcons (TDZ rule) */}<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}><path d="M4 4l10.5 10.5M4 4h3.5M4 4v3.5M13 16l3-3M16.5 16.5 20 20M20 4 9.5 14.5M20 4h-3.5M20 4v3.5M11 16l-3-3M7.5 16.5 4 20" /></svg> H2H</span>
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Draft league with a parallel head-to-head competition each matchday.</span>
                 <ul className="flex flex-col gap-[3px]">

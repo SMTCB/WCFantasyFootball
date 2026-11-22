@@ -46,6 +46,7 @@ export default function TennisHomeScreen() {
 
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--ten)', padding: '24px 20px 20px 16px' }}>
+        <div className="sport-col">
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
           🎾 Tennis · 2026 ATP Season
         </div>
@@ -94,6 +95,7 @@ export default function TennisHomeScreen() {
             ARCHIVED — this player's box is inactive.
           </div>
         )}
+        </div>
       </div>
 
       {showSettings && activeBox && (
@@ -108,7 +110,7 @@ export default function TennisHomeScreen() {
         />
       )}
 
-      <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto' }}>
+      <div className="sport-col" style={{ padding: '16px' }}>
 
         {/* No-box CTA */}
         {noBox && (
@@ -132,10 +134,10 @@ export default function TennisHomeScreen() {
         {activeOrNext && (activeOrNext.status === 'roster_open' || activeOrNext.status === 'qf_captain_open') && (
           <div style={{ background: activeOrNext.status === 'qf_captain_open' ? 'var(--gold)' : 'var(--ten)', borderRadius: 'var(--radius)', padding: '14px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
+              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--on-accent)', opacity: 0.85, marginBottom: 4 }}>
                 {activeOrNext.status === 'qf_captain_open' ? 'QF Captain window open' : 'Roster selection open'}
               </div>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--text)' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--on-accent)' }}>
                 {activeOrNext.name}
               </div>
             </div>
@@ -148,9 +150,10 @@ export default function TennisHomeScreen() {
           </div>
         )}
 
+        <div className="sport-split">
         {/* Leaderboard snapshot */}
         {activeBox && !lbLoading && standings.length > 0 && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', marginBottom: 20 }}>
+          <div className="sport-aside" style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', marginBottom: 20 }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>Season Standings</span>
               <button
@@ -177,6 +180,7 @@ export default function TennisHomeScreen() {
         )}
 
         {/* Tournament calendar */}
+        <div className="sport-main">
         <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>2026 Calendar</span>
           <button
@@ -246,6 +250,8 @@ export default function TennisHomeScreen() {
             })}
           </div>
         )}
+        </div>
+        </div>
       </div>
     </div>
   );

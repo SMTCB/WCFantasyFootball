@@ -1046,3 +1046,87 @@ select.ffl-input {
     transform: translateX(-50%);
   }
 }
+
+/* ── F1 and tennis desktop frame (UX-DESKTOP-1) ─────────────────── */
+/* One centred column so headers and content line up, the same width as
+   the football Home. `.sport-split` adds a side column at desktop width
+   (`.sport-main` left, up to two `.sport-aside` blocks right); below
+   1024px it stacks in source order, so mobile is unchanged. */
+.sport-col {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+.sport-split {
+  display: flex;
+  flex-direction: column;
+}
+.sport-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 1024px) {
+  .sport-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 28px;
+    align-items: start;
+  }
+  /* The main column spans both rows, so side blocks placed before and
+     after it in the source (to keep the mobile order) stack on the right. */
+  .sport-split {
+    grid-template-rows: auto 1fr;
+  }
+  .sport-split > .sport-main {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .sport-split > .sport-aside {
+    grid-column: 2;
+    min-width: 0;
+  }
+  .sport-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+}
+/* Desktop gutter for screens whose mobile content runs edge to edge. */
+@media (min-width: 1024px) {
+  .sport-pad {
+    padding: 16px 16px 0;
+  }
+}
+/* A form's main button: full width on mobile, right-aligned at desktop. */
+@media (min-width: 1024px) {
+  .sport-submit {
+    align-self: flex-end;
+    width: 320px;
+  }
+}
+/* Cards that carry their own bottom margin: no extra gap when stacked,
+   a column gap only once they sit side by side. */
+.sport-cards.sport-tight {
+  gap: 0;
+}
+@media (min-width: 1024px) {
+  .sport-cards.sport-tight {
+    column-gap: 16px;
+  }
+}
+/* Side blocks keep a bottom margin for the stacked mobile order; in the
+   grid the row gap already spaces them. !important because those margins
+   are inline styles. */
+@media (min-width: 1024px) {
+  .sport-split {
+    row-gap: 20px;
+  }
+  .sport-split > .sport-aside,
+  .sport-split > .sport-aside > :last-child {
+    margin-bottom: 0 !important;
+  }
+}

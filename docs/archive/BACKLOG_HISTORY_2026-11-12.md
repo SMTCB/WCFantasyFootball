@@ -6871,4 +6871,10 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 - LEAGUE-SHEET-1: the trade builder and the manager squad view moved out of `LeagueScreen.jsx` into `league/TradeBuilderSheet.jsx` and `league/ManagerTeamSheet.jsx`, both on the shared `BottomSheet` (focus trap, Escape, light theme instead of the dark overlay).
 - Checked: `npm run lint`; `npx madge --circular src/` and the TDZ import check; `npm run build`; `platform.spec.js` on both browsers; F1, tennis and trophy screens seen at 375px.
 
+## S16 part 4: desktop layouts for F1 and tennis (2026-11-22)
+
+- UX-DESKTOP-1: new layout classes in `index.css` (`sport-col`, `sport-split`, `sport-main`, `sport-aside`, `sport-cards`). On screens 1024px and wider, the F1 and tennis screens use a centred 1180px column, with the main content beside a 360px side panel (standings snapshot, scoring tiers, drop rule, Ace Card and submit) and cards in a grid. Phone layout is unchanged. Covers the Paddock lobby, F1 home, standings, report, season bets and admin, and Player Box lobby, tennis home, tournament, leaderboard, ATP Finals and admin.
+- Fixed on the way: the tennis leaderboard crashed on season data (`useTennisLeaderboard` now shapes rows through `shapeTennisSeason`); icons inside text broke onto their own line (Tailwind makes svg a block, so `Icon` is now inline-block); the tennis home banner text was low contrast on green; desktop leaderboard columns show full tournament names; `var(--text2)` typos in the touched tennis files now `var(--text-2)`.
+- Checked: `npm run lint` (no new warnings); `npx madge --circular src/`; `npm run build`; `platform.spec.js` on both browsers; every F1 and tennis screen seen at 1280px and 375px against the local stack, no page errors, no sideways scroll.
+
 Last Updated: 2026-11-22

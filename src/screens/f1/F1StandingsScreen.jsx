@@ -34,24 +34,29 @@ export default function F1StandingsScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
+        <div className="sport-col">
         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
           Paddock standings · 2026
         </div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>STANDINGS</h1>
+        </div>
       </div>
 
       {paddock?.archived && (
         <div style={{ padding: '8px 16px', background: 'var(--elev)', borderBottom: '1px solid var(--rule)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-          ARCHIVED — this paddock is inactive.
+          <div className="sport-col">ARCHIVED — this paddock is inactive.</div>
         </div>
       )}
 
       {!yearResults?.is_final && (
         <div style={{ padding: '8px 16px', background: 'rgba(217,119,6,0.1)', borderBottom: '1px solid rgba(217,119,6,0.25)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
-          <Icon name="warning" /> SEASON PTS ARE PRELIMINARY — not final until season results are confirmed
+          <div className="sport-col"><Icon name="warning" /> SEASON PTS ARE PRELIMINARY — not final until season results are confirmed</div>
         </div>
       )}
 
+      {/* Desktop: table on the left, scoring rules on the right */}
+      <div className="sport-col sport-split sport-pad">
+      <div className="sport-main">
       {/* View toggle */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
         {[['total', 'Total'], ['race', 'Race pts'], ['year', 'Season pts']].map(([key, label]) => (
@@ -99,9 +104,11 @@ export default function F1StandingsScreen() {
           rowPadding="12px 16px"
           gap={8}
         />
+      </div>
+      </div>
 
         {sorted.length > 0 && (
-          <div style={{ margin: '16px 16px 0', padding: '10px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
+          <div className="sport-aside" style={{ margin: '16px 16px 0', padding: '10px 12px', background: 'var(--elev)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
             SCORING: 10 pts exact P1 · 8 exact P2 · 6 exact P3 · 3 wrong podium spot · 5 each for DNF / team / special · 3 all-correct bonus
           </div>
         )}
