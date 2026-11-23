@@ -89,7 +89,7 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove, owned
           // Carried over from an earlier round (or bought in a free-market
           // round) — the draft will skip them; kept so the manager decides.
           <span className="block text-[length:var(--fs-micro)] font-black truncate" style={{ color: 'var(--mute)' }}>
-            Owned by {ownedBy} — will be skipped
+            Owned by {ownedBy} — only drafted if released
           </span>
         )}
       </span>
@@ -165,7 +165,12 @@ export default function WishlistDraftScreen() {
   useEffect(() => {
     if (loading || hydrated) return;
     const poolMap = Object.fromEntries(playerPool.map(p => [p.id, p]));
-    setTargets(existingTargets.map(id => poolMap[id]).filter(Boolean));
+    // A saved wishlist can still name players the manager has since drafted or
+    // bought; drop them so the list only holds players still worth targeting.
+    const mine = new Set(squadPlayers.map(p => p.id));
+    const liveTargets = existingTargets.filter(id => !mine.has(id));
+    if (liveTargets.length !== existingTargets.length) dirtyRef.current = true;
+    setTargets(liveTargets.map(id => poolMap[id]).filter(Boolean));
     // A saved release can name a player who has since left the squad (sold,
     // traded, auctioned). submit_wishlist_draft rejects those (NOT_IN_SQUAD) and
     // the drop panel only lists current squad players, so the stale id could
@@ -185,20 +190,21 @@ export default function WishlistDraftScreen() {
     return names;
   }, [playerPool]);
 
-  // Target pool excludes players already owned — by this manager (nothing to
-  // "target" there, use the drop panel to release them) or by ANY other squad
-  // in the league (via ownershipMap — a draft league has no free market, so a
-  // rostered player simply isn't a legal target) — and players already ranked.
+  // Target pool excludes the manager's own players (use the drop panel to
+  // release them) and players already ranked. Players owned by another manager
+  // stay selectable: they are only drafted if that manager releases them this
+  // round, and the draft treats every rostered player as taken, so a target can
+  // never be granted to two squads or to the current owner (see snakeDraft.ts,
+  // commit_wishlist_draft).
   const filteredPool = useMemo(() => {
     return playerPool.filter(p => {
       if (listedIds.has(p.id) || ownedIds.has(p.id)) return false;
-      if (ownershipMap[p.id] > 0 || otherOwners[p.id]) return false;
       if (filterPos !== 'ALL' && p.position !== filterPos) return false;
       if (filterClubs.size > 0 && !filterClubs.has(p.club)) return false;
       if (search && !matchesPlayerSearch(p.name, search)) return false;
       return true;
     });
-  }, [playerPool, listedIds, ownedIds, ownershipMap, otherOwners, filterPos, filterClubs, search]);
+  }, [playerPool, listedIds, ownedIds, filterPos, filterClubs, search]);
 
   const addTarget = (player) => {
     if (targets.length >= maxTargets) return;
@@ -677,6 +683,11 @@ export default function WishlistDraftScreen() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[var(--mute)] text-[length:var(--fs-micro)] truncate">{p.club}</span>
+                          {otherOwners[p.id] && (
+                            <span className="text-[length:var(--fs-micro)] font-black shrink-0" style={{ color: 'var(--accent)' }}>
+                              Owned by {otherOwners[p.id].join(', ')}
+                            </span>
+                          )}
                           <FormStrip rounds={(statsMap[p.id] || []).slice(0, 5)} />
                         </div>
                       </div>
