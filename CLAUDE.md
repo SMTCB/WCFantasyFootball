@@ -278,7 +278,7 @@ Reading order for a new session: this file, then [BACKLOG.md](BACKLOG.md), then 
 npm run dev              # Dev server (http://localhost:5173)
 npm run build            # Production build → dist/
 npm run lint             # ESLint (CI-enforced)
-npx playwright test      # CI spec only: platform.spec.js (42 tests × 2 browsers = 84, ~3 min)
+npx playwright test      # CI spec only: platform.spec.js (64 tests × 2 browsers = 128, ~4 min)
                          # Full suite (all 9 specs, requires live DB): npx playwright test e2e/
 npm run build && npx cap sync   # Build + sync to native projects
 npx cap open ios         # Open Xcode
@@ -429,7 +429,7 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
 - **Player Status**: Injury alerts, suspension tracking, injury history
 - **Design**: Editorial Brandmark, tactical navigation icons, dark theme with gold accents
 - **Mobile**: Capacitor wrapper for iOS/Android, responsive layout at 375px+
-- **E2E Tests**: `platform.spec.js` (42 tests × 2 browsers = 84) in CI; 8 additional integration specs run manually against live Supabase data
+- **E2E Tests**: `platform.spec.js` (64 tests × 2 browsers = 128) in CI; 8 additional integration specs run manually against live Supabase data
 
 ### 🚧 In Progress / Planned
 - **Trade System**: Submit/approve player swap requests between managers
@@ -527,7 +527,7 @@ grep -n "^import" src/screens/LeagueScreen.jsx
 
 `supabase.channel(name)` returns the already-subscribed channel when the name is reused, and adding `.on()` to it throws. A hook that opens a channel must put a per-mount random suffix in the name (`${name}:${Math.random().toString(36).slice(2)}`), because two components often call the same hook at once. A fixed name crashed every Clubhouse on 2026-11-14 (PR #1169).
 
-- **E2E**: `platform.spec.js` must stay green — CI runs it automatically on every PR (42 tests × 2 browsers = 84, ~3 min). Integration specs (draft/scoring/bets) run manually: `npx playwright test e2e/<spec>.spec.js`
+- **E2E**: `platform.spec.js` must stay green — CI runs it automatically on every PR (64 tests × 2 browsers = 128, ~4 min). Integration specs (draft/scoring/bets) run manually: `npx playwright test e2e/<spec>.spec.js`
 - **Mobile-first**: All UI tested at 375px viewport minimum (use DevTools device emulation)
 - **RLS**: Never bypass Supabase Row Level Security — always filter by `auth.uid()`
 - **Secrets**: Never commit `.env.local` or credentials — use `.env.example` as template

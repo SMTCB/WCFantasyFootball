@@ -6911,4 +6911,6 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 
 - **Market redesign (2026-11-22, owner request, PR #1198):** the Market button on My team is a pill with a swap icon and a gold badge for pending changes (compact on phones); the price filter is one two-handle slider with a live label (the old inputs were cut off); a new "Only players I can sign" switch hides players over budget and from full clubs; the players in / players out basket is back inside the market sheet and as a card on My team (`TransferBasket.jsx`), and the fixed "Review changes" bottom bar is gone. Pitch, icons, crests and player sheet untouched. `platform.spec.js` 128 passed on both browsers.
 
-Last Updated: 2026-11-22
+- **Unavailable players show why (2026-11-23, owner request, PR #1201):** the reason ("Hamstring", "Muscle injury") and expected return date ("back 20 Dec") were already in `player_status` (reason on every non-fit row, return date on about 100 of 109 players ruled out) but only appeared as a hover tooltip. They now show under the player in the desktop Needs attention card and the phone Status list through `statusDetail()` in `src/lib/intelligence.js`. Not yet shown in the market list (still only the warning icon with the tooltip). Also PR #1200: Squad and Budget vertically centred in the desktop My team bar.
+
+Last Updated: 2026-11-23
