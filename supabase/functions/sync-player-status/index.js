@@ -59,6 +59,20 @@ function mapReason(forza_reason, type) {
   return forza_reason.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+// A suspension counts only if at least one match it blocks is in this
+// tournament. Forza lists those in `upcoming_matches`; match them by id against
+// our fixtures, or by an explicit tournament id when the object carries one.
+// With no match list we cannot tell, so keep the previous behaviour.
+function suspensionAppliesHere(s, tournamentId, tournamentMatchIds) {
+  const matches = s.upcoming_matches;
+  if (!Array.isArray(matches) || matches.length === 0) return true;
+  return matches.some(m => {
+    const tId = m?.tournament?.id ?? m?.tournament_id;
+    if (tId != null) return String(tId) === String(tournamentId);
+    return tournamentMatchIds.has(String(m?.id ?? m?.match_id));
+  });
+}
+
 function mapStatus(absence) {
   if (!absence) return 'doubt';
   // Suspensions are always definite
@@ -85,8 +99,8 @@ Deno.serve(async (req) => {
   const authErr = await requireServiceRole(req);
   if (authErr) return authErr;
 
-  let forza_id;
-  try { ({ forza_id } = await req.json()); }
+  let forza_id, debug_team_id;
+  try { ({ forza_id, debug_team_id } = await req.json()); }
   catch { return respond(400, { error: 'Invalid JSON body' }); }
   if (!forza_id) return respond(400, { error: 'forza_id required' });
 
@@ -111,12 +125,22 @@ Deno.serve(async (req) => {
 
     if (!teams?.length) return respond(200, { ok: true, updated: 0, cleared: 0, note: 'No teams found — run sync-players first' });
 
+    // A team's unavailable_players feed covers every competition the club plays
+    // in, so a La Liga ban would otherwise mark the player 'out' here too.
+    const { data: fixtureRows } = await supabase
+      .from('fixtures')
+      .select('forza_match_id')
+      .eq('tournament_id', forza_id);
+    const tournamentMatchIds = new Set((fixtureRows ?? []).map(f => String(f.forza_match_id)));
+
     // ── 3. Fetch unavailability for all teams (batched) ───────────────────────
     // DATA-15: collect all forza_player_ids first, then do one batch lookup —
     // replaces per-player individual queries (N+1 anti-pattern).
     const unavailablePlayerForzaIds = new Set();
     // Raw absence/suspension records before player ID resolution
     const rawStatusEntries = [];
+    let debugFeed = null;
+    let skippedOtherCompetition = 0;
     const BATCH = 5;
 
     for (let i = 0; i < teams.length; i += BATCH) {
@@ -126,7 +150,14 @@ Deno.serve(async (req) => {
         try {
           const data = await forza(`/v2/teams/${team.forza_team_id}/unavailable_players`);
 
+          // Read-only probe: returns the raw feed for one team so the match
+          // object shape can be checked without touching player_status.
+          if (debug_team_id && String(team.forza_team_id) === String(debug_team_id)) {
+            debugFeed = { team: team.name, suspensions: data.suspensions ?? [], tournamentMatchCount: tournamentMatchIds.size };
+          }
+
           for (const s of [...(data.suspensions || [])]) {
+            if (!suspensionAppliesHere(s, forza_id, tournamentMatchIds)) { skippedOtherCompetition++; continue; }
             const forzaPlayerId = String(s.player?.id);
             if (!forzaPlayerId) continue;
             unavailablePlayerForzaIds.add(forzaPlayerId);
@@ -190,6 +221,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (debug_team_id) return respond(200, { ok: true, debug: debugFeed, skippedOtherCompetition, wouldUpdate: statusRows.length });
+
     // ── 4. Pass 1: upsert all currently unavailable players ───────────────────
     let updated = 0;
     if (statusRows.length) {
@@ -228,7 +261,7 @@ Deno.serve(async (req) => {
       else cleared = toReset.length;
     }
 
-    return respond(200, { ok: true, updated, cleared });
+    return respond(200, { ok: true, updated, cleared, skippedOtherCompetition });
 
   } catch (err) {
     await logError(FN, 'error', err.message, { stack: err.stack });
