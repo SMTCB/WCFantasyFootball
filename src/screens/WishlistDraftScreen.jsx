@@ -165,7 +165,12 @@ export default function WishlistDraftScreen() {
   useEffect(() => {
     if (loading || hydrated) return;
     const poolMap = Object.fromEntries(playerPool.map(p => [p.id, p]));
-    setTargets(existingTargets.map(id => poolMap[id]).filter(Boolean));
+    // A saved wishlist can still name players the manager has since drafted or
+    // bought; drop them so the list only holds players still worth targeting.
+    const mine = new Set(squadPlayers.map(p => p.id));
+    const liveTargets = existingTargets.filter(id => !mine.has(id));
+    if (liveTargets.length !== existingTargets.length) dirtyRef.current = true;
+    setTargets(liveTargets.map(id => poolMap[id]).filter(Boolean));
     // A saved release can name a player who has since left the squad (sold,
     // traded, auctioned). submit_wishlist_draft rejects those (NOT_IN_SQUAD) and
     // the drop panel only lists current squad players, so the stale id could

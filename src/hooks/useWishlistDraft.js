@@ -122,7 +122,10 @@ export function useWishlistDraft(leagueId) {
             .from('players')
             .select('id, name, position, club, price, forza_team_id')
             .eq('tournament_id', leagueRow.tournament_id)
-            .eq('is_active', true),
+            .eq('is_active', true)
+            // Unpriced rows are youth/reserve squad entries the Market already hides.
+            .not('price', 'is', null)
+            .gt('price', 0),
           supabase.from('player_status').select('*'),
         ]);
         const poolWithIntel = (pool ?? []).map(p => ({
