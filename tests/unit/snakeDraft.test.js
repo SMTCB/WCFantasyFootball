@@ -288,3 +288,32 @@ describe('runSnakeDraft — skipLog', () => {
     assert.deepEqual(userState.u1.allocated, []);
   });
 });
+
+describe('runSnakeDraft — targeting a player another manager owns', () => {
+  const order = ['u1', 'u2'];
+  const run = (taken, submissionMap) => {
+    const playerMap = { x: makePlayer('x', 'MID', 5) };
+    const userState = freshUserState(order);
+    const skipLog = [];
+    runSnakeDraft({
+      order, submissionMap, userState, playerMap, taken,
+      squadSize: 2, posCaps: POS_CAPS, budget: 100, clubCap: 99, skipLog,
+    });
+    return { userState, skipLog };
+  };
+
+  it('never grants a still-owned target to the requester or the owner', () => {
+    // u2 owns x (seeded into taken, as wishlistDraft.ts does for every squad).
+    const { userState, skipLog } = run(new Set(['x']), { u1: ['x'], u2: ['x'] });
+    assert.deepEqual(userState.u1.allocated, []);
+    assert.deepEqual(userState.u2.allocated, []);
+    assert.deepEqual(skipLog.map(s => s.reason), ['taken', 'taken']);
+  });
+
+  it('grants a released player to exactly one requester', () => {
+    // u2 released x, so it is no longer taken; u1 and u2 both list it.
+    const { userState } = run(new Set(), { u1: ['x'], u2: ['x'] });
+    const holders = order.filter(u => userState[u].allocated.includes('x'));
+    assert.equal(holders.length, 1);
+  });
+});
