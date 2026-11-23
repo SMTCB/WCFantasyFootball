@@ -19,7 +19,7 @@ The previous version of this doc (dated 2026-06-01) had drifted from reality —
 | Component tests | 5 in `tests/components/` | 35 | Vitest + jsdom + React Testing Library (`npm run test:components`) | `lint` (step "Component tests") |
 | Tier 1 — unit / RPC | 14 in `tests/unit/` | ~221 | `node --test` (`npm run test:unit`) | `unit-tests` |
 | Tier 2 — schema rehearsal | `scripts/rehearse-schema.sh` | one check per changed migration | psql | `schema-rehearsal` |
-| UI smoke (demo mode) | `e2e/platform.spec.js` | 59 × 2 browsers = 118 | Playwright | `e2e` |
+| UI smoke (demo mode) | `e2e/platform.spec.js` | 64 × 2 browsers = 128 | Playwright | `e2e` |
 | Tier 3 — local full stack | the other 17 specs in `e2e/` | see the job log | Playwright + `npx supabase start` | `e2e-tier3` |
 | Tier 4 — live platform | `scripts/TEST_pilot_gate.js` | 6 read-only checks | node | never in CI |
 
@@ -253,4 +253,4 @@ Carried forward unchanged from the previous version of this doc — these apply 
 
 ---
 
-Last Updated: **2026-11-22**
+Last Updated: **2026-11-23**

@@ -134,4 +134,6 @@ None. All three sessions reuse today's RPCs and functions. Any surprise need for
 - **Pending changes lost.** If you leave the tab with changes waiting, warn first. The changes are not saved until you confirm.
 - **Two places to buy during the move.** Between S30 and S31, `/market` still works as today, so nothing is ever unreachable.
 
-Last Updated: 2026-11-21
+**Follow-up 2026-11-22 (PR #1198):** the market got a Market pill with a pending badge, a single price slider, an "Only players I can sign" switch (hides players over budget and from full clubs), and the in / out basket inside the market sheet and as a card on My team. The fixed "Review changes" bar no longer exists.
+
+Last Updated: 2026-11-23
