@@ -347,7 +347,17 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
       // can carry the ×2/×3 multiplier (matches RecapView/LiveScreen — round the
       // raw score BEFORE multiplying, e.g. round(4.75)*2=10, not round(4.75*2)).
       const captainIdForPoints = squad.captain_id || playerIds[0] || '';
-      const captainMult = squad.is_triple_captain ? 3 : 2;
+      // squads.is_triple_captain is never reset and mid-round holds the chip armed
+      // for the NEXT round, so the round's scored breakdown is the source of truth.
+      let roundTripleCaptain = false;
+      if (squad.id && (squad.matchday_id || activeMatchdayId)) {
+        const { data: fpRow } = await supabase.from('fantasy_points')
+          .select('points_breakdown')
+          .eq('squad_id', squad.id).eq('matchday_id', activeMatchdayId || squad.matchday_id)
+          .is('player_id', null).maybeSingle();
+        roundTripleCaptain = !!fpRow?.points_breakdown?.is_triple_captain;
+      }
+      const captainMult = roundTripleCaptain ? 3 : 2;
 
       const mappedPlayers = (players || []).map((p) => {
         const playerIntel = intelData?.find(i => i.player_id === p.id);
@@ -476,7 +486,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
         startingXi:      squad.starting_xi || [],
         lineupLocks:     lineupLocks,
         lockedIds:       lockedIds,
-        isTripleCaptain: squad.is_triple_captain,
+        isTripleCaptain: roundTripleCaptain,
         locked_at:       squad.locked_at,
       });
     } catch (err) {
@@ -642,7 +652,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
       }));
 
       if (result.deduction > 0) {
-        showToast(`−${result.deduction} pts deducted (${pitchPlayer.name} benched after scoring).`, 'warning', 5000);
+        showToast(`−${result.deduction} pts deducted (${pitchPlayer.name} benched).`, 'warning', 5000);
       }
 
       if (captainBeingBenched) {

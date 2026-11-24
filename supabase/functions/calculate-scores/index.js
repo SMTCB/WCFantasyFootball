@@ -836,17 +836,20 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id, { POINTS, U
     // live squads.starting_xi/captain_id (which may have already moved on to the next
     // matchday). auto_subs/captain_reassigned record WHY the effective XI/captain
     // differ from the manager's own selection (for the explanatory tags in the UI).
+    // Chips are written on every pass (not just at settlement): clients must not
+    // fall back to the never-reset squads.is_triple_captain / joker_player_id
+    // columns, which mid-round hold the chip armed for the NEXT round.
+    breakdown.is_triple_captain = isTripleCaptain;
+    breakdown.is_max_cap = isMaxCap;
+    if (jokerPid) breakdown.joker_player_id = jokerPid;
+    else delete breakdown.joker_player_id;
+
     if (roundComplete) {
       breakdown.base_xi = baseXI;
       breakdown.base_captain_id = squad.captain_id;
       breakdown.effective_xi = pitchPlayers;
       breakdown.bench_players = benchPlayers;
       breakdown.effective_captain_id = effectiveCaptainId;
-      breakdown.is_triple_captain = isTripleCaptain;
-      breakdown.is_max_cap = isMaxCap;
-      if (jokerPid) breakdown.joker_player_id = jokerPid;
-      else delete breakdown.joker_player_id;
-
       const autoSubs = [];
       for (let i = 0; i < baseXI.length; i++) {
         if (pitchPlayers[i] !== baseXI[i]) autoSubs.push({ out: baseXI[i], in: pitchPlayers[i] });

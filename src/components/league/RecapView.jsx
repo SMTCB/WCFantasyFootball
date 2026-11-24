@@ -598,8 +598,8 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       } else {
         starters          = squadRow.starting_xi?.length ? squadRow.starting_xi : (squadRow.players || []).slice(0, 11);
         captainId         = squadRow.captain_id;
-        isTripleCaptain   = !!squadRow.is_triple_captain;
-        jokerPid          = squadRow.joker_player_id ?? null;
+        isTripleCaptain   = !!bd?.is_triple_captain;
+        jokerPid          = bd?.joker_player_id ?? null;
         autoSubIns        = new Set();
         captainReassigned = false;
       }
