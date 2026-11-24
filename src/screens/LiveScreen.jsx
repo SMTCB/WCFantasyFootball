@@ -557,7 +557,7 @@ function LiveAcrossLeagues() {
         const total         = m.total_points || 0;
         const rankLabel     = m.rank ? `${m.rank} / ${members}` : '—';
         const leagueSquad   = squadByLeague[m.league_id];
-        const lgTripleCap   = leagueSquad?.is_triple_captain ?? false;
+        const lgTripleCap   = fpBreakdownBySquad[leagueSquad?.id]?.is_triple_captain ?? false;
         const win           = windowByLeague[m.league_id];
         return {
           id:              m.league_id,

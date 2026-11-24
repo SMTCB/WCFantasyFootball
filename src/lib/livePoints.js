@@ -90,7 +90,7 @@ export function resolveRoundSquad(squadRow, breakdown) {
     : (squadRow?.starting_xi?.length > 0 ? squadRow.starting_xi : null);
   // No captain set: the first starter is captain, as on the squad screen.
   const captainId = breakdown?.effective_captain_id ?? squadRow?.captain_id ?? (startingXi?.[0] ?? squadPlayerIds[0] ?? null);
-  const isTripleCap = breakdown?.is_triple_captain ?? squadRow?.is_triple_captain ?? false;
+  const isTripleCap = breakdown?.is_triple_captain ?? false;
   return { squadPlayerIds, startingXi, captainId, isTripleCap, roundIsSettled };
 }
 
