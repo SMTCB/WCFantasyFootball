@@ -598,8 +598,13 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
       const matchesPrice  = price >= priceMin && price <= priceMax;
 
       if (filterAffordable && !owned.includes(p.id) && !effectiveSquadIds.includes(p.id)) {
-        const clubIsFull = p.id !== todayJokerId && (stats.countryCounts[p.club] ?? 0) >= clubCap;
-        if (price > effectiveBudget || clubIsFull) return false;
+        // Mirror the row's canBuy so the toggle never lists a player the Buy button refuses.
+        const clubIsFull = (stats.countryCounts[p.club] ?? 0) >= clubCap;
+        const posIsFull  = (stats.posCounts[p.position] ?? 0) >= POS_LIMITS[p.position];
+        const otherOwners = isDraftLeague ? takenByAll(p.id).filter(o => o.userId !== user?.id) : [];
+        const sharingOk   = relaxationRepeatsAllowed === null || otherOwners.length <= (relaxationRepeatsAllowed ?? 0);
+        const ownedByOther = otherOwners.length > 0 && !sharingOk;
+        if (price > effectiveBudget || clubIsFull || posIsFull || ownedByOther || eliminatedClubs.has(p.club)) return false;
       }
       if (filterHideEliminated && eliminatedClubs.has(p.club) && !owned.includes(p.id)) return false;
       if (filterHideTaken && isDraftLeague && isTaken(p.id) && !owned.includes(p.id)) return false;
@@ -618,7 +623,7 @@ export default function MarketScreen({ leagueId: leagueIdProp = null, initialPos
   }, [players, filterPos, searchQuery, selectedTeams, priceMin, priceMax, mySquad,
       filterHideEliminated, filterHideTaken, filterMinScore, filterAffordable,
       effectiveBudget, effectiveSquadIds, stats, clubCap, todayJokerId,
-      eliminatedClubs, isDraftLeague, isTaken, statsMap, minutesMap, sortKey]);
+      eliminatedClubs, isDraftLeague, isTaken, takenByAll, user?.id, relaxationRepeatsAllowed, statsMap, minutesMap, sortKey]);
   const squadCount  = effectiveSquadIds.length;
   const emptySlots  = Math.max(0, squadSize - squadCount);
   const [showScoringModal, setShowScoringModal] = useState(false);
