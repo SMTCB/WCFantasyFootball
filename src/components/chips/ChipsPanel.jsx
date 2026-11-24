@@ -29,7 +29,7 @@ const STATE_COPY = {
   available:{ pill: 'AVAILABLE' },
 };
 
-function ChipCard({ chip, info, busy, hasCaptain, onActivate, onDeactivate, onPickJoker }) {
+function ChipCard({ chip, info, busy, hasCaptain, openRound, onActivate, onDeactivate, onPickJoker }) {
   const status = info?.status ?? 'locked';
   const active = status === 'active';
   const dim    = status === 'used' || status === 'locked' || status === 'blocked';
@@ -114,7 +114,7 @@ function ChipCard({ chip, info, busy, hasCaptain, onActivate, onDeactivate, onPi
           ) : active ? (
             <Button variant="secondary" size="md" onClick={onDeactivate} loading={busy} fullWidth>Deactivate</Button>
           ) : (
-            <Button variant="gold" size="md" onClick={onActivate} loading={busy} fullWidth>Activate for this round</Button>
+            <Button variant="gold" size="md" onClick={onActivate} loading={busy} fullWidth>{openRound ? `Activate for ${openRound}` : 'Activate'}</Button>
           )}
         </div>
       )}
@@ -145,7 +145,7 @@ export default function ChipsPanel({ leagueId, userId, tournamentId, ownedIds, h
     setConfirm({
       title: turningOn ? `Activate ${chip.name}?` : `Switch off ${chip.name}?`,
       body: turningOn
-        ? `${chip.rule} It applies to ${round || 'this round'} and can only be used once this tournament.`
+        ? `${chip.rule} It applies to ${round || 'the next round'} (the next round to start, not the round in play) and can only be used once this tournament.`
         : `${chip.name} goes back to your hand and can be played in a later round.`,
       confirmLabel: turningOn ? 'Activate' : 'Switch off',
       onConfirm: async () => report(await toggleChip(chipId), turningOn ? `${chip.name} activated` : `${chip.name} switched off`),
@@ -156,7 +156,7 @@ export default function ChipsPanel({ leagueId, userId, tournamentId, ownedIds, h
     setPicking(false);
     setConfirm({
       title: `Play ${player.name} as your Joker?`,
-      body: `Their points count ×2 for ${roundLabel(state?.round?.matchday_id) || 'this round'}. You can change or withdraw the pick until the deadline; once the deadline passes the Joker is spent for the tournament.`,
+      body: `Their points count ×2 for ${roundLabel(state?.round?.matchday_id) || 'the next round'} (the next round to start, not the round in play). You can change or withdraw the pick until the deadline; once the deadline passes the Joker is spent for the tournament.`,
       confirmLabel: 'Play Joker',
       onConfirm: async () => report(await setJoker(player.id), `${player.name} locked in as your Joker`),
     });
@@ -202,6 +202,12 @@ export default function ChipsPanel({ leagueId, userId, tournamentId, ownedIds, h
         <p style={{ color: 'var(--mute)', fontSize: 'var(--fs-label)' }}>Your league admin has turned all chips off.</p>
       )}
 
+      {state.round && (
+        <p style={{ margin: 0, padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', fontSize: 'var(--fs-label)', color: 'var(--paper)', lineHeight: 1.4 }}>
+          Chips you play now apply to {roundLabel(state.round.matchday_id)}, the next round to start. They do not count for a round already in play.
+        </p>
+      )}
+
       {visible.map(chip => (
         <ChipCard
           key={chip.id}
@@ -209,6 +215,7 @@ export default function ChipsPanel({ leagueId, userId, tournamentId, ownedIds, h
           info={state.chips[chip.id]}
           busy={busy === chip.id}
           hasCaptain={hasCaptain}
+          openRound={state.round ? roundLabel(state.round.matchday_id) : ''}
           onActivate={() => askToggle(chip.id, true)}
           onDeactivate={() => (chip.id === 'joker' ? askWithdraw() : askToggle(chip.id, false))}
           onPickJoker={() => setPicking(true)}
