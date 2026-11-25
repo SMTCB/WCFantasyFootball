@@ -251,8 +251,8 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
         style={{ width: '100%', height: '100%', background: 'var(--bg)', color: 'var(--paper)', flexDirection: 'column', fontFamily: 'Archivo, sans-serif', overflow: 'hidden' }}
       >
         {/* back nav */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-          <button type="button" onClick={onClose} style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>← BACK</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'calc(10px + env(safe-area-inset-top)) 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+          <button type="button" onClick={onClose} style={{ ...MO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', cursor: 'pointer', background: 'none', border: 'none', padding: '10px 12px 10px 0', minHeight: 44 }}>← BACK</button>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <PosBadge pos={player.position} small />
             <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name}</span>

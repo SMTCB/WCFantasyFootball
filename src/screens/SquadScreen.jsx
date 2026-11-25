@@ -1545,7 +1545,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
                   >?</button>
                 </div>
                 <div style={{ fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 6 }}>
-                  {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'No captain'}
+                  {captain ? `${squadData.isTripleCaptain ? 'TRIPLE CAPTAIN' : 'CAPTAIN'} ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'No captain'}
                   {squadData.matchdayId ? ` · GW${squadData.matchdayId.split('-r')[1] ?? squadData.matchdayId} PTS` : ''}
                 </div>
               </div>
