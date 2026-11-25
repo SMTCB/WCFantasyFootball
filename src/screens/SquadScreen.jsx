@@ -577,10 +577,13 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
     // set_lineup will return deduction=0 from the server anyway.
     const fixtureStarted = ['live', 'finished'].includes(pitchPlayer.fixtureInfo?.state);
     const deductionPts = pitchPlayer.rawPoints ?? pitchPlayer.points;
+    const armbandNote = squadData.captainId === pitchPlayer.id
+      ? ' The armband then passes to the first player in your XI whose match has not started yet (you can change it to another player who has not played).'
+      : '';
     if (deductionPts > 0 && fixtureStarted) {
       setConfirm({
         title:        `Move ${pitchPlayer.name} to bench?`,
-        body:         `${pitchPlayer.name} has scored ${deductionPts} pts this round. Moving them to the bench will deduct those points from your total.`,
+        body:         `${pitchPlayer.name} has scored ${deductionPts} pts this round. Moving them to the bench will deduct those points from your total.${armbandNote}`,
         warning:      'This action cannot be undone.',
         confirmLabel: 'Confirm (-' + deductionPts + ' pts)',
         danger:       true,
@@ -639,7 +642,7 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
         b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '', isLineupLocked: result.locked === true } : b
       );
       const captainBeingBenched = squadData.captainId === pitchPlayer.id;
-      const newCaptainId        = captainBeingBenched ? null : squadData.captainId;
+      const newCaptainId        = captainBeingBenched ? (result.captain_id ?? null) : squadData.captainId;
 
       setSquadData(prev => ({
         ...prev,
@@ -656,17 +659,13 @@ export default function SquadScreen({ leagueId: leagueIdProp = null, sideExtra =
       }
 
       if (captainBeingBenched) {
-        setConfirm({
-          title:        'Captain benched',
-          body:         `${pitchPlayer.name} was your captain. Select a new captain from your starting XI.`,
-          warning:      null,
-          confirmLabel: 'Select Captain',
-          danger:       false,
-          onConfirm:    () => {
-            setConfirm(null);
-            if (newPlayers.length > 0) setSelectedPlayer(newPlayers[0]);
-          },
-        });
+        const newCap = newPlayers.find(p => p.id === result.captain_id);
+        showToast(
+          newCap
+            ? `${pitchPlayer.name} was your captain — the armband passed to ${newCap.name}, who has not played yet. You can change it.`
+            : `${pitchPlayer.name} was your captain — select a new captain.`,
+          'warning', 7000,
+        );
       }
     } catch (err) {
       console.error('Swap failed', err);
