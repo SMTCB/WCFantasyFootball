@@ -103,12 +103,13 @@ export default function MobilePitchField({ squad, onPlayerClick, selectedPlayerI
                 {isCaptain && (
                   <div style={{
                     position: 'absolute', top: -5, left: -5,
-                    width: 15, height: 15, borderRadius: '50%',
+                    minWidth: 15, height: 15, borderRadius: squad.isTripleCaptain ? 8 : '50%',
+                    padding: squad.isTripleCaptain ? '0 3px' : 0,
                     background: 'var(--gold)', color: 'var(--bg)',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 11,
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: squad.isTripleCaptain ? 9 : 11,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '1.5px solid var(--bg)',
-                  }}>C</div>
+                  }}>{squad.isTripleCaptain ? '3×C' : 'C'}</div>
                 )}
                 {/* S31 (MD-12): optional; marks an incoming player not yet confirmed */}
                 {pendingMarks?.[player.id] === 'in' && (
