@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
 import { buildBreakdownItems } from '../../hooks/usePlayerFullStats';
+import { fetchRoundBets } from '../../lib/roundBets';
 
 // ── All helpers are module-level so React never sees new function references ──
 
@@ -268,7 +269,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const fpRowsRef = useRef({});
   const [expandedUser,     setExpandedUser]     = useState(null);
   const [h2hStandings,     setH2hStandings]     = useState([]);
-  const [betMap,           setBetMap]           = useState({});
+  const [bets,             setBets]             = useState({ leagueId: null, byUser: {} });
   const [tradeMap,         setTradeMap]         = useState({});
 
   // Fetch H2H standings when league is H2H-enabled
@@ -328,88 +329,13 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     return () => { cancelled = true; };
   }, [leagueId, tournamentId]);
 
-  // ── Effect 1b: load resolved points-bet rewards, mapped onto a matchday ──────
-  // bet_instances has no matchday_id column. A bet shows on the matchday it was
-  // created in: a match-scoped bet takes its fixture's matchday; any other bet
-  // takes the first matchday whose last kickoff is on/after its created_at (i.e.
-  // the round in progress when it was set). Mapping by the bet's own deadline
-  // pushed every bet into the following round. The points themselves are already
-  // safely included in league_members.total_points (migration 167) regardless —
-  // this only controls which GW row shows the "+N BET" indicator.
+  // ── Effect 1b: load points won on bets, placed on a round (lib/roundBets) ───
   useEffect(() => {
     if (!leagueId || !tournamentId || !allMatchdays.length) return;
     let cancelled = false;
-
-    (async () => {
-      try {
-        const { data: squadRows, error: sqErr } = await supabase
-          .from('squads').select('id, user_id').eq('league_id', leagueId);
-        if (cancelled || sqErr || !squadRows?.length) return;
-
-        const latestByUser = {};
-        squadRows.forEach(s => { if (!latestByUser[s.user_id]) latestByUser[s.user_id] = s.id; });
-        const squadIds = Object.values(latestByUser);
-
-        const { data: betRows, error: betErr } = await supabase
-          .from('bet_submissions')
-          .select('squad_id, reward_awarded, bet_instances!inner(id, league_id, created_at, scope_type, scope_ref, title, reward_type, status)')
-          .in('squad_id', squadIds)
-          .eq('is_correct', true)
-          .not('reward_awarded', 'is', null)
-          .eq('bet_instances.league_id', leagueId)
-          .eq('bet_instances.reward_type', 'points')
-          .eq('bet_instances.status', 'resolved');
-
-        if (cancelled) return;
-        if (betErr) { console.error('[RecapView] bet rewards:', betErr); return; }
-        if (!betRows?.length) { setBetMap({}); return; }
-
-        const { data: fixRows, error: fixErr } = await supabase
-          .from('fixtures').select('id, matchday_id, kickoff_at')
-          .eq('tournament_id', tournamentId);
-        if (cancelled) return;
-        if (fixErr) { console.error('[RecapView] bet fixtures:', fixErr); return; }
-
-        const fixtureMd = {};
-        const lastKickoff = {};
-        for (const f of fixRows ?? []) {
-          if (!f.matchday_id) continue;
-          fixtureMd[f.id] = f.matchday_id;
-          const t = new Date(f.kickoff_at).getTime();
-          if (!(lastKickoff[f.matchday_id] >= t)) lastKickoff[f.matchday_id] = t;
-        }
-
-        // allMatchdays is already ascending by round number / deadline
-        const sortedMds = allMatchdays;
-        const shownMds = new Set(sortedMds.map(md => md.matchday_id));
-        const lastShown = sortedMds[sortedMds.length - 1].matchday_id;
-        const mapToMatchday = (inst) => {
-          const scoped = inst.scope_type === 'match' ? fixtureMd[inst.scope_ref] : null;
-          if (scoped) return shownMds.has(scoped) ? scoped : lastShown;
-          const created = new Date(inst.created_at).getTime();
-          for (const md of sortedMds) {
-            if (lastKickoff[md.matchday_id] >= created) return md.matchday_id;
-          }
-          return lastShown;
-        };
-
-        const map = {};
-        for (const row of betRows) {
-          const inst = row.bet_instances;
-          const mdId = mapToMatchday(inst);
-          const amount = Number(row.reward_awarded) || 0;
-          if (!amount) continue;
-          if (!map[row.squad_id]) map[row.squad_id] = {};
-          if (!map[row.squad_id][mdId]) map[row.squad_id][mdId] = { total: 0, bets: [] };
-          map[row.squad_id][mdId].total += amount;
-          map[row.squad_id][mdId].bets.push({ title: inst.title || 'Bet', amount });
-        }
-        setBetMap(map);
-      } catch (e) {
-        console.error('[RecapView] bet rewards load error:', e);
-      }
-    })();
-
+    fetchRoundBets({ leagueId, tournamentId, roundIds: allMatchdays.map(md => md.matchday_id) })
+      .then(byUser => { if (!cancelled) setBets({ leagueId, byUser }); })
+      .catch(e => console.error('[RecapView] bet rewards load error:', e));
     return () => { cancelled = true; };
   }, [leagueId, tournamentId, allMatchdays]);
 
@@ -726,6 +652,15 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const hasScores     = scores.some(s => s.pts !== null);
   const loading       = loadingMds || loadingScores;
 
+  // A round's score is player points plus points won on bets, and ranks by that.
+  const betsByUser = bets.leagueId === leagueId ? bets.byUser : {};
+  const rankedScores = scores.map(s => {
+    const betEntry = betsByUser[s.user_id]?.[selectedMatchday];
+    const betPts = betEntry?.total ?? 0;
+    const roundPts = s.pts === null && !betPts ? null : (s.pts ?? 0) + betPts;
+    return { ...s, betEntry, betPts, roundPts };
+  }).sort((a, b) => (b.roundPts ?? -Infinity) - (a.roundPts ?? -Infinity));
+
   // Resolve username from members (display-only, doesn't affect data loading)
   const memberMap = {};
   (members || []).forEach(m => { memberMap[m.user_id] = m; });
@@ -738,11 +673,10 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     const name  = nameFor(s.user_id);
     const hue   = mgrHue(name);
     const isMe  = currentUser && s.user_id === currentUser.id;
-    const isTop = idx === 0 && s.pts !== null;
+    const isTop = idx === 0 && s.roundPts !== null;
     const isOpen = expandedUser === s.user_id;
     const totalPts = memberMap[s.user_id]?.total_points ?? null;
-    const betEntry = betMap[s.squad_id]?.[selectedMatchday];
-    const betPts = betEntry?.total ?? 0;
+    const { betEntry, betPts, roundPts } = s;
     const tradeNet = tradeMap[s.squad_id]?.[selectedMatchday]?.net ?? 0;
 
     const rowStyle = {
@@ -769,10 +703,10 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             </div>
 <div style={{ textAlign: 'right' }}>
             <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: isTop ? 'var(--gold-text)' : 'var(--paper)' }}>
-              {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
+              {roundPts !== null ? (isLiveRound ? '~' : '') + Math.round(roundPts) : '—'}
             </span>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', marginTop: 1, visibility: betPts > 0 ? 'visible' : 'hidden' }}>
-              +{betPts} bet
+              incl. +{betPts} bet
             </div>
             <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold-text)' : 'var(--danger)', marginTop: 1, visibility: tradeNet !== 0 ? 'visible' : 'hidden' }}>
               {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
@@ -803,10 +737,10 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body-lg)', color: isTop ? 'var(--gold-text)' : 'var(--paper)' }}>
-                {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
+                {roundPts !== null ? (isLiveRound ? '~' : '') + Math.round(roundPts) : '—'}
               </div>
               {betPts > 0 && (
-                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>+{betPts} bet</div>
+                <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>incl. +{betPts} bet</div>
               )}
               {tradeNet !== 0 && (
                 <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: tradeNet > 0 ? 'var(--gold-text)' : 'var(--danger)' }}>
@@ -868,7 +802,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           </div>
         ) : (
           <div style={{ flex: 1, overflow: 'auto' }}>
-            {scores.map((s, idx) => renderScoreRow(s, idx, true))}
+            {rankedScores.map((s, idx) => renderScoreRow(s, idx, true))}
           </div>
         )}
       </div>
@@ -899,7 +833,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           </div>
         </div>
       ) : (
-        scores.map((s, idx) => renderScoreRow(s, idx, false))
+        rankedScores.map((s, idx) => renderScoreRow(s, idx, false))
       )}
 
       {fixtures.length > 0 && (
