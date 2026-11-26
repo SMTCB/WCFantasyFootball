@@ -6,6 +6,7 @@ import {
 } from '../lib/livePoints';
 import { normalisePlayer, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
 import { normalizeIntelligence } from '../lib/intelligence';
+import { fetchRoundBets, withRoundBets } from '../lib/roundBets';
 
 const REFRESH_MS = 60 * 1000;
 const DEBOUNCE_MS = 1500;
@@ -20,7 +21,8 @@ const DEBOUNCE_MS = 1500;
 //   deadlineAt,      the round's deadline, when it has not passed yet
 //   fixtures,        every fixture in the round, with homeGoals/awayGoals
 //   squad,           { players (XI), bench, captainId, isTripleCaptain } | null
-//   gwPoints,        your points this round
+//   gwPoints,        your player points this round (what head-to-head compares)
+//   betPoints,       your points won on bets this round
 //   table,           rows from get_live_league_table, or null when it is not available
 //   duel,            this round's head-to-head row for you, or null
 //   refresh,
@@ -57,7 +59,7 @@ export function useLeagueMatchweek({ leagueId, tournamentId, userId, h2hEnabled 
         return;
       }
 
-      const [{ data: fixRows = [] }, { data: squadRows = [] }, tableRes, duelRes] = await Promise.all([
+      const [{ data: fixRows = [] }, { data: squadRows = [] }, tableRes, duelRes, betsByUser] = await Promise.all([
         supabase.from('fixtures').select(LIVE_FIXTURE_COLUMNS).eq('matchday_id', matchdayId).order('kickoff_at', { ascending: true }),
         supabase.from('squads')
           .select('id, league_id, matchday_id, players, starting_xi, captain_id, is_triple_captain, created_at')
@@ -68,10 +70,12 @@ export function useLeagueMatchweek({ leagueId, tournamentId, userId, h2hEnabled 
           ? supabase.from('h2h_schedule').select('*').eq('league_id', leagueId).eq('matchday_id', matchdayId)
               .or(`home_user_id.eq.${userId},away_user_id.eq.${userId},bye_user_id.eq.${userId}`).limit(1).maybeSingle()
           : Promise.resolve({ data: null }),
+        fetchRoundBets({ leagueId, tournamentId }).catch(e => { console.error('useLeagueMatchweek bets', e); return {}; }),
       ]);
       const fixtures = (fixRows || []).map(withGoals);
       // The table function arrives with migration 313; until then the tab falls back to season totals.
-      const table = tableRes.error ? null : (tableRes.data ?? []);
+      const table = tableRes.error ? null : withRoundBets(tableRes.data ?? [], betsByUser, matchdayId);
+      const betPoints = betsByUser[userId]?.[matchdayId]?.total ?? 0;
 
       const squadRow = (squadRows || []).find(s => s.matchday_id === matchdayId) ?? (squadRows || [])[0] ?? null;
       let squad = null;
@@ -115,7 +119,7 @@ export function useLeagueMatchweek({ leagueId, tournamentId, userId, h2hEnabled 
         gwPoints = fp ? Number(fp.total ?? 0) : scored.starters.reduce((sum, p) => sum + (p.displayPoints ?? 0), 0);
       }
 
-      setState({ key, loading: false, matchdayId, started, deadlineAt, fixtures, squad, gwPoints, table, duel: duelRes?.data ?? null });
+      setState({ key, loading: false, matchdayId, started, deadlineAt, fixtures, squad, gwPoints, betPoints, table, duel: duelRes?.data ?? null });
     } catch (err) {
       console.error('useLeagueMatchweek', err);
       setState(s => ({ ...s, key, loading: false }));

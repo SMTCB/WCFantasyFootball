@@ -73,8 +73,9 @@ function WeekHeader({ mw, rankRow, size, liveCount, compact }) {
         </div>
       </div>
       <div style={{ textAlign: 'right' }}>
-        <div className="num" style={{ ...NUM, fontFamily: DISPLAY, fontSize: compact ? 'var(--fs-title)' : 'var(--fs-display)', lineHeight: 1, color: 'var(--paper)' }}>{fmtPts(mw.gwPoints ?? 0)}</div>
+        <div className="num" style={{ ...NUM, fontFamily: DISPLAY, fontSize: compact ? 'var(--fs-title)' : 'var(--fs-display)', lineHeight: 1, color: 'var(--paper)' }}>{fmtPts((mw.gwPoints ?? 0) + (mw.betPoints ?? 0))}</div>
         <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>pts this week</div>
+        {mw.betPoints > 0 && <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--gold-text)' }}>incl. +{mw.betPoints} bet</div>}
       </div>
       {rankRow?.live_rank != null && (
         <div style={{ textAlign: 'right', paddingLeft: compact ? 12 : 20, borderLeft: '1px solid var(--rule)' }}>
@@ -204,7 +205,10 @@ function LiveTable({ rows, meId, showWeek, onFullTable }) {
                 <span style={{ fontWeight: me ? 800 : 600, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{me ? 'You' : (r.username ?? 'Member')}</span>
                 {moved !== 0 && <span aria-label={moved > 0 ? `up ${moved}` : `down ${-moved}`} style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, color: moved > 0 ? 'var(--positive)' : 'var(--danger)' }}>{moved > 0 ? '▲' : '▼'}{Math.abs(moved)}</span>}
               </span>
-              <span role="cell" className="num" style={{ ...NUM, textAlign: 'right', color: 'var(--mute)' }}>{showWeek ? fmtPts(r.matchday_points) : ''}</span>
+              <span role="cell" className="num" style={{ ...NUM, textAlign: 'right', color: 'var(--mute)' }}>
+                {showWeek && (r.matchday_points == null ? '—' : fmtPts(Number(r.matchday_points) + (r.bet_points ?? 0)))}
+                {showWeek && r.bet_points > 0 && <span style={{ display: 'block', fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', whiteSpace: 'nowrap' }}>incl. +{r.bet_points} bet</span>}
+              </span>
               <span role="cell" className="num" style={{ ...NUM, textAlign: 'right', fontWeight: 800, color: 'var(--paper)' }}>{fmtPts(r.total_points)}</span>
             </div>
           );
