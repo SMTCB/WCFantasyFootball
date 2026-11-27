@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
 import useConfirmDialog from '../../hooks/useConfirmDialog';
 import { CHIPS } from '../../lib/chips';
+import { formatBetReward } from '../../lib/betRewards';
 import {
   MODE_LABEL, MODE_HELP, MODE_HELP_LONG, MIN_NOTICE_MS, KICKOFF_BUFFER_MS, fmtDraftTime, toLocalInput, suggestDraftTime, draftErrorMessage,
 } from '../../lib/wishlistDraft';
@@ -936,7 +937,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>REWARD</span>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>+{bet.reward_value} PTS</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>{formatBetReward(bet.reward_type, bet.reward_value)}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>DEADLINE</span>
@@ -968,7 +969,7 @@ function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0
                         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No winner</span>
                       )}
                       <span style={{ fontFamily: MONO, fontSize: 'var(--fs-label)', color: 'var(--positive)' }}>
-                        {stats.winners} / {stats.total} correct · +{bet.reward_value} pts each
+                        {stats.winners} / {stats.total} correct · {formatBetReward(bet.reward_type, bet.reward_value)} each
                       </span>
                     </div>
                   )}
