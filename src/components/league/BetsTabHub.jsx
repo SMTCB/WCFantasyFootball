@@ -4,6 +4,7 @@ import BetWidget from '../BetWidget';
 import { HubSectionLabel, MobSection } from './HubShared';
 import { MONO, DISPLAY } from './HubConstants';
 import { Glyph, Icon } from '../UiIcons';
+import { sumBetRewards, formatBetPoints, formatBetBudget } from '../../lib/betRewards';
 
 // ── Visual styling per slug / category ───────────────────────────────────────
 
@@ -216,7 +217,9 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
   const open     = bets.filter(b => b.status === 'open');
   const pending  = bets.filter(b => b.status === 'closed');
   const resolved = bets.filter(b => b.status === 'resolved');
-  const ptsBanked = resolved.reduce((sum, b) => sum + (b.mySubmission?.is_correct ? (b.reward_value || 0) : 0), 0);
+  const banked = sumBetRewards(resolved
+    .filter(b => b.mySubmission?.is_correct)
+    .map(b => ({ type: b.reward_type, amount: b.mySubmission.reward_awarded })));
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
@@ -235,11 +238,12 @@ export default function BetsTabHub({ leagueId, squadId, currentGW }) {
           {[
             { k: 'OPEN',    v: open.length,     tone: 'var(--accent)'     },
             { k: 'PENDING', v: pending.length,  tone: 'var(--gold)'     },
-            { k: 'BANKED',  v: `+${ptsBanked}`, tone: 'var(--positive)' },
+            { k: 'BANKED',  v: formatBetPoints(banked.points), tone: 'var(--positive)', extra: banked.budget ? `${formatBetBudget(banked.budget)} budget` : null },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 20px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
               <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>{c.k}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 30px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+              {c.extra && <div data-testid="bets-banked-budget" style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', marginTop: 2 }}>{c.extra}</div>}
             </div>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { sumBetRewards } from '../lib/betRewards';
 
 /**
  * Fetches betting performance leaderboard for a league.
@@ -61,7 +62,7 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
           user_id,
           squad_id,
           squads!squad_id(users!user_id(username)),
-          bet_instances!inner!bet_instance_id(league_id, bet_templates!template_id(slug)),
+          bet_instances!inner!bet_instance_id(league_id, reward_type, bet_templates!template_id(slug)),
           is_correct,
           reward_awarded
         `)
@@ -85,12 +86,12 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
             username: entry.squads?.users?.username || 'Unknown',
             total_bets: 0,
             correct_bets: 0,
-            total_rewards: 0,
+            rewards: [],
           };
         }
         userStats[userId].total_bets += 1;
         if (entry.is_correct) userStats[userId].correct_bets += 1;
-        userStats[userId].total_rewards += entry.reward_awarded ?? 0;
+        userStats[userId].rewards.push({ type: entry.bet_instances?.reward_type, amount: entry.reward_awarded });
 
         // Per-bucket breakdown for the current user
         if (currentUserId && entry.user_id === currentUserId) {
@@ -102,15 +103,19 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
         }
       });
 
-      // Calculate accuracy % and sort by rewards
+      // Calculate accuracy % and sort by points won, budget won breaking ties
       const leaderboardData = Object.values(userStats)
+        .map(({ rewards, ...stat }) => {
+          const { points, budget } = sumBetRewards(rewards);
+          return { ...stat, total_points: points, total_budget: budget };
+        })
         .map(stat => ({
           ...stat,
           accuracy_pct: stat.total_bets > 0
             ? Math.round((stat.correct_bets / stat.total_bets) * 100 * 10) / 10
             : 0,
         }))
-        .sort((a, b) => b.total_rewards - a.total_rewards);
+        .sort((a, b) => b.total_points - a.total_points || b.total_budget - a.total_budget);
 
       setLeaderboard(leaderboardData);
       // Keep bucket order fixed; always return all 3 even if 0 bets

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MgrTag, HubSectionLabel } from './HubShared';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 import { Glyph } from '../UiIcons';
+import { formatBetPoints, formatBetBudget } from '../../lib/betRewards';
 
 const CAT_META = {
   match:   { label: 'MATCH',   color: 'var(--paper)', icon: '⚽' },
@@ -48,6 +49,12 @@ function PerformanceBetRow({ bt }) {
       </div>
     </div>
   );
+}
+
+// Budget won, on its own line under a points figure. Nothing when none was won.
+function BudgetWon({ amount }) {
+  if (!amount) return null;
+  return <span style={{ display: 'block', fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--gold-text)', letterSpacing: 0, marginTop: 2 }}>{formatBetBudget(amount)}</span>;
 }
 
 function PerformanceByType({ myBetsByType }) {
@@ -125,7 +132,8 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--accent)', }}>Your betting · season</div>
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 28px)', marginTop: 6, color: 'var(--paper)' }}>
-            {myEntry ? `+${myEntry.total_rewards} PTS` : '—'}
+            {myEntry ? `${formatBetPoints(myEntry.total_points)} PTS` : '—'}
+            {myEntry?.total_budget ? <span style={{ color: 'var(--gold-text)' }}> · {formatBetBudget(myEntry.total_budget)}</span> : null}
           </div>
           <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 6, }}>
             {myEntry && leaderboard?.length ? `RANK ${myIdx + 1} / ${leaderboard.length} IN LEAGUE` : 'No bets yet'}
@@ -136,11 +144,11 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
             { k: 'PLAYED',  v: myEntry?.total_bets    || '—', tone: 'var(--paper)'    },
             { k: 'WON',     v: myEntry?.correct_bets  || '—', tone: 'var(--positive)' },
             { k: 'WIN %',   v: myEntry ? `${myEntry.accuracy_pct}%` : '—', tone: 'var(--accent)' },
-            { k: 'REWARDS', v: myEntry ? `+${myEntry.total_rewards}` : '—', tone: 'var(--gold)' },
+            { k: 'POINTS',  v: myEntry ? formatBetPoints(myEntry.total_points) : '—', tone: 'var(--gold)', budget: myEntry?.total_budget },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(8px, 2vw, 20px)', borderRight: i < 3 ? '1px solid var(--rule)' : 'none' }}>
               <div style={{ fontFamily: MONO, fontSize: 'clamp(8px, 1.5vw, 9px)', color: 'var(--mute)', }}>{c.k}</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(16px, 3.5vw, 28px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(16px, 3.5vw, 28px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}<BudgetWon amount={c.budget} /></div>
             </div>
           ))}
         </div>
@@ -159,11 +167,11 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
           {/* Leaderboard */}
           <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
             <HubSectionLabel label="Betting leaderboard" sub="Points from bets · season"
-              right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>SORT · REWARDS ↓</span>}
+              right={<span style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>SORT · POINTS ↓</span>}
             />
             {/* Column headers — desktop only */}
             <div className="hidden lg:grid" style={{ gridTemplateColumns: '40px 1fr 70px 70px 80px', gap: 14, padding: '10px 22px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
-              {['#', 'MANAGER', 'W-L', 'WIN %', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)' }}>{h}</span>)}
+              {['#', 'MANAGER', 'W-L', 'WIN %', 'WON'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)' }}>{h}</span>)}
             </div>
 
             <div style={{ flex: 1, overflow: 'auto' }}>
@@ -183,7 +191,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--mute)', minWidth: 20 }}>{i + 1}</span>
                         <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
                         <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', flex: 1 }}>{entry.username}</span>
-                        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>+{entry.total_rewards}</span>
+                        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>{formatBetPoints(entry.total_points)} pts</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, paddingLeft: 30 }}>
                         <div>
@@ -199,8 +207,8 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Rewards</div>
-                          <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--gold-text)' }}>+{entry.total_rewards}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 'var(--fs-micro)', color: 'var(--mute)', }}>Budget</div>
+                          <div style={{ fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--gold-text)' }}>{entry.total_budget ? formatBetBudget(entry.total_budget) : '—'}</div>
                         </div>
                       </div>
                     </div>
@@ -217,7 +225,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
                         <span style={{ color: 'var(--danger)' }}>{lost}</span>
                       </span>
                       <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body)' }}>{entry.accuracy_pct}%</span>
-                      <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>+{entry.total_rewards}</span>
+                      <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 'var(--fs-body)', color: 'var(--positive)' }}>{formatBetPoints(entry.total_points)} pts<BudgetWon amount={entry.total_budget} /></span>
                     </div>
                   </div>
                 );
@@ -232,7 +240,7 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
             <HubSectionLabel label="Rivals watch" sub="Biggest gap" tone="var(--purple)" />
             <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {(leaderboard || []).filter((_, i) => Math.abs(i - myIdx) <= 2 && i !== myIdx).slice(0, 3).map(rival => {
-                const diff = (rival.total_rewards || 0) - (myEntry?.total_rewards || 0);
+                const diff = (rival.total_points || 0) - (myEntry?.total_points || 0);
                 const hue  = mgrHue(rival.username || '');
                 return (
                   <div key={rival.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

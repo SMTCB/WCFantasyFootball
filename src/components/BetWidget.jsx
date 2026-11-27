@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useBetSubmit } from '../hooks/useBetSubmit';
 import { useToast } from '../hooks/useToast';
 import { Icon } from './UiIcons';
+import { formatBetReward } from '../lib/betRewards';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -156,7 +157,7 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
     if (submission.is_correct) {
       return (
         <div className="text-[11px] font-black px-2 py-0.5 rounded-sm" style={{ color: 'var(--positive)', background: 'rgba(24,201,107,0.1)' }}>
-          ✓ +{submission.reward_awarded} {bet.reward_type === 'budget' ? 'M' : 'pts'}
+          ✓ {formatBetReward(bet.reward_type, submission.reward_awarded)}
         </div>
       );
     }
