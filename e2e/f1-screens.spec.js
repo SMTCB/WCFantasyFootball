@@ -140,15 +140,19 @@ test.describe('F1 race pick submission', () => {
     await tile.click();
     const panel = page.locator('#f1-race-panel');
     await expect(panel.getByRole('radiogroup'), 'picks stepper did not open').toBeVisible({ timeout: 10000 });
+    // Let the saved-picks fetch for this round land before reading option state.
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
 
     // Open each step by its tab and pick only if not already chosen: the other
     // browser project runs first against the same user, so the form may load
-    // with these picks saved, and tapping a chosen option clears it.
+    // with these picks saved, and tapping a chosen option clears it. A new pick
+    // moves the stepper on at once, so the saved values are checked in the DB
+    // below rather than on the (by then replaced) option.
     const pick = async (tab, option) => {
       await panel.getByRole('tab', { name: tab }).click();
       const radio = panel.getByRole('radio', { name: option });
+      await expect(radio).toBeVisible();
       if ((await radio.getAttribute('aria-checked')) !== 'true') await radio.click();
-      await expect(radio).toHaveAttribute('aria-checked', 'true');
     };
     await pick(/^Race winner/, /Max Verstappen/);
     await pick(/^Second place/, /Lando Norris/);
