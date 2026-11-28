@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
 
-// A small picture of the ground each sport is played on, with one thing moving
-// on it (design board): the ball passing on the pitch, two cars lapping the
-// track, the ball crossing the net. It stops while off screen, and stays still
-// for people who ask their phone for less motion.
-const TRACK = 'M8 28 C8 12 20 8 28 14 S44 10 44 20 S30 32 8 28Z';
+// A small picture of the ground each sport is played on (design board). The
+// pitch and the court have a ball moving on them; it stops while off screen,
+// and stays still for people who ask their phone for less motion. F1 is a
+// still circuit line on a white tile: the lapping cars read as clutter
+// (F1 redesign, direction B).
+const CIRCUIT = 'M10 25 L10 15 Q10 10 15 10 L29 10 Q33 10 34.5 13.5 L36.5 18 Q38 21 41 21 Q45 21 45 25 Q45 29 41 29 L14 29 Q10 29 10 25 Z';
 const BALL_PASS = 'M14 19 L26 12 L20 27 L34 25 L26 12 L40 19 L14 19';
 const BALL_RALLY = 'M14 25 Q26 1 39 13 Q26 5 14 25';
 
@@ -37,17 +38,11 @@ export function SportSwatch({ sport }) {
     <span aria-hidden style={{ width: 52, height: 38, borderRadius: 8, overflow: 'hidden', flex: 'none', display: 'block' }}>
       <svg ref={ref} viewBox="0 0 52 38" width="52" height="38" style={{ display: 'block' }}>
         {sport === 'f1' ? (
-          <>
-            <rect width="52" height="38" fill="var(--paper)" />
-            <path d={TRACK} fill="none" stroke="var(--f1)" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M8 24 v8" stroke="var(--card)" strokeWidth="2" />
-            <rect x="-2.2" y="-1.1" width="4.4" height="2.2" rx=".9" fill="var(--card)">
-              <animateMotion dur="6s" begin="-0.7s" repeatCount="indefinite" rotate="auto" path={TRACK} />
-            </rect>
-            <rect x="-2.2" y="-1.1" width="4.4" height="2.2" rx=".9" fill="var(--gold)" stroke="var(--paper)" strokeWidth=".4">
-              <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" path={TRACK} />
-            </rect>
-          </>
+          <svg viewBox="0 0 55 40" width="52" height="38" x="0" y="0">
+            <rect x=".5" y=".5" width="54" height="39" rx="8" fill="var(--card)" stroke="var(--rule)" />
+            <path d={CIRCUIT} fill="none" stroke="var(--f1)" strokeWidth="2.2" strokeLinejoin="round" />
+            <path d="M22 26.4v5.2" stroke="var(--paper)" strokeWidth="1.6" />
+          </svg>
         ) : sport === 'tennis' ? (
           <>
             <rect width="52" height="38" fill="var(--ten)" />
@@ -83,7 +78,6 @@ export function SportSwatch({ sport }) {
 
 // The same grounds, wide, across the top of a league card inside a clubhouse
 // (design board). The sport's name sits in the corner as a small label.
-const WIDE_TRACK = 'M60 96 C28 96 30 40 70 36 C120 30 140 70 190 64 C240 58 252 22 300 28 C342 33 338 86 300 92 C250 102 150 100 60 96 Z';
 const WIDE_PASS = 'M146 65 L222 48 L146 90 L222 84 L222 48 L338 62 L146 65';
 const WIDE_RALLY = 'M76 78 Q180 -14 286 48 Q180 -4 76 78';
 const BRIGHT_GOLD = 'var(--on-pitch-gold)';
@@ -95,18 +89,12 @@ function WideGround({ sport }) {
   if (sport === 'f1') {
     return (
       <>
-        <rect width="360" height="130" style={shade('--f1', 92)} />
-        <path d={WIDE_TRACK} fill="none" style={{ stroke: 'color-mix(in srgb, var(--f1) 58%, #000)' }} strokeWidth="17" strokeLinejoin="round" />
-        <path d={WIDE_TRACK} fill="none" stroke="var(--card)" strokeOpacity=".55" strokeWidth="1.2" strokeDasharray="5 7" />
-        <g transform="translate(150 92)" fill="var(--card)">
-          <rect width="4" height="4" /><rect x="4" y="4" width="4" height="4" /><rect y="8" width="4" height="4" /><rect x="4" y="12" width="4" height="4" />
+        <rect width="360" height="130" fill="var(--navy)" />
+        <path d={CIRCUIT} transform="translate(-10 -30) scale(7 5)" fill="none" stroke="var(--on-pitch)" strokeOpacity=".08" strokeWidth="16" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <path d={CIRCUIT} transform="translate(-10 -30) scale(7 5)" fill="none" stroke="var(--f1)" strokeWidth="3" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <g transform="translate(130 108)" fill="var(--on-pitch)">
+          <rect width="5" height="5" /><rect x="5" y="5" width="5" height="5" /><rect x="10" width="5" height="5" />
         </g>
-        <rect x="-7" y="-3.5" width="14" height="7" rx="2.5" fill="var(--card)">
-          <animateMotion dur="6s" begin="-0.7s" repeatCount="indefinite" rotate="auto" path={WIDE_TRACK} />
-        </rect>
-        <rect x="-7" y="-3.5" width="14" height="7" rx="2.5" fill={BRIGHT_GOLD} stroke="var(--paper)" strokeWidth="1">
-          <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" path={WIDE_TRACK} />
-        </rect>
       </>
     );
   }

@@ -6913,4 +6913,6 @@ Re-confirmed after a 3-week pause; identical to the 2026-08-01 DD except where n
 
 - **Unavailable players show why (2026-11-23, owner request, PR #1201):** the reason ("Hamstring", "Muscle injury") and expected return date ("back 20 Dec") were already in `player_status` (reason on every non-fit row, return date on about 100 of 109 players ruled out) but only appeared as a hover tooltip. They now show under the player in the desktop Needs attention card and the phone Status list through `statusDetail()` in `src/lib/intelligence.js`. Not yet shown in the market list (still only the warning icon with the tooltip). Also PR #1200: Squad and Budget vertically centred in the desktop My team bar.
 
-Last Updated: 2026-11-23
+- **F1 redesign (2026-11-28, owner request, direction "B with A's lights"):** every F1 screen (league list, league home, race picks, standings, race report, season bets) redone in the Race Weekend look for phone and desktop. The moving car on the sport background is now a still circuit outline. The picks deadline shows five start lights that come on as the lock nears. Race picks are a six-step chooser (winner, P2, P3, DNF, top team, special) that moves on after each choice. The report has a strip of finished rounds, your picks with the points each earned, everyone's picks and the round table. Season bets show "No bet" when nothing was chosen. New shared parts in `src/components/f1/F1Kit.jsx`, time helpers in `src/lib/f1/f1-data.js`. No database change.
+
+Last Updated: 2026-11-28

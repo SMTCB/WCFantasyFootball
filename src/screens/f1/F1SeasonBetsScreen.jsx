@@ -3,55 +3,49 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { usePaddock } from '../../hooks/f1/usePaddock';
 import { DRIVERS, TEAMS } from '../../lib/f1/f1-data';
-import { Icon } from '../../components/UiIcons';
+import { F1Header } from '../../components/f1/F1Kit';
+
+const POINTS_EACH = 10;
 
 const SEASON_FIELDS = [
-  { key: 'driver_champion',       label: 'Drivers\' Champion',              type: 'driver' },
-  { key: 'driver_p2',             label: 'Drivers\' Championship P2',       type: 'driver' },
-  { key: 'driver_p3',             label: 'Drivers\' Championship P3',       type: 'driver' },
-  { key: 'constructor_champion',  label: 'Constructors\' Champion',         type: 'team' },
-  { key: 'last_constructor',      label: 'Last Place Constructor',          type: 'team' },
-  { key: 'fewest_finishers_race', label: 'Race with Fewest Finishers',      type: 'race' },
-  { key: 'most_dnfs_driver',      label: 'Driver with Most DNFs',           type: 'driver' },
-  { key: 'first_driver_replaced', label: 'First Driver to be Replaced',    type: 'driver' },
-  { key: 'most_poles',            label: 'Driver with Most Pole Positions', type: 'driver' },
-  { key: 'most_podiums_no_win',   label: 'Most Podiums Without a Win',     type: 'driver' },
+  { key: 'driver_champion',       label: 'Drivers\' champion',          type: 'driver' },
+  { key: 'driver_p2',             label: 'Drivers\' championship P2',   type: 'driver' },
+  { key: 'driver_p3',             label: 'Drivers\' championship P3',   type: 'driver' },
+  { key: 'constructor_champion',  label: 'Constructors\' champion',     type: 'team' },
+  { key: 'last_constructor',      label: 'Last-placed team',            type: 'team' },
+  { key: 'fewest_finishers_race', label: 'Race with fewest finishers',  type: 'race' },
+  { key: 'most_dnfs_driver',      label: 'Driver with most DNFs',       type: 'driver' },
+  { key: 'first_driver_replaced', label: 'First driver replaced',       type: 'driver' },
+  { key: 'most_poles',            label: 'Most pole positions',         type: 'driver' },
+  { key: 'most_podiums_no_win',   label: 'Most podiums without a win',  type: 'driver' },
 ];
 
-function FieldInput({ field, value, onChange, disabled, races }) {
-  const style = { color: value ? 'var(--paper)' : 'var(--mute)' };
-
-  if (field.type === 'driver') {
-    return (
-      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} className="ffl-input" style={style}>
-        <option value="">Select driver…</option>
-        {DRIVERS.map(d => <option key={d} value={d}>{d}</option>)}
-      </select>
-    );
-  }
-  if (field.type === 'team') {
-    return (
-      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} className="ffl-input" style={style}>
-        <option value="">Select team…</option>
-        {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
-      </select>
-    );
-  }
-  if (field.type === 'race') {
-    return (
-      <select value={value ?? ''} onChange={e => onChange(e.target.value || null)} disabled={disabled} className="ffl-input" style={style}>
-        <option value="">Select race…</option>
-        {races.map(r => <option key={r.round_number} value={r.gp_name}>R{r.round_number} — {r.gp_name}</option>)}
-      </select>
-    );
-  }
-  return null;
+function FieldInput({ field, value, onChange, races }) {
+  const opts = field.type === 'driver' ? DRIVERS.map(d => [d, d])
+    : field.type === 'team' ? TEAMS.map(t => [t, t])
+      : races.map(r => [r.gp_name, `R${r.round_number} · ${r.gp_name}`]);
+  const placeholder = field.type === 'driver' ? 'Choose a driver' : field.type === 'team' ? 'Choose a team' : 'Choose a race';
+  return (
+    <select
+      className="f1-select"
+      aria-label={field.label}
+      value={value ?? ''}
+      onChange={e => onChange(e.target.value || null)}
+      style={{ color: value ? 'var(--paper)' : 'var(--mute)' }}
+    >
+      <option value="">{placeholder}</option>
+      {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+    </select>
+  );
 }
 
 export default function F1SeasonBetsScreen() {
-  useParams();
+  const { paddockId } = useParams();
   const { user } = useAuth();
+  const { myPaddocks } = usePaddock();
+  const paddock = myPaddocks.find(p => p.paddock_id === paddockId);
 
   const [races, setRaces] = useState([]);
   const [yearResults, setYearResults] = useState(null);
@@ -100,78 +94,91 @@ export default function F1SeasonBetsScreen() {
   }
 
   function setField(key, val) {
+    setSaved(false);
     setBet(b => ({ ...b, [key]: val }));
   }
 
-  const answered = SEASON_FIELDS.filter(f => bet[f.key]).length;
+  if (loading) {
+    return <div className="f1-screen"><div className="sport-col f1-body"><LoadingRows rows={5} /></div></div>;
+  }
 
-  if (loading) return <div style={{ padding: 40 }}><LoadingRows rows={5} /></div>;
+  const answered = SEASON_FIELDS.filter(f => bet[f.key]).length;
+  const settled = SEASON_FIELDS.filter(f => yearResults?.[f.key]);
+  const right = settled.filter(f => bet[f.key] === yearResults[f.key]).length;
+  const raceName = name => {
+    const r = races.find(x => x.gp_name === name);
+    return r ? `R${r.round_number} · ${name}` : name;
+  };
+
+  const eyebrow = [
+    paddock?.name ?? 'F1 league',
+    isLocked ? 'bets locked' : 'bets open',
+  ].join(' · ');
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
-        <div className="sport-col">
-        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
-          Season predictions · 2026
-        </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>Season bets</h1>
-        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 4 }}>
-          10 pts per correct prediction · {answered}/{SEASON_FIELDS.length} answered
-        </div>
-        </div>
-      </div>
+    <div className="f1-screen">
+      <form onSubmit={handleSubmit} className="sport-col f1-body">
+        <F1Header eyebrow={eyebrow} title="Season bets" />
 
-      {isLocked && (
-        <div className="sport-col" style={{ padding: '12px 16px 0' }}>
-        <div style={{ padding: '10px 14px', background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>
-          <Icon name="lock" /> Season bets are locked
-        </div>
-        </div>
-      )}
+        <section className="f1-live" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }} aria-label="Season bets summary">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <span className="f1-h" style={{ fontSize: 'var(--fs-heading)', color: 'var(--on-accent)' }}>
+              {settled.length > 0
+                ? `${right} of ${settled.length} settled bets right`
+                : `${answered} of ${SEASON_FIELDS.length} bets made`}
+            </span>
+            {settled.length > 0 && <span className="f1-pill gold">{right * POINTS_EACH} PTS</span>}
+          </div>
+          <div className="f1-progress" aria-hidden="true">
+            {SEASON_FIELDS.map(f => {
+              const res = yearResults?.[f.key];
+              const cls = res ? (bet[f.key] === res ? 'on' : 'off') : '';
+              return <span key={f.key} className={cls} style={!res && bet[f.key] ? { background: 'var(--f1-navy-mute)' } : undefined} />;
+            })}
+          </div>
+          <span className="f1-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--f1-navy-mute)' }}>
+            {POINTS_EACH} pts for each right answer · settles after the final race
+          </span>
+        </section>
 
-      <form onSubmit={handleSubmit} className="sport-col" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {isLocked && <div className="f1-note mute">Season bets are locked. Your answers are below.</div>}
+
         <div className="sport-cards" style={{ gap: 10 }}>
-        {SEASON_FIELDS.map(field => {
-          const isCorrect = yearResults?.[field.key] && bet[field.key] === yearResults[field.key];
-          return (
-            <div key={field.key} style={{ position: 'relative', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '12px 14px' }}>
-              {yearResults?.[field.key] && (
-                <span style={{
-                  position: 'absolute', top: 10, right: 12,
-                  fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700,
-                  padding: '2px 7px', borderRadius: 3,
-                  background: isCorrect ? 'rgba(21,128,61,0.12)' : 'rgba(185,28,28,0.1)',
-                  color: isCorrect ? 'var(--positive)' : 'var(--danger)',
-                }}>
-                  {isCorrect ? '✓ +10' : `✗ ${yearResults[field.key]}`}
-                </span>
-              )}
-              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8, paddingRight: yearResults?.[field.key] ? 90 : 0 }}>
-                {field.label}
+          {SEASON_FIELDS.map(field => {
+            const result = yearResults?.[field.key];
+            const mine = bet[field.key];
+            const isRight = result && mine === result;
+            return (
+              <div key={field.key} className="f1-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <span className="f1-eb">{field.label}</span>
+                  {result && mine
+                    ? <span className={`f1-pill ${isRight ? 'done' : 'off'}`}>{isRight ? `+${POINTS_EACH} right` : 'Wrong'}</span>
+                    : result ? <span className="f1-pill mute">No bet</span>
+                    : isLocked && <span className="f1-pill mute">Pending</span>}
+                </div>
+                {isLocked ? (
+                  <span style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: mine ? 'var(--paper)' : 'var(--mute)' }}>
+                    {mine ? (field.type === 'race' ? raceName(mine) : mine) : 'No answer'}
+                  </span>
+                ) : (
+                  <FieldInput field={field} value={mine} onChange={val => setField(field.key, val)} races={races} />
+                )}
+                {result && !isRight && (
+                  <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--text-2)' }}>
+                    Answer: {field.type === 'race' ? raceName(result) : result}
+                  </span>
+                )}
               </div>
-              <FieldInput
-                field={field}
-                value={bet[field.key]}
-                onChange={val => setField(field.key, val)}
-                disabled={isLocked}
-                races={races}
-              />
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
 
-        {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)', padding: '8px 12px', background: 'rgba(185,28,28,0.06)', borderRadius: 'var(--radius)' }}>{err}</div>}
+        {err && <div className="f1-note red">{err}</div>}
 
         {!isLocked && (
-          <button
-            type="submit"
-            className="sport-submit"
-            disabled={saving}
-            style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
-          >
-            {saved ? '✓ Season bets saved' : saving ? 'Saving…' : 'Save season bets'}
+          <button type="submit" className={`f1-btn${saved ? ' done' : ''}`} disabled={saving} style={{ maxWidth: 420, alignSelf: 'center' }}>
+            {saved ? 'Season bets saved' : saving ? 'Saving…' : 'Save season bets'}
           </button>
         )}
       </form>

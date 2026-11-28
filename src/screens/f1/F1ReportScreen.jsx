@@ -1,20 +1,26 @@
 import { LoadingRows } from '../../components/Skeleton';
-import { IconLock, Icon } from '../../components/UiIcons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
-import { getFlag } from '../../lib/f1/f1-data';
-import { FIELD_LABELS } from '../../lib/f1/scoring';
+import { usePaddock } from '../../hooks/f1/usePaddock';
+import { gpCode, driverCode, formatDay } from '../../lib/f1/f1-data';
+import { F1Header, MemberRow } from '../../components/f1/F1Kit';
 
-const YEAR_FIELD_KEYS = [
-  'driver_champion', 'driver_p2', 'driver_p3',
-  'constructor_champion', 'last_constructor',
-  'fewest_finishers_race', 'most_dnfs_driver', 'first_driver_replaced',
-  'most_poles', 'most_podiums_no_win',
+const YEAR_FIELDS = [
+  ['driver_champion', 'Drivers’ champion'],
+  ['driver_p2', 'Drivers’ championship P2'],
+  ['driver_p3', 'Drivers’ championship P3'],
+  ['constructor_champion', 'Constructors’ champion'],
+  ['last_constructor', 'Last-placed team'],
+  ['fewest_finishers_race', 'Race with fewest finishers'],
+  ['most_dnfs_driver', 'Driver with most DNFs'],
+  ['first_driver_replaced', 'First driver replaced'],
+  ['most_poles', 'Most pole positions'],
+  ['most_podiums_no_win', 'Most podiums without a win'],
 ];
-
-const MONO = { fontFamily: 'Archivo, sans-serif' };
+const YEAR_FIELD_KEYS = YEAR_FIELDS.map(([key]) => key);
+const YEAR_LABELS = Object.fromEntries(YEAR_FIELDS);
 
 // Older scored rounds were written with a legacy key schema (podium_p1_pts, wrong_spot_pts as a
 // single lump sum, etc.) before the current per-position p1/p2/p3 schema. Map old → new shape so
@@ -34,9 +40,80 @@ function normalizeBreakdown(raw) {
   };
 }
 
+// One line of context under each pick: where that driver or team actually ended up.
+function pickNote(key, pick, race) {
+  if (!pick) return null;
+  const podium = [race.result_p1, race.result_p2, race.result_p3];
+  if (key === 'p1' || key === 'p2' || key === 'p3') {
+    const at = podium.indexOf(pick);
+    if (at === 0) return 'Won it';
+    if (at > 0) return `Finished P${at + 1}`;
+    return 'Off the podium';
+  }
+  if (key === 'dnf') {
+    if (!race.result_dnf_drivers?.length) return 'Nobody retired';
+    return race.result_dnf_drivers.includes(pick) ? 'Did not finish' : 'Finished the race';
+  }
+  if (key === 'team') return race.result_team_most_points ? `Top team: ${race.result_team_most_points}` : null;
+  if (key === 'special') return race.special_category_answer ? `Answer: ${race.special_category_answer}` : null;
+  return null;
+}
+
+function pickRows(bet, breakdown) {
+  return [
+    { key: 'p1', label: 'P1', pick: bet?.p1, pts: breakdown.p1 },
+    { key: 'p2', label: 'P2', pick: bet?.p2, pts: breakdown.p2 },
+    { key: 'p3', label: 'P3', pick: bet?.p3, pts: breakdown.p3 },
+    { key: 'dnf', label: 'DNF', pick: bet?.dnf_driver, pts: breakdown.dnf },
+    { key: 'team', label: 'Team', pick: bet?.team_most_points, pts: breakdown.team },
+    { key: 'special', label: 'Special', pick: bet?.special_category_answer, pts: breakdown.special },
+  ];
+}
+
+function PicksList({ bet, score, race, withNotes }) {
+  const breakdown = normalizeBreakdown(score?.breakdown);
+  const scored = !!score;
+  return (
+    <>
+      {pickRows(bet, breakdown).map((row, i) => (
+        <div key={row.key} className={`f1-kv${i === 0 ? ' first' : ''}`}>
+          <span className="f1-eb">{row.label}</span>
+          <span className="n" style={{ color: row.pick ? 'var(--paper)' : 'var(--mute)', fontWeight: row.pick ? 700 : 400 }}>
+            {row.pick ?? 'No pick'}
+            {withNotes && row.pick && pickNote(row.key, row.pick, race) && (
+              <span style={{ display: 'block', fontWeight: 400, fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>
+                {pickNote(row.key, row.pick, race)}
+              </span>
+            )}
+          </span>
+          <span className={`v ${scored && row.pick ? (row.pts > 0 ? 'f1-ok' : 'f1-nok') : ''}`}>
+            {scored && row.pick ? (row.pts > 0 ? `+${row.pts}` : '0') : '—'}
+          </span>
+        </div>
+      ))}
+      {breakdown.wrongSpot > 0 && (
+        <div className="f1-kv">
+          <span className="f1-eb">Podium</span>
+          <span className="n" style={{ fontWeight: 400, fontSize: 'var(--fs-label)' }}>Right driver, wrong spot</span>
+          <span className="v f1-ok">+{breakdown.wrongSpot}</span>
+        </div>
+      )}
+      {breakdown.bonus > 0 && (
+        <div className="f1-kv" style={{ background: 'var(--f1-gold-wash)' }}>
+          <span className="f1-eb" style={{ color: 'var(--gold-text)' }}>Bonus</span>
+          <span className="n" style={{ fontWeight: 400, fontSize: 'var(--fs-label)' }}>All six right</span>
+          <span className="v" style={{ color: 'var(--gold-text)' }}>+{breakdown.bonus}</span>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function F1ReportScreen() {
   const { paddockId } = useParams();
   const { user } = useAuth();
+  const { myPaddocks } = usePaddock();
+  const paddock = myPaddocks.find(p => p.paddock_id === paddockId);
 
   const [tab, setTab] = useState('race'); // 'race' | 'year'
   const [members, setMembers] = useState([]);
@@ -45,8 +122,10 @@ export default function F1ReportScreen() {
   const [scores, setScores] = useState([]);
   const [yearResults, setYearResults] = useState(null);
   const [yearBets, setYearBets] = useState([]);
-  const [expanded, setExpanded] = useState(null);
+  const [round, setRound] = useState(null);
+  const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
+  const stripRef = useRef(null);
 
   useEffect(() => {
     if (!paddockId) return;
@@ -73,10 +152,22 @@ export default function F1ReportScreen() {
     });
   }, [paddockId]);
 
+  const race = races.find(r => r.round_number === round) ?? races[races.length - 1];
+
+  // Keep the chosen round in view on the strip.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const tile = race && document.getElementById(`f1-report-r${race.round_number}`);
+    if (!strip || !tile) return;
+    const offset = tile.getBoundingClientRect().left - strip.getBoundingClientRect().left + strip.scrollLeft;
+    strip.scrollTo({ left: offset - strip.clientWidth / 2 + tile.clientWidth / 2, behavior: 'smooth' });
+  }, [race?.round_number, loading, tab]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const betMap = Object.fromEntries(bets.map(b => [`${b.user_id}_${b.round_number}`, b]));
   const scoreMap = Object.fromEntries(scores.map(s => [`${s.user_id}_${s.round_number}`, s]));
   const yearBetMap = Object.fromEntries(yearBets.map(b => [b.user_id, b]));
 
+  // You first, then everyone else by name.
   const sortedMembers = [...members].sort((a, b) => {
     if (a.user_id === user?.id) return -1;
     if (b.user_id === user?.id) return 1;
@@ -86,216 +177,198 @@ export default function F1ReportScreen() {
   const isBetsLocked = yearResults?.is_bets_locked ?? false;
 
   if (loading) {
-    return <div style={{ padding: 40 }}><LoadingRows rows={5} /></div>;
+    return <div className="f1-screen"><div className="sport-col f1-body"><LoadingRows rows={5} /></div></div>;
   }
 
+  const settledCount = races.filter(r => r.is_scored).length;
+  const eyebrow = `${paddock?.name ?? 'F1 league'} · ${settledCount} race${settledCount === 1 ? '' : 's'} settled`;
+
+  const myScore = race ? scoreMap[`${user?.id}_${race.round_number}`] : null;
+  const myBet = race ? betMap[`${user?.id}_${race.round_number}`] : null;
+
+  // Everyone's points at the chosen race, best first, ties sharing a place.
+  const raceTable = race ? members
+    .map(m => ({ ...m, pts: scoreMap[`${m.user_id}_${race.round_number}`]?.total_points ?? null }))
+    .sort((a, b) => (b.pts ?? -1) - (a.pts ?? -1)) : [];
+  let place = 0;
+  raceTable.forEach((m, i) => {
+    if (i === 0 || m.pts !== raceTable[i - 1].pts) place = i + 1;
+    m.pos = m.pts == null ? null : place;
+  });
+
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '16px 16px 12px' }}>
-        <div className="sport-col">
-        <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
-          Paddock report · 2026
-        </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--text)', margin: 0 }}>REPORT</h1>
-        </div>
-      </div>
+    <div className="f1-screen">
+      <div className="sport-col f1-body">
+        <F1Header eyebrow={eyebrow} title="Report" />
 
-      <div className="sport-col sport-pad">
-      {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
-        {[['race', 'Race bets'], ['year', 'Year bets']].map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            style={{ flex: 1, padding: '11px 0', ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', border: 'none', borderBottom: tab === key ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: tab === key ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+        <div className="f1-seg" role="tablist" aria-label="Report type" style={{ maxWidth: 420 }}>
+          {[['race', 'Race bets'], ['year', 'Season bets']].map(([key, label]) => (
+            <button key={key} type="button" role="tab" aria-selected={tab === key}
+              className={tab === key ? 'on' : ''} onClick={() => setTab(key)}>
+              {label}
+            </button>
+          ))}
+        </div>
 
-      {tab === 'race' && (
-        races.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🏁</div>
-            <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)' }}>No races have been scored yet.</p>
+        {tab === 'race' && (races.length === 0 ? (
+          <div className="f1-card" style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-2)', fontSize: 'var(--fs-body)' }}>
+            No races have finished yet. The report fills in after each race is scored.
           </div>
         ) : (
-          <div className="sport-cards" style={{ padding: '12px 16px' }}>
-            {races.map(race => {
-              const myBet = betMap[`${user?.id}_${race.round_number}`];
-              const myScore = scoreMap[`${user?.id}_${race.round_number}`];
-              const isOpen = expanded === race.round_number;
+          <>
+            <div className="f1-card" style={{ padding: '12px 12px 8px' }}>
+              <div className="f1-rs" ref={stripRef} role="tablist" aria-label="Finished rounds">
+                {races.map(r => {
+                  const pts = scoreMap[`${user?.id}_${r.round_number}`]?.total_points;
+                  const sel = r.id === race?.id;
+                  return (
+                    <button
+                      key={r.id}
+                      id={`f1-report-r${r.round_number}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={sel}
+                      aria-label={`Round ${r.round_number}, ${r.gp_name}`}
+                      className={`f1-r${sel ? ' cur' : ''}`}
+                      onClick={() => { setRound(r.round_number); setShowAll(false); }}
+                    >
+                      <span className="rn">R{r.round_number}</span>
+                      <span className="cd">{gpCode(r.gp_name)}</span>
+                      <span className="rv">{pts != null ? `${pts} PTS` : r.is_scored ? '—' : 'TBC'}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-              return (
-                <div key={race.id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, overflow: 'hidden' }}>
-                  {/* Race row */}
-                  <button
-                    onClick={() => setExpanded(isOpen ? null : race.round_number)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-                  >
-                    <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 24 }}>R{race.round_number}</span>
-                    <span style={{ fontSize: 'var(--fs-body-lg)' }}>{getFlag(race.gp_name)}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {race.gp_name}
+            {race && (
+              <div className="sport-split">
+                <div className="sport-main" style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+                  <section className="f1-live" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }} aria-label={`${race.gp_name} result`}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="f1-eb">R{race.round_number} · {formatDay(race.race_date)}{race.is_saturday ? ' · Saturday race' : ''}</div>
+                        <h2 className="f1-h" style={{ fontSize: 'var(--fs-title)', color: 'var(--on-accent)', marginTop: 4 }}>{race.gp_name}</h2>
                       </div>
-                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 1 }}>
-                        {new Date(race.race_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                        {!myBet && <span style={{ color: 'var(--danger)', marginLeft: 8 }}>No picks</span>}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      {myScore ? (
-                        <>
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-heading)', color: 'var(--f1)' }}>{myScore.total_points}</div>
-                          <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>PTS</div>
-                        </>
-                      ) : (
-                        <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>—</div>
+                      {myScore && (
+                        <div style={{ textAlign: 'right', flex: 'none' }}>
+                          <div className="f1-eb">You scored</div>
+                          <div className="f1-mono" style={{ fontSize: 'var(--fs-title)', fontWeight: 600, color: 'var(--f1-gold-hi)', lineHeight: 1.1 }}>{myScore.total_points}</div>
+                        </div>
                       )}
                     </div>
-                    <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginLeft: 4 }}>{isOpen ? '▴' : '▾'}</span>
-                  </button>
-
-                  {/* Expanded breakdown — race result + every member's picks */}
-                  {isOpen && (
-                    <div style={{ borderTop: '1px solid var(--rule)', padding: '12px 14px' }}>
-                      {/* Results — podium bar-chart viz: P1 tallest/red, P2 mid/slate, P3 shortest/bronze */}
-                      <div style={{ marginBottom: 14 }}>
-                        <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>Race result</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, alignItems: 'end' }}>
-                          {[
-                            ['P1', race.result_p1, 'var(--f1)', 44, 'medal-gold'],
-                            ['P2', race.result_p2, '#4A4A52', 32, 'medal-silver'],
-                            ['P3', race.result_p3, '#B08D57', 22, 'medal-bronze'],
-                          ].map(([label, val, barColor, barHeight, medal]) => (
-                            <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
-                              <div style={{ height: barHeight, background: barColor, borderRadius: '4px 4px 0 0' }} />
-                              <div style={{ padding: '8px 10px', background: 'var(--elev)', borderRadius: '0 0 6px 6px' }}>
-                                <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 3 }}><Icon name={medal} /> {label}</div>
-                                <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 600, color: 'var(--paper)' }}>{val ?? '—'}</div>
-                              </div>
-                            </div>
-                          ))}
+                    <div className="f1-podium">
+                      {[['P1', race.result_p1], ['P2', race.result_p2], ['P3', race.result_p3]].map(([k, d]) => (
+                        <div key={k}>
+                          <div className="k">{k}</div>
+                          <div className="d" title={d ?? ''}>{d ? driverCode(d) : '—'}</div>
                         </div>
-                      </div>
-
-                      {/* Every paddock member's picks */}
-                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>League picks</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {sortedMembers.map(member => {
-                          const bet = betMap[`${member.user_id}_${race.round_number}`];
-                          const score = scoreMap[`${member.user_id}_${race.round_number}`];
-                          const breakdown = normalizeBreakdown(score?.breakdown);
-                          const isMe = member.user_id === user?.id;
-
-                          return (
-                            <div key={member.user_id}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                                <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: isMe ? 700 : 600, color: isMe ? 'var(--f1)' : 'var(--paper)' }}>
-                                  {member.display_name}{isMe ? ' (You)' : ''}
-                                </span>
-                                {score && (
-                                  <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{score.total_points} pts</span>
-                                )}
-                              </div>
-
-                              {bet ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                  {[
-                                    { key: 'p1', icon: 'medal-gold', label: 'P1', pick: bet.p1, pts: breakdown.p1 },
-                                    { key: 'p2', icon: 'medal-silver', label: 'P2', pick: bet.p2, pts: breakdown.p2 },
-                                    { key: 'p3', icon: 'medal-bronze', label: 'P3', pick: bet.p3, pts: breakdown.p3 },
-                                    { key: 'dnf', icon: 'burst', label: 'DNF', pick: bet.dnf_driver, pts: breakdown.dnf },
-                                    { key: 'team', icon: 'car', label: 'Team', pick: bet.team_most_points, pts: breakdown.team },
-                                    { key: 'special', icon: 'star', label: 'Special', pick: bet.special_category_answer, pts: breakdown.special },
-                                  ].filter(row => row.pick).map(row => (
-                                    <div key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: row.pts > 0 ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 'var(--radius)', border: `1px solid ${row.pts > 0 ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 52 }}><Icon name={row.icon} /> {row.label}</span>
-                                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', flex: 1 }}>{row.pick}</span>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: row.pts > 0 ? 'var(--positive)' : 'var(--danger)' }}>
-                                        {row.pts > 0 ? `+${row.pts}` : '+0'}
-                                      </span>
-                                    </div>
-                                  ))}
-                                  {breakdown.wrongSpot > 0 && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)' }}>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)', flex: 1 }}><Icon name="target" /> Podium (right driver, wrong spot)</span>
-                                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--gold-text)' }}>+{breakdown.wrongSpot}</span>
-                                    </div>
-                                  )}
-                                  {breakdown.bonus > 0 && (
-                                    <div style={{ padding: '6px 10px', background: 'rgba(184,114,14,0.08)', borderRadius: 'var(--radius)', border: '1px solid rgba(184,114,14,0.2)', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--gold-text)' }}>
-                                      <Icon name="star" /> All Correct Bonus +{breakdown.bonus}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', padding: '4px 0' }}>No picks submitted.</div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                      ))}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )
-      )}
+                    {!race.is_scored && (
+                      <span className="f1-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--f1-navy-mute)' }}>Points are added once the league admin scores this race.</span>
+                    )}
+                  </section>
 
-      {tab === 'year' && (
-        !isBetsLocked ? (
-          <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-            <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}><IconLock size={28} /></div>
-            <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)' }}>
-              Year bets are not yet locked — picks will be revealed once the paddock admin locks them.
-            </p>
-          </div>
-        ) : (
-          <div className="sport-cards" style={{ padding: '12px 16px' }}>
-            {sortedMembers.map(member => {
-              const bet = yearBetMap[member.user_id];
-              const isMe = member.user_id === user?.id;
-
-              return (
-                <div key={member.user_id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '12px 14px' }}>
-                  <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', fontWeight: isMe ? 700 : 600, color: isMe ? 'var(--f1)' : 'var(--paper)', marginBottom: 8 }}>
-                    {member.display_name}{isMe ? ' (You)' : ''}
+                  <div className="f1-card" style={{ overflow: 'hidden' }}>
+                    <div className="f1-card-head" style={{ borderBottom: '1px solid var(--elev)' }}>
+                      <span className="f1-eb">Your picks</span>
+                      <span className="f1-eb">PTS</span>
+                    </div>
+                    {myBet ? (
+                      <PicksList bet={myBet} score={myScore} race={race} withNotes />
+                    ) : (
+                      <div style={{ padding: '16px', fontSize: 'var(--fs-body)', color: 'var(--text-2)' }}>You made no picks for this race.</div>
+                    )}
                   </div>
 
-                  {bet ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {YEAR_FIELD_KEYS.filter(key => bet[key]).map(key => {
-                        const pick = bet[key];
-                        const result = yearResults?.[key];
-                        const isCorrect = result && pick === result;
-                        const isGraded = !!result;
+                  <button type="button" className="f1-btn2" aria-expanded={showAll} onClick={() => setShowAll(v => !v)}>
+                    {showAll ? 'Hide everyone’s picks' : 'See everyone’s picks'}
+                  </button>
+
+                  {showAll && (
+                    <div className="sport-cards" style={{ gap: 12 }}>
+                      {sortedMembers.filter(m => m.user_id !== user?.id).map(m => {
+                        const bet = betMap[`${m.user_id}_${race.round_number}`];
+                        const score = scoreMap[`${m.user_id}_${race.round_number}`];
                         return (
-                          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: !isGraded ? 'var(--elev)' : isCorrect ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 'var(--radius)', border: `1px solid ${!isGraded ? 'var(--rule)' : isCorrect ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
-                            <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', flex: 1 }}>{FIELD_LABELS[key] ?? key}</span>
-                            <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{pick}</span>
-                            {isGraded && (
-                              <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: isCorrect ? 'var(--positive)' : 'var(--danger)' }}>
-                                {isCorrect ? '✓ +10' : '✗'}
-                              </span>
-                            )}
+                          <div key={m.user_id} className="f1-card" style={{ overflow: 'hidden' }}>
+                            <div className="f1-card-head" style={{ borderBottom: '1px solid var(--elev)' }}>
+                              <span style={{ fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{m.display_name}</span>
+                              <span className="f1-mono" style={{ fontSize: 'var(--fs-label)', fontWeight: 600 }}>{score ? `${score.total_points} PTS` : '—'}</span>
+                            </div>
+                            {bet
+                              ? <PicksList bet={bet} score={score} race={race} />
+                              : <div style={{ padding: '12px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No picks for this race.</div>}
                           </div>
                         );
                       })}
                     </div>
-                  ) : (
-                    <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No season picks submitted.</div>
                   )}
+                </div>
+
+                <div className="sport-aside">
+                  <div className="f1-card">
+                    <div className="f1-card-head">
+                      <span className="f1-eb">League at {race.gp_name.replace(/ GP$/, '')}</span>
+                      <span className="f1-eb">PTS</span>
+                    </div>
+                    {raceTable.map((m, i) => (
+                      <MemberRow
+                        key={m.user_id}
+                        first={i === 0}
+                        rank={m.pos}
+                        name={m.display_name}
+                        value={m.pts ?? '—'}
+                        gapLabel=""
+                        me={m.user_id === user?.id}
+                        lead={m.pos === 1}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ))}
+
+        {tab === 'year' && (!isBetsLocked ? (
+          <div className="f1-card" style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-2)', fontSize: 'var(--fs-body)' }}>
+            Season bets stay hidden until the league admin locks them. Then everyone&rsquo;s picks show here.
+          </div>
+        ) : (
+          <div className="sport-cards" style={{ gap: 12 }}>
+            {sortedMembers.map(member => {
+              const bet = yearBetMap[member.user_id];
+              const isMe = member.user_id === user?.id;
+              const keys = YEAR_FIELD_KEYS.filter(key => bet?.[key]);
+              return (
+                <div key={member.user_id} className="f1-card" style={{ overflow: 'hidden' }}>
+                  <div className="f1-card-head" style={{ borderBottom: '1px solid var(--elev)', background: isMe ? 'var(--f1-gold-wash)' : undefined }}>
+                    <span style={{ fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--paper)' }}>{isMe ? 'You' : member.display_name}</span>
+                    <span className="f1-eb">{keys.length}/{YEAR_FIELD_KEYS.length}</span>
+                  </div>
+                  {keys.length === 0 ? (
+                    <div style={{ padding: '12px 16px', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>No season picks.</div>
+                  ) : keys.map((key, i) => {
+                    const pick = bet[key];
+                    const result = yearResults?.[key];
+                    const isRight = result && pick === result;
+                    return (
+                      <div key={key} className={`f1-kv${i === 0 ? ' first' : ''}`} style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) auto' }}>
+                        <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{YEAR_LABELS[key]}</span>
+                        <span className="n" style={{ fontSize: 'var(--fs-label)' }}>{pick}</span>
+                        <span className={`v ${result ? (isRight ? 'f1-ok' : 'f1-nok') : ''}`} style={{ fontSize: 'var(--fs-label)' }}>
+                          {result ? (isRight ? '+10' : '0') : '—'}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
           </div>
-        )
-      )}
+        ))}
       </div>
     </div>
   );

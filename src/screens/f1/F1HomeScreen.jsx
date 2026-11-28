@@ -1,81 +1,57 @@
 import { LoadingRows } from '../../components/Skeleton';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { usePaddock } from '../../hooks/f1/usePaddock';
 import { useSport } from '../../context/SportContext';
 import { useAuth } from '../../hooks/useAuth';
-import { getFlag } from '../../lib/f1/f1-data';
+import { gpCode, picksLockAt, picksLocked, useNow, formatWhen, formatDay } from '../../lib/f1/f1-data';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
-import CompetitionRankBadge from '../../components/CompetitionRankBadge';
+import {
+  F1Header, GearIcon, CircuitWatermark, StartLights, MemberRow,
+} from '../../components/f1/F1Kit';
 import F1RacePickForm from './F1RacePickForm';
-import { Icon, Dot } from '../../components/UiIcons';
 
-// Checkered-flag motif — pure CSS checkerboard, no image asset. Recurs sparingly
-// as a decorative divider under the F1 Home header (and above Report's podium viz).
-function CheckeredStrip() {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        height: 6,
-        backgroundImage:
-          'repeating-conic-gradient(#0A0A0A 0% 25%, #FFFFFF 0% 50%)',
-        backgroundSize: '12px 12px',
-      }}
-    />
-  );
+const HOUR = 3600000;
+
+// A race counts as current until three hours after lights out (or the end of
+// race day when no start time is set), so race day still shows that race.
+function raceEnd(r) {
+  if (r.race_at) return new Date(r.race_at).getTime() + 3 * HOUR;
+  return new Date(`${r.race_date}T23:59:59Z`).getTime();
 }
 
-function useCountdown(targetDate) {
-  const [diff, setDiff] = useState(null);
-  useEffect(() => {
-    if (!targetDate) return;
-    const tick = () => {
-      const ms = new Date(targetDate) - Date.now();
-      if (ms <= 0) { setDiff(null); return; }
-      const d = Math.floor(ms / 86400000);
-      const h = Math.floor((ms % 86400000) / 3600000);
-      const m = Math.floor((ms % 3600000) / 60000);
-      setDiff({ d, h, m });
-    };
-    tick();
-    const id = setInterval(tick, 60000);
-    return () => clearInterval(id);
-  }, [targetDate]);
-  return diff;
+function heroPill(race, locked, picksIn) {
+  if (race.status === 'race') return <span className="f1-pill red">Live</span>;
+  if (race.status === 'finished') return <span className="f1-pill mute">Finished</span>;
+  if (locked) return <span className="f1-pill mute">Picks locked</span>;
+  if (picksIn) return <span className="f1-pill on">Picks in</span>;
+  return <span className="f1-pill red">Picks open</span>;
 }
 
-// Status pill vocabulary: upcoming=grey, open (next race)=solid f1-red "Picks open",
-// live=gold, quali=blue-tinted "Qualifying" — the one place blue survives inside F1,
-// since it's state signaling (a session type), not brand identity.
-function RaceStatusBadge({ race, isNext, isPast }) {
-  let bg, color, label;
-  if (race.status === 'race') {
-    bg = 'var(--gold)'; color = '#fff'; label = <><Dot color="#fff" size={7} /> LIVE</>;
-  } else if (race.status === 'qualifying') {
-    bg = 'rgba(26,111,168,0.12)'; color = 'var(--accent)'; label = 'QUALIFYING';
-  } else if (isNext) {
-    bg = 'var(--f1)'; color = '#fff'; label = 'Picks open';
-  } else if (isPast) {
-    bg = 'var(--elev)'; color = 'var(--mute)'; label = 'Results pending';
-  } else {
-    bg = 'var(--elev)'; color = 'var(--mute)'; label = 'UPCOMING';
-  }
+// Quali, picks lock and race as three stops on a line, filled up to now.
+function SessionTimeline({ race, now }) {
+  const lock = picksLockAt(race);
+  const stops = [
+    { k: 'QUALI', at: race.qualifying_at ? new Date(race.qualifying_at) : null },
+    { k: 'PICKS LOCK', at: lock },
+    { k: 'RACE', at: race.race_at ? new Date(race.race_at) : null },
+  ];
+  const passed = race.status === 'finished' ? 3 : stops.filter(s => s.at && s.at.getTime() <= now).length;
   return (
-    <span style={{
-      fontFamily: 'Archivo, sans-serif',
-      fontSize: 'var(--fs-label)',
-      fontWeight: 700,
-      padding: '2px 7px',
-      borderRadius: 3,
-      background: bg,
-      color,
-    }}>
-      {label}
-    </span>
+    <div className="f1-tl" aria-label="Race weekend timeline">
+      <span className="line" />
+      <span className="fill" style={{ width: `${Math.max(0, passed - 1) * 33.4}%` }} />
+      {stops.map((s, i) => (
+        <div key={s.k} className="st">
+          <span className={`dot${i < passed ? ' past' : i === 2 ? ' race' : ''}`} />
+          <span className="k">{s.k}</span>
+          <span className="t">{s.at ? formatWhen(s.at) : 'TBC'}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -85,14 +61,18 @@ export default function F1HomeScreen() {
   const { user } = useAuth();
   const { setActivePaddockId } = useSport();
   const { myPaddocks, activePaddock, setActivePaddockId: switchPaddock, refresh: refreshPaddocks } = usePaddock();
+  const now = useNow(30000);
 
   const [races, setRaces] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [myScores, setMyScores] = useState({});
+  const [myPickRounds, setMyPickRounds] = useState(() => new Set());
   const [loading, setLoading] = useState(true);
   const [showSelector, setShowSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_paddocks');
-  const [expandedRound, setExpandedRound] = useState(null);
+  const [selectedRound, setSelectedRound] = useState(null);
+  const stripRef = useRef(null);
 
   const archivedPaddockCount = myPaddocks.filter(p => p.archived).length;
   const visiblePaddocks = showArchived ? myPaddocks : myPaddocks.filter(p => !p.archived);
@@ -102,278 +82,280 @@ export default function F1HomeScreen() {
   }, [paddockId, setActivePaddockId]);
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
       setLoading(true);
-      const [{ data: raceData }, { data: lbData }] = await Promise.all([
+      const none = Promise.resolve({ data: [] });
+      const [{ data: raceData }, { data: lbData }, { data: scoreData }, { data: betData }] = await Promise.all([
         supabase.from('f1_races').select('*').eq('season', 2026).order('round_number'),
-        paddockId ? supabase.rpc('get_paddock_leaderboard', { p_paddock_id: paddockId }) : Promise.resolve({ data: [] }),
+        paddockId ? supabase.rpc('get_paddock_leaderboard', { p_paddock_id: paddockId }) : none,
+        user?.id ? supabase.from('f1_scores').select('round_number,total_points').eq('user_id', user.id).eq('season', 2026).eq('score_type', 'race') : none,
+        user?.id ? supabase.from('f1_bets_race').select('round_number').eq('user_id', user.id).eq('season', 2026) : none,
       ]);
+      if (cancelled) return;
       setRaces(raceData ?? []);
       setLeaderboard(lbData ?? []);
+      setMyScores(Object.fromEntries((scoreData ?? []).map(s => [s.round_number, s.total_points])));
+      setMyPickRounds(new Set((betData ?? []).map(b => b.round_number)));
       setLoading(false);
     }
     load();
-  }, [paddockId]);
+    return () => { cancelled = true; };
+  }, [paddockId, user?.id]);
 
-  const now = new Date();
-  const nextRace = races.find(r => r.status !== 'finished' && new Date(r.race_date) >= now) ?? races[races.length - 1];
-  const countdown = useCountdown(nextRace?.race_at ?? (nextRace ? nextRace.race_date + 'T13:00:00Z' : null));
+  const nextRace = races.find(r => r.status !== 'finished' && raceEnd(r) >= now) ?? races[races.length - 1];
+  const selected = races.find(r => r.round_number === selectedRound) ?? nextRace;
 
-  const finished = races.filter(r => r.status === 'finished');
+  // Keep the selected round tile in the middle of the strip, without scrolling the page.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const tile = selected && document.getElementById(`f1-race-row-${selected.round_number}`);
+    if (!strip || !tile) return;
+    const offset = tile.getBoundingClientRect().left - strip.getBoundingClientRect().left + strip.scrollLeft;
+    strip.scrollTo({ left: offset - strip.clientWidth / 2 + tile.clientWidth / 2, behavior: 'smooth' });
+  }, [selected?.round_number, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ padding: '24px 20px' }}><LoadingRows rows={5} /></div>
+      <div className="f1-screen">
+        <div className="sport-col f1-body"><LoadingRows rows={5} /></div>
       </div>
     );
   }
 
-  const MONO = { fontFamily: 'Archivo, sans-serif' };
-  const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
+  const finishedCount = races.filter(r => r.status === 'finished').length;
+  // Round numbers run past the row count when a round is missing, so count by the highest round.
+  const totalRounds = races.reduce((n, r) => Math.max(n, r.round_number ?? 0), 0);
+  const lockAt = nextRace ? picksLockAt(nextRace) : null;
+  const nextLocked = nextRace ? picksLocked(nextRace, new Date(now)) : false;
+  const nextPicksIn = nextRace ? myPickRounds.has(nextRace.round_number) : false;
 
-  const PADDOCK_CARDS = [
-    { label: 'Championship\nStandings', icon: 'trophy', path: `/f1/${paddockId}/standings` },
-    { label: 'Year\nBets',              icon: 'calendar', path: `/f1/${paddockId}/season` },
-    { label: 'Report',                  icon: 'chart', path: `/f1/${paddockId}/report` },
-  ];
+  const meIdx = user ? leaderboard.findIndex(m => m.user_id === user.id) : -1;
+  const me = meIdx >= 0 ? leaderboard[meIdx] : null;
+  const nearby = me ? leaderboard.slice(Math.max(0, meIdx - 1), meIdx + 2) : [];
+  const leaderPts = leaderboard[0]?.total_points ?? 0;
+  let raceNote = null;
+  if (me && meIdx > 0) {
+    const ahead = leaderboard[meIdx - 1];
+    const gap = (ahead.total_points ?? 0) - (me.total_points ?? 0);
+    raceNote = gap === 0 ? `Level on points with P${ahead.rank}.` : `${gap} point${gap === 1 ? '' : 's'} to P${ahead.rank}.`;
+  } else if (me && leaderboard.length > 1) {
+    const gap = (me.total_points ?? 0) - (leaderboard[1].total_points ?? 0);
+    raceNote = gap === 0 ? 'Level at the top.' : `You lead by ${gap} point${gap === 1 ? '' : 's'}.`;
+  }
 
-  function goToPicks(round) {
-    setExpandedRound(round);
+  function openPicks(round) {
+    setSelectedRound(round);
     requestAnimationFrame(() => {
-      document.getElementById(`f1-race-row-${round}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('f1-race-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
 
+  const heroAction = !nextRace ? null
+    : nextRace.status === 'finished'
+      ? { label: 'See the race report', onClick: () => navigate(`/f1/${paddockId}/report`) }
+      : nextLocked
+        ? { label: 'See your picks', onClick: () => openPicks(nextRace.round_number) }
+        : { label: nextPicksIn ? 'Edit your picks' : 'Make your picks', onClick: () => openPicks(nextRace.round_number) };
+
+  const headerRight = (
+    <>
+      {paddockId && activePaddock?.role === 'owner' && (
+        <button type="button" className="f1-ib" aria-label="League settings" onClick={() => setShowSettings(true)}><GearIcon /></button>
+      )}
+      {/* Visible to everyone; the admin screen checks access itself. */}
+      {paddockId && (
+        <button type="button" className="f1-ib wide" onClick={() => navigate(`/f1/${paddockId}/admin`)}>ADMIN</button>
+      )}
+    </>
+  );
+
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
+    <div className="f1-screen">
+      <div className="sport-col f1-body">
+        <F1Header
+          eyebrow={activePaddock?.member_count ? `F1 2026 · ${activePaddock.member_count} members` : 'F1 2026'}
+          title={<>{activePaddock?.name ?? 'F1 league'}{activePaddock?.archived && <ArchivedBadge />}</>}
+          onTitleClick={() => setShowSelector(s => !s)}
+          titleLabel="Switch league"
+          right={headerRight}
+        />
 
-      {/* Header */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', borderLeft: '4px solid var(--f1)', padding: '20px 16px 16px' }}>
-        <div className="sport-col">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 4 }}>
-              🏁 Formula 1 · 2026
-            </div>
-            <button
-              onClick={() => setShowSelector(s => !s)}
-              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
-            >
-              <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--text)', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 8 }}>
-                {activePaddock?.name ?? 'Select paddock'} <span style={{ fontSize: 'var(--fs-label)', opacity: 0.5 }}>▾</span>
-                {activePaddock?.archived && <ArchivedBadge />}
-              </div>
-            </button>
-            <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 2 }}>
-              {activePaddock?.member_count ?? 0} members · {finished.length}/{races.length} races
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {/* Settings (archive toggle) — owner only */}
-            {paddockId && activePaddock?.role === 'owner' && (
-              <button
-                onClick={() => setShowSettings(true)}
-                aria-label="League settings"
-                style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--text)' }}
-              >
-                <Icon name="gear" />
-              </button>
-            )}
-            {/* Admin button — always visible; AdminScreen handles access control */}
-            {paddockId && (
-              <button
-                onClick={() => navigate(`/f1/${paddockId}/admin`)}
-                style={{ padding: '8px 14px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap' }}
-              >
-                Admin
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Paddock switcher dropdown */}
-        {showSelector && myPaddocks.length > 1 && (
-          <div style={{ marginTop: 10, background: 'var(--elev)', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--rule)' }}>
+        {showSelector && (
+          <div className="f1-menu" role="menu">
             {visiblePaddocks.map(p => (
               <button
                 key={p.paddock_id}
+                type="button"
+                role="menuitem"
+                className={p.paddock_id === paddockId ? 'on' : ''}
                 onClick={() => { switchPaddock(p.paddock_id); navigate(`/f1/${p.paddock_id}`); setShowSelector(false); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(225,6,0,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid var(--rule)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: p.paddock_id === paddockId ? 'var(--f1)' : 'var(--text)' }}
               >
-                {p.name}
-                <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>{p.member_count}m</span>
+                <span style={{ flex: 1 }}>{p.name}</span>
+                <span className="f1-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)' }}>{p.member_count} MEMBERS</span>
                 {p.archived && <ArchivedBadge />}
               </button>
             ))}
             {archivedPaddockCount > 0 && (
-              <button
-                onClick={() => setShowArchived(v => !v)}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--rule)', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
-              >
-                {showArchived ? '▾ Hide' : '▸ Show'} archived ({archivedPaddockCount})
+              <button type="button" role="menuitem" className="sub" onClick={() => setShowArchived(v => !v)}>
+                {showArchived ? 'Hide' : 'Show'} archived ({archivedPaddockCount})
               </button>
             )}
-            <button
-              onClick={() => { navigate('/f1'); setShowSelector(false); }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
-            >
-              + Join or create paddock
+            <button type="button" role="menuitem" className="sub" onClick={() => { navigate('/f1'); setShowSelector(false); }}>
+              + Join or create a league
             </button>
           </div>
         )}
-        </div>
-      </div>
 
-      {showSettings && activePaddock && (
-        <CompetitionSettingsModal
-          competitionType="paddock"
-          competitionId={activePaddock.paddock_id}
-          name={activePaddock.name}
-          archived={activePaddock.archived}
-          archivedAt={activePaddock.archived_at}
-          onUpdated={refreshPaddocks}
-          onClose={() => setShowSettings(false)}
-        />
-      )}
+        {showSettings && activePaddock && (
+          <CompetitionSettingsModal
+            competitionType="paddock"
+            competitionId={activePaddock.paddock_id}
+            name={activePaddock.name}
+            archived={activePaddock.archived}
+            archivedAt={activePaddock.archived_at}
+            onUpdated={refreshPaddocks}
+            onClose={() => setShowSettings(false)}
+          />
+        )}
 
-      <CheckeredStrip />
-
-      <div className="sport-col" style={{ padding: '16px 16px 0' }}>
-          {/* Next Race countdown — solid f1-red fill, the module's single highest-priority element */}
-          {nextRace && nextRace.status !== 'finished' && (
-            <div style={{ background: 'var(--f1)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
-              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--on-accent)', marginBottom: 8 }}>
-                R{nextRace.round_number} · Next race
+        {nextRace && (
+          <section className="f1-live f1-hero" aria-label="Next race">
+            <CircuitWatermark />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, position: 'relative', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                <span className="f1-eb">
+                  Round {nextRace.round_number} of {totalRounds}{nextRace.is_saturday ? ' · Saturday race' : ''}
+                </span>
+                {heroPill(nextRace, nextLocked, nextPicksIn)}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-                <div>
-                  <div style={{ ...HEAD, fontSize: 'var(--fs-heading)', color: 'var(--on-accent)' }}>
-                    {getFlag(nextRace.gp_name)} {nextRace.gp_name}
-                  </div>
-                  <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--on-accent)', marginTop: 3 }}>
-                    {nextRace.circuit}
-                  </div>
+              <div>
+                <h2 className="f1-h" style={{ fontSize: 'var(--fs-title)', color: 'var(--on-accent)' }}>{nextRace.gp_name}</h2>
+                <div className="f1-mono" style={{ fontSize: 'var(--fs-label)', color: 'var(--f1-navy-mute)', marginTop: 6 }}>
+                  {nextRace.circuit}{lockAt && nextRace.status !== 'finished' ? ` · picks lock ${formatWhen(lockAt)}` : ''}
                 </div>
-                {countdown && (
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="num" style={{ ...HEAD, fontSize: 'var(--fs-title)', color: 'var(--on-accent)' }}>
-                      {countdown.d > 0 ? `${countdown.d}d ${countdown.h}h` : `${countdown.h}h ${countdown.m}m`}
-                    </div>
-                    <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--on-accent)' }}>To race</div>
+              </div>
+              <SessionTimeline race={nextRace} now={now} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', justifyContent: 'space-between' }}>
+              {nextRace.status !== 'finished' && <StartLights lockAt={nextRace.is_manual_unlock ? null : lockAt} now={now} />}
+              {heroAction && (
+                <button type="button" className="f1-btn" onClick={heroAction.onClick}>{heroAction.label}</button>
+              )}
+            </div>
+          </section>
+        )}
+
+        <div className="sport-split">
+          {me && (
+            <div className="sport-aside">
+              <div className="f1-card">
+                <div className="f1-card-head">
+                  <span className="f1-eb">Your race</span>
+                  <span className="f1-eb">PTS · GAP</span>
+                </div>
+                {nearby.map((m, i) => (
+                  <MemberRow
+                    key={m.user_id}
+                    first={i === 0}
+                    rank={m.rank}
+                    name={m.display_name}
+                    value={m.total_points ?? 0}
+                    gap={m.user_id === me.user_id ? null : (m.total_points ?? 0) - (me.total_points ?? 0)}
+                    gapLabel={m.user_id === me.user_id ? '' : undefined}
+                    me={m.user_id === me.user_id}
+                    lead={(m.total_points ?? 0) === leaderPts && m.rank === 1}
+                  />
+                ))}
+                {raceNote && (
+                  <div style={{ padding: '10px 16px 14px', fontSize: 'var(--fs-label)', color: 'var(--text-2)', borderTop: '1px solid var(--elev)' }}>
+                    {raceNote} {finishedCount} of {totalRounds} races done.
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => goToPicks(nextRace.round_number)}
-                style={{ display: 'block', width: '100%', minHeight: 'var(--tap)', padding: '10px', background: 'var(--on-accent)', color: 'var(--f1)', borderRadius: 'var(--radius)', ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
-              >
-                Submit picks for R{nextRace.round_number} →
-              </button>
             </div>
           )}
 
-          {/* Desktop: calendar on the left, standings and shortcuts on the right */}
-          <div className="sport-split">
-          {/* Leaderboard preview */}
-          {leaderboard.length > 0 && (
-            <div className="sport-aside">
-              <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
-                Top of the Paddock
+          <div className="sport-main" style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+            <div className="f1-card" style={{ padding: '12px 12px 8px' }}>
+              <div className="f1-card-head" style={{ padding: '0 4px 10px' }}>
+                <span className="f1-eb">2026 calendar</span>
+                <span className="f1-eb">{finishedCount}/{totalRounds} done</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {leaderboard.slice(0, 5).map(m => {
-                  const isMe = user && m.user_id === user.id;
+              <div className="f1-rs" ref={stripRef} role="tablist" aria-label="Rounds">
+                {races.map(r => {
+                  const isNext = r.id === nextRace?.id;
+                  const isSel = r.id === selected?.id;
+                  let rv;
+                  if (r.status === 'finished') rv = myScores[r.round_number] != null ? `${myScores[r.round_number]} PTS` : '—';
+                  else if (r.status === 'race') rv = 'LIVE';
+                  else if (isNext) rv = myPickRounds.has(r.round_number) ? 'IN' : picksLocked(r, new Date(now)) ? 'LOCKED' : 'OPEN';
+                  else rv = formatDay(r.race_date);
                   return (
-                    <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isMe ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isMe ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 'var(--radius)', padding: '10px 12px' }}>
-                      <CompetitionRankBadge rank={m.rank} accent="var(--f1)" size="sm" />
-                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)', fontWeight: isMe ? 700 : 400, flex: 1 }}>
-                        {m.display_name}{isMe ? ' (You)' : ''}
-                      </span>
-                      <span style={{ ...HEAD, fontSize: 'var(--fs-body)', color: isMe ? 'var(--f1)' : 'var(--paper)' }}>{m.total_points}</span>
-                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>PTS</span>
-                    </div>
+                    <button
+                      key={r.id}
+                      id={`f1-race-row-${r.round_number}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSel}
+                      aria-label={`Round ${r.round_number}, ${r.gp_name}`}
+                      className={`f1-r${isSel ? ' cur' : ''}${isNext ? ' next' : ''}`}
+                      onClick={() => setSelectedRound(r.round_number)}
+                    >
+                      <span className="rn">R{r.round_number}</span>
+                      <span className="cd">{gpCode(r.gp_name)}</span>
+                      <span className="rv">{rv}</span>
+                    </button>
                   );
                 })}
               </div>
-              <button
-                onClick={() => navigate(`/f1/${paddockId}/standings`)}
-                style={{ display: 'block', width: '100%', marginBottom: 20, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', ...MONO, fontSize: 'var(--fs-label)', color: 'var(--f1)', textAlign: 'center' }}
-              >
-                Full standings →
-              </button>
+            </div>
+
+            {selected && (
+              <section id="f1-race-panel" className="f1-card" style={{ padding: 16, scrollMarginTop: 72 }} aria-label={`Round ${selected.round_number} picks`}>
+                <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid var(--elev)' }}>
+                  <div className="f1-eb">
+                    Round {selected.round_number} · {formatDay(selected.race_date)}{selected.is_saturday ? ' · Saturday race' : ''}
+                  </div>
+                  <h2 className="f1-h" style={{ fontSize: 'var(--fs-title)', marginTop: 4 }}>{selected.gp_name}</h2>
+                  <div className="f1-mono" style={{ fontSize: 'var(--fs-label)', color: 'var(--text-2)', marginTop: 4 }}>{selected.circuit}</div>
+                </div>
+                <F1RacePickForm
+                  key={selected.id}
+                  race={selected}
+                  paddock={activePaddock}
+                  myPoints={myScores[selected.round_number] ?? null}
+                  onSaved={round => setMyPickRounds(s => new Set(s).add(round))}
+                  onOpenReport={() => navigate(`/f1/${paddockId}/report`)}
+                />
+              </section>
+            )}
+          </div>
+
+          {leaderboard.length > 0 && (
+            <div className="sport-aside">
+              <div className="f1-card">
+                <div className="f1-card-head">
+                  <span className="f1-eb">Top of the league</span>
+                  <button type="button" className="f1-link" onClick={() => navigate(`/f1/${paddockId}/standings`)}>Table</button>
+                </div>
+                {leaderboard.slice(0, 5).map((m, i) => (
+                  <MemberRow
+                    key={m.user_id}
+                    first={i === 0}
+                    rank={m.rank}
+                    name={m.display_name}
+                    value={m.total_points ?? 0}
+                    gap={i === 0 ? null : (m.total_points ?? 0) - leaderPts}
+                    me={user && m.user_id === user.id}
+                    lead={i === 0}
+                  />
+                ))}
+              </div>
             </div>
           )}
-
-          <div className="sport-main">
-          {/* Full calendar */}
-          <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 10 }}>
-            2026 Season Calendar
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {races.map(race => {
-              const isNext = race.id === nextRace?.id;
-              const isPast = race.status !== 'finished' && new Date(race.race_date) < now;
-              // Only genuinely-upcoming rows past the next race dim; finished races stay full opacity.
-              const isDimmed = race.status === 'scheduled' && !isNext;
-              const isExpanded = expandedRound === race.round_number;
-              return (
-                <div key={race.id} id={`f1-race-row-${race.round_number}`}>
-                  <button
-                    onClick={() => setExpandedRound(isExpanded ? null : race.round_number)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'var(--f1-bg)' : 'var(--card)', border: isNext ? '2px solid var(--f1)' : '1px solid var(--rule)', borderBottom: isExpanded ? 'none' : undefined, borderRadius: isExpanded ? '6px 6px 0 0' : 6, cursor: 'pointer', opacity: isDimmed && !isExpanded ? 0.42 : 1, textAlign: 'left', width: '100%' }}
-                  >
-                    <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', minWidth: 24, textAlign: 'right' }}>
-                      R{race.round_number}
-                    </span>
-                    <span style={{ fontSize: 'var(--fs-body-lg)' }}>{getFlag(race.gp_name)}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {race.gp_name}
-                      </div>
-                      <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', marginTop: 1 }}>
-                        {new Date(race.race_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                        {race.is_saturday ? ' · Sprint' : ''}
-                      </div>
-                    </div>
-                    {race.status === 'finished' && race.result_p1 && !isExpanded ? (
-                      <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', textAlign: 'right' }}>
-                        <Icon name="trophy" /> {race.result_p1.split(' ').pop()}
-                      </span>
-                    ) : race.status === 'finished' && race.result_p1 ? null : (
-                      <RaceStatusBadge race={race} isNext={isNext} isPast={isPast} />
-                    )}
-                  </button>
-                  {isExpanded && <F1RacePickForm race={race} paddock={activePaddock} icon={Icon} />}
-                </div>
-              );
-            })}
-          </div>
-          </div>
-
-          <div className="sport-aside">
-          {/* Shortcuts */}
-          <div style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--mute)', margin: '20px 0 10px' }}>
-            Paddock Shortcuts
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
-            {PADDOCK_CARDS.map(card => (
-              <button
-                key={card.label}
-                onClick={() => navigate(card.path)}
-                style={{ padding: '18px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}
-              >
-                <span style={{ fontSize: 'var(--fs-title)', color: 'var(--f1)' }}><Icon name={card.icon} /></span>
-                <span style={{ ...MONO, fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)', whiteSpace: 'pre-line' }}>
-                  {card.label}
-                </span>
-                <span style={{ ...MONO, fontSize: 'var(--fs-label)', color: 'var(--f1)' }}>View →</span>
-              </button>
-            ))}
-          </div>
-          </div>
-          </div>
         </div>
+      </div>
     </div>
   );
 }

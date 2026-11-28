@@ -134,24 +134,21 @@ test.describe('F1 race pick submission', () => {
     await page.waitForLoadState('networkidle', { timeout: 12000 }).catch(() => {});
     await page.waitForTimeout(1200);
 
-    const row = page.locator('#f1-race-row-1');
-    await expect(row, 'round-1 race row not found').toBeVisible({ timeout: 10000 });
+    // Round 1 is a tile on the rounds strip; tapping it opens the picks panel.
+    const tile = page.locator('#f1-race-row-1');
+    await expect(tile, 'round-1 tile not found').toBeVisible({ timeout: 10000 });
+    await tile.click();
+    const panel = page.locator('#f1-race-panel');
+    await expect(panel.getByRole('radiogroup'), 'picks stepper did not open').toBeVisible({ timeout: 10000 });
 
-    // Expand the row via its toggle button if the form isn't already showing.
-    const selects = row.locator('select');
-    if (await selects.count() === 0) {
-      await row.locator('button').first().click();
-      await page.waitForTimeout(500);
-    }
-    await expect(selects, 'race-pick form did not expand').toHaveCount(5, { timeout: 10000 });
+    // Each driver pick moves the stepper on: P1, P2, P3, then DNF (skipped).
+    await panel.getByRole('radio', { name: /Max Verstappen/ }).click();
+    await panel.getByRole('radio', { name: /Lando Norris/ }).click();
+    await panel.getByRole('radio', { name: /Charles Leclerc/ }).click();
+    await panel.getByRole('tab', { name: /^Top team/ }).click();
+    await panel.getByRole('radio', { name: /^Red Bull/ }).click();
 
-    // DOM order: P1, P2, P3, DNF driver, Team.
-    await selects.nth(0).selectOption({ label: 'Max Verstappen' });
-    await selects.nth(1).selectOption({ label: 'Lando Norris' });
-    await selects.nth(2).selectOption({ label: 'Charles Leclerc' });
-    await selects.nth(4).selectOption({ label: 'Red Bull' });
-
-    const submit = row.locator('button[type="submit"]');
+    const submit = panel.locator('button[type="submit"]');
     await expect(submit).toBeEnabled();
     await submit.click();
     await expect(submit).toHaveText(/PICKS SAVED/i, { timeout: 10000 });
@@ -176,21 +173,18 @@ test.describe('F1 race pick submission', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 test.describe('F1 paddock join by invite code', () => {
-  test('3.1 USER_B joins via PaddockLobbyScreen JOIN tab', async ({ page }) => {
+  test('3.1 USER_B joins via the PaddockLobbyScreen code form', async ({ page }) => {
     await injectSession(page, sessionB);
     const reached = await safeGoto(page, '/f1');
     if (!reached) { console.log('⚠ Server unreachable for F1 lobby'); return; }
     await page.waitForLoadState('networkidle', { timeout: 12000 }).catch(() => {});
     await page.waitForTimeout(1000);
 
-    await page.getByRole('button', { name: /JOIN/i }).first().click();
-    await page.waitForTimeout(500);
-
-    const codeInput = page.locator('input[placeholder="8-CHARACTER CODE"]');
+    const codeInput = page.getByLabel('Join with a code');
     await expect(codeInput).toBeVisible({ timeout: 10000 });
     await codeInput.fill(INVITE_CODE.toLowerCase()); // client uppercases before RPC call
 
-    const joinBtn = page.getByRole('button', { name: /JOIN PADDOCK/i });
+    const joinBtn = page.getByRole('button', { name: /^JOIN$/i });
     await expect(joinBtn).toBeEnabled();
     await joinBtn.click();
 
