@@ -141,12 +141,19 @@ test.describe('F1 race pick submission', () => {
     const panel = page.locator('#f1-race-panel');
     await expect(panel.getByRole('radiogroup'), 'picks stepper did not open').toBeVisible({ timeout: 10000 });
 
-    // Each driver pick moves the stepper on: P1, P2, P3, then DNF (skipped).
-    await panel.getByRole('radio', { name: /Max Verstappen/ }).click();
-    await panel.getByRole('radio', { name: /Lando Norris/ }).click();
-    await panel.getByRole('radio', { name: /Charles Leclerc/ }).click();
-    await panel.getByRole('tab', { name: /^Top team/ }).click();
-    await panel.getByRole('radio', { name: /^Red Bull/ }).click();
+    // Open each step by its tab and pick only if not already chosen: the other
+    // browser project runs first against the same user, so the form may load
+    // with these picks saved, and tapping a chosen option clears it.
+    const pick = async (tab, option) => {
+      await panel.getByRole('tab', { name: tab }).click();
+      const radio = panel.getByRole('radio', { name: option });
+      if ((await radio.getAttribute('aria-checked')) !== 'true') await radio.click();
+      await expect(radio).toHaveAttribute('aria-checked', 'true');
+    };
+    await pick(/^Race winner/, /Max Verstappen/);
+    await pick(/^Second place/, /Lando Norris/);
+    await pick(/^Third place/, /Charles Leclerc/);
+    await pick(/^Top team/, /^Red Bull/);
 
     const submit = panel.locator('button[type="submit"]');
     await expect(submit).toBeEnabled();
