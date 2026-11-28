@@ -2,29 +2,37 @@ import { LoadingRows } from '../../components/Skeleton';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePaddock } from '../../hooks/f1/usePaddock';
+import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { useShowArchived } from '../../hooks/useShowArchived';
 import { ArchivedBadge } from '../../components/league/LeagueBadges';
 import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
-import { Icon } from '../../components/UiIcons';
+import { useNow, picksLockAt, picksLocked, formatCountdown, formatWhen } from '../../lib/f1/f1-data';
+import { CircuitMark, GearIcon } from '../../components/f1/F1Kit';
 
 export default function PaddockLobbyScreen() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { myPaddocks, loading, createPaddock, joinPaddockByCode, setActivePaddockId, refresh: refreshPaddocks } = usePaddock();
+  const now = useNow(30000);
 
-  const [tab, setTab] = useState('my');   // 'my' | 'create' | 'join'
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [busy, setBusy] = useState(null); // 'create' | 'join' | null
+  const [err, setErr] = useState({ create: '', join: '' });
   const [copied, setCopied] = useState(null);
   const [myCircles, setMyCircles] = useState([]);
   const [selectedCircleId, setSelectedCircleId] = useState(null);
   const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_paddocks');
   const [settingsPaddock, setSettingsPaddock] = useState(null);
+  const [nextRace, setNextRace] = useState(null);
+  const [picksIn, setPicksIn] = useState(false);
+  const [standing, setStanding] = useState({}); // paddock_id -> { rank, pts }
 
   const archivedCount = myPaddocks.filter(p => p.archived).length;
   const visiblePaddocks = showArchived ? myPaddocks : myPaddocks.filter(p => !p.archived);
+  const paddockKey = myPaddocks.map(p => p.paddock_id).join(',');
 
   useEffect(() => {
     supabase.rpc('get_my_circles').then(({ data }) => {
@@ -32,28 +40,59 @@ export default function PaddockLobbyScreen() {
     });
   }, []);
 
+  // The next race, and whether this user's picks are in (picks are per user, shared by all their leagues).
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase.from('f1_races').select('round_number, gp_name, race_at, status, is_manual_unlock')
+      .eq('season', 2026).neq('status', 'finished').order('round_number').limit(1)
+      .then(async ({ data }) => {
+        const race = data?.[0] ?? null;
+        if (cancelled) return;
+        setNextRace(race);
+        if (!race) return;
+        const { data: bet } = await supabase.from('f1_bets_race').select('round_number')
+          .eq('user_id', user.id).eq('season', 2026).eq('round_number', race.round_number).maybeSingle();
+        if (!cancelled) setPicksIn(!!bet);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  // My place in each league, for the card.
+  useEffect(() => {
+    if (!user?.id || !paddockKey) return;
+    let cancelled = false;
+    Promise.all(paddockKey.split(',').map(id =>
+      supabase.rpc('get_paddock_leaderboard', { p_paddock_id: id }).then(({ data }) => {
+        const me = (data ?? []).find(r => r.user_id === user.id);
+        return [id, me ? { rank: me.rank, pts: me.total_points ?? 0 } : null];
+      }),
+    )).then(entries => { if (!cancelled) setStanding(Object.fromEntries(entries)); });
+    return () => { cancelled = true; };
+  }, [paddockKey, user?.id]);
+
   async function handleCreate(e) {
     e.preventDefault();
     if (!name.trim()) return;
-    setBusy(true); setErr('');
+    setBusy('create'); setErr(x => ({ ...x, create: '' }));
     try {
       const id = await createPaddock(name.trim(), selectedCircleId ?? undefined);
       navigate(`/f1/${id}`);
     } catch (e) {
-      setErr(e.message === 'F1_SPORT_NOT_FOUND' ? 'F1 sport not configured — contact admin.' : e.message);
-    } finally { setBusy(false); }
+      setErr(x => ({ ...x, create: e.message === 'F1_SPORT_NOT_FOUND' ? 'F1 is not set up yet. Ask the admin.' : e.message }));
+    } finally { setBusy(null); }
   }
 
   async function handleJoin(e) {
     e.preventDefault();
     if (!code.trim()) return;
-    setBusy(true); setErr('');
+    setBusy('join'); setErr(x => ({ ...x, join: '' }));
     try {
       const id = await joinPaddockByCode(code.trim());
       navigate(`/f1/${id}`);
     } catch (e) {
-      setErr(e.message === 'PADDOCK_NOT_FOUND' ? 'Invite code not found — check the code and try again.' : e.message);
-    } finally { setBusy(false); }
+      setErr(x => ({ ...x, join: e.message === 'PADDOCK_NOT_FOUND' ? 'No league has that code. Check it and try again.' : e.message }));
+    } finally { setBusy(null); }
   }
 
   function enterPaddock(id) {
@@ -61,237 +100,174 @@ export default function PaddockLobbyScreen() {
     navigate(`/f1/${id}`);
   }
 
-  function copyCode(code) {
-    navigator.clipboard?.writeText(code);
-    setCopied(code);
+  function copyCode(c) {
+    navigator.clipboard?.writeText(c);
+    setCopied(c);
     setTimeout(() => setCopied(null), 2000);
   }
 
-  const TABS = [
-    { key: 'my',     label: 'My paddocks' },
-    { key: 'create', label: 'Create' },
-    { key: 'join',   label: 'Join' },
-  ];
+  const lockAt = nextRace ? picksLockAt(nextRace) : null;
+  const locked = nextRace ? picksLocked(nextRace, new Date(now)) : false;
+  const countdown = lockAt && !locked ? formatCountdown(lockAt.getTime() - now) : null;
+  const showCreate = creating || (!loading && myPaddocks.length === 0);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)', paddingBottom: 32 }}>
-      {/* Header */}
-      <div style={{ background: 'var(--card)', padding: '24px 20px 20px' }}>
-        <div className="sport-col">
-        <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 6 }}>
-          🏁 Formula 1 · 2026
-        </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-title)', color: 'var(--paper)', margin: 0, lineHeight: 1.1 }}>
-          PADDOCK
-        </h1>
-        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-body)', color: 'var(--text-2)', margin: '6px 0 0' }}>
-          Your private prediction group — create one or join a friend's.
-        </p>
-        </div>
-      </div>
+    <div className="f1-screen">
+      <div className="sport-col f1-body">
+        <header style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <CircuitMark />
+          <div style={{ minWidth: 0 }}>
+            <div className="f1-eb">Formula 1 · 2026</div>
+            <h1 className="f1-h" style={{ fontSize: 'var(--fs-title)', marginTop: 2 }}>Your F1 leagues</h1>
+          </div>
+        </header>
 
-      {/* Tabs */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', display: 'flex', gap: 0 }}>
-        <div className="sport-col" style={{ display: 'flex' }}>
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => { setTab(t.key); setErr(''); }}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              fontFamily: 'Archivo, sans-serif',
-              fontSize: 'var(--fs-label)',
-              fontWeight: 700,
-              cursor: 'pointer',
-              border: 'none',
-              borderBottom: tab === t.key ? '2px solid var(--f1)' : '2px solid transparent',
-              background: 'transparent',
-              color: tab === t.key ? 'var(--f1)' : 'var(--mute)',
-              marginBottom: -1,
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-        </div>
-      </div>
+        {nextRace && (
+          <section className="f1-live" aria-label="Next race"
+            style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0 }}>
+              <div className="f1-eb" style={{ color: 'var(--f1-navy-mute)' }}>Next · R{nextRace.round_number}</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--on-accent)', marginTop: 2 }}>{nextRace.gp_name}</div>
+              <div className="f1-mono" style={{ fontSize: 'var(--fs-micro)', color: 'var(--f1-navy-mute)', marginTop: 2 }}>
+                {locked ? 'Picks are locked' : lockAt ? `Picks lock ${formatWhen(lockAt)}` : 'Lock time to be confirmed'}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {countdown && <span className="f1-mono" style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--on-accent)' }}>{countdown}</span>}
+              {!locked && <span className={`f1-pill ${picksIn ? 'done' : 'red'}`}>{picksIn ? 'Picks in' : 'Picks due'}</span>}
+            </div>
+          </section>
+        )}
 
-      <div className="sport-col" style={{ padding: '20px 16px' }}>
-
-        {/* MY PADDOCKS */}
-        {tab === 'my' && (
-          <div>
+        <div className="sport-split">
+          <div className="sport-main" style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
             {loading ? (
-              <div style={{ padding: '24px 0' }}><LoadingRows rows={3} /></div>
+              <div className="f1-card" style={{ padding: 16 }}><LoadingRows rows={3} /></div>
             ) : myPaddocks.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ fontSize: 'var(--fs-title)', marginBottom: 12 }}>🏁</div>
-                <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 'var(--fs-body)' }}>
-                  You haven't joined any paddocks yet.
-                </p>
-                <button
-                  onClick={() => setTab('create')}
-                  style={{ marginTop: 16, padding: '10px 24px', background: 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  Create your first paddock
-                </button>
+              <div className="f1-card" style={{ padding: '28px 16px', textAlign: 'center', color: 'var(--text-2)', fontSize: 'var(--fs-body)' }}>
+                You are not in an F1 league yet. Join one with a code, or create your own.
               </div>
             ) : (
-              <div className="sport-cards" style={{ gap: 10 }}>
-                {visiblePaddocks.map(p => (
-                  <div
-                    key={p.paddock_id}
-                    style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px 16px', opacity: p.archived ? 0.7 : 1 }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 'var(--fs-body-lg)', color: 'var(--paper)' }}>
-                            {p.name}
+              <>
+                <div className="sport-cards" style={{ gap: 12 }}>
+                  {visiblePaddocks.map(p => {
+                    const s = standing[p.paddock_id];
+                    return (
+                      <div key={p.paddock_id} className="f1-card" style={{ overflow: 'hidden', opacity: p.archived ? 0.75 : 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+                          <CircuitMark width={38} height={28} />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontWeight: 800, fontSize: 'var(--fs-body-lg)', color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                              {p.archived && <ArchivedBadge />}
+                            </div>
+                            <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--mute)', marginTop: 2 }}>
+                              {p.member_count} {p.member_count === 1 ? 'member' : 'members'}{p.role === 'owner' ? ' · you run it' : ''}
+                            </div>
                           </div>
-                          {p.archived && <ArchivedBadge />}
-                        </div>
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                          <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}>
-                            {p.member_count} {p.member_count === 1 ? 'member' : 'members'}
-                          </span>
                           {p.role === 'owner' && (
-                            <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--f1)', fontWeight: 700 }}>
-                              OWNER
-                            </span>
+                            <button type="button" className="f1-ib" aria-label={`${p.name} settings`} onClick={() => setSettingsPaddock(p)}><GearIcon /></button>
                           )}
                         </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {p.role === 'owner' && (
-                          <button
-                            onClick={() => setSettingsPaddock(p)}
-                            aria-label="League settings"
-                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)' }}
-                          >
-                            <Icon name="gear" />
+
+                        <div className="f1-kv first" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
+                          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--text-2)' }}>
+                            {s ? <>You are <b style={{ color: 'var(--paper)' }}>P{s.rank}</b> of {p.member_count}</> : 'No points yet'}
+                          </span>
+                          <span className="v">{s ? `${s.pts} PTS` : '—'}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8, padding: '12px 16px 14px', borderTop: '1px solid var(--elev)' }}>
+                          <button type="button" className="f1-btn2" onClick={() => copyCode(p.invite_code)}
+                            aria-label={`Copy invite code ${p.invite_code}`} style={{ flex: 1, minHeight: 42 }}>
+                            <span className="f1-mono" style={{ letterSpacing: '.12em' }}>{copied === p.invite_code ? 'Copied' : p.invite_code}</span>
                           </button>
-                        )}
-                        <button
-                          onClick={() => enterPaddock(p.paddock_id)}
-                          style={{ padding: '8px 16px', background: 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                        >
-                          Enter →
-                        </button>
+                          <button type="button" className="f1-btn" onClick={() => enterPaddock(p.paddock_id)} style={{ flex: 1, minHeight: 42 }}>
+                            Open
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    {/* Invite code strip */}
-                    <div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); (() => copyCode(p.invite_code))(e); } }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 'var(--radius)', cursor: 'pointer' }}
-                      onClick={() => copyCode(p.invite_code)}
-                    >
-                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, color: 'var(--paper)', flex: 1 }}>
-                        {p.invite_code}
-                      </span>
-                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: copied === p.invite_code ? 'var(--positive)' : 'var(--mute)' }}>
-                        {copied === p.invite_code ? 'Copied ✓' : 'Copy code'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
                 {archivedCount > 0 && (
-                  <button
-                    onClick={() => setShowArchived(v => !v)}
-                    style={{ padding: '10px', border: 'none', background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
-                  >
-                    {showArchived ? '▾ HIDE ARCHIVED' : `▸ SHOW ARCHIVED (${archivedCount})`}
+                  <button type="button" className="f1-link" onClick={() => setShowArchived(v => !v)} style={{ alignSelf: 'flex-start' }}>
+                    {showArchived ? 'Hide archived' : `Show archived (${archivedCount})`}
                   </button>
                 )}
-                <button
-                  onClick={() => setTab('create')}
-                  style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', cursor: 'pointer' }}
-                >
-                  + Create another paddock
-                </button>
-              </div>
-            )}
-            {settingsPaddock && (
-              <CompetitionSettingsModal
-                competitionType="paddock"
-                competitionId={settingsPaddock.paddock_id}
-                name={settingsPaddock.name}
-                archived={settingsPaddock.archived}
-                archivedAt={settingsPaddock.archived_at}
-                onUpdated={refreshPaddocks}
-                onClose={() => setSettingsPaddock(null)}
-              />
+              </>
             )}
           </div>
-        )}
 
-        {/* CREATE */}
-        {tab === 'create' && (
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
-            {myCircles.length > 0 && (
-              <div>
-                <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
-                  Clubhouse (optional)
-                </label>
-                <select
-                  value={selectedCircleId ?? ''}
-                  onChange={e => setSelectedCircleId(e.target.value || null)}
-                  className="ffl-input"
-                >
-                  <option value="">No clubhouse</option>
-                  {myCircles.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+          <div className="sport-aside" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleJoin} className="f1-card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <label htmlFor="f1-join-code" className="f1-eb">Join with a code</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  id="f1-join-code"
+                  className="f1-input code"
+                  value={code}
+                  onChange={e => setCode(e.target.value.toUpperCase())}
+                  placeholder="League code"
+                  maxLength={8}
+                  autoComplete="off"
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+                <button type="submit" className="f1-btn" disabled={busy === 'join' || code.trim().length < 6} style={{ flex: 'none', width: 'auto', padding: '0 18px' }}>
+                  {busy === 'join' ? 'Joining…' : 'Join'}
+                </button>
               </div>
-            )}
-            <div>
-              <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
-                Paddock Name
-              </label>
-              <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="e.g. The Tifosi Garage"
-                maxLength={40}
-                className="ffl-input"
-              />
-            </div>
-            {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{err}</div>}
-            <button
-              type="submit"
-              disabled={busy || !name.trim()}
-              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: busy || !name.trim() ? 'default' : 'pointer' }}
-            >
-              {busy ? 'Creating…' : 'Create paddock →'}
-            </button>
-          </form>
-        )}
+              {err.join && <div className="f1-note red" role="alert">{err.join}</div>}
+            </form>
 
-        {/* JOIN */}
-        {tab === 'join' && (
-          <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
-            <div>
-              <label style={{ display: 'block', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--mute)', marginBottom: 8 }}>
-                Invite Code
-              </label>
-              <input
-                value={code}
-                onChange={e => setCode(e.target.value.toUpperCase())}
-                placeholder="8-CHARACTER CODE"
-                maxLength={8}
-                className="ffl-input" style={{ fontWeight: 700 }}
-              />
-            </div>
-            {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', color: 'var(--danger)' }}>{err}</div>}
-            <button
-              type="submit"
-              disabled={busy || code.trim().length < 6}
-              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--f1)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'Archivo, sans-serif', fontSize: 'var(--fs-label)', fontWeight: 700, cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
-            >
-              {busy ? 'Joining…' : 'Join paddock →'}
-            </button>
-          </form>
+            {showCreate ? (
+              <form onSubmit={handleCreate} className="f1-card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <label htmlFor="f1-new-name" className="f1-eb">Create a league</label>
+                <input
+                  id="f1-new-name"
+                  className="f1-input"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="League name"
+                  maxLength={40}
+                />
+                {myCircles.length > 0 && (
+                  <select
+                    className="f1-select"
+                    aria-label="Clubhouse"
+                    value={selectedCircleId ?? ''}
+                    onChange={e => setSelectedCircleId(e.target.value || null)}
+                  >
+                    <option value="">No clubhouse</option>
+                    {myCircles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                )}
+                {err.create && <div className="f1-note red" role="alert">{err.create}</div>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {myPaddocks.length > 0 && (
+                    <button type="button" className="f1-btn2" onClick={() => setCreating(false)} style={{ flex: 'none' }}>Cancel</button>
+                  )}
+                  <button type="submit" className="f1-btn" disabled={busy === 'create' || !name.trim()} style={{ flex: 1 }}>
+                    {busy === 'create' ? 'Creating…' : 'Create league'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button type="button" className="f1-btn2" onClick={() => setCreating(true)}>Create a league</button>
+            )}
+          </div>
+        </div>
+
+        {settingsPaddock && (
+          <CompetitionSettingsModal
+            competitionType="paddock"
+            competitionId={settingsPaddock.paddock_id}
+            name={settingsPaddock.name}
+            archived={settingsPaddock.archived}
+            archivedAt={settingsPaddock.archived_at}
+            onUpdated={refreshPaddocks}
+            onClose={() => setSettingsPaddock(null)}
+          />
         )}
       </div>
     </div>
